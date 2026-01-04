@@ -1,0 +1,31 @@
+/**
+ * Конфигурация приложения
+ */
+export const APP_CONFIG = {
+  name: "Dohkar",
+  description: "Современное приложение на Next.js",
+  version: "1.0.0",
+} as const;
+
+/**
+ * URL API
+ */
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+/**
+ * Лимиты пагинации
+ */
+export const PAGINATION = {
+  defaultLimit: 10,
+  maxLimit: 100,
+} as const;
+
+/**
+ * Время кэширования (в секундах)
+ */
+export const CACHE_TIME = {
+  short: 60,
+  medium: 300,
+  long: 3600,
+} as const;
