@@ -51,3 +51,6 @@ next-env.d.ts
 
 # Prettier
 .prettiercache
+
+# OpenAPI временные файлы
+.openapi.temp.json

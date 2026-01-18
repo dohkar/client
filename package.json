@@ -4,13 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run sync:api -- --skip-check && next build",
     "start": "next start",
     "tscheck": "tsc --noEmit",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "generate:api-types": "node scripts/sync-api.js --skip-check",
+    "sync:api": "node scripts/sync-api.js",
+    "validate:openapi": "node scripts/validate-openapi.js"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",
@@ -21,6 +24,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.7",
+    "openapi-typescript": "^7.10.1",
     "postcss": "^8.5",
     "prettier": "^3.3.3",
     "tailwindcss": "^4.1.9",
