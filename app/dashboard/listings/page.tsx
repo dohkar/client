@@ -12,15 +12,15 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils/format";
 import { formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
-import { useDeleteListing } from "@/hooks/use-optimistic-delete";
+import { useDeleteWithUndo } from "@/hooks/use-undo-delete";
 import type { Property } from "@/types/property";
 
 export default function ListingsPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   
-  // Optimistic delete хук
-  const { deleteWithConfirm, isDeleting } = useDeleteListing();
+  // Delete с Undo (5 секунд на отмену)
+  const { deleteWithUndo, isDeleting } = useDeleteWithUndo();
 
   // Получаем все объявления пользователя
   const { data, isLoading } = useQuery({
@@ -112,7 +112,7 @@ export default function ListingsPage() {
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => deleteWithConfirm(property.id, property.title)}
+                        onClick={() => deleteWithUndo(property.id, property.title)}
                         disabled={deleting}
                         className="min-h-[36px] min-w-[36px] shadow-md"
                         aria-label="Удалить"

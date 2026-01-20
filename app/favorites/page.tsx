@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, Trash2 } from "lucide-react";
 import { useFavorites } from "@/hooks/use-favorites";
-import { useRemoveFavoriteOptimistic } from "@/hooks/use-optimistic-delete";
+import { useRemoveFavoriteWithUndo } from "@/hooks/use-undo-delete";
 import { useAuthStore } from "@/stores";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -15,9 +15,9 @@ export default function FavoritesPage() {
   const router = useRouter();
   const { isAuthenticated, isInitialized, isLoading: authLoading } = useAuthStore();
   
-  // Используем optimistic хуки
+  // Используем optimistic хуки с Undo
   const { favorites: data, isLoading } = useFavorites();
-  const { remove: removeFromFavorites, isRemoving } = useRemoveFavoriteOptimistic();
+  const { removeWithUndo, isRemoving } = useRemoveFavoriteWithUndo();
 
   useEffect(() => {
     if (isInitialized && !isAuthenticated) {
@@ -136,7 +136,7 @@ export default function FavoritesPage() {
                       w-10 h-10
                       focus:outline-none focus:ring-2 focus:ring-primary/40
                     `}
-                    onClick={() => removeFromFavorites(property.id)}
+                    onClick={() => removeWithUndo(property.id, property.title)}
                     disabled={removing}
                     aria-label='Удалить из избранного'
                     title='Удалить из избранного'
