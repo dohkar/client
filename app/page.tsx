@@ -2,7 +2,6 @@
 
 import { HeroSearch } from "@/components/features/hero-search";
 import { CategoryShowcase } from "@/components/features/category-showcase";
-import { HowItWorksSection } from "@/components/features/how-it-works-section";
 import { PropertyGrid } from "@/components/features/property-grid";
 import { CTASection } from "@/components/features/cta-section";
 import { useProperties } from "@/hooks/use-properties";
@@ -39,7 +38,7 @@ export default function HomePage() {
         </section>
 
         {/* <PopularLocationsSection /> */}
-        <HowItWorksSection />
+        {/* <HowItWorksSection /> */}
         {/* <Testimonials /> */}
         <CTASection />
       </main>
