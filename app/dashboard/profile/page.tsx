@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { authService } from "@/services/auth.service";
 import { usersService } from "@/services/users.service";
+import { uploadService, validateImageFile, ALLOWED_IMAGE_TYPES } from "@/services/upload.service";
 import { useAuthStore } from "@/stores";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -33,17 +34,16 @@ import {
   CreditCard,
   Sparkles,
   ImageIcon,
-  Link2,
   Check,
-  X,
-  Clipboard,
   AlertCircle,
   RefreshCw,
   Copy,
+  Upload,
+  Camera,
 } from "lucide-react";
 import { formatPhoneInput } from "@/lib/utils/format";
 
-// Схема валидации
+// Схема валидации - avatar больше не нужен, загрузка отдельно
 const profileSchema = z.object({
   name: z
     .string()
@@ -57,49 +57,18 @@ const profileSchema = z.object({
       (val) => !val || /^\+?[0-9\s\-()]{10,20}$/.test(val),
       "Введите корректный номер телефона"
     ),
-  avatar: z
-    .string()
-    .optional()
-    .refine(
-      (val) => !val || /^https?:\/\/.+\..+/.test(val),
-      "Введите корректный URL изображения"
-    ),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
-
-// Проверка валидности URL изображения
-const checkImageUrl = (url: string): Promise<boolean> => {
-  return new Promise((resolve) => {
-    if (!url) {
-      resolve(true);
-      return;
-    }
-    const img = new Image();
-    const timeout = setTimeout(() => {
-      resolve(false);
-    }, 5000);
-    img.onload = () => {
-      clearTimeout(timeout);
-      resolve(true);
-    };
-    img.onerror = () => {
-      clearTimeout(timeout);
-      resolve(false);
-    };
-    img.src = url;
-  });
-};
 
 export default function ProfilePage() {
   const { setUser } = useAuthStore();
   const queryClient = useQueryClient();
 
-  // Состояния для превью аватара
-  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string>("");
-  const [isAvatarLoading, setIsAvatarLoading] = useState(false);
-  const [isAvatarValid, setIsAvatarValid] = useState<boolean | null>(null);
-  const avatarCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Состояния для аватара
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Запрос данных пользователя
   const {
@@ -136,65 +105,13 @@ export default function ProfilePage() {
     formState: { errors, isDirty, dirtyFields },
     reset,
     setValue,
-    control,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: "",
       phone: "",
-      avatar: "",
     },
   });
-
-  // Следим за изменением URL аватара
-  const watchedAvatar = useWatch({ control, name: "avatar" });
-
-  // Проверка URL аватара с дебаунсом
-  useEffect(() => {
-    if (avatarCheckTimeoutRef.current) {
-      clearTimeout(avatarCheckTimeoutRef.current);
-    }
-
-    // Ранний возврат без изменения состояния в основном потоке
-    if (!watchedAvatar) {
-      avatarCheckTimeoutRef.current = setTimeout(() => {
-        setAvatarPreviewUrl("");
-        setIsAvatarValid(null);
-        setIsAvatarLoading(false);
-      }, 0);
-      return;
-    }
-
-    // Проверяем базовый формат URL
-    if (!/^https?:\/\/.+\..+/.test(watchedAvatar)) {
-      avatarCheckTimeoutRef.current = setTimeout(() => {
-        setIsAvatarValid(false);
-        setAvatarPreviewUrl("");
-      }, 0);
-      return;
-    }
-
-    // Устанавливаем loading через microtask
-    avatarCheckTimeoutRef.current = setTimeout(() => {
-      setIsAvatarLoading(true);
-    }, 0);
-
-    // Основная проверка через дебаунс
-    const checkTimer = setTimeout(async () => {
-      const isValid = await checkImageUrl(watchedAvatar);
-      setIsAvatarValid(isValid);
-      setAvatarPreviewUrl(isValid ? watchedAvatar : "");
-      setIsAvatarLoading(false);
-    }, 600);
-
-    return () => {
-      if (avatarCheckTimeoutRef.current) {
-        clearTimeout(avatarCheckTimeoutRef.current);
-      }
-      clearTimeout(checkTimer);
-    };
-
-  }, [watchedAvatar]);
 
   // Инициализация формы при загрузке данных
   useEffect(() => {
@@ -202,16 +119,7 @@ export default function ProfilePage() {
       reset({
         name: currentUser.name || "",
         phone: currentUser.phone || "",
-        avatar: currentUser.avatar || "",
       });
-      // Установка превью при загрузке через setTimeout чтобы избежать warning
-      const timer = setTimeout(() => {
-        if (currentUser.avatar) {
-          setAvatarPreviewUrl(currentUser.avatar);
-          setIsAvatarValid(true);
-        }
-      }, 0);
-      return () => clearTimeout(timer);
     }
   }, [currentUser, reset]);
 
@@ -235,7 +143,6 @@ export default function ProfilePage() {
       reset({
         name: updatedUser.name || "",
         phone: updatedUser.phone || "",
-        avatar: updatedUser.avatar || "",
       });
       toast.success("Профиль успешно обновлен");
     },
@@ -245,28 +152,73 @@ export default function ProfilePage() {
   });
 
   const onSubmit = (data: ProfileFormData) => {
-    // Проверяем валидность аватара перед отправкой
-    if (data.avatar && isAvatarValid === false) {
-      toast.error("Исправьте URL аватара перед сохранением");
-      return;
-    }
     updateMutation.mutate(data);
   };
 
-  // Вставка из буфера обмена
-  const handlePasteAvatar = useCallback(async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text && /^https?:\/\/.+/.test(text)) {
-        setValue("avatar", text.trim(), { shouldDirty: true, shouldValidate: true });
-        toast.success("URL вставлен");
-      } else {
-        toast.error("В буфере нет корректного URL");
+  // Обработчик выбора файла аватара
+  const handleAvatarSelect = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      // Валидация на клиенте
+      const validationError = validateImageFile(file);
+      if (validationError) {
+        toast.error(validationError);
+        return;
       }
-    } catch {
-      toast.error("Нет доступа к буферу обмена");
+
+      // Создаем превью
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+      setIsAvatarUploading(true);
+
+      try {
+        // Загружаем на сервер
+        const result = await uploadService.uploadAvatar(file);
+
+        // Обновляем данные пользователя
+        const updatedUser = await authService.getCurrentUser();
+        const userForStore = {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          phone: updatedUser.phone,
+          avatar: updatedUser.avatar,
+          isPremium: updatedUser.isPremium,
+          role: updatedUser.role as "user" | "premium" | "admin",
+          createdAt: updatedUser.createdAt,
+        };
+        setUser(userForStore);
+        queryClient.setQueryData(queryKeys.auth.user(), updatedUser);
+
+        toast.success("Аватар успешно обновлен");
+
+        // Очищаем локальное превью - теперь используем URL с сервера
+        setAvatarPreview(null);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Ошибка загрузки аватара");
+        // Очищаем превью при ошибке
+        setAvatarPreview(null);
+      } finally {
+        setIsAvatarUploading(false);
+        // Очищаем input для возможности повторной загрузки того же файла
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        // Очищаем object URL
+        URL.revokeObjectURL(previewUrl);
+      }
+    },
+    [queryClient, setUser]
+  );
+
+  // Открытие диалога выбора файла
+  const handleAvatarClick = useCallback(() => {
+    if (!isAvatarUploading) {
+      fileInputRef.current?.click();
     }
-  }, [setValue]);
+  }, [isAvatarUploading]);
 
   // Копирование ID
   const handleCopyId = async () => {
@@ -286,10 +238,7 @@ export default function ProfilePage() {
       reset({
         name: currentUser.name || "",
         phone: currentUser.phone || "",
-        avatar: currentUser.avatar || "",
       });
-      setAvatarPreviewUrl(currentUser.avatar || "");
-      setIsAvatarValid(currentUser.avatar ? true : null);
     }
   }, [currentUser, reset]);
 
@@ -380,6 +329,9 @@ export default function ProfilePage() {
   // Количество изменённых полей
   const changedFieldsCount = Object.keys(dirtyFields).length;
 
+  // URL аватара для отображения: превью или текущий
+  const displayAvatarUrl = avatarPreview || currentUser.avatar || undefined;
+
   return (
     <div className="min-h-screen py-6 px-4 md:py-8">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -392,7 +344,7 @@ export default function ProfilePage() {
               <div className="relative">
                 <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-background shadow-xl">
                   <AvatarImage
-                    src={currentUser.avatar || undefined}
+                    src={displayAvatarUrl}
                     alt={currentUser.name || "Аватар"}
                   />
                   <AvatarFallback className="text-2xl md:text-3xl font-semibold bg-muted">
@@ -464,6 +416,86 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* Avatar Upload Section */}
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                    Аватар
+                  </Label>
+
+                  <div className="flex items-start gap-4">
+                    {/* Avatar Preview with Upload Button */}
+                    <div className="relative group">
+                      <button
+                        type="button"
+                        onClick={handleAvatarClick}
+                        disabled={isAvatarUploading}
+                        className="relative block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full"
+                      >
+                        <Avatar className="w-24 h-24 border-2 border-dashed border-muted-foreground/30 transition-all group-hover:border-primary/50">
+                          <AvatarImage src={displayAvatarUrl} alt="Превью" />
+                          <AvatarFallback className="bg-muted/50">
+                            <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+                          </AvatarFallback>
+                        </Avatar>
+
+                        {/* Loading Overlay */}
+                        {isAvatarUploading && (
+                          <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                            <Spinner className="w-8 h-8 text-white" />
+                          </div>
+                        )}
+
+                        {/* Hover Overlay */}
+                        {!isAvatarUploading && (
+                          <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            <Camera className="w-6 h-6 text-white" />
+                          </div>
+                        )}
+                      </button>
+
+                      {/* Hidden File Input */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept={ALLOWED_IMAGE_TYPES.join(",")}
+                        onChange={handleAvatarSelect}
+                        className="hidden"
+                      />
+                    </div>
+
+                    {/* Upload Instructions */}
+                    <div className="flex-1 space-y-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAvatarClick}
+                        disabled={isAvatarUploading}
+                        className="gap-2"
+                      >
+                        {isAvatarUploading ? (
+                          <>
+                            <Spinner className="w-4 h-4" />
+                            Загрузка...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            Выбрать файл
+                          </>
+                        )}
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        JPG, PNG или WebP. Максимум 5MB.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Изображение будет автоматически оптимизировано.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Name & Phone Grid */}
                 <div className="grid md:grid-cols-2 gap-4">
                   {/* Name Field */}
@@ -535,89 +567,6 @@ export default function ProfilePage() {
                   </p>
                 </div>
 
-                {/* Avatar URL Field */}
-                <div className="space-y-3">
-                  <Label className="flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                    Аватар
-                  </Label>
-
-                  <div className="flex gap-4">
-                    {/* Preview */}
-                    <div className="shrink-0">
-                      <div className="relative">
-                        <Avatar className="w-20 h-20 border-2 border-dashed border-muted-foreground/30">
-                          <AvatarImage src={avatarPreviewUrl || undefined} alt="Превью" />
-                          <AvatarFallback className="bg-muted/50">
-                            {isAvatarLoading ? (
-                              <Spinner className="w-5 h-5" />
-                            ) : (
-                              <ImageIcon className="w-6 h-6 text-muted-foreground/50" />
-                            )}
-                          </AvatarFallback>
-                        </Avatar>
-                        {/* Status Indicator */}
-                        {!isAvatarLoading && isAvatarValid !== null && (
-                          <div
-                            className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow ${
-                              isAvatarValid
-                                ? "bg-green-500 text-white"
-                                : "bg-destructive text-white"
-                            }`}
-                          >
-                            {isAvatarValid ? (
-                              <Check className="w-3.5 h-3.5" />
-                            ) : (
-                              <X className="w-3.5 h-3.5" />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Input & Actions */}
-                    <div className="flex-1 space-y-2">
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            {...register("avatar")}
-                            placeholder="https://example.com/avatar.jpg"
-                            className={`pl-10 ${errors.avatar || isAvatarValid === false ? "border-destructive" : ""}`}
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={handlePasteAvatar}
-                          title="Вставить из буфера"
-                        >
-                          <Clipboard className="w-4 h-4" />
-                        </Button>
-                      </div>
-
-                      {/* Error Messages */}
-                      {errors.avatar && (
-                        <p className="text-xs text-destructive flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          {errors.avatar.message}
-                        </p>
-                      )}
-                      {!errors.avatar && isAvatarValid === false && watchedAvatar && (
-                        <p className="text-xs text-destructive flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          Не удалось загрузить изображение по этому URL
-                        </p>
-                      )}
-
-                      <p className="text-xs text-muted-foreground">
-                        Поддерживаемые форматы: JPG, PNG, GIF, WebP
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Form Actions */}
                 <div className="flex items-center justify-between pt-4 border-t">
                   <p className="text-xs text-muted-foreground">
@@ -634,7 +583,7 @@ export default function ProfilePage() {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={!isDirty || updateMutation.isPending || isAvatarValid === false}
+                      disabled={!isDirty || updateMutation.isPending}
                       className="min-w-[120px]"
                     >
                       {updateMutation.isPending ? (

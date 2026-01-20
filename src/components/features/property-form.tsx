@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,10 +16,31 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { propertyService } from "@/services/property.service";
+import {
+  uploadService,
+  validateImageFiles,
+  ALLOWED_IMAGE_TYPES,
+  MAX_FILE_SIZE,
+  MAX_IMAGES_PER_PROPERTY,
+} from "@/services/upload.service";
 import { toast } from "sonner";
 import type { Property } from "@/types/property";
+import { Upload, X, ImageIcon, AlertCircle } from "lucide-react";
 
+// Интерфейс для превью изображений
+interface ImagePreview {
+  id: string;
+  file: File;
+  previewUrl: string;
+  uploadedUrl?: string;
+  uploadedPublicId?: string;
+  isUploading: boolean;
+  error?: string;
+}
+
+// Схема валидации без images как массива URL
 const propertySchema = z.object({
   title: z.string().min(10, "Заголовок должен быть не менее 10 символов"),
   price: z.number().min(1, "Цена должна быть больше 0"),
@@ -30,7 +51,6 @@ const propertySchema = z.object({
   rooms: z.number().optional(),
   area: z.number().min(1, "Площадь должна быть больше 0"),
   description: z.string().min(50, "Описание должно быть не менее 50 символов"),
-  images: z.array(z.string().url()).min(1, "Добавьте хотя бы одно изображение"),
   features: z.array(z.string()).optional(),
 });
 
@@ -42,16 +62,29 @@ interface PropertyFormProps {
   isEdit?: boolean;
 }
 
+// Генерация уникального ID
+const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
 export function PropertyForm({ onSuccess, initialData, isEdit = false }: PropertyFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [imageUrls, setImageUrls] = useState<string[]>(
-    initialData?.images && initialData.images.length > 0
-      ? initialData.images
-      : initialData?.image
-      ? [initialData.image]
-      : []
-  );
-  const [imageInput, setImageInput] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
+  const [imagesError, setImagesError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // При редактировании инициализируем превью из существующих URL
+  useState(() => {
+    if (initialData?.images && initialData.images.length > 0) {
+      const existingPreviews: ImagePreview[] = initialData.images.map((url, index) => ({
+        id: `existing-${index}`,
+        file: new File([], "existing"),
+        previewUrl: url,
+        uploadedUrl: url,
+        isUploading: false,
+      }));
+      setImagePreviews(existingPreviews);
+    }
+  });
 
   const {
     register,
@@ -71,29 +104,126 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       rooms: initialData?.rooms,
       area: initialData?.area || 0,
       description: initialData?.description || "",
-      images: imageUrls,
       features: initialData?.features || [],
     },
   });
 
-  const addImage = () => {
-    if (imageInput.trim() && imageInput.startsWith("http")) {
-      setImageUrls([...imageUrls, imageInput.trim()]);
-      setValue("images", [...imageUrls, imageInput.trim()]);
-      setImageInput("");
-    }
-  };
+  // Обработчик выбора файлов
+  const handleFilesSelect = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
 
-  const removeImage = (index: number) => {
-    const newImages = imageUrls.filter((_, i) => i !== index);
-    setImageUrls(newImages);
-    setValue("images", newImages);
-  };
+      // Проверяем общий лимит
+      const totalImages = imagePreviews.length + files.length;
+      if (totalImages > MAX_IMAGES_PER_PROPERTY) {
+        toast.error(`Максимальное количество изображений: ${MAX_IMAGES_PER_PROPERTY}`);
+        return;
+      }
 
+      // Валидация файлов
+      const validationError = validateImageFiles(files);
+      if (validationError) {
+        toast.error(validationError);
+        return;
+      }
+
+      // Создаем превью для новых файлов
+      const newPreviews: ImagePreview[] = files.map((file) => ({
+        id: generateId(),
+        file,
+        previewUrl: URL.createObjectURL(file),
+        isUploading: true,
+      }));
+
+      setImagePreviews((prev) => [...prev, ...newPreviews]);
+      setImagesError(null);
+      setIsUploading(true);
+
+      try {
+        // Загружаем файлы на сервер
+        const result = await uploadService.uploadPropertyImages(files);
+
+        // Обновляем превью с загруженными URL
+        setImagePreviews((prev) =>
+          prev.map((p) => {
+            const fileIndex = newPreviews.findIndex((np) => np.id === p.id);
+            if (fileIndex !== -1 && result.images[fileIndex]) {
+              return {
+                ...p,
+                uploadedUrl: result.images[fileIndex].url,
+                uploadedPublicId: result.images[fileIndex].publicId,
+                isUploading: false,
+              };
+            }
+            return p;
+          })
+        );
+
+        toast.success(`Загружено ${files.length} изображений`);
+      } catch (error) {
+        // Помечаем ошибку в превью
+        setImagePreviews((prev) =>
+          prev.map((p) => {
+            const isNew = newPreviews.find((np) => np.id === p.id);
+            if (isNew) {
+              return {
+                ...p,
+                isUploading: false,
+                error: error instanceof Error ? error.message : "Ошибка загрузки",
+              };
+            }
+            return p;
+          })
+        );
+        toast.error(error instanceof Error ? error.message : "Ошибка загрузки изображений");
+      } finally {
+        setIsUploading(false);
+        // Очищаем input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    },
+    [imagePreviews.length]
+  );
+
+  // Удаление изображения
+  const removeImage = useCallback((id: string) => {
+    setImagePreviews((prev) => {
+      const toRemove = prev.find((p) => p.id === id);
+      if (toRemove?.previewUrl && toRemove.file.size > 0) {
+        // Освобождаем object URL только для локальных превью
+        URL.revokeObjectURL(toRemove.previewUrl);
+      }
+      return prev.filter((p) => p.id !== id);
+    });
+  }, []);
+
+  // Открытие диалога выбора файлов
+  const handleSelectClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  // Отправка формы
   const onSubmit = async (data: PropertyFormData) => {
+    // Проверяем, что есть хотя бы одно загруженное изображение
+    const uploadedImages = imagePreviews.filter((p) => p.uploadedUrl && !p.error);
+    if (uploadedImages.length === 0) {
+      setImagesError("Добавьте хотя бы одно изображение");
+      return;
+    }
+
+    // Проверяем, что все загрузки завершены
+    const pendingUploads = imagePreviews.filter((p) => p.isUploading);
+    if (pendingUploads.length > 0) {
+      toast.error("Дождитесь завершения загрузки всех изображений");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Convert frontend format to API format
+      // Конвертация frontend формата в API формат
       const regionMap: Record<string, "CHECHNYA" | "INGUSHETIA" | "OTHER"> = {
         Chechnya: "CHECHNYA",
         Ingushetia: "INGUSHETIA",
@@ -105,6 +235,9 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
         land: "LAND",
         commercial: "COMMERCIAL",
       };
+
+      // Собираем URL загруженных изображений
+      const imageUrls = uploadedImages.map((p) => p.uploadedUrl!);
 
       const apiData = {
         title: data.title,
@@ -136,6 +269,10 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       setIsLoading(false);
     }
   };
+
+  // Проверяем, есть ли загружающиеся изображения
+  const hasUploadingImages = imagePreviews.some((p) => p.isUploading);
+  const isSubmitDisabled = isLoading || hasUploadingImages;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -290,65 +427,157 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
 
       <Card className="border-primary/20">
         <CardHeader>
-          <CardTitle>Изображения</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Изображения</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              {imagePreviews.length} / {MAX_IMAGES_PER_PROPERTY}
+            </span>
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              type="url"
-              placeholder="URL изображения"
-              value={imageInput}
-              onChange={(e) => setImageInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addImage();
-                }
-              }}
+          {/* Dropzone / Upload Button */}
+          <div
+            onClick={handleSelectClick}
+            className={`
+              border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+              transition-colors hover:border-primary/50 hover:bg-muted/50
+              ${imagePreviews.length >= MAX_IMAGES_PER_PROPERTY ? "opacity-50 pointer-events-none" : ""}
+              ${imagesError ? "border-destructive" : "border-muted-foreground/30"}
+            `}
+          >
+            <div className="flex flex-col items-center gap-2">
+              {isUploading ? (
+                <>
+                  <Spinner className="w-10 h-10 text-primary" />
+                  <p className="text-sm text-muted-foreground">Загрузка...</p>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-10 h-10 text-muted-foreground" />
+                  <p className="text-sm font-medium">
+                    Нажмите для выбора изображений
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG или WebP. Максимум {MAX_FILE_SIZE / 1024 / 1024}MB на файл.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ALLOWED_IMAGE_TYPES.join(",")}
+              multiple
+              onChange={handleFilesSelect}
+              className="hidden"
+              disabled={imagePreviews.length >= MAX_IMAGES_PER_PROPERTY}
             />
-            <Button type="button" onClick={addImage} variant="outline">
-              Добавить
-            </Button>
           </div>
 
-          {imageUrls.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {imageUrls.map((url, index) => (
-                <div key={index} className="relative group">
+          {/* Error Message */}
+          {imagesError && (
+            <p className="text-sm text-destructive flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {imagesError}
+            </p>
+          )}
+
+          {/* Image Previews Grid */}
+          {imagePreviews.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {imagePreviews.map((preview) => (
+                <div key={preview.id} className="relative group aspect-[4/3]">
+                  {/* Image */}
                   <img
-                    src={url}
-                    alt={`Изображение ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-md"
+                    src={preview.previewUrl}
+                    alt="Превью"
+                    className={`
+                      w-full h-full object-cover rounded-lg
+                      ${preview.error ? "opacity-50" : ""}
+                    `}
                   />
+
+                  {/* Loading Overlay */}
+                  {preview.isUploading && (
+                    <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                      <Spinner className="w-8 h-8 text-white" />
+                    </div>
+                  )}
+
+                  {/* Error Overlay */}
+                  {preview.error && (
+                    <div className="absolute inset-0 bg-destructive/20 rounded-lg flex items-center justify-center">
+                      <div className="text-center p-2">
+                        <AlertCircle className="w-6 h-6 text-destructive mx-auto" />
+                        <p className="text-xs text-destructive mt-1">{preview.error}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Success Indicator */}
+                  {preview.uploadedUrl && !preview.error && !preview.isUploading && (
+                    <div className="absolute top-2 left-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* Remove Button */}
                   <Button
                     type="button"
                     variant="destructive"
-                    size="sm"
-                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100"
-                    onClick={() => removeImage(index)}
+                    size="icon"
+                    className="absolute top-2 right-2 w-7 h-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeImage(preview.id)}
+                    disabled={preview.isUploading}
                   >
-                    ×
+                    <X className="w-4 h-4" />
                   </Button>
                 </div>
               ))}
             </div>
           )}
 
-          {errors.images && (
-            <p className="text-sm text-destructive">{errors.images.message}</p>
+          {/* Empty State */}
+          {imagePreviews.length === 0 && !isUploading && (
+            <div className="text-center py-4 text-muted-foreground">
+              <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Изображения ещё не добавлены</p>
+            </div>
           )}
         </CardContent>
       </Card>
 
       <div className="flex justify-end gap-4">
-        <Button type="submit" className="btn-caucasus" disabled={isLoading}>
-          {isLoading
-            ? isEdit
-              ? "Сохранение..."
-              : "Создание..."
-            : isEdit
-            ? "Сохранить изменения"
-            : "Создать объявление"}
+        <Button type="submit" className="btn-caucasus" disabled={isSubmitDisabled}>
+          {isLoading ? (
+            <>
+              <Spinner className="w-4 h-4 mr-2" />
+              {isEdit ? "Сохранение..." : "Создание..."}
+            </>
+          ) : hasUploadingImages ? (
+            <>
+              <Spinner className="w-4 h-4 mr-2" />
+              Загрузка изображений...
+            </>
+          ) : isEdit ? (
+            "Сохранить изменения"
+          ) : (
+            "Создать объявление"
+          )}
         </Button>
       </div>
     </form>

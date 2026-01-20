@@ -81,4 +81,10 @@ export const API_ENDPOINTS = {
     deleteUser: (id: string) => `/api/admin/users/${id}`,
     deleteProperty: (id: string) => `/api/admin/properties/${id}`,
   },
+
+  // Upload
+  upload: {
+    avatar: "/api/upload/avatar",
+    images: "/api/upload/images",
+  },
 } as const;

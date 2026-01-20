@@ -217,3 +217,14 @@ export type AdminDeleteUserParams = {
 export type AdminDeletePropertyParams = {
   id: string;
 };
+
+// Upload endpoints (не в OpenAPI spec, определяем вручную)
+export type UploadAvatarResponse = {
+  avatar: string;
+};
+export type UploadImagesResponse = {
+  images: Array<{
+    url: string;
+    publicId: string;
+  }>;
+};
