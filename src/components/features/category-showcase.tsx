@@ -194,7 +194,7 @@ export function CategoryShowcase() {
 
   const categoriesWithStats = useMemo<CategoryWithCount[]>(() => {
     return CATEGORIES.map((config) => {
-      const stat = data?.data?.find(
+      const stat = data?.find(
         (s: CategoryStatEntry) => s.type.toLowerCase() === config.id.toLowerCase()
       );
       return {

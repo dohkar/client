@@ -168,11 +168,6 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className='flex items-center justify-between text-sm'>
-              <Link href={ROUTES.forgotPassword} className='text-primary hover:underline'>
-                Забыли пароль?
-              </Link>
-            </div>
 
             {error && (
               <div

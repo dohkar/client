@@ -1,5 +1,15 @@
 import { API_URL, ROUTES } from "@/constants";
+import { cookieStorage } from "@/lib/cookie-storage";
 import type { ApiError, ExtendedError, NetworkError } from "@/types";
+
+/**
+ * Стандартный формат ответа от API
+ */
+interface ApiResponse<T> {
+  status: "success" | "error";
+  data: T;
+  message?: string;
+}
 
 /**
  * Базовый класс для работы с API
@@ -37,7 +47,6 @@ class ApiClient {
 
   /**
    * Обновить access token используя refresh token
-   * Токены в httpOnly cookies, сервер управляет ими автоматически
    */
   private async refreshAccessToken(): Promise<void> {
     if (this.isRefreshing && this.refreshPromise) {
@@ -47,21 +56,30 @@ class ApiClient {
     this.isRefreshing = true;
     this.refreshPromise = (async () => {
       try {
-        const response = await fetch(`${this.baseUrl}/auth/refresh`, {
+        const currentRefreshToken = cookieStorage.getRefreshToken();
+        if (!currentRefreshToken) {
+          throw new Error("Refresh token отсутствует");
+        }
+
+        const response = await fetch(`${this.baseUrl}/api/auth/refresh`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // Отправляем httpOnly cookies автоматически
+          body: JSON.stringify({ refreshToken: currentRefreshToken }),
+          credentials: "include",
         });
 
         if (!response.ok) {
           throw new Error("Не удалось обновить токен");
         }
 
-        // Сервер обновил httpOnly cookies автоматически
-        const data = await response.json();
-        if (!data.data?.accessToken) {
+        const json = await response.json();
+        // API возвращает { status, data } - извлекаем data
+        const data = json.data || json;
+        if (data.accessToken && data.refreshToken) {
+          cookieStorage.saveTokens(data.accessToken, data.refreshToken);
+        } else {
           throw new Error("Неверный формат ответа");
         }
       } finally {
@@ -93,14 +111,24 @@ class ApiClient {
     const controller = new AbortController();
     const effectiveKey = requestKey || url;
 
-    // Отменяем предыдущий запрос с таким же ключом
-    this.cancelRequest(effectiveKey);
+    // Не отменяем критические запросы (auth) автоматически
+    const isAuthRequest = endpoint.includes("/auth/");
+    if (!isAuthRequest && requestKey) {
+      // Отменяем предыдущий запрос с таким же ключом только если явно указан requestKey
+      this.cancelRequest(effectiveKey);
+    }
     this.activeRequests.set(effectiveKey, controller);
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...(options.headers as Record<string, string>),
     };
+
+    // Добавляем Authorization header если есть токен в cookies
+    const accessToken = cookieStorage.getAccessToken();
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+    }
 
     const config: RequestInit = {
       ...options,
@@ -126,7 +154,9 @@ class ApiClient {
             throw await this.handleError(retryResponse);
           }
 
-          return await retryResponse.json();
+          const retryJson = await retryResponse.json();
+          // API возвращает { status, data } - извлекаем data
+          return retryJson.data !== undefined ? retryJson.data : retryJson;
         } catch (refreshError) {
           // Перенаправляем на login при неудачном refresh
           if (typeof window !== "undefined") {
@@ -140,8 +170,9 @@ class ApiClient {
         throw await this.handleError(response);
       }
 
-      const data = await response.json();
-      return data;
+      const json = await response.json();
+      // API возвращает { status, data } - извлекаем data
+      return json.data !== undefined ? json.data : json;
     } catch (error) {
       // Удаляем контроллер при ошибке
       this.activeRequests.delete(effectiveKey);

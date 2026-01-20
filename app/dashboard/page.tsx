@@ -27,7 +27,7 @@ export default function DashboardPage() {
     queryKey: queryKeys.properties.list({}),
     queryFn: async () => {
       const response = await propertyService.getProperties({ limit: 100 });
-      return response.data.filter((p) => p.userId === user?.id) || [];
+      return response.data?.filter((p: any) => p.userId === user?.id) || [];
     },
     enabled: !!user && isAuthenticated && isInitialized,
   });
@@ -36,7 +36,7 @@ export default function DashboardPage() {
     queryKey: queryKeys.favorites.all,
     queryFn: async () => {
       const response = await favoritesService.getFavorites();
-      return response.data || [];
+      return response || [];
     },
     enabled: isAuthenticated && isInitialized,
   });

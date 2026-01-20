@@ -22,7 +22,7 @@ import { queryKeys } from "@/lib/react-query/query-keys";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ROUTES } from "@/constants";
-import { formatDate } from "@/lib/utils/format";
+import { formatDate, formatPhone, getPhoneHref } from "@/lib/utils/format";
 
 export default function PropertyPage({
   params,
@@ -31,7 +31,7 @@ export default function PropertyPage({
 }) {
   const { id } = use(params);
   const { data, isLoading, error } = useProperty(id);
-  const property = data?.data;
+  const property = data;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { isFavorite: isLocalFavorite, toggleFavorite: toggleLocalFavorite } =
     useFavoritesStore();
@@ -41,7 +41,7 @@ export default function PropertyPage({
     queryKey: queryKeys.favorites.all,
     queryFn: async () => {
       const response = await favoritesService.getFavorites();
-      return response.data || [];
+      return response || [];
     },
     enabled: isAuthenticated,
   });
@@ -305,9 +305,12 @@ export default function PropertyPage({
                   <p className='text-foreground font-medium'>
                     {property.contact.name}
                   </p>
-                  <p className='text-muted-foreground'>
-                    {property.contact.phone}
-                  </p>
+                  <a
+                    href={getPhoneHref(property.contact.phone)}
+                    className='text-muted-foreground hover:text-primary transition-colors block'
+                  >
+                    {formatPhone(property.contact.phone, "international")}
+                  </a>
                 </div>
               </div>
             </div>

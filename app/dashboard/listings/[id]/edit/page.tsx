@@ -30,7 +30,7 @@ export default function EditPropertyPage({
     );
   }
 
-  if (error || !data?.data) {
+  if (error || !data) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-2xl font-bold mb-4">Объявление не найдено</h1>
@@ -41,7 +41,7 @@ export default function EditPropertyPage({
     );
   }
 
-  const property = data.data;
+  const property = data;
 
   // Проверка прав доступа
   if (property.userId !== user?.id) {
@@ -52,7 +52,35 @@ export default function EditPropertyPage({
 
   const handleUpdate = async (updatedProperty: typeof property) => {
     try {
-      await propertyService.updateProperty(id, updatedProperty);
+      // Convert Property to ApiPropertyUpdateRequest format
+      const regionMap: Record<string, "CHECHNYA" | "INGUSHETIA" | "OTHER"> = {
+        Chechnya: "CHECHNYA",
+        Ingushetia: "INGUSHETIA",
+        Other: "OTHER",
+      };
+      const typeMap: Record<string, "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"> = {
+        apartment: "APARTMENT",
+        house: "HOUSE",
+        land: "LAND",
+        commercial: "COMMERCIAL",
+      };
+
+      const updateData = {
+        title: updatedProperty.title,
+        price: updatedProperty.price,
+        currency: updatedProperty.currency?.toUpperCase() as "RUB" | "USD",
+        location: updatedProperty.location,
+        region: regionMap[updatedProperty.region] || "OTHER",
+        type: typeMap[updatedProperty.type] || "APARTMENT",
+        rooms: updatedProperty.rooms,
+        area: updatedProperty.area,
+        description: updatedProperty.description,
+        images: updatedProperty.images,
+        features: updatedProperty.features,
+        status: updatedProperty.status?.toUpperCase() as "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED",
+      };
+
+      await propertyService.updateProperty(id, updateData);
       toast.success("Объявление обновлено");
       router.push(`/property/${id}`);
     } catch (error) {

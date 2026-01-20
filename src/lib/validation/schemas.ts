@@ -57,18 +57,6 @@ export const registerSchema = z
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
 /**
- * Схема валидации для восстановления пароля
- */
-export const forgotPasswordSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email обязателен")
-    .email("Некорректный email адрес"),
-});
-
-export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
-
-/**
  * Схема валидации для создания объявления
  */
 export const createPropertySchema = z.object({

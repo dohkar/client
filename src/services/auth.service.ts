@@ -1,13 +1,11 @@
 import { apiClient } from "@/lib/api-client";
 import { cookieStorage } from "@/lib/cookie-storage";
 import { API_ENDPOINTS } from "@/constants/routes";
-import type { ApiResponse, User } from "@/types";
-
-export interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: User;
-}
+import type {
+  AuthLoginRequest,
+  AuthRegisterRequest,
+  UserGetMeResponse,
+} from "@/lib/api-types";
 
 /**
  * Сервис для работы с авторизацией
@@ -16,62 +14,45 @@ export const authService = {
   /**
    * Получить текущего пользователя
    */
-  async getCurrentUser(): Promise<ApiResponse<User>> {
-    return apiClient.get<ApiResponse<User>>(API_ENDPOINTS.auth.me);
+  async getCurrentUser(): Promise<UserGetMeResponse> {
+    return apiClient.get<UserGetMeResponse>(API_ENDPOINTS.auth.me);
   },
 
   /**
    * Вход в систему
    */
-  async login(credentials: { email: string; password: string }): Promise<AuthResponse> {
-    // Сервер возвращает напрямую AuthResponse, а не обернутый в ApiResponse
-    // Токены устанавливаются сервером в httpOnly cookies автоматически
-    const response = await apiClient.post<AuthResponse>(
-      API_ENDPOINTS.auth.login,
-      credentials
-    );
+  async login(credentials: AuthLoginRequest): Promise<UserGetMeResponse> {
+    const response = await apiClient.post<{
+      accessToken: string;
+      refreshToken: string;
+      user: UserGetMeResponse;
+    }>("/api/auth/login/phone-password", credentials);
 
-    // Проверяем, что ответ содержит необходимые поля
-    if (response && response.user) {
-      // Токены уже установлены сервером в httpOnly cookies
-      // Не нужно сохранять их на клиенте
-      return response;
-    }
+    // Сохраняем токены в cookies
+    cookieStorage.saveTokens(response.accessToken, response.refreshToken);
 
-    throw new Error("Ошибка входа: неверный формат ответа");
+    return response.user;
   },
 
   /**
    * Регистрация
    */
-  async register(data: {
-    name: string;
-    email: string;
-    password: string;
-    phone?: string;
-  }): Promise<AuthResponse> {
+  async register(data: AuthRegisterRequest): Promise<UserGetMeResponse> {
     try {
-      // Сервер возвращает напрямую AuthResponse, а не обернутый в ApiResponse
-      // Токены устанавливаются сервером в httpOnly cookies автоматически
-      const response = await apiClient.post<AuthResponse>(
-        API_ENDPOINTS.auth.register,
-        data
-      );
+      const response = await apiClient.post<{
+        accessToken: string;
+        refreshToken: string;
+        user: UserGetMeResponse;
+      }>("/api/auth/register/phone-password", data);
 
-      // Проверяем, что ответ содержит необходимые поля
-      if (response && response.user) {
-        // Токены уже установлены сервером в httpOnly cookies
-        // Не нужно сохранять их на клиенте
-        return response;
-      }
+      // Сохраняем токены в cookies
+      cookieStorage.saveTokens(response.accessToken, response.refreshToken);
 
-      throw new Error("Ошибка регистрации: неверный формат ответа");
+      return response.user;
     } catch (error) {
-      // Если это уже Error с сообщением, пробрасываем его
       if (error instanceof Error) {
         throw error;
       }
-      // Если это объект ошибки от API
       if (error && typeof error === "object" && "message" in error) {
         throw new Error((error as { message: string }).message);
       }
@@ -82,70 +63,27 @@ export const authService = {
   /**
    * Обновление токена
    */
-  async refreshToken(): Promise<{ accessToken: string; refreshToken: string }> {
-    const refreshToken = cookieStorage.getRefreshToken();
-    if (!refreshToken) {
-      throw new Error("Refresh token не найден");
-    }
-
-    const response = await apiClient.post<
-      ApiResponse<{ accessToken: string; refreshToken: string }>
-    >(API_ENDPOINTS.auth.refresh, { refreshToken });
-
-    if (response.status === "success" && response.data) {
-      cookieStorage.saveTokens(response.data.accessToken, response.data.refreshToken);
-      return response.data;
-    }
-
-    throw new Error(response.message || "Ошибка обновления токена");
+  async refreshToken(): Promise<void> {
+    // No need to get refreshToken from client-side cookieStorage
+    // The backend is expected to read httpOnly cookies automatically
+    await apiClient.post<void>("/api/auth/refresh");
+    // After refresh, verify user status
+    await this.getCurrentUser();
   },
 
   /**
    * Выход из системы
    */
-  async logout(): Promise<ApiResponse<void>> {
+  async logout(): Promise<void> {
     try {
-      await apiClient.post<ApiResponse<void>>(API_ENDPOINTS.auth.logout);
+      await apiClient.post<void>(API_ENDPOINTS.auth.logout);
     } finally {
-      // Очищаем токены в любом случае
       cookieStorage.clearTokens();
     }
-
-    return {
-      data: undefined,
-      status: "success",
-      message: "Выход выполнен",
-    };
   },
 
-  /**
-   * Восстановление пароля
-   */
-  async forgotPassword(email: string): Promise<ApiResponse<void>> {
-    return apiClient.post<ApiResponse<void>>(API_ENDPOINTS.auth.forgotPassword, {
-      email,
-    });
-  },
-
-  /**
-   * Сброс пароля
-   */
-  async resetPassword(data: {
-    token: string;
-    newPassword: string;
-  }): Promise<ApiResponse<void>> {
-    return apiClient.post<ApiResponse<void>>(API_ENDPOINTS.auth.resetPassword, data);
-  },
-
-  /**
-   * Изменение пароля
-   */
-  async changePassword(data: {
-    currentPassword: string;
-    newPassword: string;
-  }): Promise<ApiResponse<void>> {
-    return apiClient.post<ApiResponse<void>>(API_ENDPOINTS.auth.changePassword, data);
-  },
+  // Примечание: Методы forgotPassword, resetPassword, changePassword
+  // не представлены в текущей OpenAPI спецификации
 
   /**
    * Получить OAuth URL

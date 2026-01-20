@@ -1,120 +1,100 @@
 import { apiClient } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/constants/routes";
-import type { ApiResponse, PaginatedResponse } from "@/types";
+import type { PaginatedResponse } from "@/types"; // Keep for frontend pagination structure
+import type {
+  AdminStatisticsResponse,
+  AdminUsersParams,
+  AdminPropertiesParams,
+  AdminUpdateUserRoleParams,
+  AdminUpdateUserRoleRequest,
+  AdminUpdatePropertyStatusParams,
+  AdminUpdatePropertyStatusRequest,
+  AdminDeleteUserParams,
+  AdminDeletePropertyParams,
+  UserResponseDto, // For AdminUser
+  PropertyResponseDto, // For AdminProperty
+  OperationResponse,
+} from "@/lib/api-types";
 
-export interface AdminStatistics {
-  overview: {
-    totalUsers: number;
-    totalProperties: number;
-    activeProperties: number;
-    pendingProperties: number;
-    totalViews: number;
-    premiumUsers: number;
-    newUsersLast30Days: number;
-    newPropertiesLast30Days: number;
-  };
-  propertiesByType: Array<{ type: string; count: number }>;
-  propertiesByRegion: Array<{ region: string; count: number }>;
-  dailyStats: Array<{ date: string; count: number }>;
-}
-
-export interface AdminUser {
-  id: string;
-  email: string;
-  name: string;
-  phone: string | null;
-  avatar: string | null;
-  isPremium: boolean;
-  role: string;
-  createdAt: string;
-  propertiesCount: number;
-}
-
-export interface AdminProperty {
-  id: string;
-  title: string;
-  price: number;
-  currency: string;
-  location: string;
-  region: string;
-  type: string;
-  status: string;
-  views: number;
-  createdAt: string;
-  updatedAt: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
-}
+// Assuming AdminUser and AdminProperty are mapped from UserResponseDto and PropertyResponseDto
+export type AdminUser = UserResponseDto;
+export type AdminProperty = PropertyResponseDto;
+export type AdminStatistics = AdminStatisticsResponse; // Direct usage
 
 export const adminService = {
-  async getStatistics(): Promise<ApiResponse<AdminStatistics>> {
-    return apiClient.get<ApiResponse<AdminStatistics>>(API_ENDPOINTS.admin.statistics);
+  async getStatistics(): Promise<AdminStatistics> {
+    // OpenAPI spec has content?: never, but API returns AdminStatistics
+    return apiClient.get<any>(API_ENDPOINTS.admin.statistics) as Promise<AdminStatistics>;
   },
 
-  async getUsers(params?: {
-    page?: number;
-    limit?: number;
-    search?: string;
-  }): Promise<ApiResponse<PaginatedResponse<AdminUser>>> {
+  async getUsers(
+    params?: AdminUsersParams
+  ): Promise<PaginatedResponse<AdminUser>> {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
-    if (params?.search) queryParams.append("search", params.search);
-
     const queryString = queryParams.toString();
     const endpoint = queryString
       ? `${API_ENDPOINTS.admin.users}?${queryString}`
       : API_ENDPOINTS.admin.users;
 
-    return apiClient.get<ApiResponse<PaginatedResponse<AdminUser>>>(endpoint);
+    const response = await apiClient.get<PaginatedResponse<AdminUser>>(endpoint);
+    return response;
   },
 
-  async getProperties(params?: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    status?: string;
-    type?: string;
-  }): Promise<ApiResponse<PaginatedResponse<AdminProperty>>> {
+  async getProperties(
+    params?: AdminPropertiesParams
+  ): Promise<PaginatedResponse<AdminProperty>> {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.search) queryParams.append("search", params.search);
     if (params?.status) queryParams.append("status", params.status);
     if (params?.type) queryParams.append("type", params.type);
-
     const queryString = queryParams.toString();
     const endpoint = queryString
       ? `${API_ENDPOINTS.admin.properties}?${queryString}`
       : API_ENDPOINTS.admin.properties;
 
-    return apiClient.get<ApiResponse<PaginatedResponse<AdminProperty>>>(endpoint);
+    const response = await apiClient.get<PaginatedResponse<AdminProperty>>(endpoint);
+    return response;
   },
 
-  async updateUserRole(userId: string, role: string): Promise<ApiResponse<AdminUser>> {
-    return apiClient.patch<ApiResponse<AdminUser>>(API_ENDPOINTS.admin.updateUserRole(userId), {
-      role,
-    });
+  async updateUserRole(
+    userId: string,
+    role: AdminUpdateUserRoleRequest["role"] // Use specific type
+  ): Promise<AdminUser> {
+    const params: AdminUpdateUserRoleParams = { id: userId };
+    const data: AdminUpdateUserRoleRequest = { role };
+    return apiClient.patch<AdminUser>(
+      API_ENDPOINTS.admin.updateUserRole(params.id),
+      data
+    );
   },
 
   async updatePropertyStatus(
     propertyId: string,
-    status: string
-  ): Promise<ApiResponse<AdminProperty>> {
-    return apiClient.patch<ApiResponse<AdminProperty>>(
-      API_ENDPOINTS.admin.updatePropertyStatus(propertyId),
-      { status }
+    status: AdminUpdatePropertyStatusRequest["status"] // Use specific type
+  ): Promise<AdminProperty> {
+    const params: AdminUpdatePropertyStatusParams = { id: propertyId };
+    const data: AdminUpdatePropertyStatusRequest = { status };
+    return apiClient.patch<AdminProperty>(
+      API_ENDPOINTS.admin.updatePropertyStatus(params.id),
+      data
     );
   },
 
-  async deleteUser(userId: string): Promise<ApiResponse<void>> {
-    return apiClient.delete<ApiResponse<void>>(API_ENDPOINTS.admin.deleteUser(userId));
+  async deleteUser(userId: string): Promise<void> {
+    const params: AdminDeleteUserParams = { id: userId };
+    await apiClient.delete<OperationResponse<"AdminController_deleteUser", 200>>(
+      API_ENDPOINTS.admin.deleteUser(params.id)
+    );
   },
 
-  async deleteProperty(propertyId: string): Promise<ApiResponse<void>> {
-    return apiClient.delete<ApiResponse<void>>(API_ENDPOINTS.admin.deleteProperty(propertyId));
+  async deleteProperty(propertyId: string): Promise<void> {
+    const params: AdminDeletePropertyParams = { id: propertyId };
+    await apiClient.delete<OperationResponse<"AdminController_deleteProperty", 200>>(
+      API_ENDPOINTS.admin.deleteProperty(params.id)
+    );
   },
 };

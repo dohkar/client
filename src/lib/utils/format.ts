@@ -162,3 +162,259 @@ export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + "...";
 }
+
+// ============================================
+// Утилиты для работы с телефонными номерами
+// ============================================
+
+/**
+ * Очищает номер телефона от всех символов кроме цифр и +
+ * @param phone - номер телефона
+ * @returns очищенный номер
+ */
+export function cleanPhone(phone: string | null | undefined): string {
+  if (!phone) return "";
+  return phone.replace(/[^\d+]/g, "");
+}
+
+/**
+ * Нормализует номер телефона к формату E.164 (+7XXXXXXXXXX)
+ * Поддерживает российские номера в различных форматах
+ * @param phone - номер телефона в любом формате
+ * @returns нормализованный номер или пустая строка
+ */
+export function normalizePhone(phone: string | null | undefined): string {
+  if (!phone) return "";
+  
+  // Убираем все кроме цифр
+  const digits = phone.replace(/\D/g, "");
+  
+  if (digits.length === 0) return "";
+  
+  // Российские номера
+  if (digits.length === 11) {
+    // 8XXXXXXXXXX или 7XXXXXXXXXX
+    if (digits.startsWith("8") || digits.startsWith("7")) {
+      return "+7" + digits.slice(1);
+    }
+  } else if (digits.length === 10) {
+    // 9XXXXXXXXXX (без кода страны)
+    return "+7" + digits;
+  } else if (digits.length === 12 && digits.startsWith("7")) {
+    // 7XXXXXXXXXXX (иногда встречается)
+    return "+" + digits.slice(0, 11);
+  }
+  
+  // Если номер уже начинается с +, возвращаем как есть
+  if (phone.startsWith("+")) {
+    return "+" + digits;
+  }
+  
+  // Для других форматов возвращаем как есть с +
+  return digits.length >= 10 ? "+" + digits : "";
+}
+
+/**
+ * Форматы отображения телефона
+ */
+export type PhoneFormat = 
+  | "international"  // +7 (999) 123-45-67
+  | "national"       // 8 (999) 123-45-67
+  | "compact"        // +7 999 123-45-67
+  | "digits"         // +79991234567
+  | "masked"         // +7 (999) ***-**-67
+  | "short";         // ***-45-67
+
+/**
+ * Форматирует номер телефона для отображения
+ * @param phone - номер телефона
+ * @param format - формат отображения
+ * @returns отформатированный номер
+ */
+export function formatPhone(
+  phone: string | null | undefined,
+  format: PhoneFormat = "international"
+): string {
+  if (!phone) return "Не указан";
+  
+  const normalized = normalizePhone(phone);
+  if (!normalized) return phone; // Возвращаем исходный если не удалось нормализовать
+  
+  // Извлекаем цифры без +
+  const digits = normalized.replace(/\D/g, "");
+  
+  // Для российских номеров (11 цифр начиная с 7)
+  if (digits.length === 11 && digits.startsWith("7")) {
+    const country = digits.slice(0, 1);   // 7
+    const code = digits.slice(1, 4);      // 999
+    const part1 = digits.slice(4, 7);     // 123
+    const part2 = digits.slice(7, 9);     // 45
+    const part3 = digits.slice(9, 11);    // 67
+    
+    switch (format) {
+      case "international":
+        return `+${country} (${code}) ${part1}-${part2}-${part3}`;
+      case "national":
+        return `8 (${code}) ${part1}-${part2}-${part3}`;
+      case "compact":
+        return `+${country} ${code} ${part1}-${part2}-${part3}`;
+      case "digits":
+        return normalized;
+      case "masked":
+        return `+${country} (${code}) ***-**-${part3}`;
+      case "short":
+        return `***-${part2}-${part3}`;
+      default:
+        return `+${country} (${code}) ${part1}-${part2}-${part3}`;
+    }
+  }
+  
+  // Для других номеров - базовое форматирование
+  if (digits.length >= 10) {
+    const last4 = digits.slice(-4);
+    const last2First = last4.slice(0, 2);
+    const last2Second = last4.slice(2, 4);
+    
+    if (format === "masked") {
+      return `+${digits.slice(0, -4).replace(/./g, "*")}${last2First}-${last2Second}`;
+    }
+    if (format === "short") {
+      return `***-${last2First}-${last2Second}`;
+    }
+  }
+  
+  return normalized;
+}
+
+/**
+ * Проверяет, является ли строка валидным российским номером телефона
+ * @param phone - номер телефона
+ * @returns true если номер валиден
+ */
+export function isValidRussianPhone(phone: string | null | undefined): boolean {
+  if (!phone) return false;
+  
+  const normalized = normalizePhone(phone);
+  if (!normalized) return false;
+  
+  const digits = normalized.replace(/\D/g, "");
+  
+  // Российский номер: 11 цифр, начинается с 7, код оператора 9XX
+  if (digits.length === 11 && digits.startsWith("7")) {
+    const operatorCode = digits.slice(1, 2);
+    // Мобильные номера начинаются с 9
+    // Но есть и стационарные с другими кодами
+    return operatorCode === "9" || /^[3-8]/.test(operatorCode);
+  }
+  
+  return false;
+}
+
+/**
+ * Возвращает href для телефонной ссылки
+ * @param phone - номер телефона
+ * @returns tel: ссылка
+ */
+export function getPhoneHref(phone: string | null | undefined): string {
+  const normalized = normalizePhone(phone);
+  return normalized ? `tel:${normalized}` : "#";
+}
+
+/**
+ * Возвращает href для WhatsApp
+ * @param phone - номер телефона
+ * @param message - опциональное сообщение
+ * @returns wa.me ссылка
+ */
+export function getWhatsAppHref(
+  phone: string | null | undefined,
+  message?: string
+): string {
+  const normalized = normalizePhone(phone);
+  if (!normalized) return "#";
+  
+  // WhatsApp требует номер без +
+  const digits = normalized.replace(/\D/g, "");
+  const baseUrl = `https://wa.me/${digits}`;
+  
+  if (message) {
+    return `${baseUrl}?text=${encodeURIComponent(message)}`;
+  }
+  
+  return baseUrl;
+}
+
+/**
+ * Маскирует номер телефона для приватности
+ * @param phone - номер телефона
+ * @param showLast - сколько последних цифр показать (по умолчанию 4)
+ * @returns замаскированный номер
+ */
+export function maskPhone(
+  phone: string | null | undefined,
+  showLast: number = 4
+): string {
+  if (!phone) return "Не указан";
+  
+  const normalized = normalizePhone(phone);
+  if (!normalized) return phone;
+  
+  const digits = normalized.replace(/\D/g, "");
+  
+  if (digits.length <= showLast) return normalized;
+  
+  const visible = digits.slice(-showLast);
+  const masked = "*".repeat(digits.length - showLast);
+  
+  // Форматируем красиво
+  if (digits.length === 11 && digits.startsWith("7")) {
+    return `+7 (***) ***-${visible.slice(0, 2)}-${visible.slice(2, 4)}`;
+  }
+  
+  return `+${masked}${visible}`;
+}
+
+/**
+ * Форматирует ввод телефона в реальном времени (для input)
+ * @param value - текущее значение
+ * @param previousValue - предыдущее значение (для определения направления)
+ * @returns отформатированное значение
+ */
+export function formatPhoneInput(value: string, previousValue?: string): string {
+  // Убираем все кроме цифр и +
+  let digits = value.replace(/[^\d+]/g, "");
+  
+  // Если начинается с 8, заменяем на +7
+  if (digits.startsWith("8") && digits.length > 1) {
+    digits = "+7" + digits.slice(1);
+  }
+  
+  // Если начинается просто с 7 или 9, добавляем +7
+  if (/^[79]/.test(digits) && !digits.startsWith("+")) {
+    if (digits.startsWith("9")) {
+      digits = "+7" + digits;
+    } else if (digits.startsWith("7")) {
+      digits = "+" + digits;
+    }
+  }
+  
+  // Убираем + из середины
+  const hasPlus = digits.startsWith("+");
+  digits = digits.replace(/\+/g, "");
+  if (hasPlus) digits = "+" + digits;
+  
+  // Ограничиваем длину
+  if (digits.replace(/\D/g, "").length > 11) {
+    digits = digits.slice(0, digits.startsWith("+") ? 12 : 11);
+  }
+  
+  // Форматируем по мере ввода
+  const nums = digits.replace(/\D/g, "");
+  
+  if (nums.length === 0) return "";
+  if (nums.length <= 1) return `+${nums}`;
+  if (nums.length <= 4) return `+${nums.slice(0, 1)} (${nums.slice(1)}`;
+  if (nums.length <= 7) return `+${nums.slice(0, 1)} (${nums.slice(1, 4)}) ${nums.slice(4)}`;
+  if (nums.length <= 9) return `+${nums.slice(0, 1)} (${nums.slice(1, 4)}) ${nums.slice(4, 7)}-${nums.slice(7)}`;
+  return `+${nums.slice(0, 1)} (${nums.slice(1, 4)}) ${nums.slice(4, 7)}-${nums.slice(7, 9)}-${nums.slice(9, 11)}`;
+}

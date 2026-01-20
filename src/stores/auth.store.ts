@@ -2,7 +2,22 @@ import { create } from "zustand";
 import { authService } from "@/services/auth.service";
 import { cookieStorage } from "@/lib/cookie-storage";
 import type { User } from "@/types";
+import type { UserResponseDto } from "@/lib/api-types";
 import { persist } from "zustand/middleware";
+
+// Function to map UserResponseDto to User
+function mapUserResponseToUser(userResponse: UserResponseDto): User {
+  return {
+    id: userResponse.id,
+    name: userResponse.name,
+    email: userResponse.email,
+    phone: userResponse.phone,
+    avatar: userResponse.avatar,
+    isPremium: userResponse.isPremium,
+    role: userResponse.role as User["role"],
+    createdAt: userResponse.createdAt,
+  };
+}
 
 interface AuthState {
   user: User | null;
@@ -12,13 +27,11 @@ interface AuthState {
   isInitialized: boolean;
 
   // Actions
-  login: (email: string, password: string) => Promise<void>;
+  login: (phone: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   register: (data: {
-    name: string;
-    email: string;
+    phone: string;
     password: string;
-    phone?: string;
   }) => Promise<void>;
   setUser: (user: User | null) => void;
   setLoading: (isLoading: boolean) => void;
@@ -37,12 +50,13 @@ export const useAuthStore = create<AuthState>()(
       error: null,
       isInitialized: false,
 
-      login: async (email: string, password: string) => {
+      login: async (phone: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await authService.login({ email, password });
+          const userResponse = await authService.login({ phone, password });
+          const user = mapUserResponseToUser(userResponse);
           set({
-            user: response.user,
+            user,
             isAuthenticated: true,
             isLoading: false,
             error: null,
@@ -60,9 +74,10 @@ export const useAuthStore = create<AuthState>()(
       register: async (data) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await authService.register(data);
+          const userResponse = await authService.register(data);
+          const user = mapUserResponseToUser(userResponse);
           set({
-            user: response.user,
+            user,
             isAuthenticated: true,
             isLoading: false,
             error: null, // Clear error on success
@@ -98,20 +113,18 @@ export const useAuthStore = create<AuthState>()(
       checkAuth: async () => {
         set({ isLoading: true });
 
-        // Не можем проверить httpOnly cookies на клиенте
-        // Просто пытаемся получить пользователя - если токен есть, сервер вернет данные
         try {
-          const response = await authService.getCurrentUser();
-          if (response && response.status === "success" && response.data) {
+          const userResponse = await authService.getCurrentUser();
+          if (userResponse) {
+            const user = mapUserResponseToUser(userResponse);
             set({
-              user: response.data,
+              user,
               isAuthenticated: true,
               isInitialized: true,
               isLoading: false,
               error: null,
             });
           } else {
-            // Неожиданный формат ответа - пользователь не авторизован
             set({
               user: null,
               isAuthenticated: false,
@@ -120,7 +133,6 @@ export const useAuthStore = create<AuthState>()(
             });
           }
         } catch (error: unknown) {
-          // Токен невалиден или отсутствует - пользователь не авторизован
           set({
             user: null,
             isAuthenticated: false,

@@ -47,7 +47,7 @@ import {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 export default function AdminPage() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, isInitialized } = useAuthStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<
     "overview" | "users" | "properties"
@@ -59,36 +59,29 @@ export default function AdminPage() {
   const [propertiesStatus, setPropertiesStatus] = useState<string>("all");
   const [propertiesType, setPropertiesType] = useState<string>("all");
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      redirect("/auth/login");
-    } else if (user?.role !== "admin") {
-      redirect("/dashboard");
-    }
-  }, [isAuthenticated, user]);
+  // Проверка роли админа (без учёта регистра)
+  const isAdmin = user?.role?.toUpperCase() === "ADMIN";
 
   // Statistics
   const { data: statistics, isLoading: statsLoading } = useQuery({
     queryKey: ["admin", "statistics"],
     queryFn: async () => {
-      const response = await adminService.getStatistics();
-      return response.data;
+      return adminService.getStatistics();
     },
-    enabled: isAuthenticated && user?.role === "admin",
+    enabled: isInitialized && isAuthenticated && isAdmin,
   });
 
   // Users
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ["admin", "users", usersPage, usersSearch],
     queryFn: async () => {
-      const response = await adminService.getUsers({
+      return adminService.getUsers({
         page: usersPage,
         limit: 10,
         search: usersSearch || undefined,
       });
-      return response.data;
     },
-    enabled: activeTab === "users" && isAuthenticated && user?.role === "admin",
+    enabled: activeTab === "users" && isInitialized && isAuthenticated && isAdmin,
   });
 
   // Properties
@@ -102,22 +95,20 @@ export default function AdminPage() {
       propertiesType,
     ],
     queryFn: async () => {
-      const response = await adminService.getProperties({
+      return adminService.getProperties({
         page: propertiesPage,
         limit: 10,
         search: propertiesSearch || undefined,
-        status: propertiesStatus !== "all" ? propertiesStatus : undefined,
-        type: propertiesType !== "all" ? propertiesType : undefined,
+        status: propertiesStatus !== "all" ? (propertiesStatus as "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED") : undefined,
+        type: propertiesType !== "all" ? (propertiesType as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL") : undefined,
       });
-      return response.data;
     },
-    enabled:
-      activeTab === "properties" && isAuthenticated && user?.role === "admin",
+    enabled: activeTab === "properties" && isInitialized && isAuthenticated && isAdmin,
   });
 
   // Mutations
   const updateUserRoleMutation = useMutation({
-    mutationFn: ({ userId, role }: { userId: string; role: string }) =>
+    mutationFn: ({ userId, role }: { userId: string; role: "USER" | "PREMIUM" | "ADMIN" }) =>
       adminService.updateUserRole(userId, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
@@ -135,7 +126,7 @@ export default function AdminPage() {
       status,
     }: {
       propertyId: string;
-      status: string;
+      status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
     }) => adminService.updatePropertyStatus(propertyId, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "properties"] });
@@ -171,7 +162,31 @@ export default function AdminPage() {
     },
   });
 
-  if (!isAuthenticated || user?.role !== "admin") {
+  useEffect(() => {
+    // Ждём инициализации store перед редиректом
+    if (!isInitialized) return;
+    
+    if (!isAuthenticated) {
+      redirect("/auth/login");
+    } else if (!isAdmin) {
+      redirect("/dashboard");
+    }
+  }, [isAuthenticated, isAdmin, isInitialized]);
+
+  // Показываем загрузку пока store не инициализирован
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
+          <p className="text-sm text-muted-foreground">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Не рендерим контент если не админ (редирект произойдёт)
+  if (!isAuthenticated || !isAdmin) {
     return null;
   }
 
@@ -305,7 +320,7 @@ export default function AdminPage() {
                             fill='#8884d8'
                             dataKey='count'
                           >
-                            {statistics.propertiesByType.map((entry, index) => (
+                            {statistics?.propertiesByType?.map((entry: { type: string; count: number }, index: number) => (
                               <Cell
                                 key={`cell-${index}`}
                                 fill={COLORS[index % COLORS.length]}
@@ -416,7 +431,7 @@ export default function AdminPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {usersData.data.map((user) => (
+                          {usersData?.data?.map((user) => (
                             <tr
                               key={user.id}
                               className='border-b hover:bg-muted/50'
@@ -429,7 +444,7 @@ export default function AdminPage() {
                                   onValueChange={(value) =>
                                     updateUserRoleMutation.mutate({
                                       userId: user.id,
-                                      role: value,
+                                      role: value as "USER" | "PREMIUM" | "ADMIN",
                                     })
                                   }
                                 >
@@ -446,7 +461,8 @@ export default function AdminPage() {
                                 </Select>
                               </td>
                               <td className='p-2 text-sm'>
-                                {user.propertiesCount}
+                                {/* propertiesCount not in UserResponseDto */}
+                                -
                               </td>
                               <td className='p-2 text-sm'>
                                 {formatDate(user.createdAt, "ru-RU", { relative: true })}
@@ -475,7 +491,7 @@ export default function AdminPage() {
                         </tbody>
                       </table>
                     </div>
-                    {usersData.totalPages > 1 && (
+                    {usersData?.totalPages && usersData.totalPages > 1 && (
                       <div className='mt-4'>
                         <Pagination>
                           <PaginationContent>
@@ -492,7 +508,7 @@ export default function AdminPage() {
                               />
                             </PaginationItem>
                             {Array.from(
-                              { length: usersData.totalPages },
+                              { length: usersData?.totalPages || 0 },
                               (_, i) => i + 1
                             ).map((page) => (
                               <PaginationItem key={page}>
@@ -509,11 +525,11 @@ export default function AdminPage() {
                               <PaginationNext
                                 onClick={() =>
                                   setUsersPage((p) =>
-                                    Math.min(usersData.totalPages, p + 1)
+                                    Math.min(usersData?.totalPages || 1, p + 1)
                                   )
                                 }
                                 className={
-                                  usersPage === usersData.totalPages
+                                  usersPage === (usersData?.totalPages || 1)
                                     ? "pointer-events-none opacity-50"
                                     : "cursor-pointer"
                                 }
@@ -616,7 +632,7 @@ export default function AdminPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {propertiesData.data.map((property) => (
+                          {propertiesData?.data?.map((property) => (
                             <tr
                               key={property.id}
                               className='border-b hover:bg-muted/50'
@@ -637,7 +653,7 @@ export default function AdminPage() {
                                   onValueChange={(value) =>
                                     updatePropertyStatusMutation.mutate({
                                       propertyId: property.id,
-                                      status: value,
+                                      status: value as "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED",
                                     })
                                   }
                                 >
@@ -662,7 +678,8 @@ export default function AdminPage() {
                               </td>
                               <td className='p-2 text-sm'>{property.views}</td>
                               <td className='p-2 text-sm'>
-                                {property.user.name}
+                                {/* PropertyResponseDto doesn't have user field, only userId */}
+                                {property.userId}
                               </td>
                               <td className='p-2'>
                                 <Button
@@ -690,7 +707,7 @@ export default function AdminPage() {
                         </tbody>
                       </table>
                     </div>
-                    {propertiesData.totalPages > 1 && (
+                    {propertiesData?.totalPages && propertiesData.totalPages > 1 && (
                       <div className='mt-4'>
                         <Pagination>
                           <PaginationContent>
@@ -707,7 +724,7 @@ export default function AdminPage() {
                               />
                             </PaginationItem>
                             {Array.from(
-                              { length: propertiesData.totalPages },
+                              { length: propertiesData?.totalPages || 0 },
                               (_, i) => i + 1
                             ).map((page) => (
                               <PaginationItem key={page}>
@@ -724,11 +741,11 @@ export default function AdminPage() {
                               <PaginationNext
                                 onClick={() =>
                                   setPropertiesPage((p) =>
-                                    Math.min(propertiesData.totalPages, p + 1)
+                                    Math.min(propertiesData?.totalPages || 1, p + 1)
                                   )
                                 }
                                 className={
-                                  propertiesPage === propertiesData.totalPages
+                                  propertiesPage === (propertiesData?.totalPages || 1)
                                     ? "pointer-events-none opacity-50"
                                     : "cursor-pointer"
                                 }

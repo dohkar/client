@@ -1,17 +1,14 @@
 import { apiClient } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/constants/routes";
-import type { ApiResponse } from "@/types";
-import type { Property } from "@/types/property";
 import { adaptProperty } from "@/lib/property-adapter";
-import type { PropertyBackend } from "@/types/property";
-
-export interface Favorite {
-  id: string;
-  userId: string;
-  propertyId: string;
-  createdAt: string;
-  property: PropertyBackend;
-}
+import type { Property } from "@/types/property";
+import type {
+  FavoritesListResponse,
+  FavoritesAddParams,
+  FavoritesRemoveParams,
+  OperationResponse,
+} from "@/lib/api-types";
+import type { PropertyBackend } from "@/types/property"; // Keep for adapter input
 
 /**
  * Сервис для работы с избранным
@@ -20,29 +17,18 @@ export const favoritesService = {
   /**
    * Получить список избранного
    */
-  async getFavorites(): Promise<ApiResponse<Property[]>> {
-    const response = await apiClient.get<ApiResponse<Favorite[]>>(
+  async getFavorites(): Promise<Property[]> {
+    const response = await apiClient.get<FavoritesListResponse>(
       API_ENDPOINTS.favorites.list
     );
-
-    if (response.status === "success" && response.data) {
-      return {
-        ...response,
-        data: response.data.map((fav) => adaptProperty(fav.property)),
-      };
-    }
-
-    return {
-      ...response,
-      data: [],
-    };
+    return response.map((fav) => adaptProperty(fav.property));
   },
 
   /**
    * Добавить в избранное
    */
-  async addFavorite(propertyId: string): Promise<ApiResponse<void>> {
-    return apiClient.post<ApiResponse<void>>(
+  async addFavorite(propertyId: string): Promise<void> {
+    await apiClient.post<OperationResponse<"FavoritesController_add", 201>>(
       API_ENDPOINTS.favorites.add(propertyId)
     );
   },
@@ -50,8 +36,8 @@ export const favoritesService = {
   /**
    * Удалить из избранного
    */
-  async removeFavorite(propertyId: string): Promise<ApiResponse<void>> {
-    return apiClient.delete<ApiResponse<void>>(
+  async removeFavorite(propertyId: string): Promise<void> {
+    await apiClient.delete<OperationResponse<"FavoritesController_remove", 200>>(
       API_ENDPOINTS.favorites.remove(propertyId)
     );
   },

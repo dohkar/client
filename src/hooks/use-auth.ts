@@ -2,8 +2,23 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { authService } from "@/services/auth.service";
 import type { User } from "@/types";
+import type { UserResponseDto } from "@/lib/api-types";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores";
+
+// Function to map UserResponseDto to User
+function mapUserResponseToUser(userResponse: UserResponseDto): User {
+  return {
+    id: userResponse.id,
+    name: userResponse.name,
+    email: userResponse.email,
+    phone: userResponse.phone,
+    avatar: userResponse.avatar,
+    isPremium: userResponse.isPremium,
+    role: userResponse.role as User["role"],
+    createdAt: userResponse.createdAt,
+  };
+}
 
 /**
  * Хук для получения текущего пользователя
@@ -14,8 +29,8 @@ export function useCurrentUser() {
   return useQuery<User>({
     queryKey: queryKeys.auth.user(),
     queryFn: async () => {
-      const response = await authService.getCurrentUser();
-      return response.data;
+      const userResponse = await authService.getCurrentUser();
+      return mapUserResponseToUser(userResponse);
     },
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -31,14 +46,12 @@ export function useLogin() {
   const { setUser } = useAuthStore();
 
   return useMutation({
-    mutationFn: (credentials: { email: string; password: string }) =>
+    mutationFn: (credentials: { phone: string; password: string }) =>
       authService.login(credentials),
-    onSuccess: (data) => {
-      // Устанавливаем пользователя и помечаем как авторизованного
-      setUser(data.user);
-      queryClient.setQueryData(queryKeys.auth.user(), data.user);
-
-      // Обновляем флаг инициализации
+    onSuccess: (userResponse) => {
+      const user = mapUserResponseToUser(userResponse);
+      setUser(user);
+      queryClient.setQueryData(queryKeys.auth.user(), user);
       useAuthStore.setState({ isInitialized: true });
     },
     onError: (error: Error) => {
@@ -55,20 +68,13 @@ export function useRegister() {
   const { setUser } = useAuthStore();
 
   return useMutation({
-    mutationFn: (data: {
-      name: string;
-      email: string;
-      password: string;
-      phone?: string;
-    }) => authService.register(data),
-    onSuccess: (response) => {
-      // Устанавливаем пользователя и помечаем как авторизованного
-      setUser(response.user);
-      queryClient.setQueryData(queryKeys.auth.user(), response.user);
-
-      // Обновляем флаг инициализации
+    mutationFn: (data: { phone: string; password: string }) =>
+      authService.register(data),
+    onSuccess: (userResponse) => {
+      const user = mapUserResponseToUser(userResponse);
+      setUser(user);
+      queryClient.setQueryData(queryKeys.auth.user(), user);
       useAuthStore.setState({ isInitialized: true });
-
       toast.success("Регистрация успешна");
     },
     onError: (error: Error) => {
@@ -100,14 +106,4 @@ export function useLogout() {
 /**
  * Хук для восстановления пароля
  */
-export function useForgotPassword() {
-  return useMutation({
-    mutationFn: (email: string) => authService.forgotPassword(email),
-    onSuccess: () => {
-      toast.success("Инструкции отправлены на email");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Ошибка восстановления пароля");
-    },
-  });
-}
+// Примечание: Метод forgotPassword не представлен в текущей OpenAPI спецификации

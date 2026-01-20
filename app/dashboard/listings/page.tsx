@@ -13,6 +13,7 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils/format";
 import { formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
+import type { Property } from "@/types/property";
 
 export default function ListingsPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function ListingsPage() {
     queryKey: queryKeys.properties.list({}),
     queryFn: async () => {
       const response = await propertyService.getProperties({ limit: 100 });
-      return response.data.filter((p) => p.userId === user?.id) || [];
+      return response.data?.filter((p: any) => p.userId === user?.id) || [];
     },
     enabled: !!user,
   });
@@ -78,7 +79,7 @@ export default function ListingsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {data.map((property) => (
+          {data.map((property: Property) => (
             <Card key={property.id} className="border-primary/20 hover:shadow-xl transition-all hover:-translate-y-1">
               <CardContent className="p-0">
                 <div className="relative group">

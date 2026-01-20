@@ -8,7 +8,6 @@ export const ROUTES = {
   // Auth
   login: "/auth/login",
   register: "/auth/register",
-  forgotPassword: "/auth/forgot-password",
   // Property
   search: "/search",
   property: (id: string) => `/property/${id}`,
@@ -40,9 +39,6 @@ export const API_ENDPOINTS = {
     logout: "/api/auth/logout",
     refresh: "/api/auth/refresh",
     me: "/api/auth/me",
-    forgotPassword: "/api/auth/forgot-password",
-    resetPassword: "/api/auth/reset-password",
-    changePassword: "/api/auth/change-password",
     google: "/api/auth/google",
     googleCallback: "/api/auth/google/callback",
     yandex: "/api/auth/yandex",

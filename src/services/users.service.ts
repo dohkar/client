@@ -1,13 +1,11 @@
 import { apiClient } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/constants/routes";
-import type { ApiResponse } from "@/types";
-import type { User } from "@/types";
-
-export interface UpdateUserData {
-  name?: string;
-  phone?: string;
-  avatar?: string;
-}
+import type {
+  UserGetMeResponse,
+  UserUpdateMeRequest,
+  UserUpdateMeResponse,
+  UserGetByIdResponse,
+} from "@/lib/api-types";
 
 /**
  * Сервис для работы с пользователями
@@ -15,22 +13,23 @@ export interface UpdateUserData {
 export const usersService = {
   /**
    * Получить текущего пользователя
+   * Используйте authService.getCurrentUser() вместо этого
    */
-  async getCurrentUser(): Promise<ApiResponse<User>> {
-    return apiClient.get<ApiResponse<User>>(API_ENDPOINTS.users.me);
+  async getCurrentUser(): Promise<UserGetMeResponse> {
+    return apiClient.get<UserGetMeResponse>(API_ENDPOINTS.users.me);
   },
 
   /**
    * Обновить профиль текущего пользователя
    */
-  async updateUser(data: UpdateUserData): Promise<ApiResponse<User>> {
-    return apiClient.patch<ApiResponse<User>>(API_ENDPOINTS.users.updateMe, data);
+  async updateUser(data: UserUpdateMeRequest): Promise<UserUpdateMeResponse> {
+    return apiClient.patch<UserUpdateMeResponse>(API_ENDPOINTS.users.updateMe, data);
   },
 
   /**
    * Получить пользователя по ID
    */
-  async getUserById(id: string): Promise<ApiResponse<User>> {
-    return apiClient.get<ApiResponse<User>>(API_ENDPOINTS.users.getById(id));
+  async getUserById(id: string): Promise<UserGetByIdResponse> {
+    return apiClient.get<UserGetByIdResponse>(API_ENDPOINTS.users.getById(id));
   },
 };

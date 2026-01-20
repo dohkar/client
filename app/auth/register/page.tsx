@@ -18,8 +18,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const register = useAuthStore((state) => state.register);
   const error = useAuthStore((state) => state.error);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -35,19 +33,22 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setFormError("Пароль должен быть не менее 6 символов");
+    if (password.length < 8) {
+      setFormError("Пароль должен быть не менее 8 символов");
+      return;
+    }
+
+    if (!phone) {
+      setFormError("Телефон обязателен");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await register({ name, email, password, phone: phone || undefined });
+      await register({ phone, password });
       toast.success("Регистрация успешна");
       // Очищаем форму
-      setName("");
-      setEmail("");
       setPhone("");
       setPassword("");
       setConfirmPassword("");
@@ -158,7 +159,7 @@ export default function RegisterPage() {
               </div>
               <div className='relative flex justify-center text-xs uppercase'>
                 <span className='bg-card px-2 text-muted-foreground'>
-                  Или через email
+                  Или через телефон
                 </span>
               </div>
             </div>
@@ -166,35 +167,14 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className='space-y-4 mt-6'>
             <div className='space-y-2'>
-              <Label htmlFor='name'>Имя</Label>
-              <Input
-                id='name'
-                type='text'
-                placeholder='Ваше имя'
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='email'>Email</Label>
-              <Input
-                id='email'
-                type='email'
-                placeholder='your@email.com'
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='phone'>Телефон (необязательно)</Label>
+              <Label htmlFor='phone'>Телефон *</Label>
               <Input
                 id='phone'
                 type='tel'
                 placeholder='+7 (928) 000-00-00'
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                required
               />
             </div>
             <div className='space-y-2'>

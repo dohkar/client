@@ -1,4 +1,4 @@
-import type { Property, PropertyBackend } from "@/types/property";
+import type { Property, PropertyBackend, PropertyStatus } from "@/types/property";
 
 /**
  * Адаптер для преобразования данных недвижимости из формата бэкенда в формат фронтенда
@@ -38,7 +38,7 @@ export function adaptProperty(backend: PropertyBackend): Property {
       name: backend.user?.name || "Не указано",
       phone: backend.user?.phone || "Не указано",
     },
-    status: backend.status.toLowerCase() as Property["status"],
+    status: (backend.status.toLowerCase() as PropertyStatus) as Property["status"],
     views: backend.views,
     userId: backend.userId,
     createdAt: backend.createdAt,

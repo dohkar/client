@@ -93,26 +93,42 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
   const onSubmit = async (data: PropertyFormData) => {
     setIsLoading(true);
     try {
+      // Convert frontend format to API format
+      const regionMap: Record<string, "CHECHNYA" | "INGUSHETIA" | "OTHER"> = {
+        Chechnya: "CHECHNYA",
+        Ingushetia: "INGUSHETIA",
+        Other: "OTHER",
+      };
+      const typeMap: Record<string, "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"> = {
+        apartment: "APARTMENT",
+        house: "HOUSE",
+        land: "LAND",
+        commercial: "COMMERCIAL",
+      };
+
+      const apiData = {
+        title: data.title,
+        price: data.price,
+        currency: data.currency,
+        location: data.location,
+        region: regionMap[data.region] || "OTHER",
+        type: typeMap[data.type] || "APARTMENT",
+        rooms: data.rooms,
+        area: data.area,
+        description: data.description,
+        images: imageUrls,
+        features: data.features || [],
+      };
+
       let response;
       if (isEdit && initialData?.id) {
-        response = await propertyService.updateProperty(initialData.id, {
-          ...data,
-          images: imageUrls,
-        });
-        if (response.status === "success" && response.data) {
-          toast.success("Объявление успешно обновлено");
-          onSuccess?.(response.data);
-        }
+        response = await propertyService.updateProperty(initialData.id, apiData);
+        toast.success("Объявление успешно обновлено");
+        onSuccess?.(response);
       } else {
-        response = await propertyService.createProperty({
-          ...data,
-          images: imageUrls,
-          features: data.features || [],
-        });
-        if (response.status === "success" && response.data) {
-          toast.success("Объявление успешно создано");
-          onSuccess?.(response.data);
-        }
+        response = await propertyService.createProperty(apiData);
+        toast.success("Объявление успешно создано");
+        onSuccess?.(response);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Ошибка");

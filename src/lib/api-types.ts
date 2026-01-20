@@ -6,6 +6,7 @@
  */
 
 import type { paths, components, operations } from "@/types/api";
+import type { PaginatedResponse } from "@/types";
 
 /**
  * Типы для компонентов (DTO)
@@ -144,8 +145,20 @@ export type UserGetByIdResponse = ResponseData<"/api/users/{id}", "get">;
 // Property endpoints
 export type ApiPropertyCreateRequest = RequestBody<"/api/properties", "post">;
 export type ApiPropertyCreateResponse = ResponseData<"/api/properties", "post", 201>;
-export type ApiPropertyListParams = OperationParams<"PropertiesController_findAll">;
-export type ApiPropertyListResponse = ResponseData<"/api/properties", "get">;
+// Note: OpenAPI spec has content?: never for PropertiesController_findAll, but API returns PaginatedResponse
+export type ApiPropertyListParams = {
+  query?: string;
+  type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+  priceMin?: number;
+  priceMax?: number;
+  rooms?: number;
+  areaMin?: number;
+  region?: "CHECHNYA" | "INGUSHETIA" | "OTHER";
+  sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance";
+  page?: number;
+  limit?: number;
+};
+export type ApiPropertyListResponse = PaginatedResponse<PropertyResponseDto>; // Using PaginatedResponse since spec doesn't define it
 export type ApiPropertySearchParams = OperationParams<"PropertiesController_search">;
 export type ApiPropertySearchResponse = ResponseData<"/api/properties/search", "get">;
 export type ApiPropertyGetByIdParams = RequestParams<"/api/properties/{id}", "get">;
@@ -169,27 +182,38 @@ export type FavoritesRemoveParams = RequestParams<
 >;
 
 // Admin endpoints
-export type AdminStatisticsResponse = ResponseData<"/api/admin/statistics", "get">;
-export type AdminUsersParams = RequestParams<"/api/admin/users", "get">;
-export type AdminPropertiesParams = RequestParams<"/api/admin/properties", "get">;
-export type AdminUpdateUserRoleParams = RequestParams<
-  "/api/admin/users/{id}/role",
-  "patch"
->;
+// Note: OpenAPI spec has content?: never for these endpoints, but API actually returns data
+// Using any temporarily until spec is fixed
+export type AdminStatisticsResponse = any; // ResponseData<"/api/admin/statistics", "get"> returns void
+export type AdminUsersParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+export type AdminPropertiesParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+  type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+};
+export type AdminUpdateUserRoleParams = {
+  id: string;
+};
 export type AdminUpdateUserRoleRequest = RequestBody<
   "/api/admin/users/{id}/role",
   "patch"
 >;
-export type AdminUpdatePropertyStatusParams = RequestParams<
-  "/api/admin/properties/{id}/status",
-  "patch"
->;
+export type AdminUpdatePropertyStatusParams = {
+  id: string;
+};
 export type AdminUpdatePropertyStatusRequest = RequestBody<
   "/api/admin/properties/{id}/status",
   "patch"
 >;
-export type AdminDeleteUserParams = RequestParams<"/api/admin/users/{id}", "delete">;
-export type AdminDeletePropertyParams = RequestParams<
-  "/api/admin/properties/{id}",
-  "delete"
->;
+export type AdminDeleteUserParams = {
+  id: string;
+};
+export type AdminDeletePropertyParams = {
+  id: string;
+};

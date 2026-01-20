@@ -15,7 +15,7 @@ export interface PropertyBackend {
   description: string;
   images: string[];
   features: string[];
-  status: PropertyStatus;
+  status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED"; // OpenAPI uses uppercase
   views: number;
   userId: string;
   createdAt: string;

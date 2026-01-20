@@ -2,15 +2,30 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { propertyService } from "@/services/property.service";
 import type { PropertySearchParams } from "@/types/property";
+import type { ApiPropertyListParams } from "@/lib/api-types";
 import { toast } from "sonner";
 
 /**
  * Хук для получения списка недвижимости
  */
 export function useProperties(params?: PropertySearchParams) {
+  // Convert PropertySearchParams to ApiPropertyListParams
+  const apiParams: ApiPropertyListParams | undefined = params ? {
+    query: params.query,
+    type: params.type ? (params.type.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL") : undefined,
+    priceMin: params.priceMin,
+    priceMax: params.priceMax,
+    rooms: params.rooms,
+    areaMin: params.areaMin,
+    region: params.region ? (params.region.toUpperCase() as "CHECHNYA" | "INGUSHETIA" | "OTHER") : undefined,
+    sortBy: params.sortBy,
+    page: params.page,
+    limit: params.limit,
+  } : undefined;
+
   return useQuery({
     queryKey: queryKeys.properties.list(params || {}),
-    queryFn: () => propertyService.getProperties(params),
+    queryFn: () => propertyService.getProperties(apiParams),
     staleTime: 60 * 1000, // 1 minute
     retry: 2,
   });

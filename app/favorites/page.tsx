@@ -26,7 +26,7 @@ export default function FavoritesPage() {
     enabled: isAuthenticated && isInitialized,
     queryFn: async () => {
       const response = await favoritesService.getFavorites();
-      return response.data || [];
+      return response || [];
     },
     // Показать свежие данные после удаления
     staleTime: 2 * 60 * 1000,

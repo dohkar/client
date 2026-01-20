@@ -34,7 +34,7 @@ export function PropertyCard({
     queryKey: queryKeys.favorites.all,
     queryFn: async () => {
       const response = await favoritesService.getFavorites();
-      return response.data || [];
+      return response || [];
     },
     enabled: isAuthenticated,
   });

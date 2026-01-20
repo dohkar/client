@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Heart,
   UserCircle,
+  Shield,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -113,6 +114,9 @@ export function Header() {
   // Мемоизируем имя пользователя для оптимизации
   const userName = useMemo(() => formatUserName(user?.name), [user?.name]);
   const userInitial = useMemo(() => userName.charAt(0).toUpperCase(), [userName]);
+  
+  // Проверка роли админа
+  const isAdmin = useMemo(() => user?.role?.toUpperCase() === "ADMIN", [user?.role]);
 
   return (
     <header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60'>
@@ -173,6 +177,14 @@ export function Header() {
                       <p className='text-xs text-muted-foreground'>{user?.email || ""}</p>
                     </div>
                     <DropdownMenuSeparator />
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href={`${ROUTES.dashboard}/admin`} className='cursor-pointer text-red-600'>
+                          <Shield className='mr-2 h-4 w-4' />
+                          Админ-панель
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem asChild>
                       <Link href={ROUTES.dashboard} className='cursor-pointer'>
                         <LayoutDashboard className='mr-2 h-4 w-4' />
@@ -287,6 +299,19 @@ export function Header() {
               <p className='px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                 Аккаунт
               </p>
+              {isAdmin && (
+                <Link href={`${ROUTES.dashboard}/admin`}>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='w-full justify-start gap-2 text-red-600 min-h-[44px]'
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Shield className='h-4 w-4' />
+                    <span>Админ-панель</span>
+                  </Button>
+                </Link>
+              )}
               <Link href={`${ROUTES.dashboard}/profile`}>
                 <Button
                   variant='ghost'
