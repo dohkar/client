@@ -6,14 +6,9 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Heart, MapPin } from "lucide-react";
-import { useFavoritesStore } from "@/stores";
-import { useAuthStore } from "@/stores";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { favoritesService } from "@/services/favorites.service";
-import { queryKeys } from "@/lib/react-query/query-keys";
+import { useFavorites } from "@/hooks/use-favorites";
 import type { Property } from "@/types/property";
 import { formatPrice, formatDate } from "@/lib/utils/format";
-import { toast } from "sonner";
 
 interface PropertyCardProps {
   property: Property;
@@ -24,60 +19,15 @@ export function PropertyCard({
   property,
   hideFavoriteButton = false,
 }: PropertyCardProps) {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const queryClient = useQueryClient();
-  const { isFavorite: isLocalFavorite, toggleFavorite: toggleLocalFavorite } =
-    useFavoritesStore();
-
-  // Проверяем, есть ли в избранном на сервере
-  const { data: favorites } = useQuery({
-    queryKey: queryKeys.favorites.all,
-    queryFn: async () => {
-      const response = await favoritesService.getFavorites();
-      return response || [];
-    },
-    enabled: isAuthenticated,
-  });
-
-  const isServerFavorite = favorites?.some((fav) => fav.id === property.id) || false;
-  const favorite = isAuthenticated ? isServerFavorite : isLocalFavorite(property.id);
-
-  const addMutation = useMutation({
-    mutationFn: () => favoritesService.addFavorite(property.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
-      toast.success("Добавлено в избранное");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Ошибка добавления в избранное");
-    },
-  });
-
-  const removeMutation = useMutation({
-    mutationFn: () => favoritesService.removeFavorite(property.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
-      toast.success("Удалено из избранного");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Ошибка удаления из избранного");
-    },
-  });
+  const { isFavorite, toggleFavorite, isMutating } = useFavorites();
+  
+  const favorite = isFavorite(property.id);
+  const isPending = isMutating(property.id);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (!isAuthenticated) {
-      toggleLocalFavorite(property.id);
-      return;
-    }
-
-    if (favorite) {
-      removeMutation.mutate();
-    } else {
-      addMutation.mutate();
-    }
+    toggleFavorite(property.id, property);
   };
   const pricePerMeter = Math.round(property.price / property.area);
 
@@ -112,11 +62,12 @@ export function PropertyCard({
                 favorite
                   ? "bg-destructive text-white hover:bg-destructive/90"
                   : "bg-background/90 hover:bg-background"
-              }`}
+              } ${isPending ? "opacity-70" : ""}`}
               onClick={handleFavoriteClick}
+              disabled={isPending}
               aria-label={favorite ? "Удалить из избранного" : "Добавить в избранное"}
             >
-              <Heart className={`w-4 h-4 ${favorite ? "fill-current" : ""}`} />
+              <Heart className={`w-4 h-4 transition-transform ${favorite ? "fill-current scale-110" : ""} ${isPending ? "animate-pulse" : ""}`} />
             </Button>
           )}
         </div>

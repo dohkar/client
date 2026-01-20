@@ -1,58 +1,29 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PropertyCard } from "@/components/features/property-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, Trash2 } from "lucide-react";
-import { favoritesService } from "@/services/favorites.service";
-import { queryKeys } from "@/lib/react-query/query-keys";
-import { toast } from "sonner";
+import { useFavorites } from "@/hooks/use-favorites";
+import { useRemoveFavoriteOptimistic } from "@/hooks/use-optimistic-delete";
 import { useAuthStore } from "@/stores";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ROUTES } from "@/constants";
 
-// useQuery должен вызываться безусловно, вне каких-либо условий/return/if!
 export default function FavoritesPage() {
   const router = useRouter();
   const { isAuthenticated, isInitialized, isLoading: authLoading } = useAuthStore();
-  const queryClient = useQueryClient();
-
-  // useQuery вызывается всегда, не зависит от состояния auth!
-  const { data = [], isLoading } = useQuery({
-    queryKey: queryKeys.favorites.all,
-    // enabled — загружаем только после инициализации и авторизации
-    enabled: isAuthenticated && isInitialized,
-    queryFn: async () => {
-      const response = await favoritesService.getFavorites();
-      return response || [];
-    },
-    // Показать свежие данные после удаления
-    staleTime: 2 * 60 * 1000,
-  });
+  
+  // Используем optimistic хуки
+  const { favorites: data, isLoading } = useFavorites();
+  const { remove: removeFromFavorites, isRemoving } = useRemoveFavoriteOptimistic();
 
   useEffect(() => {
-    // Дождаться завершения инициализации, затем проверять аутентификацию
     if (isInitialized && !isAuthenticated) {
       router.replace(ROUTES.login);
     }
   }, [isAuthenticated, isInitialized, router]);
-
-  // Всегда инициализируем mutation на верхнем уровне, чтобы избежать проблем с порядком хуков
-  const removeMutation = useMutation({
-    mutationFn: (propertyId: string) => favoritesService.removeFavorite(propertyId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
-      toast.success("Объявление удалено из избранного");
-    },
-    onError: (error: Error) => {
-      // Безопасное сообщение об ошибке - не показываем серверные сообщения напрямую
-      // для предотвращения XSS-уязвимости
-      console.error("Ошибка удаления из избранного:", error);
-      toast.error("Не удалось удалить из избранного. Попробуйте позже.");
-    },
-  });
 
   // Показываем фулл-скрин загрузку пока не инициализировались
   if (!isInitialized || authLoading) {
@@ -138,12 +109,15 @@ export default function FavoritesPage() {
         <div className='mx-auto max-w-7xl'>
           <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 xl:gap-10'>
             {data.map((property) => {
-              const isRemoving =
-                removeMutation.isPending && removeMutation.variables === property.id;
+              const removing = isRemoving(property.id);
               return (
                 <div
                   key={property.id}
-                  className='relative group flex flex-col h-full'
+                  className={`
+                    relative group flex flex-col h-full
+                    transition-all duration-300 ease-out
+                    ${removing ? "opacity-50 scale-95 pointer-events-none" : ""}
+                  `}
                   style={{ minHeight: 410 }}
                 >
                   <PropertyCard property={property} hideFavoriteButton />
@@ -162,14 +136,14 @@ export default function FavoritesPage() {
                       w-10 h-10
                       focus:outline-none focus:ring-2 focus:ring-primary/40
                     `}
-                    onClick={() => removeMutation.mutate(property.id)}
-                    disabled={isRemoving}
+                    onClick={() => removeFromFavorites(property.id)}
+                    disabled={removing}
                     aria-label='Удалить из избранного'
                     title='Удалить из избранного'
                     tabIndex={0}
-                    aria-busy={isRemoving}
+                    aria-busy={removing}
                   >
-                    {isRemoving ? (
+                    {removing ? (
                       <span className='w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin' />
                     ) : (
                       <Trash2 className='w-5 h-5' />
