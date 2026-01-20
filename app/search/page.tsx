@@ -20,7 +20,6 @@ import {
 import {
   HorizontalFilters,
   ActiveFilters,
-  QuickPresets,
   SearchResults,
 } from "@/components/search";
 import { ROUTES } from "@/constants";
@@ -208,7 +207,7 @@ function SearchPageContent() {
           </div>
 
           {/* Быстрые пресеты */}
-          <QuickPresets onPresetSelect={handlePresetSelect} />
+          {/* <QuickPresets onPresetSelect={handlePresetSelect} /> */}
 
           <SearchResults
             properties={properties}
