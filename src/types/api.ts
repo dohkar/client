@@ -261,6 +261,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/properties/stats/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить статистику по категориям недвижимости */
+        get: operations["PropertiesController_getCategoryStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/properties/{id}": {
         parameters: {
             query?: never;
@@ -434,6 +451,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/upload/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Загрузить аватар пользователя */
+        post: operations["UploadController_uploadAvatar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upload/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Загрузить изображения для объявления */
+        post: operations["UploadController_uploadImages"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -469,18 +520,6 @@ export interface components {
              */
             password: string;
         };
-        LoginPhonePasswordDto: {
-            /**
-             * @description Номер телефона в формате E.164
-             * @example +79626404047
-             */
-            phone: string;
-            /**
-             * @description Пароль пользователя
-             * @example StrongP@ssw0rd
-             */
-            password: string;
-        };
         RefreshTokenDto: {
             refreshToken: string;
         };
@@ -500,8 +539,6 @@ export interface components {
             name?: string;
             /** @example +7 (928) 000-00-00 */
             phone?: string;
-            /** @example https://example.com/avatar.jpg */
-            avatar?: string;
         };
         CreatePropertyDto: {
             /** @example Квартира в центре Грозного */
@@ -719,11 +756,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginPhonePasswordDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Успешная аутентификация */
             200: {
@@ -1013,6 +1046,24 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PropertyResponseDto"][];
                 };
+            };
+        };
+    };
+    PropertiesController_getCategoryStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Статистика по категориям */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1346,6 +1397,115 @@ export interface operations {
         responses: {
             /** @description Объявление удалено */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UploadController_uploadAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description Изображение (jpg, png, webp), max 5MB
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Аватар успешно загружен */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example https://res.cloudinary.com/... */
+                        avatar?: string;
+                    };
+                };
+            };
+            /** @description Некорректный запрос */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Файл слишком большой */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Неподдерживаемый формат */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UploadController_uploadImages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** @description Изображения (jpg, png, webp), max 10 файлов, каждый max 5MB */
+                    files: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Изображения успешно загружены */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        images?: {
+                            /** @example https://res.cloudinary.com/... */
+                            url?: string;
+                            /** @example dohkar/properties/abc123 */
+                            publicId?: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Некорректный запрос */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Файл слишком большой */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Неподдерживаемый формат */
+            415: {
                 headers: {
                     [name: string]: unknown;
                 };

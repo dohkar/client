@@ -45,7 +45,7 @@ export function useDeleteWithUndo() {
   const isMounted = useRef(true);
   
   // Ref для хранения executeDelete, чтобы использовать в cleanup
-  const executeDeleteRef = useRef<(propertyId: string) => Promise<boolean>>();
+  const executeDeleteRef = useRef<((propertyId: string) => Promise<boolean>) | undefined>(undefined);
 
   /**
    * Сохраняет текущее состояние кэша для возможного отката
@@ -311,7 +311,7 @@ export function useRemoveFavoriteWithUndo() {
   const isMounted = useRef(true);
 
   // Ref для хранения executeRemove, чтобы использовать в cleanup
-  const executeRemoveRef = useRef<(propertyId: string) => Promise<boolean>>();
+  const executeRemoveRef = useRef<((propertyId: string) => Promise<boolean>) | undefined>(undefined);
 
   const executeRemove = useCallback(async (propertyId: string): Promise<boolean> => {
     const pending = pendingRemoves.current.get(propertyId);

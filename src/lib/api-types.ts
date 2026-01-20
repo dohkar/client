@@ -17,7 +17,12 @@ export type ApiSchemas = components["schemas"];
 export type SendPhoneCodeDto = ApiSchemas["SendPhoneCodeDto"];
 export type VerifyPhoneCodeDto = ApiSchemas["VerifyPhoneCodeDto"];
 export type RegisterPhonePasswordDto = ApiSchemas["RegisterPhonePasswordDto"];
-export type LoginPhonePasswordDto = ApiSchemas["LoginPhonePasswordDto"];
+// LoginPhonePasswordDto не генерируется OpenAPI так как бэкенд использует LocalAuthGuard
+// Определяем вручную на основе RegisterPhonePasswordDto
+export type LoginPhonePasswordDto = {
+  phone: string;
+  password: string;
+};
 export type RefreshTokenDto = ApiSchemas["RefreshTokenDto"];
 export type UserResponseDto = ApiSchemas["UserResponseDto"];
 export type UpdateUserDto = ApiSchemas["UpdateUserDto"];
@@ -132,7 +137,9 @@ export type AuthRegisterRequest = RequestBody<
   "/api/auth/register/phone-password",
   "post"
 >;
-export type AuthLoginRequest = RequestBody<"/api/auth/login/phone-password", "post">;
+// AuthLoginRequest - бэкенд использует LocalAuthGuard, поэтому OpenAPI не генерирует requestBody
+// Определяем вручную
+export type AuthLoginRequest = LoginPhonePasswordDto;
 export type AuthRefreshRequest = RequestBody<"/api/auth/refresh", "post">;
 
 // User endpoints

@@ -283,4 +283,363 @@
     @apply font-semibold rounded-lg px-6 py-3;
     @apply transition-all duration-300 hover:shadow-md hover:scale-105;
   }
+
+  /* =====================================================
+     TOAST NOTIFICATIONS - Кавказский стиль
+     ===================================================== */
+
+  /* Контейнер тостера */
+  .toaster {
+    --toast-width: 400px;
+    font-family: var(--font-sans);
+  }
+
+  [data-sonner-toaster] {
+    --offset: 20px;
+  }
+
+  /* Базовый стиль toast */
+  .toast-base {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    width: var(--toast-width);
+    padding: 16px 18px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 
+      0 4px 6px -1px oklch(0 0 0 / 0.08),
+      0 10px 20px -5px oklch(0 0 0 / 0.1),
+      0 0 0 1px oklch(0 0 0 / 0.02);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Левая цветная полоска-индикатор */
+  .toast-base::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--border);
+    transition: background 0.2s ease;
+  }
+
+  /* Hover эффект */
+  .toast-base:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 8px 12px -2px oklch(0 0 0 / 0.1),
+      0 16px 32px -8px oklch(0 0 0 / 0.15),
+      0 0 0 1px oklch(0 0 0 / 0.03);
+  }
+
+  /* Иконка wrapper */
+  .toast-icon-wrapper {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+  }
+
+  /* Иконка успеха */
+  .toast-icon-success {
+    background: linear-gradient(135deg, oklch(0.45 0.15 160), oklch(0.50 0.14 155));
+    color: white;
+    box-shadow: 0 2px 8px oklch(0.45 0.15 160 / 0.35);
+  }
+
+  /* Иконка ошибки */
+  .toast-icon-error {
+    background: linear-gradient(135deg, oklch(0.55 0.22 27), oklch(0.50 0.20 25));
+    color: white;
+    box-shadow: 0 2px 8px oklch(0.55 0.22 27 / 0.35);
+  }
+
+  /* Иконка предупреждения */
+  .toast-icon-warning {
+    background: linear-gradient(135deg, oklch(0.75 0.15 65), oklch(0.70 0.14 60));
+    color: oklch(0.25 0.02 60);
+    box-shadow: 0 2px 8px oklch(0.75 0.15 65 / 0.35);
+  }
+
+  /* Иконка информации */
+  .toast-icon-info {
+    background: linear-gradient(135deg, oklch(0.55 0.18 250), oklch(0.50 0.16 245));
+    color: white;
+    box-shadow: 0 2px 8px oklch(0.55 0.18 250 / 0.35);
+  }
+
+  /* Иконка загрузки */
+  .toast-icon-loading {
+    background: linear-gradient(135deg, oklch(0.55 0.05 260), oklch(0.50 0.04 255));
+    color: white;
+    box-shadow: 0 2px 8px oklch(0.55 0.05 260 / 0.35);
+  }
+
+  /* Текстовый контент */
+  .toast-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--foreground);
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+  }
+
+  .toast-description {
+    font-size: 13px;
+    color: var(--muted-foreground);
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  /* Кнопки */
+  .toast-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-foreground);
+    background: var(--primary);
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-top: 10px;
+    box-shadow: 0 1px 3px oklch(0 0 0 / 0.1);
+  }
+
+  .toast-action-btn:hover {
+    background: oklch(0.40 0.14 160);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px oklch(0 0 0 / 0.15);
+  }
+
+  .toast-cancel-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    background: var(--secondary);
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-top: 10px;
+    margin-left: 8px;
+  }
+
+  .toast-cancel-btn:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  /* Кнопка закрытия */
+  .toast-close-btn {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    left: auto !important;
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 6px !important;
+    color: var(--muted-foreground) !important;
+    cursor: pointer !important;
+    opacity: 0;
+    transition: all 0.15s ease !important;
+  }
+
+  .toast-close-btn:hover {
+    background: var(--muted) !important;
+    color: var(--foreground) !important;
+  }
+
+  .toast-base:hover .toast-close-btn {
+    opacity: 1;
+  }
+
+  /* Стили по типам - цветные полоски */
+  .toast-success::before {
+    background: linear-gradient(180deg, oklch(0.45 0.15 160), oklch(0.50 0.14 155));
+  }
+
+  .toast-error::before {
+    background: linear-gradient(180deg, oklch(0.55 0.22 27), oklch(0.50 0.20 25));
+  }
+
+  .toast-warning::before {
+    background: linear-gradient(180deg, oklch(0.75 0.15 65), oklch(0.70 0.14 60));
+  }
+
+  .toast-info::before {
+    background: linear-gradient(180deg, oklch(0.55 0.18 250), oklch(0.50 0.16 245));
+  }
+
+  .toast-loading::before {
+    background: linear-gradient(180deg, oklch(0.55 0.05 260), oklch(0.50 0.04 255));
+  }
+
+  /* Анимации */
+  [data-sonner-toast][data-mounted="true"] {
+    animation: toast-enter 0.4s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+  }
+
+  [data-sonner-toast][data-removed="true"] {
+    animation: toast-exit 0.3s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+  }
+
+  @keyframes toast-enter {
+    0% {
+      opacity: 0;
+      transform: translateX(100%) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes toast-exit {
+    0% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(30%) scale(0.95);
+    }
+  }
+
+  /* Мобильная адаптация */
+  @media (max-width: 640px) {
+    .toaster {
+      --toast-width: calc(100vw - 32px);
+    }
+
+    [data-sonner-toaster] {
+      left: 16px !important;
+      right: 16px !important;
+      bottom: 16px !important;
+    }
+
+    .toast-base {
+      padding: 14px 16px;
+      border-radius: 14px;
+    }
+
+    .toast-icon-wrapper {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+    }
+
+    .toast-icon-wrapper svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .toast-title {
+      font-size: 13px;
+    }
+
+    .toast-description {
+      font-size: 12px;
+    }
+
+    [data-sonner-toast][data-mounted="true"] {
+      animation: toast-enter-mobile 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+    }
+
+    [data-sonner-toast][data-removed="true"] {
+      animation: toast-exit-mobile 0.25s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+    }
+
+    @keyframes toast-enter-mobile {
+      0% {
+        opacity: 0;
+        transform: translateY(100%) scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes toast-exit-mobile {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(20%) scale(0.95);
+      }
+    }
+  }
+
+  /* Темная тема */
+  .dark .toast-base {
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: 
+      0 4px 6px -1px oklch(0 0 0 / 0.2),
+      0 10px 20px -5px oklch(0 0 0 / 0.25),
+      0 0 0 1px oklch(1 0 0 / 0.03);
+  }
+
+  .dark .toast-base:hover {
+    box-shadow: 
+      0 8px 12px -2px oklch(0 0 0 / 0.25),
+      0 16px 32px -8px oklch(0 0 0 / 0.3),
+      0 0 0 1px oklch(1 0 0 / 0.05);
+  }
+
+  .dark .toast-icon-success {
+    background: linear-gradient(135deg, oklch(0.55 0.16 160), oklch(0.60 0.15 155));
+    box-shadow: 0 2px 8px oklch(0.55 0.16 160 / 0.4);
+  }
+
+  .dark .toast-icon-error {
+    background: linear-gradient(135deg, oklch(0.58 0.20 27), oklch(0.53 0.18 25));
+    box-shadow: 0 2px 8px oklch(0.58 0.20 27 / 0.4);
+  }
+
+  .dark .toast-icon-warning {
+    background: linear-gradient(135deg, oklch(0.72 0.16 65), oklch(0.68 0.15 60));
+    box-shadow: 0 2px 8px oklch(0.72 0.16 65 / 0.4);
+  }
+
+  .dark .toast-icon-info {
+    background: linear-gradient(135deg, oklch(0.58 0.16 250), oklch(0.53 0.14 245));
+    box-shadow: 0 2px 8px oklch(0.58 0.16 250 / 0.4);
+  }
+
+  .dark .toast-action-btn {
+    background: oklch(0.55 0.16 160);
+  }
+
+  .dark .toast-action-btn:hover {
+    background: oklch(0.50 0.15 160);
+  }
 }
