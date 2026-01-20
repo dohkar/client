@@ -18,7 +18,7 @@ export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
   const error = useAuthStore((state) => state.error);
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,7 +27,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(phone, password);
       toast.success("Вы успешно вошли в аккаунт", {
         description: "Перенаправление в личный кабинет",
       });
@@ -132,7 +132,7 @@ export default function LoginPage() {
               </div>
               <div className='relative flex justify-center text-xs uppercase'>
                 <span className='bg-card px-2 text-muted-foreground'>
-                  Или через email
+                  Или через телефон
                 </span>
               </div>
             </div>
@@ -140,16 +140,16 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className='space-y-4 mt-6' noValidate>
             <div className='space-y-2'>
-              <Label htmlFor='email'>Email</Label>
+              <Label htmlFor='phone'>Телефон</Label>
               <Input
-                id='email'
-                type='email'
-                placeholder='your@email.com'
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id='phone'
+                type='tel'
+                placeholder='+7 (___) ___-__-__'
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 required
-                autoComplete='email'
-                aria-describedby='email-error'
+                autoComplete='tel'
+                aria-describedby='phone-error'
                 aria-invalid={!!error}
               />
             </div>
