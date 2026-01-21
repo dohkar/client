@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
 
+  // Output для оптимального деплоя
+  output: "standalone",
+
   // Оптимизация изображений
   images: {
     formats: ["image/avif", "image/webp"],
