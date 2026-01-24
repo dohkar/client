@@ -4,6 +4,7 @@ export * from "./use-media-query";
 export * from "./use-click-outside";
 export * from "./use-amenities";
 export { useSearchSync } from "./use-search-sync";
+export { useProfile } from "./use-profile";
 
 // Optimistic updates hooks
 export { useFavorites, useFavoriteStatus } from "./use-favorites";
