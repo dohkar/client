@@ -311,7 +311,7 @@
     -webkit-backdrop-filter: blur(12px) saturate(1.1);
     border: 1px solid oklch(from var(--border) l c h / 0.5);
     border-radius: 16px;
-    box-shadow: 
+    box-shadow:
       0 2px 4px -1px oklch(0 0 0 / 0.06),
       0 4px 8px -2px oklch(0 0 0 / 0.08);
     position: relative;
@@ -671,7 +671,7 @@
   .dark .toast-base {
     background: oklch(from var(--card) l c h / 0.94);
     border-color: oklch(from var(--border) l c h / 0.4);
-    box-shadow: 
+    box-shadow:
       0 2px 6px oklch(0 0 0 / 0.25),
       0 6px 16px -4px oklch(0 0 0 / 0.2);
   }
@@ -716,5 +716,55 @@
 
   .dark .toast-cancel-btn:hover {
     background: var(--muted);
+  }
+
+  /* Анимации для страницы размещения объявлений */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Улучшенные focus-visible стили для accessibility */
+  *:focus-visible {
+    @apply outline-none;
+  }
+
+  /* Skip to content link стили */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
 }

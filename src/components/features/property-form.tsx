@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -27,7 +27,21 @@ import {
 } from "@/services/upload.service";
 import { toast } from "sonner";
 import type { Property } from "@/types/property";
-import { Upload, X, ImageIcon, AlertCircle } from "lucide-react";
+import {
+  Upload,
+  X,
+  ImageIcon,
+  AlertCircle,
+  Home,
+  MapPin,
+  DollarSign,
+  FileText,
+  Building2,
+  Ruler,
+  DoorOpen,
+  ChevronRight,
+} from "lucide-react";
+import { useAmenities } from "@/hooks/use-amenities";
 
 // Интерфейс для превью изображений
 interface ImagePreview {
@@ -40,17 +54,21 @@ interface ImagePreview {
   error?: string;
 }
 
+
+
 // Схема валидации без images как массива URL
 const propertySchema = z.object({
   title: z.string().min(10, "Заголовок должен быть не менее 10 символов"),
   price: z.number().min(1, "Цена должна быть больше 0"),
-  currency: z.enum(["RUB", "USD"]),
   location: z.string().min(5, "Адрес должен быть не менее 5 символов"),
   region: z.enum(["Chechnya", "Ingushetia", "Other"]),
   type: z.enum(["apartment", "house", "land", "commercial"]),
   rooms: z.number().optional(),
   area: z.number().min(1, "Площадь должна быть больше 0"),
-  description: z.string().min(50, "Описание должно быть не менее 50 символов"),
+  description: z
+    .string()
+    .min(50, "Описание должно быть не менее 50 символов")
+    .max(8000, "Описание не должно превышать 8000 символов"),
   features: z.array(z.string()).optional(),
 });
 
@@ -65,15 +83,37 @@ interface PropertyFormProps {
 // Генерация уникального ID
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+// Утилиты для форматирования чисел
+const formatNumberWithSpaces = (value: number | string): string => {
+  const numStr = String(value).replace(/\s/g, "");
+  if (!numStr) return "";
+  const num = parseFloat(numStr);
+  if (isNaN(num)) return "";
+  return Math.floor(num).toLocaleString("ru-RU");
+};
+
+const parseFormattedNumber = (value: string): number => {
+  const cleaned = value.replace(/\s/g, "").replace(",", ".");
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+};
+
 export function PropertyForm({ onSuccess, initialData, isEdit = false }: PropertyFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
   const [imagesError, setImagesError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [priceDisplay, setPriceDisplay] = useState<string>("");
+  const [areaDisplay, setAreaDisplay] = useState<string>("");
+
+  // Хук для управления удобствами
+  const amenities = useAmenities({
+    initialFeatures: initialData?.features || [],
+  });
 
   // При редактировании инициализируем превью из существующих URL
-  useState(() => {
+  useEffect(() => {
     if (initialData?.images && initialData.images.length > 0) {
       const existingPreviews: ImagePreview[] = initialData.images.map((url, index) => ({
         id: `existing-${index}`,
@@ -84,7 +124,7 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       }));
       setImagePreviews(existingPreviews);
     }
-  });
+  }, [initialData?.images]);
 
   const {
     register,
@@ -97,7 +137,6 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
     defaultValues: {
       title: initialData?.title || "",
       price: initialData?.price || 0,
-      currency: initialData?.currency || "RUB",
       location: initialData?.location || "",
       region: initialData?.region || "Other",
       type: initialData?.type || "apartment",
@@ -107,6 +146,19 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       features: initialData?.features || [],
     },
   });
+
+  // Инициализация отформатированных значений
+  useEffect(() => {
+    if (initialData?.price && initialData.price > 0) {
+      setPriceDisplay(formatNumberWithSpaces(initialData.price));
+    }
+    if (initialData?.area && initialData.area > 0) {
+      setAreaDisplay(String(initialData.area));
+    }
+  }, [initialData?.price, initialData?.area]);
+
+  const propertyType = watch("type");
+  const showRooms = propertyType === "apartment" || propertyType === "house";
 
   // Обработчик выбора файлов
   const handleFilesSelect = useCallback(
@@ -239,10 +291,13 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       // Собираем URL загруженных изображений
       const imageUrls = uploadedImages.map((p) => p.uploadedUrl!);
 
+      // Преобразуем features: ID -> Label для предустановленных, оставляем как есть для кастомных
+      const featuresLabels = amenities.getFeaturesLabels();
+
       const apiData = {
         title: data.title,
         price: data.price,
-        currency: data.currency,
+        currency: "RUB" as const, // Всегда рубли
         location: data.location,
         region: regionMap[data.region] || "OTHER",
         type: typeMap[data.type] || "APARTMENT",
@@ -250,7 +305,7 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
         area: data.area,
         description: data.description,
         images: imageUrls,
-        features: data.features || [],
+        features: featuresLabels,
       };
 
       let response;
@@ -276,76 +331,116 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Card className="border-primary/20">
-        <CardHeader>
-          <CardTitle>Основная информация</CardTitle>
+      {/* Основная информация */}
+      <Card className="border-primary/20 shadow-lg transition-all hover:shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Home className="w-5 h-5 text-primary" />
+            Основная информация
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="pt-6 space-y-6">
+          {/* Заголовок */}
           <div className="space-y-2">
-            <Label htmlFor="title">Заголовок объявления *</Label>
-            <Input
+            <Label htmlFor="title" className="text-base font-medium flex items-center gap-2">
+              <FileText className="w-4 h-4 text-muted-foreground" />
+              Заголовок объявления *
+            </Label>
+            <Textarea
               id="title"
               {...register("title")}
               placeholder="Например: 3-комнатная квартира в центре"
+              rows={2}
+              className="text-base resize-none min-h-[60px]"
             />
             {errors.title && (
-              <p className="text-sm text-destructive">{errors.title.message}</p>
+              <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.title.message}
+              </p>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Цена *</Label>
+          {/* Цена - полная ширина с иконкой */}
+          <div className="space-y-2">
+            <Label htmlFor="price" className="text-base font-medium flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              Цена (₽) *
+            </Label>
+            <div className="relative">
               <Input
                 id="price"
-                type="number"
-                {...register("price", { valueAsNumber: true })}
-                placeholder="5000000"
+                type="text"
+                inputMode="numeric"
+                value={priceDisplay}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Разрешаем только цифры
+                  const cleaned = value.replace(/\D/g, "");
+                  const num = parseFormattedNumber(cleaned);
+                  // Форматируем с пробелами при вводе
+                  const formatted = cleaned ? formatNumberWithSpaces(cleaned) : "";
+                  setPriceDisplay(formatted);
+                  setValue("price", num, { shouldValidate: true });
+                }}
+                onBlur={(e) => {
+                  const num = parseFormattedNumber(e.target.value);
+                  if (num > 0) {
+                    setPriceDisplay(formatNumberWithSpaces(num));
+                  } else {
+                    setPriceDisplay("");
+                  }
+                }}
+                placeholder="5 000 000"
+                className="h-11 text-base pl-10 font-medium"
+                aria-label="Цена недвижимости в рублях"
               />
-              {errors.price && (
-                <p className="text-sm text-destructive">{errors.price.message}</p>
-              )}
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
+                ₽
+              </span>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="currency">Валюта *</Label>
-              <Select
-                value={watch("currency")}
-                onValueChange={(value) => setValue("currency", value as "RUB" | "USD")}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="RUB">₽ RUB</SelectItem>
-                  <SelectItem value="USD">$ USD</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {errors.price && (
+              <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.price.message}
+              </p>
+            )}
           </div>
 
+          {/* Адрес */}
           <div className="space-y-2">
-            <Label htmlFor="location">Адрес *</Label>
+            <Label htmlFor="location" className="text-base font-medium flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-muted-foreground" />
+              Адрес *
+            </Label>
             <Input
               id="location"
               {...register("location")}
               placeholder="г. Грозный, ул. Ленина, д. 10"
+              className="h-11 text-base"
             />
             {errors.location && (
-              <p className="text-sm text-destructive">{errors.location.message}</p>
+              <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.location.message}
+              </p>
             )}
           </div>
 
+          {/* Регион и Тип недвижимости */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="region">Регион *</Label>
+              <Label htmlFor="region" className="text-base font-medium flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                Регион *
+              </Label>
               <Select
                 value={watch("region")}
                 onValueChange={(value) =>
                   setValue("region", value as "Chechnya" | "Ingushetia" | "Other")
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11 text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -357,14 +452,17 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type">Тип недвижимости *</Label>
+              <Label htmlFor="type" className="text-base font-medium flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-muted-foreground" />
+                Тип недвижимости *
+              </Label>
               <Select
                 value={watch("type")}
                 onValueChange={(value) =>
                   setValue("type", value as "apartment" | "house" | "land" | "commercial")
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11 text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -377,89 +475,202 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
             </div>
           </div>
 
+          {/* Количество комнат и Площадь - динамически */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="rooms">Количество комнат</Label>
-              <Input
-                id="rooms"
-                type="number"
-                {...register("rooms", { valueAsNumber: true })}
-                placeholder="3"
-              />
-            </div>
+            {showRooms && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-left-2 duration-300">
+                <Label htmlFor="rooms" className="text-base font-medium flex items-center gap-2">
+                  <DoorOpen className="w-4 h-4 text-muted-foreground" />
+                  Количество комнат
+                </Label>
+                <Input
+                  id="rooms"
+                  type="number"
+                  {...register("rooms", { valueAsNumber: true })}
+                  placeholder="3"
+                  className="h-11 text-base"
+                />
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="area">Площадь (м²) *</Label>
-              <Input
-                id="area"
-                type="number"
-                step="0.1"
-                {...register("area", { valueAsNumber: true })}
-                placeholder="75.5"
-              />
+            <div className={`space-y-2 ${showRooms ? "" : "md:col-span-2"}`}>
+              <Label htmlFor="area" className="text-base font-medium flex items-center gap-2">
+                <Ruler className="w-4 h-4 text-muted-foreground" />
+                Площадь (м²) *
+              </Label>
+              <div className="relative">
+                <Input
+                  id="area"
+                  type="text"
+                  inputMode="decimal"
+                  value={areaDisplay}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Разрешаем только цифры, точку и запятую
+                    const cleaned = value.replace(/[^\d.,]/g, "").replace(",", ".");
+                    // Разрешаем только одну точку
+                    const parts = cleaned.split(".");
+                    const formatted = parts.length > 2 
+                      ? parts[0] + "." + parts.slice(1).join("")
+                      : cleaned;
+                    setAreaDisplay(formatted);
+                    const num = parseFloat(formatted) || 0;
+                    setValue("area", num, { shouldValidate: true });
+                  }}
+                  onBlur={(e) => {
+                    const num = parseFloat(e.target.value) || 0;
+                    if (num > 0) {
+                      setAreaDisplay(String(num));
+                    }
+                  }}
+                  placeholder="75.5"
+                  className="h-11 text-base pr-10 font-medium"
+                  aria-label="Площадь недвижимости в квадратных метрах"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
+                  м²
+                </span>
+              </div>
               {errors.area && (
-                <p className="text-sm text-destructive">{errors.area.message}</p>
+                <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.area.message}
+                </p>
               )}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-primary/20">
-        <CardHeader>
-          <CardTitle>Описание</CardTitle>
+      {/* Описание */}
+      <Card className="border-primary/20 shadow-lg transition-all hover:shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <FileText className="w-5 h-5 text-primary" />
+            Описание
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="pt-6">
           <div className="space-y-2">
-            <Label htmlFor="description">Описание *</Label>
+            <Label htmlFor="description" className="text-base font-medium">
+              Подробное описание недвижимости *
+            </Label>
             <Textarea
               id="description"
               {...register("description")}
-              placeholder="Подробное описание недвижимости..."
-              rows={6}
+              placeholder="Опишите недвижимость подробно: расположение, состояние, особенности, инфраструктуру рядом..."
+              rows={8}
+              className="text-base resize-y"
+              maxLength={8000}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                if (target.value.length >= 8000) {
+                  toast.warning("Достигнут лимит в 8000 символов", {
+                    duration: 2000,
+                  });
+                }
+              }}
             />
-            {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
-            )}
+            <div className="flex items-center justify-between text-xs mt-1">
+              <span className="flex items-center gap-1">
+                {errors.description ? (
+                  <span className="text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.description.message}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">
+                    Минимум 50 символов
+                  </span>
+                )}
+              </span>
+              <span
+                className={`font-medium transition-colors ${(watch("description")?.length || 0) >= 7600
+                  ? "text-destructive"
+                  : (watch("description")?.length || 0) >= 7000
+                    ? "text-amber-600 dark:text-amber-500"
+                    : "text-muted-foreground"
+                  }`}
+              >
+                {watch("description")?.length || 0} / 8000
+              </span>
+            </div>
+            {/* Прогресс-бар при приближении к лимиту */}
+            {/* {(watch("description")?.length || 0) >= 6000 && (
+              <div className="w-full h-full bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full transition-all duration-300 rounded-full"
+                  style={{
+                    width: `${Math.min(((watch("description")?.length || 0) / 8000) * 100, 100)}%`,
+                    backgroundColor:
+                      (watch("description")?.length || 0) >= 7600
+                        ? "hsl(var(--destructive))"
+                        : (watch("description")?.length || 0) >= 7000
+                          ? "hsl(var(--accent))"
+                          : "hsl(var(--primary))",
+                  }}
+                />
+              </div> */}
+            {/* )} */}
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Изображения</span>
-            <span className="text-sm font-normal text-muted-foreground">
+      {/* Удобства */}
+      {/* <AmenitiesSelector
+        selectedFeatures={amenities.selectedFeatures}
+        customFeature={amenities.customFeature}
+        setCustomFeature={amenities.setCustomFeature}
+        toggleFeature={amenities.toggleFeature}
+        addCustomFeature={amenities.addCustomFeature}
+        removeFeature={amenities.removeFeature}
+        featuresByCategory={amenities.featuresByCategory}
+      /> */}
+
+      {/* Изображения */}
+      <Card className="border-primary/20 shadow-lg transition-all hover:shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+          <CardTitle className="flex items-center justify-between text-xl">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-primary" />
+              Изображения
+            </div>
+            <span className="text-sm font-normal text-muted-foreground bg-background px-3 py-1 rounded-full border">
               {imagePreviews.length} / {MAX_IMAGES_PER_PROPERTY}
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="pt-6 space-y-4">
           {/* Dropzone / Upload Button */}
           <div
             onClick={handleSelectClick}
             className={`
-              border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-              transition-colors hover:border-primary/50 hover:bg-muted/50
+              border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
+              transition-all duration-200 hover:border-primary/50 hover:bg-muted/30
               ${imagePreviews.length >= MAX_IMAGES_PER_PROPERTY ? "opacity-50 pointer-events-none" : ""}
-              ${imagesError ? "border-destructive" : "border-muted-foreground/30"}
+              ${imagesError ? "border-destructive bg-destructive/5" : "border-muted-foreground/30"}
             `}
           >
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-3">
               {isUploading ? (
                 <>
-                  <Spinner className="w-10 h-10 text-primary" />
-                  <p className="text-sm text-muted-foreground">Загрузка...</p>
+                  <Spinner className="w-12 h-12 text-primary" />
+                  <p className="text-sm font-medium text-foreground">Загрузка...</p>
+                  <p className="text-xs text-muted-foreground">Пожалуйста, подождите</p>
                 </>
               ) : (
                 <>
-                  <Upload className="w-10 h-10 text-muted-foreground" />
-                  <p className="text-sm font-medium">
-                    Нажмите для выбора изображений
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    JPG, PNG или WebP. Максимум {MAX_FILE_SIZE / 1024 / 1024}MB на файл.
-                  </p>
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Upload className="w-8 h-8 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold text-foreground mb-1">
+                      Нажмите для выбора изображений
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      JPG, PNG или WebP. Максимум {MAX_FILE_SIZE / 1024 / 1024}MB на файл
+                    </p>
+                  </div>
                 </>
               )}
             </div>
@@ -476,49 +687,56 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
             />
           </div>
 
+
+
           {/* Error Message */}
           {imagesError && (
-            <p className="text-sm text-destructive flex items-center gap-1">
-              <AlertCircle className="w-4 h-4" />
-              {imagesError}
-            </p>
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+              <p className="text-sm text-destructive">{imagesError}</p>
+            </div>
           )}
 
           {/* Image Previews Grid */}
           {imagePreviews.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {imagePreviews.map((preview) => (
-                <div key={preview.id} className="relative group aspect-[4/3]">
+                <div
+                  key={preview.id}
+                  className="relative group aspect-4/3 rounded-lg overflow-hidden border-2 border-border hover:border-primary/50 transition-all duration-200"
+                >
                   {/* Image */}
                   <img
                     src={preview.previewUrl}
                     alt="Превью"
                     className={`
-                      w-full h-full object-cover rounded-lg
+                      w-full h-full object-cover
                       ${preview.error ? "opacity-50" : ""}
                     `}
                   />
 
                   {/* Loading Overlay */}
                   {preview.isUploading && (
-                    <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center backdrop-blur-sm">
                       <Spinner className="w-8 h-8 text-white" />
                     </div>
                   )}
 
                   {/* Error Overlay */}
                   {preview.error && (
-                    <div className="absolute inset-0 bg-destructive/20 rounded-lg flex items-center justify-center">
+                    <div className="absolute inset-0 bg-destructive/30 rounded-lg flex items-center justify-center backdrop-blur-sm">
                       <div className="text-center p-2">
                         <AlertCircle className="w-6 h-6 text-destructive mx-auto" />
-                        <p className="text-xs text-destructive mt-1">{preview.error}</p>
+                        <p className="text-xs text-destructive mt-1 font-medium">
+                          {preview.error}
+                        </p>
                       </div>
                     </div>
                   )}
 
                   {/* Success Indicator */}
                   {preview.uploadedUrl && !preview.error && !preview.isUploading && (
-                    <div className="absolute top-2 left-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <div className="absolute top-2 left-2 w-7 h-7 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
                       <svg
                         className="w-4 h-4 text-white"
                         fill="none"
@@ -528,7 +746,7 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={2}
+                          strokeWidth={3}
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
@@ -540,7 +758,7 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
                     type="button"
                     variant="destructive"
                     size="icon"
-                    className="absolute top-2 right-2 w-7 h-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                     onClick={() => removeImage(preview.id)}
                     disabled={preview.isUploading}
                   >
@@ -553,30 +771,37 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
 
           {/* Empty State */}
           {imagePreviews.length === 0 && !isUploading && (
-            <div className="text-center py-4 text-muted-foreground">
-              <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Изображения ещё не добавлены</p>
+            <div className="text-center py-8 text-muted-foreground">
+              <ImageIcon className="w-16 h-16 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium">Изображения ещё не добавлены</p>
+              <p className="text-xs mt-1">Добавьте хотя бы одно изображение для объявления</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-4">
-        <Button type="submit" className="btn-caucasus" disabled={isSubmitDisabled}>
+      {/* Кнопка отправки */}
+      <div className="flex justify-end gap-4 pt-4">
+        <Button
+          type="submit"
+          className="btn-caucasus min-w-[200px] h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+          disabled={isSubmitDisabled}
+        >
           {isLoading ? (
             <>
-              <Spinner className="w-4 h-4 mr-2" />
+              <Spinner className="w-5 h-5 mr-2" />
               {isEdit ? "Сохранение..." : "Создание..."}
             </>
           ) : hasUploadingImages ? (
             <>
-              <Spinner className="w-4 h-4 mr-2" />
+              <Spinner className="w-5 h-5 mr-2" />
               Загрузка изображений...
             </>
-          ) : isEdit ? (
-            "Сохранить изменения"
           ) : (
-            "Создать объявление"
+            <>
+              {isEdit ? "Сохранить изменения" : "Создать объявление"}
+              <ChevronRight className="w-5 h-5 ml-2" />
+            </>
           )}
         </Button>
       </div>

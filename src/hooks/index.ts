@@ -2,6 +2,7 @@ export * from "./use-local-storage";
 export * from "./use-debounce";
 export * from "./use-media-query";
 export * from "./use-click-outside";
+export * from "./use-amenities";
 export { useSearchSync } from "./use-search-sync";
 
 // Optimistic updates hooks
