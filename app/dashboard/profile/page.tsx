@@ -41,7 +41,7 @@ import {
   Upload,
   Camera,
 } from "lucide-react";
-import { formatPhoneInput } from "@/lib/utils/format";
+import { formatDate, formatPhoneInput } from "@/lib/utils/format";
 
 // Схема валидации - avatar больше не нужен, загрузка отдельно
 const profileSchema = z.object({
@@ -332,45 +332,129 @@ export default function ProfilePage() {
   // URL аватара для отображения: превью или текущий
   const displayAvatarUrl = avatarPreview || currentUser.avatar || undefined;
 
+  // Mobile and desktop visibility helper classes
+  // For "Детали аккаунта" и "Премиум предложение" (premium CTA) to render after form on mobile, before form on desktop:
+  // Use: 'block lg:hidden' (mobile only), 'hidden lg:block' (desktop only)
+
+  const AccountDetailsCard = (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+          <CreditCard className="w-5 h-5" />
+          Детали аккаунта
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* Account ID */}
+        {/* <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+          <p className="text-xs text-muted-foreground">ID аккаунта</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-mono text-xs truncate">{currentUser.id}</p>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0"
+              onClick={handleCopyId}
+              title="Копировать ID"
+            >
+              <Copy className="w-3 h-3" />
+            </Button>
+          </div>
+        </div> */}
+
+        {/* Premium Status */}
+        <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <Crown className="w-3.5 h-3.5" />
+            Premium статус
+          </p>
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-2 h-2 rounded-full ${currentUser.isPremium ? "bg-green-500" : "bg-gray-400"
+                }`}
+            />
+            <p className="text-sm font-medium">
+              {currentUser.isPremium ? "Активен" : "Не активен"}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const PremiumCtaCard = !currentUser.isPremium && (
+    <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 dark:border-amber-800">
+      <CardContent className="p-4 sm:p-6 text-center space-y-4">
+        <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg">
+          <Crown className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-base sm:text-lg">Станьте Premium</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            Разблокируйте все возможности платформы
+          </p>
+        </div>
+        <ul className="text-xs text-left space-y-2">
+          <li className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-green-500 shrink-0" />
+            <span>Приоритетная поддержка</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-green-500 shrink-0" />
+            <span>Расширенная аналитика</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-green-500 shrink-0" />
+            <span>Без ограничений</span>
+          </li>
+        </ul>
+        <Button className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white shadow-md">
+          <Sparkles className="w-4 h-4 mr-2" />
+          Активировать Premium
+        </Button>
+      </CardContent>
+    </Card>
+  );
+
   return (
-    <div className="min-h-screen py-6 px-4 md:py-8">
+    <div className="min-h-screen py-4 px-1 md:px-4 md:py-8">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header Card */}
         <Card className="overflow-hidden">
-          <div className={`h-24 md:h-32 bg-gradient-to-r ${roleConfig.gradient}`} />
-          <CardContent className="relative px-4 pb-6 md:px-6">
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-4 -mt-12 md:-mt-16">
+          <div className={`h-20 sm:h-24 md:h-32 bg-gradient-to-r ${roleConfig.gradient}`} />
+          <CardContent className="relative px-2 sm:px-4 pb-6 md:px-6">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-4 -mt-10 sm:-mt-12 md:-mt-16">
               {/* Avatar */}
               <div className="relative">
-                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-background shadow-xl">
+                <Avatar className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 border-4 border-background shadow-xl">
                   <AvatarImage
                     src={displayAvatarUrl}
                     alt={currentUser.name || "Аватар"}
                   />
-                  <AvatarFallback className="text-2xl md:text-3xl font-semibold bg-muted">
+                  <AvatarFallback className="text-xl sm:text-2xl md:text-3xl font-semibold bg-muted">
                     {getInitials(currentUser.name, currentUser.email)}
                   </AvatarFallback>
                 </Avatar>
                 {currentUser.isPremium && (
-                  <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg">
-                    <Crown className="w-4 h-4 text-white" />
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg">
+                    <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                   </div>
                 )}
               </div>
 
               {/* User Info */}
-              <div className="flex-1 text-center md:text-left space-y-2 md:pb-2">
-                <h1 className="text-2xl md:text-3xl font-bold">
+              <div className="flex-1 text-center md:text-left space-y-1 sm:space-y-2 md:pb-2">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
                   {currentUser.name || "Имя не указано"}
                 </h1>
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-2 sm:gap-x-4 gap-y-2">
                   <Badge variant={roleConfig.variant} className="gap-1.5">
-                    <RoleIcon className="w-3.5 h-3.5" />
+                    <RoleIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     {roleConfig.label}
                   </Badge>
                   {currentUser.email && (
-                    <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5" />
+                    <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       {currentUser.email}
                     </span>
                   )}
@@ -378,14 +462,21 @@ export default function ProfilePage() {
               </div>
 
               {/* Registration Date */}
-              <div className="hidden lg:block text-right">
-                <p className="text-xs text-muted-foreground">Дата регистрации</p>
+              <div className="flex-col items-end text-right gap-1 text-muted-foreground hidden lg:flex">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <p className="text-xs text-muted-foreground">
+                    Дата регистрации:
+                  </p>
+                </div>
                 <p className="text-sm font-medium">
                   {new Date(currentUser.createdAt).toLocaleDateString("ru-RU", {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
                   })}
+                  <span className="mx-1">•</span>
+                  {formatDate(currentUser.createdAt, "ru-RU", { relative: true, short: true })}
                 </p>
               </div>
             </div>
@@ -393,12 +484,18 @@ export default function ProfilePage() {
         </Card>
 
         {/* Main Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid gap-4 lg:grid-cols-3">
+          {/* Sidebar, DESKTOP ONLY */}
+          <div className="space-y-6 order-1 lg:order-2 hidden lg:block">
+            {AccountDetailsCard}
+            {PremiumCtaCard}
+          </div>
+
           {/* Form Card */}
-          <Card className="lg:col-span-2">
+          <Card className="order-2 lg:order-1 lg:col-span-2">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
+                <div className="w-full sm:w-auto">
                   <CardTitle className="flex items-center gap-2">
                     <User className="w-5 h-5" />
                     Личная информация
@@ -423,7 +520,7 @@ export default function ProfilePage() {
                     Аватар
                   </Label>
 
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                     {/* Avatar Preview with Upload Button */}
                     <div className="relative group">
                       <button
@@ -432,7 +529,7 @@ export default function ProfilePage() {
                         disabled={isAvatarUploading}
                         className="relative block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full"
                       >
-                        <Avatar className="w-24 h-24 border-2 border-dashed border-muted-foreground/30 transition-all group-hover:border-primary/50">
+                        <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-dashed border-muted-foreground/30 transition-all group-hover:border-primary/50">
                           <AvatarImage src={displayAvatarUrl} alt="Превью" />
                           <AvatarFallback className="bg-muted/50">
                             <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
@@ -497,7 +594,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Name & Phone Grid */}
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   {/* Name Field */}
                   <div className="space-y-2">
                     <Label htmlFor="name" className="flex items-center gap-2">
@@ -568,8 +665,8 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <p className="text-xs text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t">
+                  <p className="text-xs text-muted-foreground text-center sm:text-left">
                     {isDirty ? "Есть несохранённые изменения" : "Все изменения сохранены"}
                   </p>
                   <div className="flex gap-2">
@@ -601,103 +698,10 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Account Details Card */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Детали аккаунта
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Account ID */}
-                <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-                  <p className="text-xs text-muted-foreground">ID аккаунта</p>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-mono text-xs truncate">{currentUser.id}</p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0"
-                      onClick={handleCopyId}
-                      title="Копировать ID"
-                    >
-                      <Copy className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Registration Date */}
-                <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Дата регистрации
-                  </p>
-                  <p className="text-sm font-medium">
-                    {new Date(currentUser.createdAt).toLocaleDateString("ru-RU", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-
-                {/* Premium Status */}
-                <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                    <Crown className="w-3.5 h-3.5" />
-                    Premium статус
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        currentUser.isPremium ? "bg-green-500" : "bg-gray-400"
-                      }`}
-                    />
-                    <p className="text-sm font-medium">
-                      {currentUser.isPremium ? "Активен" : "Не активен"}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Premium CTA */}
-            {!currentUser.isPremium && (
-              <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 dark:border-amber-800">
-                <CardContent className="p-6 text-center space-y-4">
-                  <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg">
-                    <Crown className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Станьте Premium</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Разблокируйте все возможности платформы
-                    </p>
-                  </div>
-                  <ul className="text-xs text-left space-y-2">
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-500 shrink-0" />
-                      <span>Приоритетная поддержка</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-500 shrink-0" />
-                      <span>Расширенная аналитика</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-500 shrink-0" />
-                      <span>Без ограничений</span>
-                    </li>
-                  </ul>
-                  <Button className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white shadow-md">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Активировать Premium
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+          {/* Sidebar, MOBILE ONLY */}
+          <div className="space-y-6 order-3 lg:hidden mt-4">
+            {AccountDetailsCard}
+            {PremiumCtaCard}
           </div>
         </div>
       </div>
