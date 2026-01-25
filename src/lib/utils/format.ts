@@ -191,26 +191,43 @@ export function normalizePhone(phone: string | null | undefined): string {
   
   if (digits.length === 0) return "";
   
-  // Российские номера
+  // Российские номера - приоритетная обработка
   if (digits.length === 11) {
-    // 8XXXXXXXXXX или 7XXXXXXXXXX
-    if (digits.startsWith("8") || digits.startsWith("7")) {
+    // 8XXXXXXXXXX → +7XXXXXXXXXX
+    if (digits.startsWith("8")) {
+      return "+7" + digits.slice(1);
+    }
+    // 7XXXXXXXXXX → +7XXXXXXXXXX
+    if (digits.startsWith("7")) {
       return "+7" + digits.slice(1);
     }
   } else if (digits.length === 10) {
-    // 9XXXXXXXXXX (без кода страны)
+    // 9XXXXXXXXX (без кода страны) → +79XXXXXXXXX
+    if (digits.startsWith("9")) {
+      return "+7" + digits;
+    }
+    // Другие 10-значные номера → +7XXXXXXXXXX
     return "+7" + digits;
   } else if (digits.length === 12 && digits.startsWith("7")) {
-    // 7XXXXXXXXXXX (иногда встречается)
-    return "+" + digits.slice(0, 11);
+    // 7XXXXXXXXXXX (иногда встречается с лишней цифрой) → +7XXXXXXXXXX
+    return "+7" + digits.slice(1, 12);
   }
   
-  // Если номер уже начинается с +, возвращаем как есть
+  // Если номер уже начинается с +, нормализуем
   if (phone.startsWith("+")) {
-    return "+" + digits;
+    const plusDigits = phone.replace(/\D/g, "");
+    // Если это российский номер с +7
+    if (plusDigits.startsWith("7") && plusDigits.length === 11) {
+      return "+" + plusDigits;
+    }
+    // Если это российский номер с +8 (ошибка)
+    if (plusDigits.startsWith("8") && plusDigits.length === 11) {
+      return "+7" + plusDigits.slice(1);
+    }
+    return "+" + plusDigits;
   }
   
-  // Для других форматов возвращаем как есть с +
+  // Для других форматов возвращаем как есть с + (если достаточно цифр)
   return digits.length >= 10 ? "+" + digits : "";
 }
 
@@ -376,6 +393,7 @@ export function maskPhone(
 
 /**
  * Форматирует ввод телефона в реальном времени (для input)
+ * Улучшенная версия с поддержкой copy/paste и правильной обработкой удаления
  * @param value - текущее значение
  * @param previousValue - предыдущее значение (для определения направления)
  * @returns отформатированное значение
@@ -384,37 +402,59 @@ export function formatPhoneInput(value: string, previousValue?: string): string 
   // Убираем все кроме цифр и +
   let digits = value.replace(/[^\d+]/g, "");
   
-  // Если начинается с 8, заменяем на +7
+  // Нормализация: 8 → +7
   if (digits.startsWith("8") && digits.length > 1) {
     digits = "+7" + digits.slice(1);
   }
   
-  // Если начинается просто с 7 или 9, добавляем +7
-  if (/^[79]/.test(digits) && !digits.startsWith("+")) {
-    if (digits.startsWith("9")) {
-      digits = "+7" + digits;
-    } else if (digits.startsWith("7")) {
-      digits = "+" + digits;
-    }
+  // Если начинается с 9 (без +7), добавляем +7
+  if (digits.startsWith("9") && !digits.startsWith("+")) {
+    digits = "+7" + digits;
   }
   
-  // Убираем + из середины
+  // Если начинается с 7 (без +), добавляем +
+  if (digits.startsWith("7") && !digits.startsWith("+")) {
+    digits = "+" + digits;
+  }
+  
+  // Убираем лишние + из середины
   const hasPlus = digits.startsWith("+");
   digits = digits.replace(/\+/g, "");
   if (hasPlus) digits = "+" + digits;
   
-  // Ограничиваем длину
-  if (digits.replace(/\D/g, "").length > 11) {
-    digits = digits.slice(0, digits.startsWith("+") ? 12 : 11);
-  }
-  
-  // Форматируем по мере ввода
+  // Извлекаем только цифры для форматирования
   const nums = digits.replace(/\D/g, "");
   
-  if (nums.length === 0) return "";
-  if (nums.length <= 1) return `+${nums}`;
-  if (nums.length <= 4) return `+${nums.slice(0, 1)} (${nums.slice(1)}`;
-  if (nums.length <= 7) return `+${nums.slice(0, 1)} (${nums.slice(1, 4)}) ${nums.slice(4)}`;
-  if (nums.length <= 9) return `+${nums.slice(0, 1)} (${nums.slice(1, 4)}) ${nums.slice(4, 7)}-${nums.slice(7)}`;
-  return `+${nums.slice(0, 1)} (${nums.slice(1, 4)}) ${nums.slice(4, 7)}-${nums.slice(7, 9)}-${nums.slice(9, 11)}`;
+  // Ограничиваем длину (11 цифр для российского номера)
+  const maxDigits = 11;
+  const limitedNums = nums.slice(0, maxDigits);
+  
+  // Если пусто, возвращаем пустую строку
+  if (limitedNums.length === 0) return "";
+  
+  // Если только одна цифра (7), возвращаем +7
+  if (limitedNums.length === 1) {
+    return limitedNums === "7" ? "+7" : `+${limitedNums}`;
+  }
+  
+  // Форматируем по мере ввода: +7 (XXX) XXX-XX-XX
+  const country = limitedNums.slice(0, 1); // 7
+  const code = limitedNums.slice(1, 4); // XXX
+  const part1 = limitedNums.slice(4, 7); // XXX
+  const part2 = limitedNums.slice(7, 9); // XX
+  const part3 = limitedNums.slice(9, 11); // XX
+  
+  if (limitedNums.length <= 4) {
+    // +7 (XXX
+    return `+${country} (${code}`;
+  } else if (limitedNums.length <= 7) {
+    // +7 (XXX) XXX
+    return `+${country} (${code}) ${part1}`;
+  } else if (limitedNums.length <= 9) {
+    // +7 (XXX) XXX-XX
+    return `+${country} (${code}) ${part1}-${part2}`;
+  } else {
+    // +7 (XXX) XXX-XX-XX
+    return `+${country} (${code}) ${part1}-${part2}-${part3}`;
+  }
 }

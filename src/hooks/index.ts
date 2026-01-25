@@ -3,7 +3,7 @@ export * from "./use-debounce";
 export * from "./use-media-query";
 export * from "./use-click-outside";
 export * from "./use-amenities";
-export { useSearchSync } from "./use-search-sync";
+export { useSearchFilters } from "./use-search-filters";
 export { useProfile } from "./use-profile";
 
 // Optimistic updates hooks
