@@ -10,5 +10,6 @@ export * from "./property-gallery";
 export * from "./property-grid";
 export * from "./statistics-section";
 export * from "./testimonials";
+export * from "./yandex-map";
 export * from "./profile";
 export * from "./sell";

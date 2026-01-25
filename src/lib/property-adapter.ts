@@ -64,5 +64,7 @@ export function adaptProperty(backend: PropertyBackend): Property {
     updatedAt: backend.updatedAt,
     pricePerMeter:
       backend.area > 0 ? Math.round(backend.price / backend.area) : undefined,
+    latitude: backend.latitude,
+    longitude: backend.longitude,
   };
 }

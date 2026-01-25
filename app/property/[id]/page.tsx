@@ -1,10 +1,11 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { PropertyGallery } from "@/components/features/property-gallery";
+import { YandexMap } from "@/components/features/yandex-map";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Calendar, Eye, Share2, Heart, Home, Square, Building2 } from "lucide-react";
+import { MapPin, Calendar, Eye, Share2, Heart, Home, Square, Building2, Copy } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -25,17 +26,48 @@ export default function PropertyPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { data, isLoading, error } = useProperty(id);
-  const property = data;
-  
+  const { data: property, isLoading, error } = useProperty(id);
+
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
-  
+
   const favorite = property ? isFavorite(property.id) : false;
   const isPending = property ? isMutating(property.id) : false;
+
+  // For "show phone" button
+  const [showPhone, setShowPhone] = useState(false);
+
+  // For share functionality
+  const [copied, setCopied] = useState(false);
 
   const handleFavoriteClick = () => {
     if (property) {
       toggleFavorite(property.id, property);
+    }
+  };
+
+  console.log(property);
+
+
+
+  const handleShowPhone = () => {
+    setShowPhone(true);
+  };
+
+  const handleContactSeller = () => {
+    if (typeof window !== "undefined" && property?.contact?.phone) {
+      window.location.href = getPhoneHref(property.contact.phone);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (typeof window !== "undefined") {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      } catch {
+        setCopied(false);
+      }
     }
   };
 
@@ -66,6 +98,9 @@ export default function PropertyPage({
   const pricePerMeter =
     property.pricePerMeter || Math.round(property.price / property.area);
   const images = property.images || [property.image];
+
+  // карта
+  // Вставьте сюда виджет карты (например, яндекс или google maps) по координатам property.latitude, property.longitude если есть
 
   return (
     <div className='min-h-screen flex flex-col bg-background'>
@@ -113,15 +148,28 @@ export default function PropertyPage({
                         className={`w-5 h-5 transition-transform ${favorite ? "fill-current text-red-500 scale-110" : ""} ${isPending ? "animate-pulse" : ""}`}
                       />
                     </Button>
-                    <Button
-                      variant='outline'
-                      size='icon'
-                      title='Поделиться'
-                      aria-label="Поделиться"
-                      className="min-h-[44px] min-w-[44px]"
-                    >
-                      <Share2 className='w-5 h-5' />
-                    </Button>
+                    <div className="relative">
+                      <Button
+                        type="button"
+                        variant='outline'
+                        size='icon'
+                        title='Поделиться'
+                        aria-label="Поделиться"
+                        className="min-h-[44px] min-w-[44px]"
+                        onClick={handleCopyLink}
+                      >
+                        {copied ? (
+                          <Copy className='w-5 h-5 text-green-500' />
+                        ) : (
+                          <Share2 className='w-5 h-5' />
+                        )}
+                      </Button>
+                      {copied && (
+                        <div className='absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-muted rounded text-xs text-muted-foreground shadow z-10'>
+                          Ссылка скопирована
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -142,7 +190,7 @@ export default function PropertyPage({
                       {formatDate(property.updatedAt, "ru-RU", { relative: true, includeTime: true })}
                     </span>
                   )}
-                  {property.views && (
+                  {property.views !== undefined && (
                     <span className='flex items-center gap-1'>
                       <Eye className='w-4 h-4' />
                       {property.views} просмотров
@@ -197,7 +245,7 @@ export default function PropertyPage({
                       {property.area} м²
                     </span>
                   </div>
-                  {property.rooms && (
+                  {property.rooms !== undefined && property.rooms !== null && (
                     <div className='flex justify-between items-baseline border-b border-border/50 pb-2'>
                       <span className='text-muted-foreground'>Комнат</span>
                       <span className='font-medium text-foreground'>
@@ -205,7 +253,7 @@ export default function PropertyPage({
                       </span>
                     </div>
                   )}
-                  {property.floor && (
+                  {property.floor !== undefined && property.floor !== null && (
                     <div className='flex justify-between items-baseline border-b border-border/50 pb-2'>
                       <span className='text-muted-foreground'>Этаж</span>
                       <span className='font-medium text-foreground'>
@@ -241,6 +289,27 @@ export default function PropertyPage({
                       </Badge>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Карта */}
+              {property.latitude && property.longitude ? (
+                <div className='bg-card rounded-xl border border-border p-6'>
+                  <h2 className='text-xl font-semibold mb-4'>Расположение на карте</h2>
+                  <YandexMap
+                    latitude={property.latitude}
+                    longitude={property.longitude}
+                    zoom={15}
+                    height={400}
+                    markerTitle={property.title}
+                  />
+                </div>
+              ) : (
+                <div className='bg-card rounded-xl border border-border p-6'>
+                  <h2 className='text-xl font-semibold mb-4'>Расположение на карте</h2>
+                  <p className='text-muted-foreground text-sm'>
+                    Координаты не указаны. Для отображения карты необходимо указать широту и долготу.
+                  </p>
                 </div>
               )}
 
@@ -323,7 +392,7 @@ export default function PropertyPage({
                             <span className='text-sm font-medium'>{property.area} м²</span>
                           </div>
                         </div>
-                        {property.floor && (
+                        {property.floor !== undefined && property.floor !== null && (
                           <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
                             <Building2 className='w-4 h-4 text-muted-foreground flex-shrink-0' />
                             <div className='flex flex-col'>
@@ -348,11 +417,25 @@ export default function PropertyPage({
 
                     {/* CTA кнопки */}
                     <div className='space-y-2 pt-2'>
-                      <Button className='w-full min-h-[44px]'>Связаться с продавцом</Button>
-                      <Button variant='outline' className='w-full min-h-[44px]'>
-                        Показать телефон
+                      <Button
+                        className='w-full min-h-[44px]'
+                        onClick={handleContactSeller}
+                        asChild={false}
+                      >
+                        Связаться с продавцом
+                      </Button>
+                      <Button
+                        variant='outline'
+                        className='w-full min-h-[44px]'
+                        onClick={handleShowPhone}
+                        disabled={showPhone}
+                      >
+                        {showPhone
+                          ? formatPhone(property.contact.phone, "international")
+                          : "Показать телефон"}
                       </Button>
                     </div>
+
                   </div>
                 </div>
               </div>
