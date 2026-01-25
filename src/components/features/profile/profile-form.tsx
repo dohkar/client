@@ -1,8 +1,7 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import type { UseFormRegister, UseFormHandleSubmit, FieldErrors, UseFormSetValue } from "react-hook-form";
 import {
   Card,
   CardContent,
@@ -60,6 +59,10 @@ interface ProfileFormProps {
   isDirty: boolean;
   changedFieldsCount: number;
   isSubmitting: boolean;
+  register: UseFormRegister<ProfileFormData>;
+  handleSubmit: UseFormHandleSubmit<ProfileFormData>;
+  errors: FieldErrors<ProfileFormData>;
+  setValue: UseFormSetValue<ProfileFormData>;
 }
 
 export function ProfileForm({
@@ -72,19 +75,11 @@ export function ProfileForm({
   isDirty,
   changedFieldsCount,
   isSubmitting,
+  register,
+  handleSubmit,
+  errors,
+  setValue,
 }: ProfileFormProps) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-  } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: user.name || "",
-      phone: user.phone || "",
-    },
-  });
 
   return (
     <Card>
@@ -212,7 +207,7 @@ export function ProfileForm({
                 id="phone"
                 type="tel"
                 {...register("phone", {
-                  onChange: (e) => {
+                  onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
                     const formatted = formatPhoneInput(e.target.value);
                     setValue("phone", formatted, { shouldValidate: true });
                   },

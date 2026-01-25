@@ -1,14 +1,14 @@
 export type PropertyType = "apartment" | "house" | "land" | "commercial";
 export type PropertyStatus = "active" | "pending" | "sold" | "archived";
 
-// Backend property format
+// Backend property format (matches API response)
 export interface PropertyBackend {
   id: string;
   title: string;
   price: number;
   currency: "RUB" | "USD";
   location: string;
-  region: "CHECHNYA" | "INGUSHETIA" | "OTHER";
+  regionId: string; // Changed from region enum to regionId UUID
   type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
   rooms?: number;
   area: number;
@@ -27,6 +27,12 @@ export interface PropertyBackend {
     avatar?: string;
     isPremium?: boolean;
   };
+  // Optional: region relation might be included in some responses
+  // OpenAPI spec generates Record<string, never> but API may return proper structure
+  region?: {
+    id: string;
+    name: string;
+  } | Record<string, never>;
 }
 
 // Frontend property format (for compatibility)

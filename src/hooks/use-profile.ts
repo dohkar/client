@@ -220,5 +220,6 @@ export function useProfile() {
     fileInputRef,
     handleAvatarSelect,
     handleAvatarClick,
+    setValue,
   };
 }

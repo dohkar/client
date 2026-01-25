@@ -602,6 +602,8 @@ export interface components {
             currency: "RUB" | "USD";
             location: string;
             regionId: string;
+            /** @description Region relation (optional, may be included in response) */
+            region?: Record<string, never>;
             /** @enum {string} */
             type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
             rooms?: number;

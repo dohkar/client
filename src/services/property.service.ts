@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/constants/routes";
 import { adaptProperty } from "@/lib/property-adapter";
+import { initializeRegionCache } from "@/services/region.service";
 import type { PaginatedResponse } from "@/types";
 import type { Property, PropertyBackend } from "@/types/property";
 import type {
@@ -32,7 +33,7 @@ export const propertyService = {
     if (params?.priceMax) queryParams.append("priceMax", params.priceMax.toString());
     if (params?.rooms) queryParams.append("rooms", params.rooms.toString());
     if (params?.areaMin) queryParams.append("areaMin", params.areaMin.toString());
-    if (params?.region) queryParams.append("region", params.region);
+    if (params?.regionId) queryParams.append("regionId", params.regionId);
     if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -67,6 +68,10 @@ export const propertyService = {
     const response = await apiClient.get<ApiPropertySearchResponse>(
       `${API_ENDPOINTS.properties.search}?q=${encodeURIComponent(query)}`
     );
+    
+    // Инициализируем кэш регионов на основе полученных данных
+    initializeRegionCache(response);
+    
     return response.map(adaptProperty); // Directly map the response
   },
 

@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/constants/routes";
 import { adaptProperty } from "@/lib/property-adapter";
+import { initializeRegionCache } from "@/services/region.service";
 import type { Property } from "@/types/property";
 import type {
   FavoritesListResponse,
@@ -21,7 +22,12 @@ export const favoritesService = {
     const response = await apiClient.get<FavoritesListResponse>(
       API_ENDPOINTS.favorites.list
     );
-    return response.map((fav) => adaptProperty(fav.property));
+
+    // Инициализируем кэш регионов на основе полученных данных
+    const properties = response.map((fav) => fav.property);
+    initializeRegionCache(properties);
+
+    return properties.map(adaptProperty);
   },
 
   /**

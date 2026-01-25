@@ -1,15 +1,15 @@
 import type { Property, PropertyBackend, PropertyStatus } from "@/types/property";
+import {
+  getRegionNameById,
+  registerRegionMapping,
+  REGION_BACKEND_TO_NAME,
+  type RegionName
+} from "@/lib/regions";
 
 /**
  * Адаптер для преобразования данных недвижимости из формата бэкенда в формат фронтенда
  */
 export function adaptProperty(backend: PropertyBackend): Property {
-  const regionMap: Record<string, "Chechnya" | "Ingushetia" | "Other"> = {
-    CHECHNYA: "Chechnya",
-    INGUSHETIA: "Ingushetia",
-    OTHER: "Other",
-  };
-
   const typeMap: Record<string, "apartment" | "house" | "land" | "commercial"> =
     {
       APARTMENT: "apartment",
@@ -18,13 +18,32 @@ export function adaptProperty(backend: PropertyBackend): Property {
       COMMERCIAL: "commercial",
     };
 
+  // Определяем название региона:
+  // 1. Если есть relation с region, используем его
+  // 2. Иначе используем кэш по regionId
+  // 3. Иначе используем "Other" по умолчанию
+  let regionName: RegionName = "Other";
+
+  // Type guard: проверяем, что region имеет правильную структуру (не Record<string, never>)
+  if (backend.region && "name" in backend.region && typeof backend.region.name === "string") {
+    // Если API вернул relation с регионом, используем его
+    const region = backend.region as { id: string; name: string };
+    const backendName = region.name as keyof typeof REGION_BACKEND_TO_NAME;
+    regionName = REGION_BACKEND_TO_NAME[backendName] || "Other";
+    // Кэшируем маппинг для будущего использования
+    registerRegionMapping(backend.regionId, regionName);
+  } else {
+    // Используем кэш или значение по умолчанию
+    regionName = getRegionNameById(backend.regionId);
+  }
+
   return {
     id: backend.id,
     title: backend.title,
     price: backend.price,
     currency: backend.currency,
     location: backend.location,
-    region: regionMap[backend.region] || "Other",
+    region: regionName,
     type: typeMap[backend.type] || "apartment",
     rooms: backend.rooms,
     area: backend.area,
