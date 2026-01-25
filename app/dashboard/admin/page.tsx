@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks";
 import { useAuthStore } from "@/stores";
 import { redirect } from "next/navigation";
 import { adminService } from "@/services/admin.service";
@@ -10,6 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { UsersDataTable } from "@/components/admin/users/users-data-table";
+import { createUserColumns, type UserWithCount } from "@/components/admin/users/columns";
+import { PropertiesDataTable } from "@/components/admin/properties/properties-data-table";
+import { createPropertyColumns } from "@/components/admin/properties/columns";
 import {
   Select,
   SelectContent,
@@ -34,16 +39,6 @@ import {
 } from "recharts";
 import { Users, Home, Eye, Search, Trash2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { formatCurrency } from "@/lib/utils/format";
-import { formatDate } from "@/lib/utils/format";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
@@ -53,12 +48,13 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<
     "overview" | "users" | "properties"
   >("overview");
-  const [usersPage, setUsersPage] = useState(1);
-  const [propertiesPage, setPropertiesPage] = useState(1);
   const [usersSearch, setUsersSearch] = useState("");
   const [propertiesSearch, setPropertiesSearch] = useState("");
   const [propertiesStatus, setPropertiesStatus] = useState<string>("all");
   const [propertiesType, setPropertiesType] = useState<string>("all");
+
+  const debouncedUsersSearch = useDebounce(usersSearch, 400);
+  const debouncedPropertiesSearch = useDebounce(propertiesSearch, 400);
 
   // Проверка роли админа (без учёта регистра)
   const isAdmin = user?.role?.toUpperCase() === "ADMIN";
@@ -72,34 +68,37 @@ export default function AdminPage() {
     enabled: isInitialized && isAuthenticated && isAdmin,
   });
 
-  // Users
+  // Users - загружаем все данные для клиентской пагинации через TanStack Table
   const { data: usersData, isLoading: usersLoading } = useQuery({
-    queryKey: ["admin", "users", usersPage, usersSearch],
+    queryKey: ["admin", "users", debouncedUsersSearch],
     queryFn: async () => {
+      // Загружаем больше данных для клиентской пагинации
+      // В будущем можно переделать на manual pagination для больших объемов
       return adminService.getUsers({
-        page: usersPage,
-        limit: 10,
-        search: usersSearch || undefined,
+        page: 1,
+        limit: 1000, // Временное решение - загружаем много данных
+        search: debouncedUsersSearch || undefined,
       });
     },
     enabled: activeTab === "users" && isInitialized && isAuthenticated && isAdmin,
   });
 
-  // Properties
+  // Properties - загружаем все данные для клиентской пагинации через TanStack Table
   const { data: propertiesData, isLoading: propertiesLoading } = useQuery({
     queryKey: [
       "admin",
       "properties",
-      propertiesPage,
-      propertiesSearch,
+      debouncedPropertiesSearch,
       propertiesStatus,
       propertiesType,
     ],
     queryFn: async () => {
+      // Загружаем больше данных для клиентской пагинации
+      // В будущем можно переделать на manual pagination для больших объемов
       return adminService.getProperties({
-        page: propertiesPage,
-        limit: 10,
-        search: propertiesSearch || undefined,
+        page: 1,
+        limit: 1000, // Временное решение - загружаем много данных
+        search: debouncedPropertiesSearch || undefined,
         status: propertiesStatus !== "all" ? (propertiesStatus as "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED") : undefined,
         type: propertiesType !== "all" ? (propertiesType as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL") : undefined,
       });
@@ -166,7 +165,7 @@ export default function AdminPage() {
   useEffect(() => {
     // Ждём инициализации store перед редиректом
     if (!isInitialized) return;
-    
+
     if (!isAuthenticated) {
       redirect("/auth/login");
     } else if (!isAdmin) {
@@ -204,28 +203,30 @@ export default function AdminPage() {
         </div>
 
         {/* Tabs */}
-        <div className='flex gap-2 mb-6 border-b'>
-          <Button
-            variant={activeTab === "overview" ? "default" : "ghost"}
-            onClick={() => setActiveTab("overview")}
-            className='min-h-[44px]'
-          >
-            Обзор
-          </Button>
-          <Button
-            variant={activeTab === "users" ? "default" : "ghost"}
-            onClick={() => setActiveTab("users")}
-            className='min-h-[44px]'
-          >
-            Пользователи
-          </Button>
-          <Button
-            variant={activeTab === "properties" ? "default" : "ghost"}
-            onClick={() => setActiveTab("properties")}
-            className='min-h-[44px]'
-          >
-            Объявления
-          </Button>
+        <div className='flex gap-2 mb-6 border-b overflow-x-auto'>
+          <div className='flex gap-2 min-w-max'>
+            <Button
+              variant={activeTab === "overview" ? "default" : "ghost"}
+              onClick={() => setActiveTab("overview")}
+              className='min-h-[44px] whitespace-nowrap'
+            >
+              Обзор
+            </Button>
+            <Button
+              variant={activeTab === "users" ? "default" : "ghost"}
+              onClick={() => setActiveTab("users")}
+              className='min-h-[44px] whitespace-nowrap'
+            >
+              Пользователи
+            </Button>
+            <Button
+              variant={activeTab === "properties" ? "default" : "ghost"}
+              onClick={() => setActiveTab("properties")}
+              className='min-h-[44px] whitespace-nowrap'
+            >
+              Объявления
+            </Button>
+          </div>
         </div>
 
         {/* Overview Tab */}
@@ -303,13 +304,13 @@ export default function AdminPage() {
                 </div>
 
                 {/* Charts */}
-                <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+                <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
                   <Card className='border-primary/20'>
-                    <CardHeader>
-                      <CardTitle>Объявления по типам</CardTitle>
+                    <CardHeader className='pb-3 sm:pb-6'>
+                      <CardTitle className='text-base sm:text-lg'>Объявления по типам</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width='100%' height={300}>
+                    <CardContent className='px-2 sm:px-6'>
+                      <ResponsiveContainer width='100%' height={250} className="sm:h-[300px]">
                         <PieChart>
                           <Pie
                             data={statistics.propertiesByType}
@@ -317,7 +318,8 @@ export default function AdminPage() {
                             cy='50%'
                             labelLine={false}
                             label={({ type, count }) => `${type}: ${count}`}
-                            outerRadius={80}
+                            outerRadius={60}
+                            className="sm:outerRadius-[80px]"
                             fill='#8884d8'
                             dataKey='count'
                           >
@@ -335,14 +337,20 @@ export default function AdminPage() {
                   </Card>
 
                   <Card className='border-primary/20'>
-                    <CardHeader>
-                      <CardTitle>Объявления по регионам</CardTitle>
+                    <CardHeader className='pb-3 sm:pb-6'>
+                      <CardTitle className='text-base sm:text-lg'>Объявления по регионам</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width='100%' height={300}>
+                    <CardContent className='px-2 sm:px-6'>
+                      <ResponsiveContainer width='100%' height={250} className="sm:h-[300px]">
                         <BarChart data={statistics.propertiesByRegion}>
                           <CartesianGrid strokeDasharray='3 3' />
-                          <XAxis dataKey='region' />
+                          <XAxis 
+                            dataKey='region' 
+                            angle={-45}
+                            textAnchor="end"
+                            height={80}
+                            className="text-xs"
+                          />
                           <YAxis />
                           <Tooltip />
                           <Bar dataKey='count' fill='#8884d8' />
@@ -353,14 +361,20 @@ export default function AdminPage() {
                 </div>
 
                 <Card className='border-primary/20'>
-                  <CardHeader>
-                    <CardTitle>Новые объявления за последние 7 дней</CardTitle>
+                  <CardHeader className='pb-3 sm:pb-6'>
+                    <CardTitle className='text-base sm:text-lg'>Новые объявления за последние 7 дней</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width='100%' height={300}>
+                  <CardContent className='px-2 sm:px-6'>
+                    <ResponsiveContainer width='100%' height={250} className="sm:h-[300px]">
                       <LineChart data={statistics.dailyStats}>
                         <CartesianGrid strokeDasharray='3 3' />
-                        <XAxis dataKey='date' />
+                        <XAxis 
+                          dataKey='date' 
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                          className="text-xs"
+                        />
                         <YAxis />
                         <Tooltip />
                         <Legend />
@@ -394,7 +408,6 @@ export default function AdminPage() {
                         value={usersSearch}
                         onChange={(e) => {
                           setUsersSearch(e.target.value);
-                          setUsersPage(1);
                         }}
                         className='pl-8 min-h-[44px]'
                       />
@@ -403,145 +416,18 @@ export default function AdminPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                {usersLoading ? (
-                  <div className='text-center py-12'>Загрузка...</div>
-                ) : usersData ? (
-                  <>
-                    <div className='overflow-x-auto'>
-                      <table className='w-full'>
-                        <thead>
-                          <tr className='border-b'>
-                            <th className='text-left p-2 text-sm font-semibold'>
-                              Email
-                            </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
-                              Имя
-                            </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
-                              Роль
-                            </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
-                              Объявлений
-                            </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
-                              Дата регистрации
-                            </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
-                              Действия
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {usersData?.data?.map((user) => (
-                            <tr
-                              key={user.id}
-                              className='border-b hover:bg-muted/50'
-                            >
-                              <td className='p-2 text-sm'>{user.email}</td>
-                              <td className='p-2 text-sm'>{user.name}</td>
-                              <td className='p-2'>
-                                <Select
-                                  value={user.role}
-                                  onValueChange={(value) =>
-                                    updateUserRoleMutation.mutate({
-                                      userId: user.id,
-                                      role: value as "USER" | "PREMIUM" | "ADMIN",
-                                    })
-                                  }
-                                >
-                                  <SelectTrigger className='w-32 min-h-[36px]'>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value='USER'>USER</SelectItem>
-                                    <SelectItem value='PREMIUM'>
-                                      PREMIUM
-                                    </SelectItem>
-                                    <SelectItem value='ADMIN'>ADMIN</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </td>
-                              <td className='p-2 text-sm'>
-                                {/* propertiesCount not in UserResponseDto */}
-                                -
-                              </td>
-                              <td className='p-2 text-sm'>
-                                {formatDate(user.createdAt, "ru-RU", { relative: true })}
-                              </td>
-                              <td className='p-2'>
-                                <Button
-                                  size='sm'
-                                  variant='destructive'
-                                  onClick={() => {
-                                    if (
-                                      confirm(
-                                        `Удалить пользователя ${user.email}?`
-                                      )
-                                    ) {
-                                      deleteUserMutation.mutate(user.id);
-                                    }
-                                  }}
-                                  disabled={deleteUserMutation.isPending}
-                                  className='min-h-[36px]'
-                                >
-                                  <Trash2 className='w-4 h-4' />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    {usersData?.totalPages && usersData.totalPages > 1 && (
-                      <div className='mt-4'>
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationPrevious
-                                onClick={() =>
-                                  setUsersPage((p) => Math.max(1, p - 1))
-                                }
-                                className={
-                                  usersPage === 1
-                                    ? "pointer-events-none opacity-50"
-                                    : "cursor-pointer"
-                                }
-                              />
-                            </PaginationItem>
-                            {Array.from(
-                              { length: usersData?.totalPages || 0 },
-                              (_, i) => i + 1
-                            ).map((page) => (
-                              <PaginationItem key={page}>
-                                <PaginationLink
-                                  onClick={() => setUsersPage(page)}
-                                  isActive={page === usersPage}
-                                  className='cursor-pointer'
-                                >
-                                  {page}
-                                </PaginationLink>
-                              </PaginationItem>
-                            ))}
-                            <PaginationItem>
-                              <PaginationNext
-                                onClick={() =>
-                                  setUsersPage((p) =>
-                                    Math.min(usersData?.totalPages || 1, p + 1)
-                                  )
-                                }
-                                className={
-                                  usersPage === (usersData?.totalPages || 1)
-                                    ? "pointer-events-none opacity-50"
-                                    : "cursor-pointer"
-                                }
-                              />
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                      </div>
-                    )}
-                  </>
-                ) : null}
+                <UsersDataTable
+                  columns={createUserColumns(
+                    (userId, role) =>
+                      updateUserRoleMutation.mutate({ userId, role }),
+                    (userId) => deleteUserMutation.mutate(userId),
+                    deleteUserMutation.isPending
+                  )}
+                  data={(usersData?.data || []) as UserWithCount[]}
+                  isLoading={usersLoading}
+                  searchValue={debouncedUsersSearch}
+                  onSearchChange={setUsersSearch}
+                />
               </CardContent>
             </Card>
           </div>
@@ -562,7 +448,6 @@ export default function AdminPage() {
                         value={propertiesSearch}
                         onChange={(e) => {
                           setPropertiesSearch(e.target.value);
-                          setPropertiesPage(1);
                         }}
                         className='pl-8 min-h-[44px]'
                       />
@@ -601,186 +486,18 @@ export default function AdminPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                {propertiesLoading ? (
-                  <div className='text-center py-12'>Загрузка...</div>
-                ) : propertiesData ? (
-                  <>
-                    <div className='overflow-x-auto rounded-lg border border-border'>
-                      <table className='w-full'>
-                        <thead>
-                          <tr className='border-b bg-muted/50'>
-                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
-                              Название
-                            </th>
-                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
-                              Цена
-                            </th>
-                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
-                              Тип
-                            </th>
-                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
-                              Статус
-                            </th>
-                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
-                              Просмотры
-                            </th>
-                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
-                              Владелец
-                            </th>
-                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
-                              Действия
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {propertiesData?.data?.map((property, index) => (
-                            <tr
-                              key={property.id}
-                              className={`border-b transition-colors ${
-                                index % 2 === 0 ? "bg-background" : "bg-muted/30"
-                              } hover:bg-muted/70`}
-                            >
-                              <td className='p-3 text-sm max-w-xs'>
-                                <span className='truncate block' title={property.title}>
-                                  {property.title}
-                                </span>
-                              </td>
-                              <td className='p-3 text-sm font-medium'>
-                                {formatCurrency(
-                                  property.price,
-                                  (property.currency as "RUB" | "USD") || "RUB"
-                                )}
-                              </td>
-                              <td className='p-3 text-sm'>
-                                <Badge variant='outline' className='text-xs'>
-                                  {property.type}
-                                </Badge>
-                              </td>
-                              <td className='p-3'>
-                                <Select
-                                  value={property.status}
-                                  onValueChange={(value) =>
-                                    updatePropertyStatusMutation.mutate({
-                                      propertyId: property.id,
-                                      status: value as "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED",
-                                    })
-                                  }
-                                >
-                                  <SelectTrigger className='w-36 min-h-[36px]'>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value='ACTIVE'>
-                                      <div className='flex items-center gap-2'>
-                                        <div className='w-2 h-2 rounded-full bg-green-500' />
-                                        Активное
-                                      </div>
-                                    </SelectItem>
-                                    <SelectItem value='PENDING'>
-                                      <div className='flex items-center gap-2'>
-                                        <div className='w-2 h-2 rounded-full bg-yellow-500' />
-                                        На модерации
-                                      </div>
-                                    </SelectItem>
-                                    <SelectItem value='SOLD'>
-                                      <div className='flex items-center gap-2'>
-                                        <div className='w-2 h-2 rounded-full bg-blue-500' />
-                                        Продано
-                                      </div>
-                                    </SelectItem>
-                                    <SelectItem value='ARCHIVED'>
-                                      <div className='flex items-center gap-2'>
-                                        <div className='w-2 h-2 rounded-full bg-gray-500' />
-                                        Архив
-                                      </div>
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </td>
-                              <td className='p-3 text-sm text-muted-foreground'>
-                                {property.views || 0}
-                              </td>
-                              <td className='p-3 text-sm text-muted-foreground'>
-                                <span className='truncate block max-w-[120px]' title={property.userId}>
-                                  {property.userId}
-                                </span>
-                              </td>
-                              <td className='p-3'>
-                                <Button
-                                  size='sm'
-                                  variant='destructive'
-                                  onClick={() => {
-                                    if (
-                                      confirm(
-                                        `Удалить объявление "${property.title}"?`
-                                      )
-                                    ) {
-                                      deletePropertyMutation.mutate(
-                                        property.id
-                                      );
-                                    }
-                                  }}
-                                  disabled={deletePropertyMutation.isPending}
-                                  className='min-h-[36px]'
-                                >
-                                  <Trash2 className='w-4 h-4' />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    {propertiesData?.totalPages && propertiesData.totalPages > 1 && (
-                      <div className='mt-4'>
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationPrevious
-                                onClick={() =>
-                                  setPropertiesPage((p) => Math.max(1, p - 1))
-                                }
-                                className={
-                                  propertiesPage === 1
-                                    ? "pointer-events-none opacity-50"
-                                    : "cursor-pointer"
-                                }
-                              />
-                            </PaginationItem>
-                            {Array.from(
-                              { length: propertiesData?.totalPages || 0 },
-                              (_, i) => i + 1
-                            ).map((page) => (
-                              <PaginationItem key={page}>
-                                <PaginationLink
-                                  onClick={() => setPropertiesPage(page)}
-                                  isActive={page === propertiesPage}
-                                  className='cursor-pointer'
-                                >
-                                  {page}
-                                </PaginationLink>
-                              </PaginationItem>
-                            ))}
-                            <PaginationItem>
-                              <PaginationNext
-                                onClick={() =>
-                                  setPropertiesPage((p) =>
-                                    Math.min(propertiesData?.totalPages || 1, p + 1)
-                                  )
-                                }
-                                className={
-                                  propertiesPage === (propertiesData?.totalPages || 1)
-                                    ? "pointer-events-none opacity-50"
-                                    : "cursor-pointer"
-                                }
-                              />
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                      </div>
-                    )}
-                  </>
-                ) : null}
+                <PropertiesDataTable
+                  columns={createPropertyColumns(
+                    (propertyId, status) =>
+                      updatePropertyStatusMutation.mutate({ propertyId, status }),
+                    (propertyId) => deletePropertyMutation.mutate(propertyId),
+                    deletePropertyMutation.isPending
+                  )}
+                  data={propertiesData?.data || []}
+                  isLoading={propertiesLoading}
+                  searchValue={debouncedPropertiesSearch}
+                  onSearchChange={setPropertiesSearch}
+                />
               </CardContent>
             </Card>
           </div>
