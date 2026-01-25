@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { propertyService } from "@/services/property.service";
+import { getRegionIdByName } from "@/services/region.service";
 import type { PropertySearchParams } from "@/types/property";
 import type { ApiPropertyListParams } from "@/lib/api-types";
 import { toast } from "sonner";
@@ -17,7 +18,8 @@ export function useProperties(params?: PropertySearchParams) {
     priceMax: params.priceMax,
     rooms: params.rooms,
     areaMin: params.areaMin,
-    region: params.region ? (params.region.toUpperCase() as "CHECHNYA" | "INGUSHETIA" | "OTHER") : undefined,
+    // Конвертируем название региона в regionId через кэш
+    regionId: params.region ? getRegionIdByName(params.region) : undefined,
     sortBy: params.sortBy,
     page: params.page,
     limit: params.limit,

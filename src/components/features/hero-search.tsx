@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/select";
 
 import { DealType } from "@/types/common";
-// import { useDebounce } from "@/hooks/use-debounce";
 import { POPULAR_CITIES, DEAL_TYPES } from "@/constants/search";
 
 interface SearchForm {
@@ -22,30 +21,46 @@ interface SearchForm {
   dealType: DealType;
 }
 
+const DEFAULT_DEAL_TYPE = DEAL_TYPES[0]?.value || "buy";
+
 export function HeroSearch() {
   const router = useRouter();
 
-  const { register, setValue, watch } = useForm<SearchForm>({
+  // Вынесем errors на будущее, но не форсим ошибку на UI
+  const {
+    register,
+    setValue,
+    watch,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SearchForm>({
     defaultValues: {
       query: "",
-      dealType: "buy",
+      dealType: DEFAULT_DEAL_TYPE,
     },
   });
 
-  const query = watch("query");
   const dealType = watch("dealType");
 
-  // const debouncedQuery = useDebounce(query, 200);
+  // useMemo убираем — это вычисление простое и предсказуемое
+  const validDealType =
+    DEAL_TYPES.some((t) => t.value === dealType)
+      ? dealType
+      : DEFAULT_DEAL_TYPE;
 
-  const performSearch = (q: string) => {
-    const encodedCity = encodeURIComponent(q.trim());
-    router.push(`/search?query=${encodedCity}&dealType=${dealType}`);
+  // Теперь performSearch принимает SearchForm (расширяемость)
+  const performSearch = (params: SearchForm) => {
+    const trimmedQuery = params.query.trim();
+    if (!trimmedQuery) return;
+
+    router.push(
+      `/search?query=${encodeURIComponent(trimmedQuery)}&dealType=${params.dealType}`,
+    );
   };
 
-  const onSubmit = () => {
-    if (!query.trim()) return;
-    performSearch(query);
-  };
+  const onSubmit = handleSubmit((data) => {
+    performSearch(data);
+  });
 
   return (
     <div className='relative background-mountains py-16 md:py-24'>
@@ -56,29 +71,32 @@ export function HeroSearch() {
           </h1>
 
           {/* Search box */}
-          <div className='bg-white p-6 rounded-xl shadow-xl max-w-2xl mx-auto'>
+          <form onSubmit={onSubmit} className='bg-white p-6 rounded-xl shadow-xl max-w-2xl mx-auto'>
             <div className='flex flex-col lg:flex-row gap-4'>
               {/* Input */}
               <div className='relative flex-1'>
                 <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground' />
 
                 <Input
-                  {...register("query")}
+                  {...register("query", { required: true })}
                   placeholder='Город, район или улица'
                   className='pl-12 h-12 text-base'
                   autoComplete='off'
                   aria-label='Поисковый запрос'
-                  onKeyDown={(e) => e.key === "Enter" && onSubmit()}
                 />
               </div>
 
               {/* Deal type */}
               <Select
-                value={dealType}
-                onValueChange={(v: DealType) => setValue("dealType", v)}
+                value={validDealType}
+                onValueChange={(v: DealType) =>
+                  setValue("dealType", v, { shouldDirty: true })
+                }
               >
                 <SelectTrigger className='h-12 text-base'>
-                  <SelectValue placeholder='Тип сделки' />
+                  <div className='flex items-center gap-2 flex-1'>
+                    <SelectValue placeholder='Тип сделки' />
+                  </div>
                 </SelectTrigger>
 
                 <SelectContent>
@@ -95,21 +113,24 @@ export function HeroSearch() {
 
               {/* Search button */}
               <Button
+                type='submit'
                 className='h-12 px-8 font-semibold'
-                onClick={onSubmit}
                 aria-label='Начать поиск'
+                disabled={Boolean(errors.query)} // простая блокировка если инпут пустой
               >
                 Найти
               </Button>
             </div>
-          </div>
+          </form>
 
           {/* Popular cities */}
           <div className='flex flex-wrap justify-center gap-2 pt-2 text-sm'>
             {POPULAR_CITIES.map((city) => (
               <button
                 key={city}
-                onClick={() => performSearch(city)}
+                onClick={() =>
+                  performSearch({ query: city, dealType: validDealType })
+                }
                 className='flex items-center gap-1 px-3 py-1.5 bg-primary/40 text-gold rounded-full border border-white/30 hover:border-white/60 hover:brightness-110 transition-all duration-200'
               >
                 <MapPin className='h-3 w-3' />

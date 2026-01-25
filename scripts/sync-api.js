@@ -13,7 +13,7 @@
  *   node scripts/sync-api.js [--url <api-url>] [--skip-check] [--save-file]
  *
  * Опции:
- *   --url <api-url>     URL API сервера (по умолчанию из NEXT_PUBLIC_API_URL или http://localhost:3001)
+ *   --url <api-url>     URL API сервера (по умолчанию из NEXT_PUBLIC_API_URL или http://localhost:4000)
  *   --skip-check        Пропустить проверку типов (tscheck)
  *   --save-file         Сохранить openapi.json в корень проекта (опционально)
  */
@@ -71,7 +71,7 @@ function getApiUrl() {
 		return envUrl.replace(/\/api\/?$/, '');
 	}
 
-	return 'http://localhost:3001';
+	return 'http://localhost:4000';
 }
 
 function shouldSkipCheck() {

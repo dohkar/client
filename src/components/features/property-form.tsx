@@ -18,6 +18,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { propertyService } from "@/services/property.service";
+import { getRegionIdByName } from "@/services/region.service";
+import { REGION_OPTIONS } from "@/lib/search-constants";
 import {
   uploadService,
   validateImageFiles,
@@ -275,12 +277,14 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
 
     setIsLoading(true);
     try {
-      // Конвертация frontend формата в API формат
-      const regionMap: Record<string, "CHECHNYA" | "INGUSHETIA" | "OTHER"> = {
-        Chechnya: "CHECHNYA",
-        Ingushetia: "INGUSHETIA",
-        Other: "OTHER",
-      };
+      // Получаем regionId по названию региона
+      const regionId = getRegionIdByName(data.region);
+      if (!regionId) {
+        toast.error("Регион не найден. Пожалуйста, обновите страницу и попробуйте снова.");
+        setIsLoading(false);
+        return;
+      }
+
       const typeMap: Record<string, "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"> = {
         apartment: "APARTMENT",
         house: "HOUSE",
@@ -299,7 +303,7 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
         price: data.price,
         currency: "RUB" as const, // Всегда рубли
         location: data.location,
-        region: regionMap[data.region] || "OTHER",
+        regionId: regionId, // Используем regionId вместо region enum
         type: typeMap[data.type] || "APARTMENT",
         rooms: data.rooms,
         area: data.area,

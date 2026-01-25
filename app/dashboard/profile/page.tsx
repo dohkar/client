@@ -31,6 +31,10 @@ export default function ProfilePage() {
     fileInputRef,
     handleAvatarSelect,
     handleAvatarClick,
+    register,
+    handleSubmit,
+    errors,
+    setValue,
   } = useProfile();
 
   // Состояние загрузки — показываем skeleton с анимацией
@@ -103,6 +107,10 @@ export default function ProfilePage() {
               isDirty={isDirty}
               changedFieldsCount={changedFieldsCount}
               isSubmitting={isSubmitting}
+              register={register}
+              handleSubmit={handleSubmit}
+              errors={errors}
+              setValue={setValue}
             />
             {/* Hidden File Input */}
             <input

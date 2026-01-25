@@ -75,7 +75,7 @@ function validateBasicStructure(json) {
 }
 
 async function main() {
-	const input = process.argv[2] || 'http://localhost:3001/openapi.json';
+	const input = process.argv[2] || 'http://localhost:4000/openapi.json';
 
 	log('\n🔍 Валидация OpenAPI спецификации\n', 'blue');
 	log('═══════════════════════════════════════════', 'blue');

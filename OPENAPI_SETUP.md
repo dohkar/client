@@ -81,14 +81,14 @@ npm run sync:api -- --url http://api.example.com
 
 1. **Переменная окружения**: `NEXT_PUBLIC_API_URL`
 2. **Аргумент командной строки**: `--url <api-url>`
-3. **По умолчанию**: `http://localhost:3001`
+3. **По умолчанию**: `http://localhost:4000`
 
 ### Переменные окружения
 
 Создайте `.env.local` в `client/`:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=http://localhost:4000
 ```
 
 ## 📁 Структура

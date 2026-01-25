@@ -485,6 +485,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health check endpoint */
+        get: operations["HealthController_check"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -552,8 +569,8 @@ export interface components {
             currency: "RUB" | "USD";
             /** @example г. Грозный, ул. Ленина, д. 10 */
             location: string;
-            /** @enum {string} */
-            region: "CHECHNYA" | "INGUSHETIA" | "OTHER";
+            /** @example 550e8400-e29b-41d4-a716-446655440000 */
+            regionId: string;
             /** @enum {string} */
             type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
             /** @example 3 */
@@ -584,8 +601,9 @@ export interface components {
             /** @enum {string} */
             currency: "RUB" | "USD";
             location: string;
-            /** @enum {string} */
-            region: "CHECHNYA" | "INGUSHETIA" | "OTHER";
+            regionId: string;
+            /** @description Region relation (optional, may be included in response) */
+            region?: Record<string, never>;
             /** @enum {string} */
             type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
             rooms?: number;
@@ -611,8 +629,8 @@ export interface components {
             currency?: "RUB" | "USD";
             /** @example г. Грозный, ул. Ленина, д. 10 */
             location?: string;
-            /** @enum {string} */
-            region?: "CHECHNYA" | "INGUSHETIA" | "OTHER";
+            /** @example 550e8400-e29b-41d4-a716-446655440000 */
+            regionId?: string;
             /** @enum {string} */
             type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
             /** @example 3 */
@@ -982,7 +1000,7 @@ export interface operations {
                 priceMax?: number;
                 rooms?: number;
                 areaMin?: number;
-                region?: "CHECHNYA" | "INGUSHETIA" | "OTHER";
+                regionId?: string;
                 sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance";
                 page?: number;
                 limit?: number;
@@ -1506,6 +1524,24 @@ export interface operations {
             };
             /** @description Неподдерживаемый формат */
             415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HealthController_check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Service is healthy */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
