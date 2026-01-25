@@ -9,6 +9,7 @@ import { adminService } from "@/services/admin.service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -604,50 +605,58 @@ export default function AdminPage() {
                   <div className='text-center py-12'>Загрузка...</div>
                 ) : propertiesData ? (
                   <>
-                    <div className='overflow-x-auto'>
+                    <div className='overflow-x-auto rounded-lg border border-border'>
                       <table className='w-full'>
                         <thead>
-                          <tr className='border-b'>
-                            <th className='text-left p-2 text-sm font-semibold'>
+                          <tr className='border-b bg-muted/50'>
+                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
                               Название
                             </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
+                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
                               Цена
                             </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
+                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
                               Тип
                             </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
+                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
                               Статус
                             </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
+                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
                               Просмотры
                             </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
+                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
                               Владелец
                             </th>
-                            <th className='text-left p-2 text-sm font-semibold'>
+                            <th className='text-left p-3 text-sm font-semibold text-foreground'>
                               Действия
                             </th>
                           </tr>
                         </thead>
                         <tbody>
-                          {propertiesData?.data?.map((property) => (
+                          {propertiesData?.data?.map((property, index) => (
                             <tr
                               key={property.id}
-                              className='border-b hover:bg-muted/50'
+                              className={`border-b transition-colors ${
+                                index % 2 === 0 ? "bg-background" : "bg-muted/30"
+                              } hover:bg-muted/70`}
                             >
-                              <td className='p-2 text-sm max-w-xs truncate'>
-                                {property.title}
+                              <td className='p-3 text-sm max-w-xs'>
+                                <span className='truncate block' title={property.title}>
+                                  {property.title}
+                                </span>
                               </td>
-                              <td className='p-2 text-sm'>
+                              <td className='p-3 text-sm font-medium'>
                                 {formatCurrency(
                                   property.price,
                                   (property.currency as "RUB" | "USD") || "RUB"
                                 )}
                               </td>
-                              <td className='p-2 text-sm'>{property.type}</td>
-                              <td className='p-2'>
+                              <td className='p-3 text-sm'>
+                                <Badge variant='outline' className='text-xs'>
+                                  {property.type}
+                                </Badge>
+                              </td>
+                              <td className='p-3'>
                                 <Select
                                   value={property.status}
                                   onValueChange={(value) =>
@@ -662,26 +671,41 @@ export default function AdminPage() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value='ACTIVE'>
-                                      Активное
+                                      <div className='flex items-center gap-2'>
+                                        <div className='w-2 h-2 rounded-full bg-green-500' />
+                                        Активное
+                                      </div>
                                     </SelectItem>
                                     <SelectItem value='PENDING'>
-                                      На модерации
+                                      <div className='flex items-center gap-2'>
+                                        <div className='w-2 h-2 rounded-full bg-yellow-500' />
+                                        На модерации
+                                      </div>
                                     </SelectItem>
                                     <SelectItem value='SOLD'>
-                                      Продано
+                                      <div className='flex items-center gap-2'>
+                                        <div className='w-2 h-2 rounded-full bg-blue-500' />
+                                        Продано
+                                      </div>
                                     </SelectItem>
                                     <SelectItem value='ARCHIVED'>
-                                      Архив
+                                      <div className='flex items-center gap-2'>
+                                        <div className='w-2 h-2 rounded-full bg-gray-500' />
+                                        Архив
+                                      </div>
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </td>
-                              <td className='p-2 text-sm'>{property.views}</td>
-                              <td className='p-2 text-sm'>
-                                {/* PropertyResponseDto doesn't have user field, only userId */}
-                                {property.userId}
+                              <td className='p-3 text-sm text-muted-foreground'>
+                                {property.views || 0}
                               </td>
-                              <td className='p-2'>
+                              <td className='p-3 text-sm text-muted-foreground'>
+                                <span className='truncate block max-w-[120px]' title={property.userId}>
+                                  {property.userId}
+                                </span>
+                              </td>
+                              <td className='p-3'>
                                 <Button
                                   size='sm'
                                   variant='destructive'

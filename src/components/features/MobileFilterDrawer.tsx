@@ -17,21 +17,20 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Filter, Building2, DollarSign, Ruler, MapPin } from "lucide-react";
-import { usePropertyStore } from "@/stores";
 import { useUIStore } from "@/stores";
-import { useFiltersController } from "@/hooks/use-filters-controller";
+import { useSearchFilters } from "@/hooks/use-search-filters";
 import { PROPERTY_TYPE_OPTIONS, REGION_OPTIONS } from "@/lib/search-constants";
 
 export function MobileFilterDrawer() {
-  const { filters, updateFilters, resetFilters } = usePropertyStore();
   const { isFilterModalOpen, openFilterModal, closeFilterModal } = useUIStore();
 
   // Используем единый hook для управления фильтрами
   const {
-    localPriceMin,
-    localPriceMax,
-    setLocalPriceMin,
-    setLocalPriceMax,
+    appliedFilters: filters,
+    draftPriceMin: localPriceMin,
+    draftPriceMax: localPriceMax,
+    setDraftPriceMin: setLocalPriceMin,
+    setDraftPriceMax: setLocalPriceMax,
     handleTypeChange,
     handleRegionChange,
     handleRoomsChange,
@@ -39,11 +38,8 @@ export function MobileFilterDrawer() {
     handlePriceMinBlur,
     handlePriceMaxBlur,
     handleResetAll,
-  } = useFiltersController({
-    filters,
-    updateFilters,
-    resetFilters,
-  });
+    priceErrors,
+  } = useSearchFilters();
 
   return (
     <>
@@ -55,7 +51,8 @@ export function MobileFilterDrawer() {
       >
         <Filter className="h-4 w-4" />
         <span>Фильтры</span>
-        {(filters.type !== "all" ||
+        {(filters.query?.trim() ||
+          filters.type !== "all" ||
           filters.priceMin ||
           filters.priceMax ||
           filters.roomsMin ||
@@ -124,7 +121,7 @@ export function MobileFilterDrawer() {
                       setLocalPriceMin(val);
                     }}
                     onBlur={handlePriceMinBlur}
-                    className="pl-9"
+                    className={`pl-9 ${priceErrors.priceMin ? "border-destructive" : ""}`}
                     autoComplete="off"
                     inputMode="numeric"
                   />
@@ -143,7 +140,7 @@ export function MobileFilterDrawer() {
                       setLocalPriceMax(val);
                     }}
                     onBlur={handlePriceMaxBlur}
-                    className="pl-9"
+                    className={`pl-9 ${priceErrors.priceMax ? "border-destructive" : ""}`}
                     autoComplete="off"
                     inputMode="numeric"
                   />
@@ -151,6 +148,12 @@ export function MobileFilterDrawer() {
                     до
                   </span>
                 </div>
+                {(priceErrors.priceMin || priceErrors.priceMax) && (
+                  <div className="text-xs text-destructive space-y-1">
+                    {priceErrors.priceMin && <p>{priceErrors.priceMin}</p>}
+                    {priceErrors.priceMax && <p>{priceErrors.priceMax}</p>}
+                  </div>
+                )}
               </div>
             </div>
 

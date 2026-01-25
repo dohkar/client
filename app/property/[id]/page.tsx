@@ -4,7 +4,7 @@ import { use } from "react";
 import { PropertyGallery } from "@/components/features/property-gallery";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Calendar, Eye, Share2, Heart } from "lucide-react";
+import { MapPin, Calendar, Eye, Share2, Heart, Home, Square, Building2 } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -266,6 +266,7 @@ export default function PropertyPage({
               <div className='sticky top-24 space-y-6'>
                 <div className='bg-card rounded-xl border border-border p-4 sm:p-6'>
                   <div className='space-y-4'>
+                    {/* Цена */}
                     <div>
                       <p className='text-2xl sm:text-3xl font-bold text-foreground'>
                         {new Intl.NumberFormat("ru-RU", {
@@ -283,10 +284,75 @@ export default function PropertyPage({
                         /м²
                       </p>
                     </div>
-                    <Button className='w-full min-h-[44px]'>Связаться с продавцом</Button>
-                    <Button variant='outline' className='w-full min-h-[44px]'>
-                      Показать телефон
-                    </Button>
+
+                    {/* Информация о публикации */}
+                    <div className='space-y-3 pt-4 border-t border-border'>
+                      {/* Дата и просмотры */}
+                      <div className='flex flex-col gap-2 text-sm'>
+                        {property.updatedAt && (
+                          <div className='flex items-center gap-2 text-muted-foreground'>
+                            <Calendar className='w-4 h-4 flex-shrink-0' />
+                            <span>
+                              {formatDate(property.updatedAt, "ru-RU", { relative: true })}
+                            </span>
+                          </div>
+                        )}
+                        {property.views !== undefined && (
+                          <div className='flex items-center gap-2 text-muted-foreground'>
+                            <Eye className='w-4 h-4 flex-shrink-0' />
+                            <span>{property.views} просмотров</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Основные характеристики */}
+                      <div className='grid grid-cols-2 gap-2 pt-2'>
+                        {property.rooms !== undefined && property.rooms !== null && (
+                          <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
+                            <Home className='w-4 h-4 text-muted-foreground flex-shrink-0' />
+                            <div className='flex flex-col'>
+                              <span className='text-xs text-muted-foreground'>Комнат</span>
+                              <span className='text-sm font-medium'>{property.rooms}</span>
+                            </div>
+                          </div>
+                        )}
+                        <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
+                          <Square className='w-4 h-4 text-muted-foreground flex-shrink-0' />
+                          <div className='flex flex-col'>
+                            <span className='text-xs text-muted-foreground'>Площадь</span>
+                            <span className='text-sm font-medium'>{property.area} м²</span>
+                          </div>
+                        </div>
+                        {property.floor && (
+                          <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
+                            <Building2 className='w-4 h-4 text-muted-foreground flex-shrink-0' />
+                            <div className='flex flex-col'>
+                              <span className='text-xs text-muted-foreground'>Этаж</span>
+                              <span className='text-sm font-medium'>{property.floor}</span>
+                            </div>
+                          </div>
+                        )}
+                        <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
+                          <Badge variant='secondary' className='text-xs'>
+                            {property.type === "apartment"
+                              ? "Квартира"
+                              : property.type === "house"
+                                ? "Дом"
+                                : property.type === "land"
+                                  ? "Участок"
+                                  : "Коммерческая"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CTA кнопки */}
+                    <div className='space-y-2 pt-2'>
+                      <Button className='w-full min-h-[44px]'>Связаться с продавцом</Button>
+                      <Button variant='outline' className='w-full min-h-[44px]'>
+                        Показать телефон
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

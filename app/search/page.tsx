@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { usePropertyStore } from "@/stores";
+import { useMemo, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { useProperties } from "@/hooks/use-properties";
-import { useSearchSync } from "@/hooks/use-search-sync";
-import { useFiltersController } from "@/hooks/use-filters-controller";
-import { buildApiSearchParams, getPageFromSearchParams } from "@/lib/search-utils";
+import { useSearchFilters } from "@/hooks/use-search-filters";
+import { buildApiSearchParams } from "@/lib/search-utils";
 import { SEARCH_CONSTANTS, PROPERTY_TYPE_LABELS } from "@/lib/search-constants";
 import { Spinner } from "@/components/ui";
 import {
@@ -26,42 +24,40 @@ import { ROUTES } from "@/constants";
 
 // Основной компонент страницы поиска
 function SearchPageContent() {
-  const { filters, updateFilters, resetFilters } = usePropertyStore();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // useState для page: нет race conditions, так как не зависит от асинхронщины
-  const [currentPage, setCurrentPage] = useState(() =>
-    getPageFromSearchParams(searchParams)
-  );
+  // Единый хук для управления фильтрами (draft/applied разделение)
+  const {
+    appliedFilters,
+    draftPriceMin,
+    draftPriceMax,
+    draftAreaMin,
+    setDraftPriceMin,
+    setDraftPriceMax,
+    setDraftAreaMin,
+    handleTypeChange,
+    handleRegionChange,
+    handleRoomsChange,
+    handleSortChange,
+    handleAreaMinChange,
+    handleAreaMinBlur,
+    handlePriceMinBlur,
+    handlePriceMaxBlur,
+    handleTypeReset,
+    handlePriceReset,
+    handleRegionReset,
+    handleRoomsReset,
+    handleAreaReset,
+    handleResetAll,
+    priceErrors,
+    currentPage,
+    setCurrentPage,
+  } = useSearchFilters();
 
-  // Синхронизация local state <-> store/URL
-  const { localPriceMin, setLocalPriceMin, localPriceMax, setLocalPriceMax } =
-    useSearchSync({
-      filters,
-      updateFilters,
-      resetFilters,
-      currentPage,
-      setCurrentPage,
-    });
-
-  // Единый hook для управления фильтрами
-  // Используем localPriceMin/localPriceMax из useSearchSync для синхронизации с URL
-  const filtersController = useFiltersController({
-    filters,
-    updateFilters,
-    resetFilters,
-    onPageReset: () => setCurrentPage(1),
-    externalLocalPriceMin: localPriceMin,
-    externalLocalPriceMax: localPriceMax,
-    externalSetLocalPriceMin: setLocalPriceMin,
-    externalSetLocalPriceMax: setLocalPriceMax,
-  });
-
-  // Корректно мемоизированные параметры для запроса (filters, currentPage)
+  // Корректно мемоизированные параметры для запроса (appliedFilters, currentPage)
   const urlSearchParams = useMemo(
-    () => buildApiSearchParams(filters, currentPage, SEARCH_CONSTANTS.ITEMS_PER_PAGE),
-    [filters, currentPage]
+    () => buildApiSearchParams(appliedFilters, currentPage, SEARCH_CONSTANTS.ITEMS_PER_PAGE),
+    [appliedFilters, currentPage]
   );
 
   // Хук получения данных: обрабатывает undefined/null данных и ошибки
@@ -72,65 +68,19 @@ function SearchPageContent() {
   // Вычисляет число активных фильтров — сверяет на null/undefined для числовых и "all" для строковых
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (filters.type && filters.type !== "all") count++;
-    if (filters.priceMin != null) count++;
-    if (filters.priceMax != null) count++;
-    if (filters.roomsMin != null) count++;
-    if (filters.areaMin != null) count++;
-    if (filters.region && filters.region !== "all") count++;
+    if (appliedFilters.query && appliedFilters.query.trim().length > 0) count++;
+    if (appliedFilters.type && appliedFilters.type !== "all") count++;
+    if (appliedFilters.priceMin != null) count++;
+    if (appliedFilters.priceMax != null) count++;
+    if (appliedFilters.roomsMin != null) count++;
+    if (appliedFilters.areaMin != null) count++;
+    if (appliedFilters.region && appliedFilters.region !== "all") count++;
     return count;
-  }, [filters]);
-
-  // Используем обработчики из filtersController, но переопределяем для синхронизации с useSearchSync
-  const handlePriceMinBlur = () => {
-    filtersController.handlePriceMinBlur();
-  };
-
-  const handlePriceMaxBlur = () => {
-    filtersController.handlePriceMaxBlur();
-  };
-
-  // Обёртки для синхронизации с useSearchSync
-  const handleTypeChange = filtersController.handleTypeChange;
-  const handleRegionChange = filtersController.handleRegionChange;
-  const handleRoomsChange = filtersController.handleRoomsChange;
-  const handleSortChange = filtersController.handleSortChange;
-  const handleAreaMinChange = filtersController.handleAreaMinChange;
-
-  // Сбросы для отдельных фильтров
-  const handleTypeReset = filtersController.handleTypeReset;
-  const handlePriceReset = () => {
-    filtersController.handlePriceReset();
-    setLocalPriceMin("");
-    setLocalPriceMax("");
-  };
-  const handleRegionReset = filtersController.handleRegionReset;
-  const handleRoomsReset = filtersController.handleRoomsReset;
-  const handleAreaReset = filtersController.handleAreaReset;
-
-  // Полный сброс фильтров и локальных значений
-  const handleResetAll = () => {
-    filtersController.handleResetAll();
-    setLocalPriceMin("");
-    setLocalPriceMax("");
-  };
-
-  // Быстрые пресеты: выставляют фильтры + локальные значения для цен, если есть
-  const handlePresetSelect = (
-    presetFilters: Parameters<typeof updateFilters>[0],
-    localPriceMinValue?: string,
-    localPriceMaxValue?: string
-  ) => {
-    updateFilters(presetFilters);
-    setCurrentPage(1);
-    if (typeof localPriceMinValue === "string") setLocalPriceMin(localPriceMinValue);
-    if (typeof localPriceMaxValue === "string") setLocalPriceMax(localPriceMaxValue);
-  };
+  }, [appliedFilters]);
 
   // Страницы
   const handlePageChange = (page: number) => {
-    if (typeof page === "number" && page > 0 && page !== currentPage)
-      setCurrentPage(page);
+    setCurrentPage(page);
   };
 
   // Reset кнопки в результатах
@@ -154,12 +104,12 @@ function SearchPageContent() {
             <BreadcrumbItem>
               <BreadcrumbPage>Поиск</BreadcrumbPage>
             </BreadcrumbItem>
-            {filters.type !== "all" && (
+            {appliedFilters.type !== "all" && (
               <>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbPage>
-                    {PROPERTY_TYPE_LABELS[filters.type] || "Тип недвижимости"}
+                    {PROPERTY_TYPE_LABELS[appliedFilters.type] || "Тип недвижимости"}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
               </>
@@ -169,26 +119,29 @@ function SearchPageContent() {
 
         {/* Горизонтальные фильтры */}
         <HorizontalFilters
-          filters={filters}
-          localPriceMin={localPriceMin}
-          localPriceMax={localPriceMax}
+          filters={appliedFilters}
+          localPriceMin={draftPriceMin}
+          localPriceMax={draftPriceMax}
+          localAreaMin={draftAreaMin}
+          priceErrors={priceErrors}
           onTypeChange={handleTypeChange}
           onRegionChange={handleRegionChange}
           onRoomsChange={handleRoomsChange}
           onSortChange={handleSortChange}
-          onPriceMinChange={setLocalPriceMin}
-          onPriceMaxChange={setLocalPriceMax}
+          onPriceMinChange={setDraftPriceMin}
+          onPriceMaxChange={setDraftPriceMax}
           onPriceMinBlur={handlePriceMinBlur}
           onPriceMaxBlur={handlePriceMaxBlur}
-          onAreaMinChange={handleAreaMinChange}
+          onAreaMinChange={setDraftAreaMin}
+          onAreaMinBlur={handleAreaMinBlur}
         />
 
         {/* Активные фильтры */}
         <ActiveFilters
-          filters={filters}
+          filters={appliedFilters}
           activeFiltersCount={activeFiltersCount}
-          localPriceMin={localPriceMin}
-          localPriceMax={localPriceMax}
+          localPriceMin={draftPriceMin}
+          localPriceMax={draftPriceMax}
           onTypeReset={handleTypeReset}
           onPriceReset={handlePriceReset}
           onRegionReset={handleRegionReset}
