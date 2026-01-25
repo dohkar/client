@@ -90,7 +90,7 @@ export const authService = {
    */
   getOAuthUrl(provider: "google" | "yandex" | "vk"): string {
     // Базовый URL БЕЗ глобального префикса /api — он уже есть в API_ENDPOINTS
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
     const endpoints = {
       google: API_ENDPOINTS.auth.google,
       yandex: API_ENDPOINTS.auth.yandex,
