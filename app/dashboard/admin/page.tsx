@@ -197,9 +197,9 @@ export default function AdminPage() {
           <h1 className='text-2xl sm:text-3xl font-bold text-foreground mb-2'>
             Админ панель
           </h1>
-          <p className='text-sm sm:text-base text-muted-foreground'>
+          {/* <p className='text-sm sm:text-base text-muted-foreground'>
             Управление платформой Дохкар
-          </p>
+          </p> */}
         </div>
 
         {/* Tabs */}
@@ -344,8 +344,8 @@ export default function AdminPage() {
                       <ResponsiveContainer width='100%' height={250} className="sm:h-[300px]">
                         <BarChart data={statistics.propertiesByRegion}>
                           <CartesianGrid strokeDasharray='3 3' />
-                          <XAxis 
-                            dataKey='region' 
+                          <XAxis
+                            dataKey='region'
                             angle={-45}
                             textAnchor="end"
                             height={80}
@@ -368,8 +368,8 @@ export default function AdminPage() {
                     <ResponsiveContainer width='100%' height={250} className="sm:h-[300px]">
                       <LineChart data={statistics.dailyStats}>
                         <CartesianGrid strokeDasharray='3 3' />
-                        <XAxis 
-                          dataKey='date' 
+                        <XAxis
+                          dataKey='date'
                           angle={-45}
                           textAnchor="end"
                           height={80}
@@ -404,7 +404,7 @@ export default function AdminPage() {
                     <div className='relative flex-1 sm:flex-initial'>
                       <Search className='absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
                       <Input
-                        placeholder='Поиск...'
+                        placeholder='Поиск по email, имени, роли, телефону...'
                         value={usersSearch}
                         onChange={(e) => {
                           setUsersSearch(e.target.value);

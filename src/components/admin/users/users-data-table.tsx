@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "../shared/data-table-pagination";
 import { Users } from "lucide-react";
+import type { UserWithCount } from "./columns";
 
 interface UsersDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -38,7 +39,7 @@ export function UsersDataTable<TData, TValue>({
   data,
   isLoading = false,
   searchValue = "",
-  onSearchChange,
+  onSearchChange: _onSearchChange,
 }: UsersDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -47,6 +48,7 @@ export function UsersDataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [globalFilter, setGlobalFilter] = React.useState("");
 
   const table = useReactTable({
     data,
@@ -59,21 +61,40 @@ export function UsersDataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, columnId, filterValue) => {
+      if (!filterValue) return true;
+      const searchValue = filterValue.toLowerCase();
+      const user = row.original as UserWithCount;
+      
+      // Поиск по email
+      if (user.email?.toLowerCase().includes(searchValue)) return true;
+      // Поиск по имени
+      if (user.name?.toLowerCase().includes(searchValue)) return true;
+      // Поиск по роли
+      if (user.role?.toLowerCase().includes(searchValue)) return true;
+      // Поиск по телефону
+      if (user.phone?.toLowerCase().includes(searchValue)) return true;
+      // Поиск по количеству объявлений
+      if (String(user.propertiesCount || 0).includes(searchValue)) return true;
+      
+      return false;
+    },
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      globalFilter,
     },
   });
 
-  // Синхронизация внешнего поиска с фильтрами таблицы
+  // Синхронизация внешнего поиска с глобальным фильтром
   React.useEffect(() => {
-    const emailColumn = table.getColumn("email");
-    if (emailColumn && searchValue !== undefined) {
-      emailColumn.setFilterValue(searchValue || undefined);
+    if (searchValue !== undefined) {
+      setGlobalFilter(searchValue || "");
     }
-  }, [searchValue, table]);
+  }, [searchValue]);
 
   if (isLoading) {
     return (
@@ -82,6 +103,9 @@ export function UsersDataTable<TData, TValue>({
       </div>
     );
   }
+
+  // Проверяем результаты после фильтрации
+  const filteredRows = table.getFilteredRowModel().rows;
 
   if (!data || data.length === 0) {
     return (
@@ -92,6 +116,18 @@ export function UsersDataTable<TData, TValue>({
           {searchValue
             ? "Попробуйте изменить параметры поиска"
             : "В системе пока нет пользователей"}
+        </p>
+      </div>
+    );
+  }
+
+  if (filteredRows.length === 0 && globalFilter) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+        <p className="text-lg font-medium">Ничего не найдено</p>
+        <p className="text-sm mt-2">
+          По запросу &quot;{globalFilter}&quot; ничего не найдено. Попробуйте изменить параметры поиска.
         </p>
       </div>
     );
