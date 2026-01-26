@@ -44,6 +44,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useAmenities } from "@/hooks/use-amenities";
+import { geocodeAddress } from "@/lib/yandex-geocoder";
 
 // Интерфейс для превью изображений
 interface ImagePreview {
@@ -72,6 +73,8 @@ const propertySchema = z.object({
     .min(50, "Описание должно быть не менее 50 символов")
     .max(8000, "Описание не должно превышать 8000 символов"),
   features: z.array(z.string()).optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 type PropertyFormData = z.infer<typeof propertySchema>;
@@ -108,6 +111,8 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [priceDisplay, setPriceDisplay] = useState<string>("");
   const [areaDisplay, setAreaDisplay] = useState<string>("");
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const geocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Хук для управления удобствами
   const amenities = useAmenities({
@@ -146,6 +151,8 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       area: initialData?.area || 0,
       description: initialData?.description || "",
       features: initialData?.features || [],
+      latitude: initialData?.latitude,
+      longitude: initialData?.longitude,
     },
   });
 
@@ -158,6 +165,62 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       setAreaDisplay(String(initialData.area));
     }
   }, [initialData?.price, initialData?.area]);
+
+  // Автоматическое геокодирование адреса
+  const locationValue = watch("location");
+  useEffect(() => {
+    // Очищаем предыдущий таймаут
+    if (geocodeTimeoutRef.current) {
+      clearTimeout(geocodeTimeoutRef.current);
+    }
+
+    // Если адрес слишком короткий, не геокодируем
+    if (!locationValue || locationValue.length < 5) {
+      setValue("latitude", undefined);
+      setValue("longitude", undefined);
+      return;
+    }
+
+    // Если координаты уже есть и адрес не изменился, не геокодируем
+    if (initialData?.latitude && initialData?.longitude && locationValue === initialData.location) {
+      return;
+    }
+
+    // Debounce - ждем 1 секунду после последнего изменения
+    setIsGeocoding(true);
+    geocodeTimeoutRef.current = setTimeout(async () => {
+      try {
+        const API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || "";
+        const result = await geocodeAddress(locationValue, API_KEY);
+        
+        if (result) {
+          setValue("latitude", result.latitude);
+          setValue("longitude", result.longitude);
+          // Обновляем адрес на более точный, если геокодер вернул улучшенную версию
+          if (result.formattedAddress !== locationValue) {
+            setValue("location", result.formattedAddress);
+          }
+          toast.success("Координаты определены автоматически");
+        } else {
+          setValue("latitude", undefined);
+          setValue("longitude", undefined);
+          toast.warning("Не удалось определить координаты. Проверьте адрес.");
+        }
+      } catch (error) {
+        console.error("Ошибка геокодирования:", error);
+        setValue("latitude", undefined);
+        setValue("longitude", undefined);
+      } finally {
+        setIsGeocoding(false);
+      }
+    }, 1000);
+
+    return () => {
+      if (geocodeTimeoutRef.current) {
+        clearTimeout(geocodeTimeoutRef.current);
+      }
+    };
+  }, [locationValue, setValue, initialData]);
 
   const propertyType = watch("type");
   const showRooms = propertyType === "apartment" || propertyType === "house";
@@ -310,6 +373,8 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
         description: data.description,
         images: imageUrls,
         features: featuresLabels,
+        latitude: data.latitude,
+        longitude: data.longitude,
       };
 
       let response;
@@ -416,6 +481,9 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
             <Label htmlFor="location" className="text-base font-medium flex items-center gap-2">
               <MapPin className="w-4 h-4 text-muted-foreground" />
               Адрес *
+              {isGeocoding && (
+                <Spinner className="w-4 h-4 ml-2" />
+              )}
             </Label>
             <Input
               id="location"
@@ -427,6 +495,11 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
               <p className="text-sm text-destructive flex items-center gap-1 mt-1">
                 <AlertCircle className="w-4 h-4" />
                 {errors.location.message}
+              </p>
+            )}
+            {watch("latitude") && watch("longitude") && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Координаты: {watch("latitude")?.toFixed(6)}, {watch("longitude")?.toFixed(6)}
               </p>
             )}
           </div>

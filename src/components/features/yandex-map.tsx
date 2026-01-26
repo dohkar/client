@@ -17,12 +17,14 @@ declare global {
     ymaps3?: {
       ready: Promise<void>;
       import: (module: string) => Promise<{
-        YMapDefaultMarker: new (options: {
+        YMapDefaultMarker?: new (options: {
           coordinates: [number, number];
           title?: string;
         }) => {
           destroy: () => void;
         };
+        YMapZoomControl?: new (options?: unknown) => unknown;
+        [key: string]: unknown;
       }>;
       YMap: new (
         container: HTMLElement,
@@ -74,71 +76,19 @@ export function YandexMap({
   // Для тестирования можно использовать без ключа, но с ограничениями
   const API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || "";
 
-  // Альтернативная загрузка скрипта, если Next.js Script не работает
+  // Проверяем, не загружен ли уже скрипт (для предотвращения двойной загрузки)
   useEffect(() => {
-    if (typeof window === "undefined" || scriptLoadedRef.current) {
+    if (typeof window === "undefined") {
       return;
     }
 
     // Проверяем, не загружен ли уже скрипт
     const existingScript = document.querySelector('script[src*="api-maps.yandex.ru"]');
-    if (existingScript || window.ymaps3) {
+    if (existingScript && window.ymaps3) {
       scriptLoadedRef.current = true;
-      if (window.ymaps3) {
-        setTimeout(() => setIsApiReady(true), 100);
-      }
-      return;
+      setTimeout(() => setIsApiReady(true), 100);
     }
-
-    // Загружаем скрипт вручную, если его еще нет
-    // Если API ключ вызывает 403, пробуем без ключа
-    const loadScript = (useApiKey: boolean) => {
-      const script = document.createElement("script");
-      script.src = useApiKey && API_KEY
-        ? `https://api-maps.yandex.ru/v3/?apikey=${API_KEY}&lang=ru_RU`
-        : "https://api-maps.yandex.ru/v3/?lang=ru_RU";
-      script.async = true;
-      script.onload = () => {
-        scriptLoadedRef.current = true;
-        setTimeout(() => {
-          if (window.ymaps3) {
-            setIsApiReady(true);
-          } else {
-            setError("Yandex Maps API не инициализирован");
-            setIsLoading(false);
-          }
-        }, 200);
-      };
-      script.onerror = (event) => {
-        console.error("Ошибка загрузки скрипта Yandex Maps:", event);
-        
-        // Если ошибка с API ключом, пробуем без ключа
-        if (useApiKey && API_KEY) {
-          console.warn("Попытка загрузить API без ключа из-за ошибки с ключом");
-          // Удаляем скрипт с ошибкой
-          script.remove();
-          // Пробуем без ключа
-          loadScript(false);
-        } else {
-          const errorMsg = "Не удалось загрузить Yandex Maps API. Возможные причины:\n" +
-            "1. API ключ не активирован или неправильный\n" +
-            "2. Не настроены ограничения по HTTP Referer в настройках ключа\n" +
-            "3. Домен не разрешен в настройках API ключа\n" +
-            "4. Проблемы с подключением к интернету";
-          setError(errorMsg);
-          setIsLoading(false);
-        }
-      };
-      document.head.appendChild(script);
-    };
-
-    // Пробуем сначала с ключом, если он есть
-    loadScript(!!API_KEY);
-
-    return () => {
-      // Не удаляем скрипт при размонтировании, так как он может использоваться другими компонентами
-    };
-  }, [API_KEY]);
+  }, []);
 
   useEffect(() => {
     if (!isApiReady || !mapContainerRef.current) {
@@ -201,23 +151,41 @@ export function YandexMap({
         );
 
         // Добавляем элементы управления
-        const { YMapControls, YMapZoomControl } = window.ymaps3;
+        // YMapControls доступен в основном API
+        const { YMapControls } = window.ymaps3;
         const controls = new YMapControls({ position: "right" });
         map.addChild(controls);
 
-        const zoomControl = new YMapZoomControl();
-        controls.addChild(zoomControl);
+        // Импортируем YMapZoomControl из темы UI
+        // Примечание: контролы зума опциональны, карта работает и без них
+        try {
+          const uiTheme = await window.ymaps3.import('@yandex/ymaps3-default-ui-theme') as any;
+          // YMapZoomControl может быть в том же модуле
+          if (uiTheme && typeof uiTheme.YMapZoomControl === 'function') {
+            const zoomControl = new uiTheme.YMapZoomControl({});
+            controls.addChild(zoomControl);
+          }
+        } catch (controlsError) {
+          // Если контролы недоступны, карта будет без зума (но это не критично)
+          // Пользователь может использовать колесико мыши для зума
+          console.warn("Элементы управления зумом недоступны, используйте колесико мыши:", controlsError);
+        }
 
-        // Пытаемся использовать стилизованный маркер, если доступен
+        // Пытаемся использовать стилизованный маркер из темы UI
         let marker: unknown;
         try {
-          const { YMapDefaultMarker } = await window.ymaps3.import('@yandex/ymaps3-default-ui-theme');
-          marker = new YMapDefaultMarker({
-            coordinates: [longitude, latitude],
-            title: markerTitle || "Местоположение",
-          });
-        } catch {
+          const uiTheme = await window.ymaps3.import('@yandex/ymaps3-default-ui-theme') as any;
+          
+          // Создаем маркер
+          if (uiTheme && typeof uiTheme.YMapDefaultMarker === 'function') {
+            marker = new uiTheme.YMapDefaultMarker({
+              coordinates: [longitude, latitude],
+              title: markerTitle || "Местоположение",
+            });
+          }
+        } catch (themeError) {
           // Fallback: используем простой маркер через YMapMarker, если доступен
+          console.warn("Тема UI недоступна, используем базовые компоненты:", themeError);
           if (window.ymaps3.YMapMarker) {
             marker = new window.ymaps3.YMapMarker({
               coordinates: [longitude, latitude],
@@ -257,6 +225,7 @@ export function YandexMap({
   const handleScriptLoad = () => {
     // Проверяем, что API действительно загружен
     if (typeof window !== "undefined" && window.ymaps3) {
+      scriptLoadedRef.current = true;
       // Небольшая задержка для гарантии, что API полностью загружен
       setTimeout(() => {
         setIsApiReady(true);
@@ -265,6 +234,7 @@ export function YandexMap({
       // Если API не загрузился, пробуем еще раз через небольшую задержку
       setTimeout(() => {
         if (typeof window !== "undefined" && window.ymaps3) {
+          scriptLoadedRef.current = true;
           setIsApiReady(true);
         } else {
           setError("Yandex Maps API не загружен. Проверьте подключение к интернету.");
@@ -302,22 +272,24 @@ export function YandexMap({
 
   return (
     <>
-      {/* Next.js Script компонент - если он не работает, используется альтернативная загрузка в useEffect */}
-      <Script
-        src={apiUrl}
-        strategy="lazyOnload"
-        onLoad={handleScriptLoad}
-        onError={() => {
-          // Если ошибка с ключом, альтернативная загрузка в useEffect попробует без ключа
-          handleScriptError("Ошибка загрузки скрипта (возможно 403 - проблема с API ключом)");
-        }}
-        onReady={() => {
-          // Дополнительная проверка после ready
-          if (typeof window !== "undefined" && window.ymaps3) {
-            handleScriptLoad();
-          }
-        }}
-      />
+      {/* Загружаем скрипт только если он еще не загружен */}
+      {typeof window !== "undefined" && !scriptLoadedRef.current && !document.querySelector('script[src*="api-maps.yandex.ru"]') && (
+        <Script
+          src={apiUrl}
+          strategy="lazyOnload"
+          onLoad={handleScriptLoad}
+          onError={() => {
+            handleScriptError("Ошибка загрузки скрипта (возможно 403 - проблема с API ключом)");
+          }}
+          onReady={() => {
+            // Дополнительная проверка после ready
+            if (typeof window !== "undefined" && window.ymaps3) {
+              scriptLoadedRef.current = true;
+              handleScriptLoad();
+            }
+          }}
+        />
+      )}
       <div
         ref={mapContainerRef}
         className={className}
