@@ -87,4 +87,14 @@ export const API_ENDPOINTS = {
     avatar: "/api/upload/avatar",
     images: "/api/upload/images",
   },
+
+  // Chats
+  chats: {
+    list: "/api/chats",
+    createProperty: "/api/chats/property",
+    createSupport: "/api/chats/support",
+    messages: (chatId: string) => `/api/chats/${chatId}/messages`,
+    sendMessage: (chatId: string) => `/api/chats/${chatId}/messages`,
+    markRead: (chatId: string) => `/api/chats/${chatId}/read`,
+  },
 } as const;

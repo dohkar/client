@@ -16,9 +16,13 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useProperty } from "@/hooks/use-properties";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useCreatePropertyChat } from "@/hooks/use-chats";
+import { useAuthStore } from "@/stores";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ROUTES } from "@/constants";
 import { formatDate, formatPhone, getPhoneHref } from "@/lib/utils/format";
+import { MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function PropertyPage({
   params,
@@ -26,9 +30,13 @@ export default function PropertyPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const { data: property, isLoading, error } = useProperty(id);
 
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
+  const createChatMutation = useCreatePropertyChat();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
 
   const favorite = property ? isFavorite(property.id) : false;
   const isPending = property ? isMutating(property.id) : false;
@@ -68,6 +76,27 @@ export default function PropertyPage({
       } catch {
         setCopied(false);
       }
+    }
+  };
+
+  const handleWriteToOwner = async () => {
+    if (!isAuthenticated) {
+      router.push(ROUTES.login);
+      return;
+    }
+
+    if (!property) return;
+
+    // Проверяем, не является ли пользователь владельцем
+    if (user?.id === property.userId) {
+      return; // Не показываем кнопку для владельца
+    }
+
+    try {
+      const chat = await createChatMutation.mutateAsync(property.id);
+      router.push(ROUTES.messages);
+    } catch (error) {
+      // Ошибка обработается в хуке
     }
   };
 
@@ -502,7 +531,21 @@ export default function PropertyPage({
 
                     {/* CTA кнопки */}
                     <div className='space-y-2 pt-2'>
+                      {/* Кнопка чата (только если пользователь не владелец) */}
+                      {user?.id !== property.userId && (
+                        <Button
+                          className='w-full min-h-[44px]'
+                          onClick={handleWriteToOwner}
+                          disabled={createChatMutation.isPending}
+                        >
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          {createChatMutation.isPending
+                            ? "Создание чата..."
+                            : "Написать владельцу"}
+                        </Button>
+                      )}
                       <Button
+                        variant={user?.id === property.userId ? "default" : "outline"}
                         className='w-full min-h-[44px]'
                         onClick={handleContactSeller}
                         asChild={false}
