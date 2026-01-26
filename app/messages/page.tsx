@@ -140,6 +140,34 @@ function MessagesPageContent() {
     (msg) => msg.senderId === user?.id
   ).length;
 
+  // Проверка на спам в support-чате (3 сообщения подряд без ответа)
+  const showSpamHint = useMemo(() => {
+    if (!selectedChat || selectedChat.type !== "SUPPORT" || !user?.id) {
+      return false;
+    }
+
+    // Берем последние 3 сообщения
+    const lastThreeMessages = allMessages.slice(-3);
+    
+    // Проверяем, что все 3 последних сообщения от пользователя
+    if (lastThreeMessages.length < 3) {
+      return false;
+    }
+
+    const allFromUser = lastThreeMessages.every((msg) => msg.senderId === user.id);
+    
+    // Проверяем, что перед этими 3 сообщениями нет ответа от поддержки
+    if (allFromUser && allMessages.length > 3) {
+      const messageBeforeLastThree = allMessages[allMessages.length - 4];
+      // Если перед последними 3 сообщениями есть сообщение не от пользователя - не спам
+      if (messageBeforeLastThree && messageBeforeLastThree.senderId !== user.id) {
+        return false;
+      }
+    }
+
+    return allFromUser;
+  }, [allMessages, selectedChat, user?.id]);
+
   // Обработка уведомлений при новых сообщениях
   useEffect(() => {
     if (!selectedChatId || !user?.id || document.hidden) return;
@@ -217,11 +245,14 @@ function MessagesPageContent() {
                   hasMore={messagesQuery.hasNextPage}
                   onLoadMore={() => messagesQuery.fetchNextPage()}
                   isFetchingMore={messagesQuery.isFetchingNextPage}
+                  chatType={selectedChat.type}
                 />
                 <MessageInput
                   onSend={handleSendMessage}
                   disabled={sendMessageMutation.isPending}
                   messageCount={userMessagesCount}
+                  chatType={selectedChat.type}
+                  showSpamHint={showSpamHint}
                 />
               </>
             ) : (

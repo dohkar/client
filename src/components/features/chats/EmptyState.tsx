@@ -3,10 +3,11 @@
 import { MessageSquare, MessagesSquare } from "lucide-react";
 
 interface EmptyStateProps {
-  type: "no-chats" | "no-messages" | "select-chat";
+  type: "no-chats" | "no-messages" | "select-chat" | "support-empty";
+  chatType?: "PROPERTY" | "SUPPORT";
 }
 
-export function EmptyState({ type }: EmptyStateProps) {
+export function EmptyState({ type, chatType }: EmptyStateProps) {
   const content = {
     "no-chats": {
       icon: MessagesSquare,
@@ -16,12 +17,21 @@ export function EmptyState({ type }: EmptyStateProps) {
     "no-messages": {
       icon: MessageSquare,
       title: "Нет сообщений",
-      description: "Будьте первым, кто напишет сообщение",
+      description:
+        chatType === "SUPPORT"
+          ? "Опишите проблему максимально подробно — это ускорит ответ"
+          : "Будьте первым, кто напишет сообщение",
     },
     "select-chat": {
       icon: MessageSquare,
       title: "Выберите чат",
       description: "Выберите чат из списка, чтобы начать общение",
+    },
+    "support-empty": {
+      icon: MessageSquare,
+      title: "Начните диалог",
+      description:
+        "Опишите проблему максимально подробно — это ускорит ответ. Мы получим ваше сообщение и ответим в ближайшее время.",
     },
   };
 

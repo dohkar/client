@@ -18,6 +18,7 @@ interface MessageListProps {
   hasMore?: boolean;
   onLoadMore?: () => void;
   isFetchingMore?: boolean;
+  chatType?: "PROPERTY" | "SUPPORT";
 }
 
 export function MessageList({
@@ -27,6 +28,7 @@ export function MessageList({
   hasMore = false,
   onLoadMore,
   isFetchingMore = false,
+  chatType,
 }: MessageListProps) {
   const { scrollRef, shouldAutoScroll, scrollToBottom } = useAutoScroll<HTMLDivElement>();
 
@@ -71,7 +73,12 @@ export function MessageList({
   }
 
   if (messages.length === 0) {
-    return <EmptyState type="no-messages" />;
+    return (
+      <EmptyState
+        type={chatType === "SUPPORT" ? "support-empty" : "no-messages"}
+        chatType={chatType}
+      />
+    );
   }
 
   return (

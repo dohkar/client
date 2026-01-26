@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Send } from "lucide-react";
+import { Send, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { hasProhibitedContent } from "@/lib/utils/content-filter";
 import { toast } from "sonner";
 
@@ -11,12 +12,16 @@ interface MessageInputProps {
   onSend: (text: string) => void;
   disabled?: boolean;
   messageCount?: number;
+  chatType?: "PROPERTY" | "SUPPORT";
+  showSpamHint?: boolean;
 }
 
 export function MessageInput({
   onSend,
   disabled = false,
   messageCount = 0,
+  chatType,
+  showSpamHint = false,
 }: MessageInputProps) {
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -78,6 +83,16 @@ export function MessageInput({
 
   return (
     <div className="border-t bg-background p-4">
+      {/* Hint при спаме в support-чате */}
+      {showSpamHint && chatType === "SUPPORT" && (
+        <Alert className="mb-3 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
+            Мы получили ваше сообщение, пожалуйста, дождитесь ответа. Обычно отвечаем в течение 15 минут.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex gap-2">
         <Textarea
           value={text}
