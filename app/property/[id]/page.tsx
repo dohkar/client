@@ -73,13 +73,107 @@ export default function PropertyPage({
 
   if (isLoading) {
     return (
-      <div className='container mx-auto px-4 py-12'>
-        <Skeleton className='h-8 w-3/4 mb-4' />
-        <Skeleton className='h-64 w-full mb-4' />
-        <div className='grid grid-cols-2 gap-4'>
-          <Skeleton className='h-32' />
-          <Skeleton className='h-32' />
-        </div>
+      <div className="min-h-screen flex flex-col bg-background">
+        <main className="flex-1 pb-12">
+          {/* Навигационная цепочка */}
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center space-x-2">
+              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-5 w-4" />
+              <Skeleton className="h-5 w-28" />
+              <Skeleton className="h-5 w-4" />
+              <Skeleton className="h-5 w-40" />
+            </div>
+          </div>
+
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+              {/* Левая часть */}
+              <div className="lg:col-span-8 space-y-6 sm:space-y-8">
+                {/* Заголовок и кнопки */}
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <Skeleton className="h-8 sm:h-10 w-3/4" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-11 w-11 rounded-lg" />
+                      <Skeleton className="h-11 w-11 rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Галерея - Hero + Thumbs */}
+                <div className="space-y-3">
+                  <Skeleton className="aspect-video w-full rounded-xl" />
+                  <div className="flex gap-2">
+                    <Skeleton className="aspect-[4/3] flex-1 rounded-lg" />
+                    <Skeleton className="aspect-[4/3] flex-1 rounded-lg" />
+                    <Skeleton className="aspect-[4/3] flex-1 rounded-lg" />
+                    <Skeleton className="aspect-[4/3] flex-1 rounded-lg" />
+                  </div>
+                </div>
+
+                {/* Цена */}
+                <Skeleton className="h-20 w-full rounded-xl" />
+
+                {/* Характеристики */}
+                <div className="bg-card rounded-xl border border-border p-4 sm:p-6">
+                  <Skeleton className="h-6 w-32 mb-4 sm:mb-6" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 sm:gap-y-4 gap-x-4 sm:gap-x-8">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="flex justify-between items-baseline border-b border-border/50 pb-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Описание */}
+                <div className="bg-card rounded-xl border border-border p-6">
+                  <Skeleton className="h-6 w-24 mb-4" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-4 w-4/5" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Правая часть - Сайдбар */}
+              <div className="lg:col-span-4">
+                <div className="sticky top-24">
+                  <div className="bg-card rounded-xl border border-border p-4 sm:p-6 space-y-4">
+                    {/* Цена */}
+                    <div>
+                      <Skeleton className="h-9 w-2/3 mb-2" />
+                      <Skeleton className="h-5 w-1/2" />
+                    </div>
+
+                    {/* Информация */}
+                    <div className="space-y-3 pt-4 border-t border-border">
+                      <Skeleton className="h-5 w-full" />
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-5 w-2/3" />
+                    </div>
+
+                    {/* Характеристики */}
+                    <div className="grid grid-cols-2 gap-2 pt-2">
+                      {[1, 2, 3, 4].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                      ))}
+                    </div>
+
+                    {/* Кнопки */}
+                    <div className="space-y-2 pt-2">
+                      <Skeleton className="h-11 w-full rounded-lg" />
+                      <Skeleton className="h-11 w-full rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -173,30 +267,6 @@ export default function PropertyPage({
                   </div>
                 </div>
 
-                <div className='flex items-center gap-2 text-muted-foreground'>
-                  <MapPin className='w-4 h-4' />
-                  <span>{property.location}</span>
-                </div>
-
-                <div className='flex flex-wrap gap-4 text-sm text-muted-foreground'>
-                  {property.isPremium && (
-                    <Badge variant='secondary' className='rounded-md'>
-                      Премиум
-                    </Badge>
-                  )}
-                  {property.updatedAt && (
-                    <span className='flex items-center gap-1'>
-                      <Calendar className='w-4 h-4' />
-                      {formatDate(property.updatedAt, "ru-RU", { relative: true, includeTime: true })}
-                    </span>
-                  )}
-                  {property.views !== undefined && (
-                    <span className='flex items-center gap-1'>
-                      <Eye className='w-4 h-4' />
-                      {property.views} просмотров
-                    </span>
-                  )}
-                </div>
               </div>
 
               {/* Галерея */}
@@ -356,19 +426,34 @@ export default function PropertyPage({
 
                     {/* Информация о публикации */}
                     <div className='space-y-3 pt-4 border-t border-border'>
+                      {/* Адрес */}
+                      <div className='flex items-start gap-2 text-sm text-muted-foreground'>
+                        <MapPin className='w-4 h-4 shrink-0 mt-0.5' />
+                        <span className='wrap-break-word'>{property.location}</span>
+                      </div>
+
+                      {/* Премиум badge */}
+                      {property.isPremium && (
+                        <div>
+                          <Badge variant='secondary' className='rounded-md'>
+                            Премиум
+                          </Badge>
+                        </div>
+                      )}
+
                       {/* Дата и просмотры */}
                       <div className='flex flex-col gap-2 text-sm'>
                         {property.updatedAt && (
                           <div className='flex items-center gap-2 text-muted-foreground'>
-                            <Calendar className='w-4 h-4 flex-shrink-0' />
+                            <Calendar className='w-4 h-4 shrink-0' />
                             <span>
-                              {formatDate(property.updatedAt, "ru-RU", { relative: true })}
+                              {formatDate(property.updatedAt, "ru-RU", { relative: true, includeTime: true })}
                             </span>
                           </div>
                         )}
                         {property.views !== undefined && (
                           <div className='flex items-center gap-2 text-muted-foreground'>
-                            <Eye className='w-4 h-4 flex-shrink-0' />
+                            <Eye className='w-4 h-4 shrink-0' />
                             <span>{property.views} просмотров</span>
                           </div>
                         )}
@@ -378,7 +463,7 @@ export default function PropertyPage({
                       <div className='grid grid-cols-2 gap-2 pt-2'>
                         {property.rooms !== undefined && property.rooms !== null && (
                           <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
-                            <Home className='w-4 h-4 text-muted-foreground flex-shrink-0' />
+                            <Home className='w-4 h-4 text-muted-foreground shrink-0' />
                             <div className='flex flex-col'>
                               <span className='text-xs text-muted-foreground'>Комнат</span>
                               <span className='text-sm font-medium'>{property.rooms}</span>
@@ -386,7 +471,7 @@ export default function PropertyPage({
                           </div>
                         )}
                         <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
-                          <Square className='w-4 h-4 text-muted-foreground flex-shrink-0' />
+                          <Square className='w-4 h-4 text-muted-foreground shrink-0' />
                           <div className='flex flex-col'>
                             <span className='text-xs text-muted-foreground'>Площадь</span>
                             <span className='text-sm font-medium'>{property.area} м²</span>
@@ -394,7 +479,7 @@ export default function PropertyPage({
                         </div>
                         {property.floor !== undefined && property.floor !== null && (
                           <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
-                            <Building2 className='w-4 h-4 text-muted-foreground flex-shrink-0' />
+                            <Building2 className='w-4 h-4 text-muted-foreground shrink-0' />
                             <div className='flex flex-col'>
                               <span className='text-xs text-muted-foreground'>Этаж</span>
                               <span className='text-sm font-medium'>{property.floor}</span>
