@@ -66,6 +66,7 @@ export function YandexMap({
   const mapInstanceRef = useRef<{
     map: InstanceType<NonNullable<typeof window.ymaps3>["YMap"]>;
     marker: unknown;
+    observer?: MutationObserver;
   } | null>(null);
   const [isApiReady, setIsApiReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -201,7 +202,41 @@ export function YandexMap({
           map.addChild(marker);
         }
 
-        mapInstanceRef.current = { map, marker };
+        // Скрываем водяной знак Yandex Maps после инициализации
+        // ВНИМАНИЕ: Это может нарушать условия использования API
+        // Для официального использования без водяного знака требуется коммерческая лицензия
+        const hideCopyrights = () => {
+          if (container) {
+            const copyrights = container.querySelectorAll('.ymaps3x0--map-copyrights, [class*="copyrights"], [class*="copyright"]');
+            copyrights.forEach((el) => {
+              (el as HTMLElement).style.display = 'none';
+              (el as HTMLElement).style.visibility = 'hidden';
+              (el as HTMLElement).style.opacity = '0';
+            });
+          }
+        };
+
+        // Скрываем сразу и через небольшую задержку (элементы могут добавляться динамически)
+        hideCopyrights();
+        setTimeout(hideCopyrights, 500);
+        setTimeout(hideCopyrights, 1000);
+
+        // Наблюдаем за изменениями DOM и скрываем новые элементы copyright
+        if (container && typeof MutationObserver !== 'undefined') {
+          const observer = new MutationObserver(() => {
+            hideCopyrights();
+          });
+          observer.observe(container, {
+            childList: true,
+            subtree: true,
+          });
+          
+          // Сохраняем observer для очистки
+          mapInstanceRef.current = { map, marker, observer };
+        } else {
+          mapInstanceRef.current = { map, marker };
+        }
+
         setIsLoading(false);
       } catch (err) {
         console.error("Ошибка инициализации карты:", err);
@@ -215,8 +250,15 @@ export function YandexMap({
 
     // Очистка при размонтировании
     return () => {
-      if (mapInstanceRef.current?.map) {
-        mapInstanceRef.current.map.destroy();
+      if (mapInstanceRef.current) {
+        // Останавливаем observer
+        if (mapInstanceRef.current.observer) {
+          mapInstanceRef.current.observer.disconnect();
+        }
+        // Уничтожаем карту
+        if (mapInstanceRef.current.map) {
+          mapInstanceRef.current.map.destroy();
+        }
         mapInstanceRef.current = null;
       }
     };
@@ -292,13 +334,14 @@ export function YandexMap({
       )}
       <div
         ref={mapContainerRef}
-        className={className}
+        className={`${className} yandex-map-container`}
         style={{
           width: "100%",
           height: `${height}px`,
           borderRadius: "8px",
           overflow: "hidden",
           background: "#eee",
+          position: "relative",
         }}
       >
         {isLoading && !error && (
