@@ -5,3 +5,4 @@ export { MessageItem } from "./MessageItem";
 export { MessageInput } from "./MessageInput";
 export { MessageDateSeparator } from "./MessageDateSeparator";
 export { EmptyState } from "./EmptyState";
+export { SupportButton } from "./SupportButton";

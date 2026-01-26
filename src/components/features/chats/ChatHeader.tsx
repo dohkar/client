@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Archive } from "lucide-react";
+import { ArrowLeft, Archive, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils/format";
@@ -13,6 +13,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ chat, onBack }: ChatHeaderProps) {
   const isPropertyChat = chat.type === "PROPERTY";
+  const isSupportChat = chat.type === "SUPPORT";
   const isArchived = chat.isArchived;
 
   return (
@@ -42,6 +43,18 @@ export function ChatHeader({ chat, onBack }: ChatHeaderProps) {
               </div>
               <p className="text-sm text-muted-foreground">
                 {formatPrice(chat.property.price)}
+              </p>
+            </div>
+          ) : isSupportChat ? (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <LifeBuoy className="h-5 w-5 text-primary shrink-0" />
+                <h2 className="font-semibold text-base">
+                  Техническая поддержка Dohkar
+                </h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Мы отвечаем как можно быстрее
               </p>
             </div>
           ) : (

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { SupportButton } from "@/components/features/chats/SupportButton";
 import { APP_CONFIG } from "@/constants";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -48,6 +49,7 @@ export default function RootLayout({
                 <main className='flex-1 pb-20 md:pb-0'>{children}</main>
                 <Footer />
                 <MobileBottomNav />
+                <SupportButton />
               </div>
               <Toaster />
             </ErrorBoundary>

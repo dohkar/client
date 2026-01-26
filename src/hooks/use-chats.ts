@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tansta
 import { useCallback, useEffect, useState } from "react";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { chatsService } from "@/services/chats.service";
+import { useAuthStore } from "@/stores";
 import { toast } from "sonner";
 import type { Chat, Message, SendMessageRequest, MessagesResponse } from "@/types/chat";
 
@@ -65,6 +66,50 @@ export function useChatMessages(chatId: string | null, enabled: boolean = true) 
     refetchInterval: refetchInterval as number | false,
     staleTime: 3000,
     initialPageParam: undefined as string | undefined,
+    // Предотвращаем дубликаты при polling и удаляем временные сообщения
+    structuralSharing: (oldData: any, newData: any) => {
+      if (!oldData || !newData) return newData;
+      if (!oldData.pages || !newData.pages) return newData;
+
+      // Объединяем сообщения и удаляем дубликаты по ID
+      // Также удаляем временные сообщения (они должны быть заменены реальными)
+      const allMessages = new Map<string, Message>();
+      
+      // Сначала добавляем старые данные (без временных)
+      oldData.pages.forEach((page: MessagesResponse) => {
+        page.messages.forEach((msg) => {
+          // Пропускаем временные сообщения
+          if (!msg.id.startsWith("temp-")) {
+            allMessages.set(msg.id, msg);
+          }
+        });
+      });
+
+      // Затем добавляем новые данные (они имеют приоритет)
+      newData.pages.forEach((page: MessagesResponse) => {
+        page.messages.forEach((msg) => {
+          allMessages.set(msg.id, msg);
+        });
+      });
+
+      // Создаем новую структуру без дубликатов
+      const uniqueMessages = Array.from(allMessages.values());
+      // Сортируем по времени создания (от старых к новым) для правильного отображения
+      const sortedMessages = uniqueMessages.sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
+      return {
+        ...newData,
+        pages: [
+          {
+            messages: sortedMessages,
+            nextCursor: newData.pages[0]?.nextCursor || null,
+            hasMore: newData.pages[0]?.hasMore || false,
+          },
+        ],
+      };
+    },
   });
 }
 
@@ -89,33 +134,41 @@ export function useSendMessage() {
         queryKeys.chats.messages(chatId)
       );
 
+      // Получаем текущего пользователя из store
+      const currentUser = useAuthStore.getState().user;
+
       // Optimistic update: добавляем временное сообщение
       queryClient.setQueryData<any>(queryKeys.chats.messages(chatId), (old: any) => {
-        if (!old) return old;
+        if (!old || !old.pages || old.pages.length === 0) return old;
 
         const tempMessage: Message = {
-          id: `temp-${Date.now()}`,
+          id: `temp-${Date.now()}-${Math.random()}`,
           chatId,
-          senderId: "current-user", // Будет заменено реальным ID
+          senderId: currentUser?.id || "current-user",
           text: data.text,
           isRead: false,
           readAt: null,
           createdAt: new Date(),
         };
 
+        // Сообщения уже отсортированы от старых к новым (для отображения)
+        // Добавляем новое сообщение в конец (самое свежее)
+        const firstPage = old.pages[0];
+        const updatedMessages = [...firstPage.messages, tempMessage];
+
         return {
           ...old,
           pages: [
             {
-              ...old.pages[0],
-              messages: [tempMessage, ...old.pages[0].messages],
+              ...firstPage,
+              messages: updatedMessages,
             },
             ...old.pages.slice(1),
           ],
         };
       });
 
-      return { previousMessages };
+      return { previousMessages, tempMessageId: `temp-${Date.now()}` };
     },
 
     onError: (error, variables, context) => {
@@ -129,16 +182,79 @@ export function useSendMessage() {
       toast.error("Не удалось отправить сообщение");
     },
 
-    onSuccess: (data, variables) => {
+    onSuccess: (newMessage, variables, context) => {
+      // Заменяем временное сообщение на реальное
+      queryClient.setQueryData<any>(
+        queryKeys.chats.messages(variables.chatId),
+        (old: any) => {
+          if (!old || !old.pages || old.pages.length === 0) {
+            // Если нет данных, создаем новую структуру
+            return {
+              pages: [
+                {
+                  messages: [newMessage],
+                  nextCursor: null,
+                  hasMore: false,
+                },
+              ],
+              pageParams: [undefined],
+            };
+          }
+
+          // Удаляем все временные сообщения и добавляем реальное
+          const updatedPages = old.pages.map((page: MessagesResponse, index: number) => {
+            if (index === 0) {
+              // В первой странице удаляем временные сообщения
+              const messagesWithoutTemp = page.messages.filter(
+                (msg) => !msg.id.startsWith("temp-")
+              );
+              
+              // Проверяем, нет ли уже этого сообщения (по ID или тексту + времени)
+              const messageExists = messagesWithoutTemp.some(
+                (msg) =>
+                  msg.id === newMessage.id ||
+                  (msg.text === newMessage.text &&
+                    Math.abs(
+                      new Date(msg.createdAt).getTime() -
+                      new Date(newMessage.createdAt).getTime()
+                    ) < 5000) // 5 секунд разница
+              );
+
+              if (!messageExists) {
+                // Добавляем новое сообщение в конец (самое свежее, так как массив отсортирован от старых к новым)
+                return {
+                  ...page,
+                  messages: [...messagesWithoutTemp, newMessage],
+                };
+              }
+
+              // Если сообщение уже есть, просто удаляем временные
+              return {
+                ...page,
+                messages: messagesWithoutTemp,
+              };
+            }
+            return page;
+          });
+
+          return {
+            ...old,
+            pages: updatedPages,
+          };
+        }
+      );
+
       // Обновляем список чатов (lastMessage)
       queryClient.invalidateQueries({ queryKey: queryKeys.chats.list() });
     },
 
     onSettled: (data, error, variables) => {
-      // Синхронизируем с сервером
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.chats.messages(variables.chatId),
-      });
+      // Синхронизируем с сервером только если была ошибка
+      if (error) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.chats.messages(variables.chatId),
+        });
+      }
     },
   });
 }
@@ -189,6 +305,26 @@ export function useCreatePropertyChat() {
       } else {
         toast.error("Не удалось создать чат");
       }
+    },
+  });
+}
+
+/**
+ * Хук для создания или получения чата поддержки
+ */
+export function useSupportChat() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => chatsService.createSupportChat(),
+
+    onSuccess: () => {
+      // Обновляем список чатов
+      queryClient.invalidateQueries({ queryKey: queryKeys.chats.list() });
+    },
+
+    onError: () => {
+      toast.error("Не удалось открыть чат поддержки");
     },
   });
 }

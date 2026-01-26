@@ -51,7 +51,7 @@ export function MessageItem({ message, isOwn, showStatus = true }: MessageItemPr
         {/* Кнопка копирования */}
         <button
           onClick={handleCopy}
-          className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border rounded-full p-1.5 shadow-sm"
+          className="absolute cursor-pointer hidden lg:block -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border rounded-full p-1.5 shadow-sm"
           aria-label="Копировать текст"
         >
           <Copy className="h-3 w-3" />
