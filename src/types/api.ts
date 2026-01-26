@@ -1294,6 +1294,7 @@ export interface operations {
             query?: {
                 page?: number;
                 limit?: number;
+                search?: string;
             };
             header?: never;
             path?: never;

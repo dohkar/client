@@ -33,6 +33,9 @@ export interface PropertyBackend {
     id: string;
     name: string;
   } | Record<string, never>;
+  // Coordinates for map display
+  latitude?: number;
+  longitude?: number;
 }
 
 // Frontend property format (for compatibility)
@@ -67,6 +70,9 @@ export interface Property {
   totalFloors?: number;
   yearBuilt?: number;
   condition?: string;
+  // Coordinates for map display
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface PropertyFilters {
