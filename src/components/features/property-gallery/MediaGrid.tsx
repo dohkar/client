@@ -1,10 +1,15 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import type { MediaItem, AspectRatio } from "./types";
 import { MediaThumbnail } from "./MediaThumbnail";
 
 type MediaGridProps = {
   media: MediaItem[];
+  currentHeroIndex: number;
   onItemClick: (index: number) => void;
+  onHeroPrev?: () => void;
+  onHeroNext?: () => void;
   aspectRatio?: AspectRatio;
   className?: string;
   emptyStateText?: string;
@@ -20,7 +25,10 @@ const MAX_THUMBS = 4; // Максимальное количество thumbs д
 
 export function MediaGrid({
   media,
+  currentHeroIndex,
   onItemClick,
+  onHeroPrev,
+  onHeroNext,
   aspectRatio = "16/9",
   className,
   emptyStateText = "Нет медиа",
@@ -39,27 +47,67 @@ export function MediaGrid({
     );
   }
 
-  const heroItem = media[0];
+  const heroItem = media[currentHeroIndex];
   const hasMore = media.length > 1;
-  const thumbs = hasMore ? media.slice(1, MAX_THUMBS + 1) : [];
+  // Показываем thumbs, исключая текущий hero
+  const thumbs = hasMore
+    ? media
+        .filter((_, index) => index !== currentHeroIndex)
+        .slice(0, MAX_THUMBS)
+    : [];
   const remainingCount = media.length > MAX_THUMBS + 1 ? media.length - (MAX_THUMBS + 1) : 0;
 
   // Явная проверка для случая с 2 элементами
   const isTwoItems = media.length === 2;
+  const showNavigation = hasMore && (onHeroPrev || onHeroNext);
 
   return (
     <div className={cn("space-y-3", className)}>
-      {/* Hero изображение */}
-      <MediaThumbnail
-        item={heroItem}
-        index={0}
-        onClick={() => onItemClick(0)}
-        size="hero"
-        className={cn(
-          "w-full",
-          aspectRatioClasses[aspectRatio]
+      {/* Hero изображение с навигацией */}
+      <div className="relative group">
+        <MediaThumbnail
+          item={heroItem}
+          index={currentHeroIndex}
+          onClick={() => onItemClick(currentHeroIndex)}
+          size="hero"
+          className={cn("w-full", aspectRatioClasses[aspectRatio])}
+        />
+
+        {/* Кнопки навигации */}
+        {showNavigation && (
+          <div className="absolute inset-0 flex items-center justify-between p-2 sm:p-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            {onHeroPrev && (
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onHeroPrev();
+                }}
+                className="pointer-events-auto rounded-full bg-background/90 backdrop-blur hover:bg-background shadow-lg min-h-[44px] min-w-[44px]"
+                aria-label="Предыдущее фото"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+            )}
+
+            {onHeroNext && (
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onHeroNext();
+                }}
+                className="pointer-events-auto rounded-full bg-background/90 backdrop-blur hover:bg-background shadow-lg min-h-[44px] min-w-[44px] ml-auto"
+                aria-label="Следующее фото"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            )}
+          </div>
         )}
-      />
+      </div>
 
       {/* Compact thumbs strip */}
       {hasMore && (
@@ -74,7 +122,10 @@ export function MediaGrid({
           {thumbs.map((item) => {
             // Используем indexOf для надежного определения индекса
             const actualIndex = media.indexOf(item);
-            const isLast = item === thumbs[thumbs.length - 1] && remainingCount > 0;
+            // Проверяем, является ли это последним видимым thumb и есть ли еще фото
+            const visibleThumbsCount = thumbs.length;
+            const totalAfterHero = media.length - 1; // Все фото кроме текущего hero
+            const isLast = item === thumbs[visibleThumbsCount - 1] && totalAfterHero > visibleThumbsCount;
 
             return (
               <MediaThumbnail
@@ -85,10 +136,11 @@ export function MediaGrid({
                 size="thumb"
                 className={cn(
                   isTwoItems ? "aspect-square" : "aspect-[5/3]",
-                  "opacity-90 hover:opacity-100 transition-opacity"
+                  "opacity-90 hover:opacity-100 transition-opacity",
+                  actualIndex === currentHeroIndex && "ring-2 ring-primary opacity-100"
                 )}
                 showOverlay={isLast}
-                overlayText={isLast ? `+${remainingCount}` : undefined}
+                overlayText={isLast ? `+${totalAfterHero - visibleThumbsCount}` : undefined}
               />
             );
           })}
