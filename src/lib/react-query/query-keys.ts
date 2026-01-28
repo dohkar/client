@@ -37,6 +37,9 @@ function normalizeSearchParams(
   if (params.region !== undefined) {
     normalized.region = params.region;
   }
+  if (params.cityId !== undefined && params.cityId.trim().length > 0) {
+    normalized.cityId = params.cityId;
+  }
   if (params.sortBy !== undefined) {
     normalized.sortBy = params.sortBy;
   }

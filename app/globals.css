@@ -241,7 +241,9 @@
   }
 
   .background-mountains {
-    background: url('/images/mountains.jpg') no-repeat center center;
+    /* background: url('/images/mountains.jpg') no-repeat center center; */
+    /* background: url('https://img.freepik.com/premium-photo/scenic-view-mountains-against-sky-sunrise_1048944-7757387.jpg?semt=ais_hybrid&w=740') no-repeat center center; */
+    background: url('https://avatars.mds.yandex.net/i?id=366621b0a1025d34460a4c710ed27b643acac8af-5305635-images-thumbs&n=13') no-repeat center center;
     background-size: cover;
   }
 
@@ -772,7 +774,7 @@
   /* ВНИМАНИЕ: Удаление водяного знака может нарушать условия использования Yandex Maps API */
   /* Для официального использования без водяного знака требуется коммерческая лицензия */
   /* Подробнее: https://yandex.com/dev/commercial/doc/en/concepts/how-to-buy */
-  
+
   /* Скрываем copyright элементы внутри контейнера карты */
   .yandex-map-container .ymaps3x0--map-copyrights,
   .yandex-map-container ymaps.ymaps3x0--map-copyrights {

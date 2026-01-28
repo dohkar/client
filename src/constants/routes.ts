@@ -54,6 +54,15 @@ export const API_ENDPOINTS = {
     getById: (id: string) => `/api/users/${id}`,
   },
 
+  // Regions & Cities
+  regions: {
+    list: "/api/regions",
+    getById: (id: string) => `/api/regions/${id}`,
+  },
+  cities: {
+    list: "/api/cities",
+  },
+
   // Properties
   properties: {
     list: "/api/properties",

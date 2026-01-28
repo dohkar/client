@@ -43,10 +43,9 @@ export function HeroSearch() {
   const dealType = watch("dealType");
 
   // useMemo убираем — это вычисление простое и предсказуемое
-  const validDealType =
-    DEAL_TYPES.some((t) => t.value === dealType)
-      ? dealType
-      : DEFAULT_DEAL_TYPE;
+  const validDealType = DEAL_TYPES.some((t) => t.value === dealType)
+    ? dealType
+    : DEFAULT_DEAL_TYPE;
 
   // Теперь performSearch принимает SearchForm (расширяемость)
   const performSearch = (params: SearchForm) => {
@@ -54,7 +53,7 @@ export function HeroSearch() {
     if (!trimmedQuery) return;
 
     router.push(
-      `/search?query=${encodeURIComponent(trimmedQuery)}&dealType=${params.dealType}`,
+      `/search?query=${encodeURIComponent(trimmedQuery)}&dealType=${params.dealType}`
     );
   };
 
@@ -71,7 +70,10 @@ export function HeroSearch() {
           </h1>
 
           {/* Search box */}
-          <form onSubmit={onSubmit} className='bg-white p-6 rounded-xl shadow-xl max-w-2xl mx-auto'>
+          <form
+            onSubmit={onSubmit}
+            className='bg-white/20 backdrop-blur-lg p-6 rounded-xl shadow-xl max-w-2xl mx-auto'
+          >
             <div className='flex flex-col lg:flex-row gap-4'>
               {/* Input */}
               <div className='relative flex-1'>
@@ -124,19 +126,22 @@ export function HeroSearch() {
           </form>
 
           {/* Popular cities */}
-          <div className='flex flex-wrap justify-center gap-2 pt-2 text-sm'>
-            {POPULAR_CITIES.map((city) => (
-              <button
-                key={city}
-                onClick={() =>
-                  performSearch({ query: city, dealType: validDealType })
-                }
-                className='flex items-center gap-1 px-3 py-1.5 bg-primary/40 text-gold rounded-full border border-white/30 hover:border-white/60 hover:brightness-110 transition-all duration-200'
-              >
-                <MapPin className='h-3 w-3' />
-                {city}
-              </button>
-            ))}
+          <div className="flex justify-center">
+            <div className="flex flex-wrap gap-3 bg-black/30 backdrop-blur-lg rounded-2xl px-5 py-2 shadow-lg border border-white/10">
+              {POPULAR_CITIES.map((city) => (
+                <button
+                  key={city}
+                  onClick={() => performSearch({ query: city, dealType: validDealType })}
+                  className="flex cursor-pointer items-center gap-2 px-4 py-1.5 bg-transparent border border-primary/40 rounded-full hover:border-primary/80 hover:bg-primary/10 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold text-gold font-medium"
+                  style={{
+                    boxShadow: "0 1.5px 0 0 oklch(0.75 0.15 65 / 0.3)",
+                  }}
+                >
+                  <MapPin className="h-4 w-4 text-gold" />
+                  {city}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

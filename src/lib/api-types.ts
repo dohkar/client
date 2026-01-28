@@ -160,7 +160,8 @@ export type ApiPropertyListParams = {
   priceMax?: number;
   rooms?: number;
   areaMin?: number;
-  regionId?: string; // Changed from region enum to regionId UUID
+  regionId?: string;
+  cityId?: string;
   sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance";
   page?: number;
   limit?: number;
