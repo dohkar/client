@@ -8,6 +8,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { hasProhibitedContent } from "@/lib/utils/content-filter";
 import { toast } from "sonner";
 
+const MIN_ROWS = 1;
+const MAX_HEIGHT_PX = 200;
+
 interface MessageInputProps {
   onSend: (text: string) => void;
   disabled?: boolean;
@@ -26,6 +29,16 @@ export function MessageInput({
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /** Авто-рост высоты textarea по контенту */
+  const adjustHeight = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const newHeight = Math.min(Math.max(el.scrollHeight, 44), MAX_HEIGHT_PX);
+    el.style.height = `${newHeight}px`;
+  }, []);
 
   /**
    * Обработчик отправки с debounce (500ms)
@@ -56,8 +69,9 @@ export function MessageInput({
       onSend(trimmedText);
       setText("");
       setIsSending(false);
+      setTimeout(adjustHeight, 0); // сброс высоты после отправки
     }, 500);
-  }, [text, messageCount, isSending, onSend]);
+  }, [text, messageCount, isSending, onSend, adjustHeight]);
 
   /**
    * Обработчик Enter (отправка), Shift+Enter (новая строка)
@@ -81,6 +95,11 @@ export function MessageInput({
     };
   }, []);
 
+  // Авто-рост при изменении текста
+  useEffect(() => {
+    adjustHeight();
+  }, [text, adjustHeight]);
+
   return (
     <div className="border-t bg-background p-4">
       {/* Hint при спаме в support-чате */}
@@ -95,13 +114,14 @@ export function MessageInput({
 
       <div className="flex gap-2">
         <Textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Введите сообщение..."
           disabled={disabled || isSending}
-          className="min-h-[44px] max-h-32 resize-none"
-          rows={1}
+          className="min-h-[44px] max-h-[200px] resize-none overflow-y-auto py-3"
+          rows={MIN_ROWS}
         />
         <Button
           onClick={handleSend}

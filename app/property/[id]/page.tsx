@@ -94,7 +94,7 @@ export default function PropertyPage({
 
     try {
       const chat = await createChatMutation.mutateAsync(property.id);
-      router.push(ROUTES.messages);
+      router.push(`${ROUTES.messages}?chatId=${chat.id}`);
     } catch (error) {
       // Ошибка обработается в хуке
     }

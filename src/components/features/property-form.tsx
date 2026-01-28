@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CitySearchSelect } from "@/components/features/CitySearchSelect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { useQuery } from "@tanstack/react-query";
@@ -578,29 +579,13 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="cityId" className="text-base font-medium flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
-                Город
-              </Label>
-              <Select
-                value={watch("cityId") || "none"}
-                onValueChange={(value) => setValue("cityId", value === "none" ? "" : value)}
-                disabled={!regionIdForCities || cities.length === 0}
-              >
-                <SelectTrigger className="h-11 text-base">
-                  <SelectValue placeholder={cities.length === 0 ? "Нет городов" : "Выберите город"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Не выбран</SelectItem>
-                  {cities.map((city) => (
-                    <SelectItem key={city.id} value={city.id}>
-                      {city.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <CitySearchSelect
+              value={watch("cityId") || ""}
+              onValueChange={(value) => setValue("cityId", value)}
+              cities={cities}
+              disabled={!regionIdForCities}
+              placeholder={cities.length === 0 ? "Нет городов" : "Поиск или выбор города"}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="type" className="text-base font-medium flex items-center gap-2">
