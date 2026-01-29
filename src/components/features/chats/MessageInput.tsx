@@ -143,26 +143,27 @@ export function MessageInput({
   }, [text, chatId, isConnected]);
 
   return (
-    <div className="border-t bg-background p-4">
+    <div className='border-t bg-background p-4'>
       {/* Hint при спаме в support-чате */}
       {showSpamHint && chatType === "SUPPORT" && (
-        <Alert className="mb-3 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
-            Мы получили ваше сообщение, пожалуйста, дождитесь ответа. Обычно отвечаем в течение 15 минут.
+        <Alert className='mb-3 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800'>
+          <Info className='h-4 w-4 text-blue-600 dark:text-blue-400' />
+          <AlertDescription className='text-sm text-blue-800 dark:text-blue-200'>
+            Мы получили ваше сообщение, пожалуйста, дождитесь ответа. Обычно отвечаем в
+            течение 15 минут.
           </AlertDescription>
         </Alert>
       )}
 
-      <div className="flex gap-2">
+      <div className='flex gap-2 shrink-0'>
         <Textarea
           ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Введите сообщение..."
+          placeholder='Введите сообщение...'
           disabled={disabled || isSending}
-          className="min-h-[44px] max-h-[200px] resize-none overflow-y-auto py-3"
+          className='min-h-[46px] max-h-[200px] resize-none overflow-y-auto py-3 md:[scrollbar-width:none] md:[-ms-overflow-style:none] md:[&::-webkit-scrollbar]:hidden'
           rows={MIN_ROWS}
           onBlur={() => {
             if (chatId && isConnected) {
@@ -173,13 +174,13 @@ export function MessageInput({
         <Button
           onClick={handleSend}
           disabled={disabled || isSending || !text.trim()}
-          size="icon"
-          className="shrink-0"
+          size='icon'
+          className='shrink-0'
         >
-          <Send className="h-4 w-4" />
+          <Send className='h-4 w-4' />
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground mt-2">
+      <p className='text-xs text-muted-foreground mt-2'>
         Enter — отправить, Shift+Enter — новая строка
       </p>
     </div>
