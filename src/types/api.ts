@@ -297,6 +297,23 @@ export interface paths {
         patch: operations["PropertiesController_update"];
         trace?: never;
     };
+    "/api/properties/{id}/related": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить похожие объявления */
+        get: operations["PropertiesController_findRelated"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/favorites": {
         parameters: {
             query?: never;
@@ -673,6 +690,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить все заявки (только админ/поддержка) */
+        get: operations["InboxController_getAllRequests"];
+        put?: never;
+        /** Создать заявку (контакт или жалобу) */
+        post: operations["InboxController_createRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inbox/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить заявку по ID */
+        get: operations["InboxController_getRequestById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inbox/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Обновить статус заявки */
+        patch: operations["InboxController_updateStatus"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -979,6 +1048,28 @@ export interface components {
              * @example 550e8400-e29b-41d4-a716-446655440000
              */
             supportUserId: string;
+        };
+        CreateInboxRequestDto: {
+            /**
+             * @example CONTACT
+             * @enum {string}
+             */
+            category: "CONTACT" | "COMPLAINT";
+            /**
+             * @example MEDIUM
+             * @enum {string}
+             */
+            severity?: "LOW" | "MEDIUM" | "HIGH";
+            /** @example Иван Петров */
+            name: string;
+            /** @example ivan@example.com */
+            email?: string;
+            /** @example +79123456789 */
+            phone?: string;
+            /** @example Здравствуйте, хочу уточнить... */
+            message: string;
+            /** @example uuid */
+            propertyId?: string;
         };
     };
     responses: never;
@@ -1492,6 +1583,28 @@ export interface operations {
             };
             /** @description Объявление не найдено */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PropertiesController_findRelated: {
+        parameters: {
+            query: {
+                limit: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список похожих объявлений */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2198,6 +2311,95 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Список городов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InboxController_getAllRequests: {
+        parameters: {
+            query: {
+                category: string;
+                severity: string;
+                status: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список заявок */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InboxController_createRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInboxRequestDto"];
+            };
+        };
+        responses: {
+            /** @description Заявка создана */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Некорректные данные */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InboxController_getRequestById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InboxController_updateStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
