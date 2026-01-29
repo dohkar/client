@@ -46,12 +46,16 @@ export default function AdminPage() {
   const { user, isAuthenticated, isInitialized } = useAuthStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "properties"
+    "overview" | "users" | "properties" | "inbox"
   >("overview");
   const [usersSearch, setUsersSearch] = useState("");
   const [propertiesSearch, setPropertiesSearch] = useState("");
   const [propertiesStatus, setPropertiesStatus] = useState<string>("all");
   const [propertiesType, setPropertiesType] = useState<string>("all");
+
+  const [inboxCategory, setInboxCategory] = useState<string>("all");
+  const [inboxSeverity, setInboxSeverity] = useState<string>("all");
+  const [inboxStatus, setInboxStatus] = useState<string>("all");
 
   const debouncedUsersSearch = useDebounce(usersSearch, 400);
   const debouncedPropertiesSearch = useDebounce(propertiesSearch, 400);
@@ -104,6 +108,27 @@ export default function AdminPage() {
       });
     },
     enabled: activeTab === "properties" && isInitialized && isAuthenticated && isAdmin,
+  });
+
+  const { data: inboxData, isLoading: inboxLoading } = useQuery({
+    queryKey: ["admin", "inbox", inboxCategory, inboxSeverity, inboxStatus],
+    queryFn: async () => {
+      return adminService.getInboxRequests({
+        category:
+          inboxCategory !== "all"
+            ? (inboxCategory as "CONTACT" | "COMPLAINT")
+            : undefined,
+        severity:
+          inboxSeverity !== "all"
+            ? (inboxSeverity as "LOW" | "MEDIUM" | "HIGH")
+            : undefined,
+        status:
+          inboxStatus !== "all"
+            ? (inboxStatus as "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED")
+            : undefined,
+      });
+    },
+    enabled: activeTab === "inbox" && isInitialized && isAuthenticated && isAdmin,
   });
 
   // Mutations
@@ -159,6 +184,23 @@ export default function AdminPage() {
     },
     onError: (error: Error) => {
       toast.error(error.message || "Ошибка удаления");
+    },
+  });
+
+  const updateInboxStatusMutation = useMutation({
+    mutationFn: ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+    }) => adminService.updateInboxStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "inbox"] });
+      toast.success("Статус заявки обновлен");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Ошибка обновления статуса");
     },
   });
 
@@ -225,6 +267,13 @@ export default function AdminPage() {
               className='min-h-[44px] whitespace-nowrap'
             >
               Объявления
+            </Button>
+            <Button
+              variant={activeTab === "inbox" ? "default" : "ghost"}
+              onClick={() => setActiveTab("inbox")}
+              className='min-h-[44px] whitespace-nowrap'
+            >
+              Inbox
             </Button>
           </div>
         </div>
@@ -498,6 +547,129 @@ export default function AdminPage() {
                   searchValue={debouncedPropertiesSearch}
                   onSearchChange={setPropertiesSearch}
                 />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Inbox Tab */}
+        {activeTab === "inbox" && (
+          <div className="space-y-6">
+            <Card className="border-primary/20">
+              <CardHeader>
+                <CardTitle>Inbox (CONTACT + COMPLAINT)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">Категория</div>
+                    <Select value={inboxCategory} onValueChange={setInboxCategory}>
+                      <SelectTrigger className="min-h-[44px]">
+                        <SelectValue placeholder="Все" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все</SelectItem>
+                        <SelectItem value="CONTACT">CONTACT</SelectItem>
+                        <SelectItem value="COMPLAINT">COMPLAINT</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">Severity</div>
+                    <Select value={inboxSeverity} onValueChange={setInboxSeverity}>
+                      <SelectTrigger className="min-h-[44px]">
+                        <SelectValue placeholder="Все" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все</SelectItem>
+                        <SelectItem value="LOW">LOW</SelectItem>
+                        <SelectItem value="MEDIUM">MEDIUM</SelectItem>
+                        <SelectItem value="HIGH">HIGH</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">Status</div>
+                    <Select value={inboxStatus} onValueChange={setInboxStatus}>
+                      <SelectTrigger className="min-h-[44px]">
+                        <SelectValue placeholder="Все" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все</SelectItem>
+                        <SelectItem value="NEW">NEW</SelectItem>
+                        <SelectItem value="IN_PROGRESS">IN_PROGRESS</SelectItem>
+                        <SelectItem value="RESOLVED">RESOLVED</SelectItem>
+                        <SelectItem value="CLOSED">CLOSED</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {inboxLoading ? (
+                  <div className="text-sm text-muted-foreground">Загрузка...</div>
+                ) : !inboxData || inboxData.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">Нет заявок</div>
+                ) : (
+                  <div className="space-y-3">
+                    {inboxData.map((item: any) => (
+                      <div
+                        key={item.id}
+                        className="rounded-lg border border-border p-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="secondary">{item.category}</Badge>
+                            <Badge
+                              variant={
+                                item.severity === "HIGH" ? "destructive" : "outline"
+                              }
+                            >
+                              {item.severity}
+                            </Badge>
+                            <Badge variant="outline">{item.status}</Badge>
+                            {item.propertyId && (
+                              <Badge variant="outline">property: {item.propertyId}</Badge>
+                            )}
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium">{item.name}</span>
+                            {item.email ? (
+                              <span className="text-muted-foreground"> • {item.email}</span>
+                            ) : null}
+                            {item.phone ? (
+                              <span className="text-muted-foreground"> • {item.phone}</span>
+                            ) : null}
+                          </div>
+                          <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                            {item.message}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                          <Select
+                            value={item.status}
+                            onValueChange={(value) =>
+                              updateInboxStatusMutation.mutate({
+                                id: item.id,
+                                status: value as any,
+                              })
+                            }
+                          >
+                            <SelectTrigger className="min-w-[200px] min-h-[44px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="NEW">NEW</SelectItem>
+                              <SelectItem value="IN_PROGRESS">IN_PROGRESS</SelectItem>
+                              <SelectItem value="RESOLVED">RESOLVED</SelectItem>
+                              <SelectItem value="CLOSED">CLOSED</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -23,6 +23,18 @@ import { ROUTES } from "@/constants";
 import { formatDate, formatPhone, getPhoneHref } from "@/lib/utils/format";
 import { MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Flag } from "lucide-react";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { logger } from "@/lib/utils/logger";
 
 export default function PropertyPage({
   params,
@@ -47,13 +59,19 @@ export default function PropertyPage({
   // For share functionality
   const [copied, setCopied] = useState(false);
 
+  // Complaint modal state
+  const [complaintOpen, setComplaintOpen] = useState(false);
+  const [complaintReason, setComplaintReason] = useState<string>("");
+  const [complaintComment, setComplaintComment] = useState<string>("");
+  const [complaintSubmitting, setComplaintSubmitting] = useState(false);
+
   const handleFavoriteClick = () => {
     if (property) {
       toggleFavorite(property.id, property);
     }
   };
 
-  console.log(property);
+  // no-op: avoid console logging in prod
 
 
 
@@ -97,6 +115,54 @@ export default function PropertyPage({
       router.push(`${ROUTES.messages}?chatId=${chat.id}`);
     } catch (error) {
       // Ошибка обработается в хуке
+    }
+  };
+
+  const handleSubmitComplaint = async () => {
+    if (!property) return;
+    if (!isAuthenticated) {
+      router.push(ROUTES.login);
+      return;
+    }
+
+    if (!complaintReason) {
+      toast.error("Выберите причину жалобы");
+      return;
+    }
+
+    try {
+      setComplaintSubmitting(true);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const message = `Жалоба на объявление ${property.id}\nПричина: ${complaintReason}\nКомментарий: ${complaintComment || "-"}`;
+
+      const res = await fetch(`${API_URL}/api/inbox`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          category: "COMPLAINT",
+          severity: "MEDIUM",
+          name: user?.name || "Пользователь",
+          email: user?.email || undefined,
+          phone: user?.phone || undefined,
+          message,
+          propertyId: property.id,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to submit complaint");
+      }
+
+      toast.success("Жалоба отправлена");
+      setComplaintOpen(false);
+      setComplaintReason("");
+      setComplaintComment("");
+    } catch (error) {
+      logger.error("Failed to submit complaint", error);
+      toast.error("Не удалось отправить жалобу");
+    } finally {
+      setComplaintSubmitting(false);
     }
   };
 
@@ -562,6 +628,77 @@ export default function PropertyPage({
                           ? formatPhone(property.contact.phone, "international")
                           : "Показать телефон"}
                       </Button>
+
+                      {/* Жалоба (только на странице объявления) */}
+                      <div className="pt-2">
+                        <Dialog open={complaintOpen} onOpenChange={setComplaintOpen}>
+                          <DialogTrigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Flag className="h-4 w-4" />
+                              Пожаловаться
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Пожаловаться на объявление</DialogTitle>
+                              <DialogDescription>
+                                Выберите причину и при желании добавьте комментарий.
+                              </DialogDescription>
+                            </DialogHeader>
+
+                            <div className="space-y-3">
+                              <div className="space-y-2">
+                                <div className="text-sm font-medium">Причина</div>
+                                <Select
+                                  value={complaintReason}
+                                  onValueChange={setComplaintReason}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Выберите причину" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="SCAM">Мошенничество</SelectItem>
+                                    <SelectItem value="WRONG_INFO">Недостоверная информация</SelectItem>
+                                    <SelectItem value="DUPLICATE">Дубликат</SelectItem>
+                                    <SelectItem value="SPAM">Спам</SelectItem>
+                                    <SelectItem value="OTHER">Другое</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="space-y-2">
+                                <div className="text-sm font-medium">Комментарий (опционально)</div>
+                                <Textarea
+                                  value={complaintComment}
+                                  onChange={(e) => setComplaintComment(e.target.value)}
+                                  placeholder="Опишите проблему..."
+                                />
+                              </div>
+                            </div>
+
+                            <DialogFooter>
+                              <Button
+                                variant="outline"
+                                type="button"
+                                onClick={() => setComplaintOpen(false)}
+                                disabled={complaintSubmitting}
+                              >
+                                Отмена
+                              </Button>
+                              <Button
+                                type="button"
+                                onClick={handleSubmitComplaint}
+                                disabled={complaintSubmitting}
+                              >
+                                {complaintSubmitting ? "Отправка..." : "Отправить"}
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
 
                   </div>

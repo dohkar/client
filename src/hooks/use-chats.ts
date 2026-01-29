@@ -1,10 +1,23 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { chatsService } from "@/services/chats.service";
-import { useAuthStore } from "@/stores";
 import { toast } from "sonner";
+import { useAuthStore } from "@/stores";
 import type { Chat, Message, SendMessageRequest, MessagesResponse } from "@/types/chat";
+import {
+  useSocket,
+  useChatRealtimeUpdates,
+  useMessagesRealtimeUpdates,
+  useSendMessageWs,
+} from "./use-socket";
+import { logger } from "@/lib/utils/logger";
+import { socketClient } from "@/lib/socket/socket-client";
 
 /**
  * Адаптивный polling с Page Visibility API
@@ -35,26 +48,42 @@ function useAdaptivePolling(interval: number, enabled: boolean = true) {
 }
 
 /**
- * Хук для списка чатов с адаптивным polling (10 секунд)
+ * Хук для списка чатов с WebSocket real-time + fallback на polling
  */
 export function useChatsList() {
+  const { useFallback } = useSocket();
   const { refetchInterval } = useAdaptivePolling(10000); // 10 секунд
+
+  // Включаем WebSocket обновления
+  useChatRealtimeUpdates(!useFallback);
 
   return useQuery<Chat[]>({
     queryKey: queryKeys.chats.list(),
     queryFn: () => chatsService.getChats(),
-    refetchInterval: refetchInterval as number | false,
+    // Polling только если WebSocket недоступен
+    refetchInterval: useFallback ? (refetchInterval as number | false) : false,
     staleTime: 5000,
   });
 }
 
 /**
- * Хук для сообщений чата с cursor-based пагинацией и polling (5 секунд)
+ * Хук для сообщений чата с WebSocket real-time + fallback на polling
  */
 export function useChatMessages(chatId: string | null, enabled: boolean = true) {
+  const { useFallback } = useSocket();
   const { refetchInterval } = useAdaptivePolling(5000, enabled && !!chatId); // 5 секунд
 
-  return useInfiniteQuery<MessagesResponse, Error, MessagesResponse, readonly ["chats", "messages", string] | readonly ["chats", "messages", string, string], string | undefined>({
+  // Включаем WebSocket обновления для сообщений
+  useMessagesRealtimeUpdates(chatId, enabled && !useFallback);
+
+  return useInfiniteQuery<
+    MessagesResponse,
+    Error,
+    MessagesResponse,
+    | readonly ["chats", "messages", string]
+    | readonly ["chats", "messages", string, string],
+    string | undefined
+  >({
     queryKey: queryKeys.chats.messages(chatId || ""),
     queryFn: ({ pageParam }) =>
       chatsService.getChatMessages(chatId!, {
@@ -63,198 +92,74 @@ export function useChatMessages(chatId: string | null, enabled: boolean = true) 
       }),
     getNextPageParam: (lastPage: MessagesResponse) => lastPage.nextCursor || undefined,
     enabled: enabled && !!chatId,
-    refetchInterval: refetchInterval as number | false,
+    // Polling только если WebSocket недоступен
+    refetchInterval: useFallback ? (refetchInterval as number | false) : false,
     staleTime: 3000,
     initialPageParam: undefined as string | undefined,
-    // Предотвращаем дубликаты при polling и удаляем временные сообщения
-    structuralSharing: (oldData: any, newData: any) => {
-      if (!oldData || !newData) return newData;
-      if (!oldData.pages || !newData.pages) return newData;
-
-      // Объединяем сообщения и удаляем дубликаты по ID
-      // Также удаляем временные сообщения (они должны быть заменены реальными)
-      const allMessages = new Map<string, Message>();
-      
-      // Сначала добавляем старые данные (без временных)
-      oldData.pages.forEach((page: MessagesResponse) => {
-        page.messages.forEach((msg) => {
-          // Пропускаем временные сообщения
-          if (!msg.id.startsWith("temp-")) {
-            allMessages.set(msg.id, msg);
-          }
-        });
-      });
-
-      // Затем добавляем новые данные (они имеют приоритет)
-      newData.pages.forEach((page: MessagesResponse) => {
-        page.messages.forEach((msg) => {
-          allMessages.set(msg.id, msg);
-        });
-      });
-
-      // Создаем новую структуру без дубликатов
-      const uniqueMessages = Array.from(allMessages.values());
-      // Сортируем по времени создания (от старых к новым) для правильного отображения
-      const sortedMessages = uniqueMessages.sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
-
-      return {
-        ...newData,
-        pages: [
-          {
-            messages: sortedMessages,
-            nextCursor: newData.pages[0]?.nextCursor || null,
-            hasMore: newData.pages[0]?.hasMore || false,
-          },
-        ],
-      };
-    },
   });
 }
 
 /**
- * Хук для отправки сообщения с optimistic updates и debounce
+ * Хук для отправки сообщения через WebSocket с fallback на REST
  */
 export function useSendMessage() {
-  const queryClient = useQueryClient();
+  const { useFallback } = useSocket();
+  const { sendMessage: sendMessageWs, isConnected } = useSendMessageWs();
 
   return useMutation({
-    mutationFn: ({ chatId, data }: { chatId: string; data: SendMessageRequest }) =>
-      chatsService.sendMessage(chatId, data),
-
-    onMutate: async ({ chatId, data }) => {
-      // Отменяем исходящие запросы
-      await queryClient.cancelQueries({
-        queryKey: queryKeys.chats.messages(chatId),
-      });
-
-      // Сохраняем предыдущее состояние
-      const previousMessages = queryClient.getQueryData(
-        queryKeys.chats.messages(chatId)
-      );
-
-      // Получаем текущего пользователя из store
-      const currentUser = useAuthStore.getState().user;
-
-      // Optimistic update: добавляем временное сообщение
-      queryClient.setQueryData<any>(queryKeys.chats.messages(chatId), (old: any) => {
-        if (!old || !old.pages || old.pages.length === 0) return old;
-
-        const tempMessage: Message = {
-          id: `temp-${Date.now()}-${Math.random()}`,
-          chatId,
-          senderId: currentUser?.id || "current-user",
-          text: data.text,
-          isRead: false,
-          readAt: null,
-          createdAt: new Date(),
-        };
-
-        // Сообщения уже отсортированы от старых к новым (для отображения)
-        // Добавляем новое сообщение в конец (самое свежее)
-        const firstPage = old.pages[0];
-        const updatedMessages = [...firstPage.messages, tempMessage];
-
-        return {
-          ...old,
-          pages: [
-            {
-              ...firstPage,
-              messages: updatedMessages,
-            },
-            ...old.pages.slice(1),
-          ],
-        };
-      });
-
-      return { previousMessages, tempMessageId: `temp-${Date.now()}` };
-    },
-
-    onError: (error, variables, context) => {
-      // Откатываем к предыдущему состоянию
-      if (context?.previousMessages) {
-        queryClient.setQueryData(
-          queryKeys.chats.messages(variables.chatId),
-          context.previousMessages
-        );
-      }
-      toast.error("Не удалось отправить сообщение");
-    },
-
-    onSuccess: (newMessage, variables, context) => {
-      // Заменяем временное сообщение на реальное
-      queryClient.setQueryData<any>(
-        queryKeys.chats.messages(variables.chatId),
-        (old: any) => {
-          if (!old || !old.pages || old.pages.length === 0) {
-            // Если нет данных, создаем новую структуру
-            return {
-              pages: [
-                {
-                  messages: [newMessage],
-                  nextCursor: null,
-                  hasMore: false,
-                },
-              ],
-              pageParams: [undefined],
-            };
-          }
-
-          // Удаляем все временные сообщения и добавляем реальное
-          const updatedPages = old.pages.map((page: MessagesResponse, index: number) => {
-            if (index === 0) {
-              // В первой странице удаляем временные сообщения
-              const messagesWithoutTemp = page.messages.filter(
-                (msg) => !msg.id.startsWith("temp-")
-              );
-              
-              // Проверяем, нет ли уже этого сообщения (по ID или тексту + времени)
-              const messageExists = messagesWithoutTemp.some(
-                (msg) =>
-                  msg.id === newMessage.id ||
-                  (msg.text === newMessage.text &&
-                    Math.abs(
-                      new Date(msg.createdAt).getTime() -
-                      new Date(newMessage.createdAt).getTime()
-                    ) < 5000) // 5 секунд разница
-              );
-
-              if (!messageExists) {
-                // Добавляем новое сообщение в конец (самое свежее, так как массив отсортирован от старых к новым)
-                return {
-                  ...page,
-                  messages: [...messagesWithoutTemp, newMessage],
-                };
-              }
-
-              // Если сообщение уже есть, просто удаляем временные
-              return {
-                ...page,
-                messages: messagesWithoutTemp,
-              };
-            }
-            return page;
-          });
-
-          return {
-            ...old,
-            pages: updatedPages,
-          };
+    mutationFn: async ({
+      chatId,
+      data,
+    }: {
+      chatId: string;
+      data: SendMessageRequest;
+    }) => {
+      // Генерируем clientMessageId для идемпотентности (UUID v4),
+      // чтобы проходить server-side @IsUUID() в WsSendMessageDto.
+      const clientMessageId = (() => {
+        if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+          return crypto.randomUUID();
         }
-      );
 
-      // Обновляем список чатов (lastMessage)
-      queryClient.invalidateQueries({ queryKey: queryKeys.chats.list() });
-    },
+        // Fallback: UUID v4 from crypto.getRandomValues (без внешних зависимостей)
+        const cryptoObj = (globalThis as unknown as { crypto?: Crypto }).crypto;
+        if (cryptoObj?.getRandomValues) {
+          const bytes = new Uint8Array(16);
+          cryptoObj.getRandomValues(bytes);
+          // version 4
+          bytes[6] = (bytes[6] & 0x0f) | 0x40;
+          // variant 10xx
+          bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
-    onSettled: (data, error, variables) => {
-      // Синхронизируем с сервером только если была ошибка
-      if (error) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.chats.messages(variables.chatId),
-        });
+          const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0"));
+          return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex
+            .slice(6, 8)
+            .join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
+        }
+
+        // Самый последний fallback (теоретически): сохраняем уникальность, но UUID не гарантируем
+        // (на практике в современных браузерах crypto.getRandomValues есть).
+        return `${Date.now()}-${Math.random().toString(16).slice(2)}-${Math.random()
+          .toString(16)
+          .slice(2)}`;
+      })();
+
+      // Если WebSocket доступен, используем его
+      if (!useFallback && isConnected) {
+        try {
+          return await sendMessageWs(chatId, data.text, clientMessageId);
+        } catch (error) {
+          logger.error("[useSendMessage] WS failed, falling back to REST:", error);
+          // Fallback на REST
+          return chatsService.sendMessage(chatId, data);
+        }
       }
+
+      // Иначе используем REST
+      return chatsService.sendMessage(chatId, data);
+    },
+    onError: () => {
+      toast.error("Не удалось отправить сообщение");
     },
   });
 }
@@ -264,18 +169,48 @@ export function useSendMessage() {
  */
 export function useMarkAsRead() {
   const queryClient = useQueryClient();
+  const { useFallback, isConnected } = useSocket();
 
   return useMutation({
-    mutationFn: (chatId: string) => chatsService.markMessagesAsRead(chatId),
+    mutationFn: async (chatId: string) => {
+      if (!useFallback && isConnected) {
+        // WS mark-as-read with ACK
+        return await new Promise<{ count: number }>((resolve, reject) => {
+          socketClient.markAsRead(chatId, (ack) => {
+            if (ack.status === "success") {
+              resolve({ count: typeof ack.count === "number" ? ack.count : 0 });
+            } else {
+              reject(new Error(typeof ack.message === "string" ? ack.message : "Failed"));
+            }
+          });
+        });
+      }
+
+      return chatsService.markMessagesAsRead(chatId);
+    },
 
     onSuccess: (data, chatId) => {
-      // Обновляем сообщения в чате
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.chats.messages(chatId),
+      // Локально помечаем сообщения как прочитанные, чтобы не дергать REST лишний раз
+      queryClient.setQueryData<any>(queryKeys.chats.messages(chatId), (old: any) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: MessagesResponse) => ({
+            ...page,
+            messages: page.messages.map((m: Message) =>
+              m.senderId !== useAuthStore.getState().user?.id
+                ? { ...m, isRead: true, readAt: new Date() }
+                : m
+            ),
+          })),
+        };
       });
 
-      // Обновляем список чатов (unreadCount)
-      queryClient.invalidateQueries({ queryKey: queryKeys.chats.list() });
+      // Обновляем unreadCount в списке чатов локально
+      queryClient.setQueryData<Chat[]>(queryKeys.chats.list(), (oldChats) => {
+        if (!oldChats) return oldChats;
+        return oldChats.map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c));
+      });
     },
 
     onError: () => {
@@ -291,8 +226,7 @@ export function useCreatePropertyChat() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (propertyId: string) =>
-      chatsService.createPropertyChat({ propertyId }),
+    mutationFn: (propertyId: string) => chatsService.createPropertyChat({ propertyId }),
 
     onSuccess: () => {
       // Обновляем список чатов

@@ -17,6 +17,12 @@ export interface ChatParticipant {
   id: string;
   userId: string;
   role: ChatParticipantRole;
+  user?: {
+    id: string;
+    name: string | null;
+    avatar: string | null;
+    lastSeenAt: Date | null;
+  };
 }
 
 export interface Message {
@@ -24,9 +30,16 @@ export interface Message {
   chatId: string;
   senderId: string;
   text: string;
+  clientMessageId?: string;
   isRead: boolean;
   readAt: Date | null;
   createdAt: Date;
+  deletedAt?: Date | null;
+  sender?: {
+    id: string;
+    name: string | null;
+    avatar: string | null;
+  };
 }
 
 export interface Chat {

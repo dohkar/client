@@ -12,6 +12,8 @@ import { ROUTES } from "@/constants";
 import { cn } from "@/lib/utils";
 import type { Message, MessagesResponse } from "@/types/chat";
 import type { InfiniteData } from "@tanstack/react-query";
+import { useChatTypingAndPresence } from "@/hooks/use-socket";
+import { useSocket } from "@/hooks/use-socket";
 
 function MessagesPageContent() {
   const router = useRouter();
@@ -46,6 +48,8 @@ function MessagesPageContent() {
 
   // Получаем сообщения активного чата
   const messagesQuery = useChatMessages(selectedChatId, !!selectedChatId);
+  const { isConnected: isWsConnected, isConnecting: isWsConnecting, useFallback: isWsFallback } =
+    useSocket();
 
   // Мутации
   const sendMessageMutation = useSendMessage();
@@ -135,6 +139,20 @@ function MessagesPageContent() {
   // Находим выбранный чат
   const selectedChat = chats.find((chat) => chat.id === selectedChatId);
 
+  const { typingUserIds, onlineUserIds } = useChatTypingAndPresence(
+    selectedChatId,
+    !!selectedChatId
+  );
+
+  const otherParticipantId = useMemo(() => {
+    if (!selectedChat || !user?.id) return null;
+    const other = selectedChat.participants.find((p) => p.userId !== user.id);
+    return other?.userId || null;
+  }, [selectedChat, user?.id]);
+
+  const isOtherTyping = otherParticipantId ? typingUserIds.has(otherParticipantId) : false;
+  const isOtherOnline = otherParticipantId ? onlineUserIds.has(otherParticipantId) : undefined;
+
   // Подсчет сообщений от текущего пользователя (для валидации)
   const userMessagesCount = allMessages.filter(
     (msg) => msg.senderId === user?.id
@@ -148,14 +166,14 @@ function MessagesPageContent() {
 
     // Берем последние 3 сообщения
     const lastThreeMessages = allMessages.slice(-3);
-    
+
     // Проверяем, что все 3 последних сообщения от пользователя
     if (lastThreeMessages.length < 3) {
       return false;
     }
 
     const allFromUser = lastThreeMessages.every((msg) => msg.senderId === user.id);
-    
+
     // Проверяем, что перед этими 3 сообщениями нет ответа от поддержки
     if (allFromUser && allMessages.length > 3) {
       const messageBeforeLastThree = allMessages[allMessages.length - 4];
@@ -237,6 +255,11 @@ function MessagesPageContent() {
                 <ChatHeader
                   chat={selectedChat}
                   onBack={() => setSelectedChatId(null)}
+                  isOtherTyping={isOtherTyping}
+                  isOtherOnline={isOtherOnline}
+                  isRealtimeConnected={isWsConnected}
+                  isFallbackPolling={isWsFallback}
+                  isConnecting={isWsConnecting}
                 />
                 <MessageList
                   messages={allMessages}
@@ -249,6 +272,7 @@ function MessagesPageContent() {
                 />
                 <MessageInput
                   onSend={handleSendMessage}
+                  chatId={selectedChatId}
                   disabled={sendMessageMutation.isPending}
                   messageCount={userMessagesCount}
                   chatType={selectedChat.type}

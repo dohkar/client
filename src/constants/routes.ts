@@ -106,4 +106,12 @@ export const API_ENDPOINTS = {
     sendMessage: (chatId: string) => `/api/chats/${chatId}/messages`,
     markRead: (chatId: string) => `/api/chats/${chatId}/read`,
   },
+
+  // Inbox (CONTACT + COMPLAINT)
+  inbox: {
+    create: "/api/inbox",
+    list: "/api/inbox",
+    getById: (id: string) => `/api/inbox/${id}`,
+    updateStatus: (id: string) => `/api/inbox/${id}/status`,
+  },
 } as const;

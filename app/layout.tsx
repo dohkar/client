@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { ConditionalFooter } from "@/components/layout/ConditionalFooter";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SupportButton } from "@/components/features/chats/SupportButton";
 import { APP_CONFIG } from "@/constants";
@@ -45,7 +45,7 @@ export default function RootLayout({
               <div className='flex min-h-screen flex-col'>
                 <Header />
                 <main className='flex-1 pb-20 md:pb-0'>{children}</main>
-                <Footer />
+                <ConditionalFooter />
                 <MobileBottomNav />
                 <SupportButton />
               </div>

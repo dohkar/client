@@ -7,12 +7,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { hasProhibitedContent } from "@/lib/utils/content-filter";
 import { toast } from "sonner";
+import { socketClient } from "@/lib/socket/socket-client";
+import { useSocket } from "@/hooks/use-socket";
 
 const MIN_ROWS = 1;
 const MAX_HEIGHT_PX = 200;
 
 interface MessageInputProps {
   onSend: (text: string) => void;
+  chatId?: string | null;
   disabled?: boolean;
   messageCount?: number;
   chatType?: "PROPERTY" | "SUPPORT";
@@ -21,6 +24,7 @@ interface MessageInputProps {
 
 export function MessageInput({
   onSend,
+  chatId,
   disabled = false,
   messageCount = 0,
   chatType,
@@ -30,6 +34,10 @@ export function MessageInput({
   const [isSending, setIsSending] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { isConnected } = useSocket();
+  const typingIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
 
   /** Авто-рост высоты textarea по контенту */
   const adjustHeight = useCallback(() => {
@@ -66,12 +74,16 @@ export function MessageInput({
     }
 
     timeoutRef.current = setTimeout(() => {
+      // typing: stop on send
+      if (chatId && isConnected) {
+        socketClient.sendTyping(chatId, false);
+      }
       onSend(trimmedText);
       setText("");
       setIsSending(false);
       setTimeout(adjustHeight, 0); // сброс высоты после отправки
     }, 500);
-  }, [text, messageCount, isSending, onSend, adjustHeight]);
+  }, [text, messageCount, isSending, onSend, adjustHeight, chatId, isConnected]);
 
   /**
    * Обработчик Enter (отправка), Shift+Enter (новая строка)
@@ -92,13 +104,37 @@ export function MessageInput({
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (typingIdleTimeoutRef.current) {
+        clearTimeout(typingIdleTimeoutRef.current);
+      }
+      if (chatId && isConnected) {
+        socketClient.sendTyping(chatId, false);
+      }
     };
-  }, []);
+  }, [chatId, isConnected]);
 
   // Авто-рост при изменении текста
   useEffect(() => {
     adjustHeight();
   }, [text, adjustHeight]);
+
+  // Typing indicator: стартуем при вводе, останавливаем при idle
+  useEffect(() => {
+    if (!chatId || !isConnected) return;
+    if (!text.trim()) {
+      socketClient.sendTyping(chatId, false);
+      return;
+    }
+
+    socketClient.sendTyping(chatId, true);
+
+    if (typingIdleTimeoutRef.current) {
+      clearTimeout(typingIdleTimeoutRef.current);
+    }
+    typingIdleTimeoutRef.current = setTimeout(() => {
+      socketClient.sendTyping(chatId, false);
+    }, 1200);
+  }, [text, chatId, isConnected]);
 
   return (
     <div className="border-t bg-background p-4">
@@ -122,6 +158,11 @@ export function MessageInput({
           disabled={disabled || isSending}
           className="min-h-[44px] max-h-[200px] resize-none overflow-y-auto py-3"
           rows={MIN_ROWS}
+          onBlur={() => {
+            if (chatId && isConnected) {
+              socketClient.sendTyping(chatId, false);
+            }
+          }}
         />
         <Button
           onClick={handleSend}

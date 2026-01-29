@@ -27,9 +27,7 @@ export const adminService = {
     return apiClient.get<any>(API_ENDPOINTS.admin.statistics) as Promise<AdminStatistics>;
   },
 
-  async getUsers(
-    params?: AdminUsersParams
-  ): Promise<PaginatedResponse<AdminUser>> {
+  async getUsers(params?: AdminUsersParams): Promise<PaginatedResponse<AdminUser>> {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -97,5 +95,30 @@ export const adminService = {
     await apiClient.delete<OperationResponse<"AdminController_deleteProperty", 200>>(
       API_ENDPOINTS.admin.deleteProperty(params.id)
     );
+  },
+
+  async getInboxRequests(params?: {
+    category?: "CONTACT" | "COMPLAINT";
+    severity?: "LOW" | "MEDIUM" | "HIGH";
+    status?: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+  }) {
+    const queryParams = new URLSearchParams();
+    if (params?.category) queryParams.append("category", params.category);
+    if (params?.severity) queryParams.append("severity", params.severity);
+    if (params?.status) queryParams.append("status", params.status);
+
+    const queryString = queryParams.toString();
+    const endpoint = queryString
+      ? `${API_ENDPOINTS.inbox.list}?${queryString}`
+      : API_ENDPOINTS.inbox.list;
+
+    return apiClient.get<any[]>(endpoint);
+  },
+
+  async updateInboxStatus(
+    id: string,
+    status: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED"
+  ) {
+    return apiClient.patch<any>(API_ENDPOINTS.inbox.updateStatus(id), { status });
   },
 };

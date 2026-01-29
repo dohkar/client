@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Check, CheckCheck, Copy } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, CheckCheck, Copy, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatRelativeTime, formatAbsoluteTime } from "@/lib/utils/chat-format";
 import { toast } from "sonner";
@@ -21,6 +21,13 @@ interface MessageItemProps {
 
 export function MessageItem({ message, isOwn, showStatus = true }: MessageItemProps) {
   const [copied, setCopied] = useState(false);
+
+  const deliveryStatus = useMemo<"sending" | "sent" | "read">(() => {
+    // Временные сообщения считаем "sending"
+    if (message.id.startsWith("temp-")) return "sending";
+    if (message.isRead) return "read";
+    return "sent";
+  }, [message.id, message.isRead]);
 
   const handleCopy = async () => {
     try {
@@ -42,7 +49,8 @@ export function MessageItem({ message, isOwn, showStatus = true }: MessageItemPr
     >
       <div
         className={cn(
-          "max-w-[70%] rounded-lg px-4 py-2 group relative",
+          // reserve space for status icon to avoid layout shift
+          "max-w-[70%] rounded-lg px-4 py-2 group relative pr-8",
           isOwn
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-foreground"
@@ -60,7 +68,7 @@ export function MessageItem({ message, isOwn, showStatus = true }: MessageItemPr
         {/* Текст сообщения */}
         <p className="text-sm whitespace-pre-wrap break-words">{message.text}</p>
 
-        {/* Время и статус */}
+        {/* Время */}
         <div
           className={cn(
             "flex items-center gap-1 mt-1",
@@ -85,22 +93,26 @@ export function MessageItem({ message, isOwn, showStatus = true }: MessageItemPr
             </Tooltip>
           </TooltipProvider>
 
-          {/* Статус прочтения (только для своих сообщений) */}
-          {isOwn && showStatus && (
-            <span
-              className={cn(
-                "text-primary-foreground/70",
-                message.isRead && "text-primary-foreground"
-              )}
-            >
-              {message.isRead ? (
-                <CheckCheck className="h-3 w-3" />
-              ) : (
-                <Check className="h-3 w-3" />
-              )}
-            </span>
-          )}
         </div>
+
+        {/* Статус доставки (только для своих, минималистично, без текста) */}
+        {isOwn && showStatus && (
+          <span
+            className={cn(
+              "absolute right-2 bottom-2",
+              "text-primary-foreground/60"
+            )}
+            aria-label={`status-${deliveryStatus}`}
+          >
+            {deliveryStatus === "sending" ? (
+              <Clock className="h-3 w-3 opacity-60" />
+            ) : deliveryStatus === "read" ? (
+              <CheckCheck className="h-3 w-3" />
+            ) : (
+              <Check className="h-3 w-3" />
+            )}
+          </span>
+        )}
       </div>
     </div>
   );

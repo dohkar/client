@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { propertyService } from "@/services/property.service";
 import { favoritesService } from "@/services/favorites.service";
+import { useChatsList } from "@/hooks/use-chats";
 import { ROUTES } from "@/constants";
 
 export default function DashboardPage() {
@@ -40,6 +41,8 @@ export default function DashboardPage() {
     },
     enabled: isAuthenticated && isInitialized,
   });
+
+  const { data: chats, isLoading: chatsLoading } = useChatsList();
 
   // Показываем загрузку во время инициализации
   if (!isInitialized || isLoading) {
@@ -73,7 +76,11 @@ export default function DashboardPage() {
     },
     {
       title: "Сообщения",
-      value: 0,
+      value: chatsLoading
+        ? "..."
+        : chats
+          ? chats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0) || chats.length
+          : 0,
       icon: MessageSquare,
       href: "/messages",
       color: "text-accent",
