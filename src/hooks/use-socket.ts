@@ -199,7 +199,7 @@ export function useMessagesRealtimeUpdates(
     const handleMessageRead = (data: SocketEventMap["message:read"]) => {
       if (data.chatId !== chatId) return;
 
-      // Обновляем статус прочтения сообщений
+      // Помечаем как прочитанные сообщения, которые прочитал пользователь data.userId (сообщения не от него)
       queryClient.setQueryData<{
         pages: MessagesResponse[];
         pageParams: (string | undefined)[];
@@ -211,7 +211,7 @@ export function useMessagesRealtimeUpdates(
           pages: oldData.pages.map((page) => ({
             ...page,
             messages: page.messages.map((msg) =>
-              msg.senderId === user.id && !msg.isRead
+              msg.senderId !== data.userId && !msg.isRead
                 ? { ...msg, isRead: true, readAt: data.readAt }
                 : msg
             ),
@@ -322,6 +322,31 @@ export function useChatTypingAndPresence(chatId: string | null, enabled: boolean
   };
 }
 
+const ACK_TIMEOUT_MS = 17000;
+
+function rollbackTempMessage(
+  queryClient: ReturnType<typeof useQueryClient>,
+  chatId: string,
+  tempMessageId: string,
+  clientMessageId: string
+) {
+  queryClient.setQueryData<{
+    pages: MessagesResponse[];
+    pageParams: (string | undefined)[];
+  }>(queryKeys.chats.messages(chatId), (oldData) => {
+    if (!oldData) return oldData;
+    return {
+      ...oldData,
+      pages: oldData.pages.map((page) => ({
+        ...page,
+        messages: page.messages.filter(
+          (msg) => msg.id !== tempMessageId && msg.clientMessageId !== clientMessageId
+        ),
+      })),
+    };
+  });
+}
+
 /**
  * Хук для отправки сообщений через WebSocket
  */
@@ -329,6 +354,33 @@ export function useSendMessageWs() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const { isConnecting, useFallback } = useSocket();
+  const pendingAcksRef = useRef<
+    Map<
+      string,
+      {
+        timeoutId: ReturnType<typeof setTimeout>;
+        chatId: string;
+        clientMessageId: string;
+        tempMessageId: string;
+        reject: (err: Error) => void;
+      }
+    >>(new Map());
+
+  useEffect(() => {
+    return () => {
+      pendingAcksRef.current.forEach((entry) => {
+        clearTimeout(entry.timeoutId);
+        rollbackTempMessage(
+          queryClient,
+          entry.chatId,
+          entry.tempMessageId,
+          entry.clientMessageId
+        );
+        entry.reject(new Error("Unmount: ACK cancelled"));
+      });
+      pendingAcksRef.current.clear();
+    };
+  }, [queryClient]);
 
   const sendMessage = useCallback(
     (chatId: string, text: string, clientMessageId: string): Promise<Message> => {
@@ -370,8 +422,37 @@ export function useSendMessageWs() {
           };
         });
 
+        const clearPending = () => {
+          const entry = pendingAcksRef.current.get(clientMessageId);
+          if (entry) {
+            clearTimeout(entry.timeoutId);
+            pendingAcksRef.current.delete(clientMessageId);
+          }
+        };
+
+        const timeoutId = setTimeout(() => {
+          clearPending();
+          rollbackTempMessage(
+            queryClient,
+            chatId,
+            tempMessage.id,
+            clientMessageId
+          );
+          reject(new Error("ACK timeout"));
+        }, ACK_TIMEOUT_MS);
+
+        pendingAcksRef.current.set(clientMessageId, {
+          timeoutId,
+          chatId,
+          clientMessageId,
+          tempMessageId: tempMessage.id,
+          reject,
+        });
+
         // Отправляем через WebSocket
         socketClient.sendMessage(chatId, text, clientMessageId, (ack) => {
+          clearPending();
+
           if (
             ack.status === "success" &&
             ack.message &&
@@ -416,20 +497,12 @@ export function useSendMessageWs() {
             resolve(saved);
           } else {
             // Откатываем оптимистичное обновление при ошибке
-            queryClient.setQueryData<{
-              pages: MessagesResponse[];
-              pageParams: (string | undefined)[];
-            }>(queryKeys.chats.messages(chatId), (oldData) => {
-              if (!oldData) return oldData;
-
-              return {
-                ...oldData,
-                pages: oldData.pages.map((page) => ({
-                  ...page,
-                  messages: page.messages.filter((msg) => msg.id !== tempMessage.id),
-                })),
-              };
-            });
+            rollbackTempMessage(
+              queryClient,
+              chatId,
+              tempMessage.id,
+              clientMessageId
+            );
 
             reject(
               new Error(

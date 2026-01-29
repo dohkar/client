@@ -51,7 +51,7 @@ export type TypingOutboundPayload = { chatId: string; isTyping: boolean };
 export type SocketAck<T = unknown> = {
   status: "success" | "error";
   message?: string | Message;
-  [key: string]: any;
+  count?: number;
 };
 
 class SocketClient {
@@ -142,6 +142,7 @@ class SocketClient {
         this.maxReconnectAttempts,
         "attempts"
       );
+      this.disconnect();
     });
   }
 

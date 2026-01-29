@@ -189,27 +189,13 @@ export function useMarkAsRead() {
       return chatsService.markMessagesAsRead(chatId);
     },
 
-    onSuccess: (data, chatId) => {
-      // Локально помечаем сообщения как прочитанные, чтобы не дергать REST лишний раз
-      queryClient.setQueryData<any>(queryKeys.chats.messages(chatId), (old: any) => {
-        if (!old?.pages) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page: MessagesResponse) => ({
-            ...page,
-            messages: page.messages.map((m: Message) =>
-              m.senderId !== useAuthStore.getState().user?.id
-                ? { ...m, isRead: true, readAt: new Date() }
-                : m
-            ),
-          })),
-        };
-      });
-
-      // Обновляем unreadCount в списке чатов локально
+    onSuccess: (_data, chatId) => {
+      // Обновляем только список чатов (unreadCount: 0). Сообщения обновляет обработчик message:read по WS.
       queryClient.setQueryData<Chat[]>(queryKeys.chats.list(), (oldChats) => {
         if (!oldChats) return oldChats;
-        return oldChats.map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c));
+        return oldChats.map((c) =>
+          c.id === chatId ? { ...c, unreadCount: 0 } : c
+        );
       });
     },
 

@@ -38,6 +38,8 @@ export function MessageInput({
   const typingIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined
   );
+  const lastTypingStartSentAt = useRef<number>(0);
+  const TYPING_THROTTLE_MS = 450;
 
   /** Авто-рост высоты textarea по контенту */
   const adjustHeight = useCallback(() => {
@@ -118,7 +120,7 @@ export function MessageInput({
     adjustHeight();
   }, [text, adjustHeight]);
 
-  // Typing indicator: стартуем при вводе, останавливаем при idle
+  // Typing indicator: throttle typing:start (1 раз в 400–500ms), typing:stop по idle
   useEffect(() => {
     if (!chatId || !isConnected) return;
     if (!text.trim()) {
@@ -126,7 +128,11 @@ export function MessageInput({
       return;
     }
 
-    socketClient.sendTyping(chatId, true);
+    const now = Date.now();
+    if (now - lastTypingStartSentAt.current >= TYPING_THROTTLE_MS) {
+      lastTypingStartSentAt.current = now;
+      socketClient.sendTyping(chatId, true);
+    }
 
     if (typingIdleTimeoutRef.current) {
       clearTimeout(typingIdleTimeoutRef.current);

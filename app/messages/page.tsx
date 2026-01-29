@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useChatsList, useChatMessages, useSendMessage, useMarkAsRead } from "@/hooks/use-chats";
 import { useAuthStore } from "@/stores";
@@ -55,6 +55,10 @@ function MessagesPageContent() {
   const sendMessageMutation = useSendMessage();
   const markAsReadMutation = useMarkAsRead();
 
+  // Не вызывать markAsRead повторно для того же chatId в течение 500ms
+  const lastMarkedRef = useRef<{ chatId: string; at: number } | null>(null);
+  const MARK_AS_READ_DEBOUNCE_MS = 500;
+
   // Notifications
   const { requestPermission, showNotification, permission } = useNotifications();
 
@@ -65,17 +69,25 @@ function MessagesPageContent() {
     }
   }, [isAuthenticated, isInitialized, router]);
 
-  // Автоматическая пометка как прочитанное при открытии чата (с debounce)
+  // Автоматическая пометка как прочитанное при открытии чата (debounce + не дублировать для одного chatId)
   useEffect(() => {
     if (!selectedChatId || document.hidden) return;
 
     const timeoutId = setTimeout(() => {
+      const now = Date.now();
+      const last = lastMarkedRef.current;
+      if (
+        last?.chatId === selectedChatId &&
+        now - last.at < MARK_AS_READ_DEBOUNCE_MS
+      ) {
+        return;
+      }
+      lastMarkedRef.current = { chatId: selectedChatId, at: now };
       markAsReadMutation.mutate(selectedChatId);
-    }, 500); // Debounce 500ms
+    }, MARK_AS_READ_DEBOUNCE_MS);
 
     return () => clearTimeout(timeoutId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedChatId]);
+  }, [selectedChatId, markAsReadMutation]);
 
   // Запрос разрешения на уведомления
   useEffect(() => {
