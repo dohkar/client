@@ -37,7 +37,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Users, Home, Eye, Search, Trash2, CheckCircle2 } from "lucide-react";
+import { Users, Home, Eye, Search, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
@@ -103,8 +103,14 @@ export default function AdminPage() {
         page: 1,
         limit: 1000, // Временное решение - загружаем много данных
         search: debouncedPropertiesSearch || undefined,
-        status: propertiesStatus !== "all" ? (propertiesStatus as "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED") : undefined,
-        type: propertiesType !== "all" ? (propertiesType as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL") : undefined,
+        status:
+          propertiesStatus !== "all"
+            ? (propertiesStatus as "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED")
+            : undefined,
+        type:
+          propertiesType !== "all"
+            ? (propertiesType as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL")
+            : undefined,
       });
     },
     enabled: activeTab === "properties" && isInitialized && isAuthenticated && isAdmin,
@@ -133,8 +139,13 @@ export default function AdminPage() {
 
   // Mutations
   const updateUserRoleMutation = useMutation({
-    mutationFn: ({ userId, role }: { userId: string; role: "USER" | "PREMIUM" | "ADMIN" }) =>
-      adminService.updateUserRole(userId, role),
+    mutationFn: ({
+      userId,
+      role,
+    }: {
+      userId: string;
+      role: "USER" | "PREMIUM" | "ADMIN";
+    }) => adminService.updateUserRole(userId, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "statistics"] });
@@ -218,10 +229,10 @@ export default function AdminPage() {
   // Показываем загрузку пока store не инициализирован
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Загрузка...</p>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-center space-y-4'>
+          <div className='animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto' />
+          <p className='text-sm text-muted-foreground'>Загрузка...</p>
         </div>
       </div>
     );
@@ -273,7 +284,7 @@ export default function AdminPage() {
               onClick={() => setActiveTab("inbox")}
               className='min-h-[44px] whitespace-nowrap'
             >
-              Inbox
+              Входящие
             </Button>
           </div>
         </div>
@@ -356,10 +367,16 @@ export default function AdminPage() {
                 <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
                   <Card className='border-primary/20'>
                     <CardHeader className='pb-3 sm:pb-6'>
-                      <CardTitle className='text-base sm:text-lg'>Объявления по типам</CardTitle>
+                      <CardTitle className='text-base sm:text-lg'>
+                        Объявления по типам
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className='px-2 sm:px-6'>
-                      <ResponsiveContainer width='100%' height={250} className="sm:h-[300px]">
+                      <ResponsiveContainer
+                        width='100%'
+                        height={250}
+                        className='sm:h-[300px]'
+                      >
                         <PieChart>
                           <Pie
                             data={statistics.propertiesByType}
@@ -368,16 +385,18 @@ export default function AdminPage() {
                             labelLine={false}
                             label={({ type, count }) => `${type}: ${count}`}
                             outerRadius={60}
-                            className="sm:outerRadius-[80px]"
+                            className='sm:outerRadius-[80px]'
                             fill='#8884d8'
                             dataKey='count'
                           >
-                            {statistics?.propertiesByType?.map((entry: { type: string; count: number }, index: number) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
-                            ))}
+                            {statistics?.propertiesByType?.map(
+                              (entry: { type: string; count: number }, index: number) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={COLORS[index % COLORS.length]}
+                                />
+                              )
+                            )}
                           </Pie>
                           <Tooltip />
                         </PieChart>
@@ -387,18 +406,24 @@ export default function AdminPage() {
 
                   <Card className='border-primary/20'>
                     <CardHeader className='pb-3 sm:pb-6'>
-                      <CardTitle className='text-base sm:text-lg'>Объявления по регионам</CardTitle>
+                      <CardTitle className='text-base sm:text-lg'>
+                        Объявления по регионам
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className='px-2 sm:px-6'>
-                      <ResponsiveContainer width='100%' height={250} className="sm:h-[300px]">
+                      <ResponsiveContainer
+                        width='100%'
+                        height={250}
+                        className='sm:h-[300px]'
+                      >
                         <BarChart data={statistics.propertiesByRegion}>
                           <CartesianGrid strokeDasharray='3 3' />
                           <XAxis
                             dataKey='region'
                             angle={-45}
-                            textAnchor="end"
+                            textAnchor='end'
                             height={80}
-                            className="text-xs"
+                            className='text-xs'
                           />
                           <YAxis />
                           <Tooltip />
@@ -411,18 +436,24 @@ export default function AdminPage() {
 
                 <Card className='border-primary/20'>
                   <CardHeader className='pb-3 sm:pb-6'>
-                    <CardTitle className='text-base sm:text-lg'>Новые объявления за последние 7 дней</CardTitle>
+                    <CardTitle className='text-base sm:text-lg'>
+                      Новые объявления за последние 7 дней
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className='px-2 sm:px-6'>
-                    <ResponsiveContainer width='100%' height={250} className="sm:h-[300px]">
+                    <ResponsiveContainer
+                      width='100%'
+                      height={250}
+                      className='sm:h-[300px]'
+                    >
                       <LineChart data={statistics.dailyStats}>
                         <CartesianGrid strokeDasharray='3 3' />
                         <XAxis
                           dataKey='date'
                           angle={-45}
-                          textAnchor="end"
+                          textAnchor='end'
                           height={80}
-                          className="text-xs"
+                          className='text-xs'
                         />
                         <YAxis />
                         <Tooltip />
@@ -467,8 +498,7 @@ export default function AdminPage() {
               <CardContent>
                 <UsersDataTable
                   columns={createUserColumns(
-                    (userId, role) =>
-                      updateUserRoleMutation.mutate({ userId, role }),
+                    (userId, role) => updateUserRoleMutation.mutate({ userId, role }),
                     (userId) => deleteUserMutation.mutate(userId),
                     deleteUserMutation.isPending
                   )}
@@ -501,10 +531,7 @@ export default function AdminPage() {
                         className='pl-8 min-h-[44px]'
                       />
                     </div>
-                    <Select
-                      value={propertiesStatus}
-                      onValueChange={setPropertiesStatus}
-                    >
+                    <Select value={propertiesStatus} onValueChange={setPropertiesStatus}>
                       <SelectTrigger className='w-full sm:w-40 min-h-[44px]'>
                         <SelectValue placeholder='Статус' />
                       </SelectTrigger>
@@ -516,10 +543,7 @@ export default function AdminPage() {
                         <SelectItem value='ARCHIVED'>Архив</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select
-                      value={propertiesType}
-                      onValueChange={setPropertiesType}
-                    >
+                    <Select value={propertiesType} onValueChange={setPropertiesType}>
                       <SelectTrigger className='w-full sm:w-40 min-h-[44px]'>
                         <SelectValue placeholder='Тип' />
                       </SelectTrigger>
@@ -554,71 +578,71 @@ export default function AdminPage() {
 
         {/* Inbox Tab */}
         {activeTab === "inbox" && (
-          <div className="space-y-6">
-            <Card className="border-primary/20">
+          <div className='space-y-6'>
+            <Card className='border-primary/20'>
               <CardHeader>
-                <CardTitle>Inbox (CONTACT + COMPLAINT)</CardTitle>
+                <CardTitle>Входящие (ОБРАЩЕНИЯ + ЖАЛОБЫ)</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">Категория</div>
+              <CardContent className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
+                  <div className='space-y-2'>
+                    <div className='text-sm text-muted-foreground'>Категория</div>
                     <Select value={inboxCategory} onValueChange={setInboxCategory}>
-                      <SelectTrigger className="min-h-[44px]">
-                        <SelectValue placeholder="Все" />
+                      <SelectTrigger className='min-h-[44px]'>
+                        <SelectValue placeholder='Все' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Все</SelectItem>
-                        <SelectItem value="CONTACT">CONTACT</SelectItem>
-                        <SelectItem value="COMPLAINT">COMPLAINT</SelectItem>
+                        <SelectItem value='all'>Все</SelectItem>
+                        <SelectItem value='CONTACT'>Обратная связь</SelectItem>
+                        <SelectItem value='COMPLAINT'>Жалоба</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">Severity</div>
+                  <div className='space-y-2'>
+                    <div className='text-sm text-muted-foreground'>Серьезность</div>
                     <Select value={inboxSeverity} onValueChange={setInboxSeverity}>
-                      <SelectTrigger className="min-h-[44px]">
-                        <SelectValue placeholder="Все" />
+                      <SelectTrigger className='min-h-[44px]'>
+                        <SelectValue placeholder='Все' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Все</SelectItem>
-                        <SelectItem value="LOW">LOW</SelectItem>
-                        <SelectItem value="MEDIUM">MEDIUM</SelectItem>
-                        <SelectItem value="HIGH">HIGH</SelectItem>
+                        <SelectItem value='all'>Все</SelectItem>
+                        <SelectItem value='LOW'>Низкая</SelectItem>
+                        <SelectItem value='MEDIUM'>Средняя</SelectItem>
+                        <SelectItem value='HIGH'>Высокая</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">Status</div>
+                  <div className='space-y-2'>
+                    <div className='text-sm text-muted-foreground'>Статус</div>
                     <Select value={inboxStatus} onValueChange={setInboxStatus}>
-                      <SelectTrigger className="min-h-[44px]">
-                        <SelectValue placeholder="Все" />
+                      <SelectTrigger className='min-h-[44px]'>
+                        <SelectValue placeholder='Все' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Все</SelectItem>
-                        <SelectItem value="NEW">NEW</SelectItem>
-                        <SelectItem value="IN_PROGRESS">IN_PROGRESS</SelectItem>
-                        <SelectItem value="RESOLVED">RESOLVED</SelectItem>
-                        <SelectItem value="CLOSED">CLOSED</SelectItem>
+                        <SelectItem value='all'>Все</SelectItem>
+                        <SelectItem value='NEW'>Новая</SelectItem>
+                        <SelectItem value='IN_PROGRESS'>В обработке</SelectItem>
+                        <SelectItem value='RESOLVED'>Решена</SelectItem>
+                        <SelectItem value='CLOSED'>Закрыта</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
                 {inboxLoading ? (
-                  <div className="text-sm text-muted-foreground">Загрузка...</div>
+                  <div className='text-sm text-muted-foreground'>Загрузка...</div>
                 ) : !inboxData || inboxData.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">Нет заявок</div>
+                  <div className='text-sm text-muted-foreground'>Нет заявок</div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className='space-y-3'>
                     {inboxData.map((item: any) => (
                       <div
                         key={item.id}
-                        className="rounded-lg border border-border p-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3"
+                        className='rounded-lg border border-border p-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3'
                       >
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="secondary">{item.category}</Badge>
+                        <div className='space-y-1'>
+                          <div className='flex flex-wrap items-center gap-2'>
+                            <Badge variant='secondary'>{item.category}</Badge>
                             <Badge
                               variant={
                                 item.severity === "HIGH" ? "destructive" : "outline"
@@ -626,26 +650,32 @@ export default function AdminPage() {
                             >
                               {item.severity}
                             </Badge>
-                            <Badge variant="outline">{item.status}</Badge>
+                            <Badge variant='outline'>{item.status}</Badge>
                             {item.propertyId && (
-                              <Badge variant="outline">property: {item.propertyId}</Badge>
+                              <Badge variant='outline'>property: {item.propertyId}</Badge>
                             )}
                           </div>
-                          <div className="text-sm">
-                            <span className="font-medium">{item.name}</span>
+                          <div className='text-sm'>
+                            <span className='font-medium'>{item.name}</span>
                             {item.email ? (
-                              <span className="text-muted-foreground"> • {item.email}</span>
+                              <span className='text-muted-foreground'>
+                                {" "}
+                                • {item.email}
+                              </span>
                             ) : null}
                             {item.phone ? (
-                              <span className="text-muted-foreground"> • {item.phone}</span>
+                              <span className='text-muted-foreground'>
+                                {" "}
+                                • {item.phone}
+                              </span>
                             ) : null}
                           </div>
-                          <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          <div className='text-sm text-muted-foreground whitespace-pre-wrap'>
                             {item.message}
                           </div>
                         </div>
 
-                        <div className="flex flex-col gap-2">
+                        <div className='flex flex-col gap-2'>
                           <Select
                             value={item.status}
                             onValueChange={(value) =>
@@ -655,14 +685,14 @@ export default function AdminPage() {
                               })
                             }
                           >
-                            <SelectTrigger className="min-w-[200px] min-h-[44px]">
+                            <SelectTrigger className='min-w-[200px] min-h-[44px]'>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="NEW">NEW</SelectItem>
-                              <SelectItem value="IN_PROGRESS">IN_PROGRESS</SelectItem>
-                              <SelectItem value="RESOLVED">RESOLVED</SelectItem>
-                              <SelectItem value="CLOSED">CLOSED</SelectItem>
+                              <SelectItem value='NEW'>NEW</SelectItem>
+                              <SelectItem value='IN_PROGRESS'>IN_PROGRESS</SelectItem>
+                              <SelectItem value='RESOLVED'>RESOLVED</SelectItem>
+                              <SelectItem value='CLOSED'>CLOSED</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
