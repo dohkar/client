@@ -1,8 +1,7 @@
 "use client";
-
 import { useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Menu,
@@ -14,22 +13,19 @@ import {
   Heart,
   UserCircle,
   Shield,
+  MessageSquare,
 } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore, useUIStore } from "@/stores";
 import { ROUTES } from "@/constants";
-import { useRouter } from "next/navigation";
 import { formatUserName } from "@/lib/utils/format-name";
 import { cn } from "@/lib/utils";
 
-// Константы вынесены наружу для избежания пересоздания при каждом рендере
 const CATEGORIES = [
   { name: "Квартиры", href: `${ROUTES.search}?type=apartment` },
   { name: "Дома", href: `${ROUTES.search}?type=house` },
@@ -43,268 +39,241 @@ export function Header() {
   const { isAuthenticated, user, logout } = useAuthStore();
   const { isMobileMenuOpen, toggleMobileMenu, setMobileMenuOpen } = useUIStore();
 
-  // Блокируем скролл body когда меню открыто
+  const userName = useMemo(() => formatUserName(user?.name), [user?.name]);
+  const userInitial = useMemo(() => userName.charAt(0).toUpperCase(), [userName]);
+  const isAdmin = useMemo(() => user?.role?.toUpperCase() === "ADMIN", [user?.role]);
+
+  // Блокировка скролла при открытом мобильном меню
   useEffect(() => {
-    if (!isMobileMenuOpen) {
-      // Восстанавливаем скролл при закрытии меню
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.overflowX = "hidden";
+    } else {
       document.body.style.removeProperty("overflow");
       document.body.style.removeProperty("overflow-x");
-      document.documentElement.style.removeProperty("overflow");
-      document.documentElement.style.removeProperty("overflow-x");
-      return;
     }
-
-    // Блокируем скролл
-    document.body.style.overflow = "hidden";
-    document.body.style.overflowX = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    document.documentElement.style.overflowX = "hidden";
-
-    // Восстанавливаем скролл при размонтировании
     return () => {
       document.body.style.removeProperty("overflow");
       document.body.style.removeProperty("overflow-x");
-      document.documentElement.style.removeProperty("overflow");
-      document.documentElement.style.removeProperty("overflow-x");
     };
   }, [isMobileMenuOpen]);
 
-  // Закрываем меню при изменении роута
+  // Закрытие меню при смене страницы
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname, setMobileMenuOpen]);
 
-  // Обработка Escape для закрытия меню
+  // Закрытие по Escape
   useEffect(() => {
     if (!isMobileMenuOpen) return;
-
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setMobileMenuOpen(false);
-      }
+      if (e.key === "Escape") setMobileMenuOpen(false);
     };
-
     document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isMobileMenuOpen, setMobileMenuOpen]);
 
-  // Обработка выхода с обработкой ошибок
   const handleLogout = useCallback(async () => {
     try {
       await logout();
       router.push(ROUTES.home);
-    } catch (error) {
-      // Ошибка при выходе не критична - перенаправляем на главную в любом случае
-      // В production можно отправить в систему мониторинга
+    } catch {
       router.push(ROUTES.home);
     }
   }, [logout, router]);
 
-  // Обработчик закрытия меню при клике на overlay
   const handleOverlayClick = useCallback(() => {
     setMobileMenuOpen(false);
   }, [setMobileMenuOpen]);
 
-  // Предотвращаем закрытие меню при клике на само меню
   const handleMenuClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
 
-  // Мемоизируем имя пользователя для оптимизации
-  const userName = useMemo(() => formatUserName(user?.name), [user?.name]);
-  const userInitial = useMemo(() => userName.charAt(0).toUpperCase(), [userName]);
-
-  // Проверка роли админа
-  const isAdmin = useMemo(() => user?.role?.toUpperCase() === "ADMIN", [user?.role]);
-
   return (
-    <header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60'>
+    <header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/75 transition-shadow'>
       <div className='container mx-auto px-4 h-16 flex items-center justify-between'>
-        {/* Logo */}
+        {/* Логотип */}
         <Link
           href={ROUTES.home}
           className='flex items-center group shrink-0 focus:outline-none'
         >
           <span
             className='
-              text-2xl md:text-3xl font-extrabold
-              tracking-[0.02em]
-              bg-gradient-to-r
-              from-[#064E3B]
-              via-[#0F766E]
-              to-[#134E4A]
+              text-2xl md:text-3xl font-extrabold tracking-[0.025em]
+              bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900
               bg-clip-text text-transparent
-              transition-all duration-300 ease-out
-              group-hover:scale-[1.03]
-              group-hover:drop-shadow-[0_0_8px_rgba(6,78,59,0.25)]
-              inline-block
+              transition-all duration-300
+              group-hover:scale-105 group-hover:drop-shadow-md
             '
           >
             Дохкар
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className='hidden md:flex items-center gap-8 text-sm font-medium ml-8'>
+        {/* Навигация десктоп */}
+        <nav className='hidden md:flex items-center gap-8 text-sm font-medium'>
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.name}
               href={cat.href}
-              className='text-muted-foreground hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-primary after:transition-all'
+              className={cn(
+                "relative py-1 transition-colors hover:text-primary",
+                pathname.includes(cat.href.split("?")[0]) && "text-primary font-semibold",
+                "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-primary after:transition-all after:duration-300",
+                pathname.includes(cat.href.split("?")[0])
+                  ? "after:w-full"
+                  : "after:w-0 hover:after:w-full"
+              )}
             >
               {cat.name}
             </Link>
           ))}
         </nav>
 
-        {/* Right Section */}
-        <div className='flex items-center gap-3'>
-          {/* Desktop Auth */}
-          <div className='hidden md:flex items-center gap-2'>
+        {/* Правая часть */}
+        <div className='flex items-center gap-3 md:gap-4'>
+          {/* Авторизация десктоп */}
+          <div className='hidden md:flex items-center gap-3'>
             {isAuthenticated ? (
               <>
                 <Link href={ROUTES.favorites}>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='gap-2 text-muted-foreground hover:text-primary'
-                  >
-                    <Heart className='h-4 w-4' />
+                  <Button variant='ghost' size='icon' className='h-9 w-9'>
+                    <Heart className='h-5 w-5' />
                   </Button>
                 </Link>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant='ghost' size='sm' className='gap-2'>
-                      <Avatar className='h-8 w-8'>
+
+                <HoverCard openDelay={80} closeDelay={200}>
+                  <HoverCardTrigger asChild>
+                    <Link
+                      href={`${ROUTES.dashboard}/profile`}
+                      className='flex items-center gap-2.5 hover:opacity-90 transition'
+                    >
+                      <Avatar className='h-9 w-9 border border-border/60 shadow-sm'>
                         <AvatarImage src={user?.avatar} alt={userName} />
-                        <AvatarFallback>{userInitial}</AvatarFallback>
+                        <AvatarFallback className='bg-primary/10 text-primary font-medium'>
+                          {userInitial}
+                        </AvatarFallback>
                       </Avatar>
-                      <span className='hidden lg:inline text-muted-foreground'>
+                      <span className='hidden lg:inline font-medium text-sm text-foreground/90'>
                         {userName}
                       </span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end' className='w-56'>
-                    <div className='px-2 py-1.5'>
-                      <p className='text-sm font-medium'>{userName}</p>
-                      <p className='text-xs text-muted-foreground'>{user?.email || ""}</p>
-                    </div>
-                    <DropdownMenuSeparator />
-                    {isAdmin && (
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href={`${ROUTES.dashboard}/admin`}
-                          className='cursor-pointer text-red-600'
-                        >
-                          <Shield className='mr-2 h-4 w-4' />
-                          Админ-панель
+                    </Link>
+                  </HoverCardTrigger>
+
+                  <HoverCardContent
+                    align='end'
+                    sideOffset={12}
+                    className='w-64 p-2 shadow-2xl rounded-xl'
+                  >
+                    <div className='space-y-1'>
+                      {isAdmin && (
+                        <Link href={`${ROUTES.dashboard}/admin`}>
+                          <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-red-600'>
+                            <Shield className='h-4 w-4' />
+                            Админ-панель
+                          </div>
                         </Link>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem asChild>
-                      <Link href={ROUTES.dashboard} className='cursor-pointer'>
-                        <LayoutDashboard className='mr-2 h-4 w-4' />
-                        Кабинет
+                      )}
+                      <Link href={ROUTES.dashboard}>
+                        <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
+                          <LayoutDashboard className='h-4 w-4' />
+                          Кабинет
+                        </div>
                       </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`${ROUTES.dashboard}/profile`}
-                        className='cursor-pointer'
+                      <Link href={`${ROUTES.dashboard}/profile`}>
+                        <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
+                          <UserCircle className='h-4 w-4' />
+                          Профиль
+                        </div>
+                      </Link>
+                      <Link href={`${ROUTES.messages}`}>
+                        <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
+                          <MessageSquare className='h-4 w-4' /> {/* или другой иконкой */}
+                          Сообщения
+                        </div>
+                      </Link>
+                      <Link href={ROUTES.favorites}>
+                        <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
+                          <Heart className='h-4 w-4' />
+                          Избранное
+                        </div>
+                      </Link>
+                      <Link href={`${ROUTES.dashboard}/listings`}>
+                        <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
+                          <LayoutDashboard className='h-4 w-4' />
+                          Мои объявления
+                        </div>
+                      </Link>
+                    </div>
+
+                    <div className='pt-2 mt-1 border-t'>
+                      <div
+                        onClick={handleLogout}
+                        className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-destructive/10 cursor-pointer text-destructive'
                       >
-                        <UserCircle className='mr-2 h-4 w-4' />
-                        Профиль
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={ROUTES.favorites} className='cursor-pointer'>
-                        <Heart className='mr-2 h-4 w-4' />
-                        Избранное
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`${ROUTES.dashboard}/listings`}
-                        className='cursor-pointer'
-                      >
-                        <LayoutDashboard className='mr-2 h-4 w-4' />
-                        Мои объявления
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className='cursor-pointer'>
-                      <LogOut className='mr-2 h-4 w-4' />
-                      Выход
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                        <LogOut className='h-4 w-4' />
+                        Выйти
+                      </div>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
               </>
             ) : (
               <Link href={ROUTES.login}>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='gap-2 text-muted-foreground hover:text-primary'
-                >
+                <Button variant='outline' size='sm' className='gap-2'>
                   <User className='h-4 w-4' />
-                  <span>Войти</span>
+                  Войти
                 </Button>
               </Link>
             )}
           </div>
 
-          {/* Sell Button - Always visible */}
+          {/* Кнопка Разместить */}
           <Link href={ROUTES.sell}>
-            <Button className='btn-caucasus h-9 px-3 md:px-4 gap-2'>
-              <PlusCircle className='h-4 w-4' />
-              <span className='hidden sm:inline text-sm'>Разместить</span>
-              <span className='sm:hidden text-sm'>+</span>
+            <Button className='bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all h-10 px-4 md:px-6 gap-2'>
+              <PlusCircle className='h-4.5 w-4.5' />
+              <span className='hidden sm:inline'>Разместить</span>
+              <span className='sm:hidden'>+</span>
             </Button>
           </Link>
 
-          {/* Mobile Menu Button */}
+          {/* Кнопка мобильного меню */}
           <button
-            className='md:hidden p-2 hover:bg-muted rounded-md transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center'
+            className='md:hidden p-2 hover:bg-accent rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center'
             onClick={toggleMobileMenu}
             aria-label={isMobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
-            aria-expanded={isMobileMenuOpen}
           >
-            {isMobileMenuOpen ? <X className='h-5 w-5' /> : <Menu className='h-5 w-5' />}
+            {isMobileMenuOpen ? <X className='h-6 w-6' /> : <Menu className='h-6 w-6' />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Мобильное меню */}
       {isMobileMenuOpen && (
         <div
-          className='fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300'
+          className='fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300'
           onClick={handleOverlayClick}
-          aria-hidden='true'
-          role='button'
-          tabIndex={-1}
         />
       )}
 
-      {/* Mobile Menu */}
       <div
-        className={`fixed top-16 right-0 bottom-0 w-80 max-w-[85vw] md:hidden bg-background z-50 shadow-xl transition-transform duration-300 ease-in-out overflow-y-auto overscroll-contain will-change-transform ${
+        className={cn(
+          "fixed top-16 right-0 bottom-0 w-80 max-w-[90vw] md:hidden bg-background z-50 shadow-2xl transition-transform duration-300 ease-out",
           isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        )}
         onClick={handleMenuClick}
       >
-        <div className='px-4 py-6 space-y-4'>
-          {/* Categories */}
-          <div className='space-y-1'>
-            <p className='px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+        <div className='p-6 space-y-6'>
+          <div className='space-y-2'>
+            <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2'>
               Категории
             </p>
             {CATEGORIES.map((cat) => (
               <Link
                 key={cat.name}
                 href={cat.href}
-                className='flex px-4 py-3 text-sm rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors min-h-[44px] items-center'
+                className='flex items-center px-4 py-3 text-base rounded-xl hover:bg-accent transition-colors'
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {cat.name}
@@ -312,61 +281,63 @@ export function Header() {
             ))}
           </div>
 
-          {isAuthenticated && (
-            <div className='border-t pt-4 space-y-1'>
-              <p className='px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+          {isAuthenticated ? (
+            <div className='space-y-2 border-t pt-5'>
+              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2'>
                 Аккаунт
               </p>
+
               {isAdmin && (
                 <Link href={`${ROUTES.dashboard}/admin`}>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='w-full justify-start gap-2 text-red-600 min-h-[44px]'
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Shield className='h-4 w-4' />
-                    <span>Админ-панель</span>
-                  </Button>
+                  <div className='flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent text-red-600 transition'>
+                    <Shield className='h-5 w-5' />
+                    Админ-панель
+                  </div>
                 </Link>
               )}
-              <Link href={`${ROUTES.dashboard}/profile`}>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='w-full justify-start gap-2 text-muted-foreground min-h-[44px]'
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <UserCircle className='h-4 w-4' />
-                  <span>Профиль</span>
-                </Button>
-              </Link>
-              <Button
-                variant='ghost'
-                size='sm'
-                className='w-full justify-start gap-2 text-muted-foreground min-h-[44px]'
-                onClick={async () => {
-                  setMobileMenuOpen(false);
-                  await handleLogout();
-                }}
-              >
-                <LogOut className='h-4 w-4' />
-                <span>Выход</span>
-              </Button>
-            </div>
-          )}
 
-          {!isAuthenticated && (
-            <div className='border-t pt-4'>
+              <Link href={ROUTES.dashboard}>
+                <div className='flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition'>
+                  <LayoutDashboard className='h-5 w-5' />
+                  Кабинет
+                </div>
+              </Link>
+
+              <Link href={`${ROUTES.dashboard}/profile`}>
+                <div className='flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition'>
+                  <UserCircle className='h-5 w-5' />
+                  Профиль
+                </div>
+              </Link>
+
+              <Link href={ROUTES.favorites}>
+                <div className='flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition'>
+                  <Heart className='h-5 w-5' />
+                  Избранное
+                </div>
+              </Link>
+
+              <div
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className='flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-destructive/10 text-destructive transition cursor-pointer mt-2'
+              >
+                <LogOut className='h-5 w-5' />
+                Выйти
+              </div>
+            </div>
+          ) : (
+            <div className='border-t pt-5'>
               <Link href={ROUTES.login}>
                 <Button
-                  variant='ghost'
-                  size='sm'
-                  className='w-full justify-start gap-2 text-muted-foreground min-h-[44px]'
+                  variant='outline'
+                  className='w-full justify-start gap-3 py-6 text-base'
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <User className='h-4 w-4' />
-                  <span>Войти</span>
+                  <User className='h-5 w-5' />
+                  Войти / Зарегистрироваться
                 </Button>
               </Link>
             </div>
