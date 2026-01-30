@@ -220,7 +220,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 </div>
 
                 {/* Цена */}
-                <Skeleton className='h-20 w-full rounded-xl' />
+                {/*<Skeleton className='h-20 w-full rounded-xl' />*/}
 
                 {/* Характеристики */}
                 <div className='bg-card rounded-xl border border-border p-4 sm:p-6'>
