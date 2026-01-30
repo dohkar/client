@@ -20,7 +20,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline hover:text-primary/80 active:text-primary/70 p-0 h-auto",
         // Дополнительный красивый вариант
         fancy:
-          "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
+          "gradient-mountains text-white shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
       },
       size: {
         default: "h-11 px-6 py-2 min-h-[44px] has-[>svg]:px-4",

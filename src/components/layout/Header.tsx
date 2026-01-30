@@ -27,6 +27,7 @@ import { useAuthStore, useUIStore } from "@/stores";
 import { ROUTES } from "@/constants";
 import { useRouter } from "next/navigation";
 import { formatUserName } from "@/lib/utils/format-name";
+import { cn } from "@/lib/utils";
 
 // Константы вынесены наружу для избежания пересоздания при каждом рендере
 const CATEGORIES = [
@@ -122,10 +123,27 @@ export function Header() {
     <header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60'>
       <div className='container mx-auto px-4 h-16 flex items-center justify-between'>
         {/* Logo */}
-        <Link href={ROUTES.home} className='flex items-center gap-2 shrink-0 group'>
-          <div className='flex items-center gap-2 px-3 py-1.5 gradient-mountains rounded-md shadow-md transition-transform group-hover:scale-105'>
-            <span className='text-white font-bold text-lg tracking-tight'>Дохкар</span>
-          </div>
+        <Link
+          href={ROUTES.home}
+          className='flex items-center group shrink-0 focus:outline-none'
+        >
+          <span
+            className='
+              text-2xl md:text-3xl font-extrabold
+              tracking-[0.02em]
+              bg-gradient-to-r
+              from-[#064E3B]
+              via-[#0F766E]
+              to-[#134E4A]
+              bg-clip-text text-transparent
+              transition-all duration-300 ease-out
+              group-hover:scale-[1.03]
+              group-hover:drop-shadow-[0_0_8px_rgba(6,78,59,0.25)]
+              inline-block
+            '
+          >
+            Дохкар
+          </span>
         </Link>
 
         {/* Desktop Navigation */}

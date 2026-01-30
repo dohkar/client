@@ -15,6 +15,7 @@ import {
 
 import { DealType } from "@/types/common";
 import { POPULAR_CITIES, DEAL_TYPES } from "@/constants/search";
+import { cn } from "@/lib/utils";
 
 interface SearchForm {
   query: string;
@@ -63,8 +64,8 @@ export function HeroSearch() {
 
   return (
     <div className='relative background-mountains py-16 md:py-24'>
-      <div className='container mx-auto px-4 relative z-10'>
-        <div className='max-w-3xl mx-auto text-center space-y-8'>
+      <div className='container mx-auto px-2 relative z-10 lg:px-4'>
+        <div className='max-w-4xl mx-auto text-center space-y-8'>
           <h1 className='text-4xl md:text-5xl font-bold text-white tracking-tight'>
             Найдите свой идеальный дом на Кавказе
           </h1>
@@ -72,38 +73,44 @@ export function HeroSearch() {
           {/* Search box */}
           <form
             onSubmit={onSubmit}
-            className='bg-white/20 backdrop-blur-lg p-6 rounded-xl shadow-xl max-w-2xl mx-auto'
+            className='bg-white/5 backdrop-blur-2xl border border-white/15 shadow-2xl rounded-2xl p-3 sm:p-6 lg:p-6 max-w-4xl mx-auto w-full'
           >
-            <div className='flex flex-col lg:flex-row gap-4'>
-              {/* Input */}
-              <div className='relative flex-1'>
-                <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground' />
-
+            <div className='flex flex-col md:flex-row gap-4 lg:gap-5 items-stretch md:items-center'>
+              {/* Поиск */}
+              <div className='relative flex-1 min-w-0'>
+                <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-300' />
                 <Input
                   {...register("query", { required: true })}
                   placeholder='Город, район или улица'
-                  className='pl-12 h-12 text-base'
+                  className={cn(
+                    "pl-12 h-14 text-base bg-white/10 border-white/25 text-white placeholder:text-gray-300 font-medium",
+                    "focus:bg-white/15 focus:border-white/40 focus:ring-2 focus:ring-primary/50 focus:shadow-lg",
+                    "rounded-xl transition-all duration-200 shadow-inner"
+                  )}
                   autoComplete='off'
                   aria-label='Поисковый запрос'
                 />
               </div>
 
-              {/* Deal type */}
+              {/* Тип сделки */}
               <Select
                 value={validDealType}
                 onValueChange={(v: DealType) =>
                   setValue("dealType", v, { shouldDirty: true })
                 }
               >
-                <SelectTrigger className='h-12 text-base'>
+                <SelectTrigger className='h-14 w-full md:w-40 bg-white/10 border-white/25 text-white font-medium rounded-xl focus:ring-primary/50 transition-all duration-200 shadow-inner'>
                   <div className='flex items-center gap-2 flex-1'>
                     <SelectValue placeholder='Тип сделки' />
                   </div>
                 </SelectTrigger>
-
-                <SelectContent>
+                <SelectContent className='bg-gray-900/95 backdrop-blur-lg border-white/15 text-white'>
                   {DEAL_TYPES.map(({ value, label, icon: Icon }) => (
-                    <SelectItem key={value} value={value}>
+                    <SelectItem
+                      key={value}
+                      value={value}
+                      className='focus:bg-primary/30 focus:text-white'
+                    >
                       <div className='flex items-center gap-2'>
                         <Icon className='h-4 w-4 text-primary' />
                         {label}
@@ -113,14 +120,20 @@ export function HeroSearch() {
                 </SelectContent>
               </Select>
 
-              {/* Search button */}
+              {/* Кнопка */}
               <Button
                 type='submit'
-                variant={"default"}
-                size={"lg"}
-                className='h-12 px-6 font-semibold text-md hover:bg-primary/60 transition-all duration-75 active:translate-y-px'
+                variant='default'
+                size='lg'
+                className={cn(
+                  "h-14 px-8 font-semibold text-base md:text-lg tracking-wide",
+                  "bg-primary hover:bg-primary/90 active:bg-primary/80",
+                  "rounded-xl shadow-lg shadow-primary/40",
+                  "transition-all duration-200 active:scale-[0.98] hover:shadow-xl hover:shadow-primary/50",
+                  "disabled:opacity-60 disabled:cursor-not-allowed"
+                )}
+                disabled={Boolean(errors.query)}
                 aria-label='Начать поиск'
-                disabled={Boolean(errors.query)} // простая блокировка если инпут пустой
               >
                 Найти
               </Button>
@@ -129,12 +142,27 @@ export function HeroSearch() {
 
           {/* Popular cities */}
           <div className='flex justify-center'>
-            <div className='flex flex-wrap gap-3 bg-black/30 backdrop-blur-lg rounded-2xl px-5 py-2 shadow-lg border border-white/10'>
+            <div
+              className={cn(
+                "flex gap-3 bg-black/30 backdrop-blur-lg rounded-2xl px-3 py-2 shadow-lg border border-white/10",
+                "overflow-x-auto scroll-smooth snap-x snap-mandatory", // скролл + snap
+                "scrollbar-hide", // скрыть скроллбар (добавь в tailwind config или css)
+                "max-w-full" // не вылезает за экран
+              )}
+            >
               {POPULAR_CITIES.map((city) => (
                 <button
                   key={city}
                   onClick={() => performSearch({ query: city, dealType: validDealType })}
-                  className='flex cursor-pointer items-center gap-2 px-4 py-1.5 bg-transparent border border-primary/40 rounded-full hover:border-primary/80 hover:bg-primary/10 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold text-gold font-medium'
+                  className={cn(
+                    "flex shrink-0 cursor-pointer items-center gap-2 px-5 py-2",
+                    "bg-transparent border border-primary/40 rounded-2xl",
+                    "hover:border-primary/80 hover:bg-primary/10",
+                    "transition-all duration-200",
+                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                    "text-gold font-medium text-sm md:text-base",
+                    "snap-start" // snap к началу кнопки
+                  )}
                   style={{
                     boxShadow: "0 1.5px 0 0 oklch(0.75 0.15 65 / 0.3)",
                   }}
