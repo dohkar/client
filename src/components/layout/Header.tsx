@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useCallback, useMemo } from "react";
+import { useEffect, useCallback, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -38,14 +39,16 @@ export function Header() {
   const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { isMobileMenuOpen, toggleMobileMenu, setMobileMenuOpen } = useUIStore();
+  const [isClosing, setIsClosing] = useState(false);
+  const isPortalVisible = isMobileMenuOpen || isClosing;
 
   const userName = useMemo(() => formatUserName(user?.name), [user?.name]);
   const userInitial = useMemo(() => userName.charAt(0).toUpperCase(), [userName]);
   const isAdmin = useMemo(() => user?.role?.toUpperCase() === "ADMIN", [user?.role]);
 
-  // Блокировка скролла при открытом мобильном меню
+  // Блокировка скролла при открытом или закрывающемся мобильном меню
   useEffect(() => {
-    if (isMobileMenuOpen) {
+    if (isPortalVisible) {
       document.body.style.overflow = "hidden";
       document.body.style.overflowX = "hidden";
     } else {
@@ -56,22 +59,41 @@ export function Header() {
       document.body.style.removeProperty("overflow");
       document.body.style.removeProperty("overflow-x");
     };
-  }, [isMobileMenuOpen]);
+  }, [isPortalVisible]);
 
   // Закрытие меню при смене страницы
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname, setMobileMenuOpen]);
 
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+    setIsClosing(true);
+  }, [setMobileMenuOpen]);
+
+  useEffect(() => {
+    if (!isClosing) return;
+    const t = setTimeout(() => setIsClosing(false), 300);
+    return () => clearTimeout(t);
+  }, [isClosing]);
+
+  const handleOverlayClick = useCallback(() => {
+    closeMobileMenu();
+  }, [closeMobileMenu]);
+
+  const handleMenuClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
   // Закрытие по Escape
   useEffect(() => {
     if (!isMobileMenuOpen) return;
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMobileMenuOpen(false);
+      if (e.key === "Escape") closeMobileMenu();
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isMobileMenuOpen, setMobileMenuOpen]);
+  }, [isMobileMenuOpen, closeMobileMenu]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -81,14 +103,6 @@ export function Header() {
       router.push(ROUTES.home);
     }
   }, [logout, router]);
-
-  const handleOverlayClick = useCallback(() => {
-    setMobileMenuOpen(false);
-  }, [setMobileMenuOpen]);
-
-  const handleMenuClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
 
   return (
     <header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/75 transition-shadow'>
@@ -249,101 +263,134 @@ export function Header() {
         </div>
       </div>
 
-      {/* Мобильное меню */}
-      {isMobileMenuOpen && (
-        <div
-          className='fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300'
-          onClick={handleOverlayClick}
-        />
-      )}
-
-      <div
-        className={cn(
-          "fixed top-16 right-0 bottom-0 w-80 max-w-[90vw] md:hidden bg-background z-50 shadow-2xl transition-transform duration-300 ease-out",
-          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
-        )}
-        onClick={handleMenuClick}
-      >
-        <div className='p-6 space-y-6'>
-          <div className='space-y-2'>
-            <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2'>
-              Категории
-            </p>
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.name}
-                href={cat.href}
-                className='flex items-center px-4 py-3 text-base rounded-xl hover:bg-accent transition-colors'
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {cat.name}
-              </Link>
-            ))}
-          </div>
-
-          {isAuthenticated ? (
-            <div className='space-y-2 border-t pt-5'>
-              <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2'>
-                Аккаунт
-              </p>
-
-              {isAdmin && (
-                <Link href={`${ROUTES.dashboard}/admin`}>
-                  <div className='flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent text-red-600 transition'>
-                    <Shield className='h-5 w-5' />
-                    Админ-панель
-                  </div>
-                </Link>
+      {/* Мобильное меню: портал поверх всего с непрозрачной панелью */}
+      {typeof document !== "undefined" &&
+        isPortalVisible &&
+        createPortal(
+          <div className='fixed inset-0 z-[100] md:hidden' aria-hidden='true'>
+            {/* Оверлей — более мягкий, чуть прозрачнее */}
+            <div
+              className={cn(
+                "absolute inset-0 bg-black/20 backdrop-blur-md transition-opacity duration-400",
+                isClosing && "opacity-0"
               )}
+              onClick={handleOverlayClick}
+            />
 
-              <Link href={ROUTES.dashboard}>
-                <div className='flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition'>
-                  <LayoutDashboard className='h-5 w-5' />
-                  Кабинет
+            {/* Панель меню — светлая, с лёгким blur, скруглённые углы слева */}
+            <div
+              role='dialog'
+              aria-modal='true'
+              aria-label='Меню навигации'
+              className={cn(
+                "absolute top-0 right-0 bottom-0 w-80 max-w-[90vw]",
+                "bg-background/95 backdrop-blur-xl border-l border-border/50",
+                "shadow-2xl rounded-l-3xl overflow-hidden",
+                "transition-transform duration-400 ease-out",
+                isClosing ? "translate-x-full" : "translate-x-0"
+              )}
+              onClick={handleMenuClick}
+            >
+              {/* Шапка: логотип + крестик */}
+              <div className='sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-background/80 backdrop-blur-md border-b border-border/40'>
+                <span className='text-xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent'>
+                  Дохкар
+                </span>
+                <button
+                  onClick={closeMobileMenu}
+                  className='p-2 cursor-pointer flex items-center justify-center rounded-full hover:bg-accent transition-colors focus:outline-none'
+                  aria-label='Закрыть меню'
+                >
+                  <X className='h-6 w-6 text-foreground' />
+                </button>
+              </div>
+
+              {/* Контент с прокруткой */}
+              <div className='flex-1 overflow-y-auto overscroll-contain px-4 py-6'>
+                {/* Категории */}
+                <div className='space-y-2 mb-8'>
+                  <p className='px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                    Категории
+                  </p>
+                  {CATEGORIES.map((cat) => (
+                    <Link
+                      key={cat.name}
+                      href={cat.href}
+                      className='flex items-center px-5 py-3.5 text-base font-medium rounded-xl hover:bg-accent/70 active:bg-accent transition-colors'
+                      onClick={() => closeMobileMenu()}
+                    >
+                      {cat.name}
+                    </Link>
+                  ))}
                 </div>
-              </Link>
 
-              <Link href={`${ROUTES.dashboard}/profile`}>
-                <div className='flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition'>
-                  <UserCircle className='h-5 w-5' />
-                  Профиль
-                </div>
-              </Link>
+                {/* Аккаунт */}
+                {isAuthenticated ? (
+                  <div className='space-y-2'>
+                    <p className='px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                      Аккаунт
+                    </p>
 
-              <Link href={ROUTES.favorites}>
-                <div className='flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition'>
-                  <Heart className='h-5 w-5' />
-                  Избранное
-                </div>
-              </Link>
+                    {isAdmin && (
+                      <Link href={`${ROUTES.dashboard}/admin`}>
+                        <div className='flex items-center gap-3.5 px-5 py-3.5 rounded-xl hover:bg-red-500/10 text-red-600 transition-colors'>
+                          <Shield className='h-5 w-5' />
+                          Админ-панель
+                        </div>
+                      </Link>
+                    )}
 
-              <div
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleLogout();
-                }}
-                className='flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-destructive/10 text-destructive transition cursor-pointer mt-2'
-              >
-                <LogOut className='h-5 w-5' />
-                Выйти
+                    <Link href={ROUTES.dashboard}>
+                      <div className='flex items-center gap-3.5 px-5 py-3.5 rounded-xl hover:bg-accent/70 transition-colors'>
+                        <LayoutDashboard className='h-5 w-5' />
+                        Кабинет
+                      </div>
+                    </Link>
+
+                    <Link href={`${ROUTES.dashboard}/profile`}>
+                      <div className='flex items-center gap-3.5 px-5 py-3.5 rounded-xl hover:bg-accent/70 transition-colors'>
+                        <UserCircle className='h-5 w-5' />
+                        Профиль
+                      </div>
+                    </Link>
+
+                    <Link href={ROUTES.favorites}>
+                      <div className='flex items-center gap-3.5 px-5 py-3.5 rounded-xl hover:bg-accent/70 transition-colors'>
+                        <Heart className='h-5 w-5' />
+                        Избранное
+                      </div>
+                    </Link>
+
+                    <div
+                      onClick={() => {
+                        closeMobileMenu();
+                        handleLogout();
+                      }}
+                      className='flex items-center gap-3.5 px-5 py-3.5 rounded-xl hover:bg-destructive/10 text-destructive transition-colors cursor-pointer'
+                    >
+                      <LogOut className='h-5 w-5' />
+                      Выйти
+                    </div>
+                  </div>
+                ) : (
+                  <div className='px-4'>
+                    <Link href={ROUTES.login}>
+                      <Button
+                        variant='default'
+                        className='w-full py-6 text-base font-medium rounded-xl'
+                        onClick={() => closeMobileMenu()}
+                      >
+                        <User className='mr-3 h-5 w-5' />
+                        Войти / Зарегистрироваться
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
-          ) : (
-            <div className='border-t pt-5'>
-              <Link href={ROUTES.login}>
-                <Button
-                  variant='outline'
-                  className='w-full justify-start gap-3 py-6 text-base'
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <User className='h-5 w-5' />
-                  Войти / Зарегистрироваться
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
+          </div>,
+          document.body
+        )}
     </header>
   );
 }

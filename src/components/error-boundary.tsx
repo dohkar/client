@@ -26,10 +26,7 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-class ErrorBoundary extends React.Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -52,12 +49,7 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError && this.state.error) {
       const FallbackComponent = this.props.fallback || DefaultErrorFallback;
-      return (
-        <FallbackComponent
-          error={this.state.error}
-          resetError={this.resetError}
-        />
-      );
+      return <FallbackComponent error={this.state.error} resetError={this.resetError} />;
     }
 
     return this.props.children;
@@ -71,24 +63,26 @@ function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
         <CardHeader>
           <CardTitle>Что-то пошло не так</CardTitle>
           <CardDescription>
-            Произошла непредвиденная ошибка. Пожалуйста, попробуйте обновить
-            страницу.
+            Произошла непредвиденная ошибка. Пожалуйста, попробуйте обновить страницу.
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
           {process.env.NODE_ENV === "development" && (
             <div className='rounded-md bg-muted p-4'>
-              <p className='text-sm font-mono text-destructive'>
-                {error.message}
-              </p>
+              <p className='text-sm font-mono text-destructive'>{error.message}</p>
             </div>
           )}
           <div className='flex gap-2'>
-            <Button onClick={resetError} variant='default'>
+            <Button aria-label='Попробовать снова' onClick={resetError} variant='default'>
               Попробовать снова
             </Button>
-            <Button onClick={() => window.location.reload()} variant='outline'>
-              Обновить страницу
+            <Button
+              aria-label='Обновить страницу'
+              onClick={() => window.location.reload()}
+              variant='outline'
+              className='truncate'
+            >
+              Обновить
             </Button>
           </div>
         </CardContent>
