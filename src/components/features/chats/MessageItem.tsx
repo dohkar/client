@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, CheckCheck, Copy, Clock } from "lucide-react";
+import { Check, CheckCheck, Clock, UserIcon, CopyIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatRelativeTime, formatAbsoluteTime } from "@/lib/utils/chat-format";
 import { toast } from "sonner";
@@ -12,18 +12,26 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Message } from "@/types/chat";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface MessageItemProps {
   message: Message;
   isOwn: boolean;
+  showAvatar?: boolean; // для чужих — показывать аватар
+  avatarUrl?: string | null; // url аватара собеседника
   showStatus?: boolean;
 }
 
-export function MessageItem({ message, isOwn, showStatus = true }: MessageItemProps) {
+export function MessageItem({
+  message,
+  isOwn,
+  showAvatar = true,
+  avatarUrl,
+  showStatus = true,
+}: MessageItemProps) {
   const [copied, setCopied] = useState(false);
 
   const deliveryStatus = useMemo<"sending" | "sent" | "read">(() => {
-    // Временные сообщения считаем "sending"
     if (message.id.startsWith("temp-")) return "sending";
     if (message.isRead) return "read";
     return "sent";
@@ -33,86 +41,110 @@ export function MessageItem({ message, isOwn, showStatus = true }: MessageItemPr
     try {
       await navigator.clipboard.writeText(message.text);
       setCopied(true);
-      toast.success("Текст скопирован");
+      toast.success("Скопировано", { duration: 1500 });
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Не удалось скопировать текст");
+      toast.error("Не удалось скопировать");
     }
   };
 
   return (
     <div
       className={cn(
-        "flex w-full mb-4",
-        isOwn ? "justify-end" : "justify-start"
+        "flex w-full mb-3 group",
+        isOwn ? "justify-end" : "justify-start gap-2"
       )}
     >
+      {/* Аватар слева для чужих сообщений */}
+      {!isOwn && showAvatar && (
+        <div className='flex-shrink-0 pt-1'>
+          <Avatar>
+            {avatarUrl ? (
+              <AvatarImage src={avatarUrl} alt='Аватар' className='object-cover' />
+            ) : null}
+            <AvatarFallback className='bg-gradient-to-br from-muted to-muted-foreground/30 flex items-center justify-center rounded-full border border-border shadow-inner'>
+              <UserIcon className='h-7 w-7 text-primary/70' fill='currentColor' />
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      )}
+
       <div
         className={cn(
-          // reserve space for status icon to avoid layout shift
-          "max-w-[70%] rounded-lg px-4 py-2 group relative pr-8",
+          "relative max-w-[75%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words shadow-sm transition-all",
+          // Bubble с хвостиком
           isOwn
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-foreground"
+            ? "bg-primary text-primary-foreground rounded-br-none after:content-[''] after:absolute after:bottom-0 after:right-[-6px] after:border-[6px] after:border-transparent after:border-l-primary after:border-b-primary"
+            : "bg-muted text-foreground rounded-bl-none after:content-[''] after:absolute after:bottom-0 after:left-[-6px] after:border-[6px] after:border-transparent after:border-r-muted after:border-b-muted",
+          // Hover-эффект
+          "group-hover:shadow-md"
         )}
       >
         {/* Кнопка копирования */}
         <button
           onClick={handleCopy}
-          className="absolute cursor-pointer hidden lg:block -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border rounded-full p-1.5 shadow-sm"
-          aria-label="Копировать текст"
+          className={cn(
+            "absolute cursor-pointer -top-2 -right-2 p-1.5 rounded-full bg-background border border-border shadow-sm transition-all",
+            copied ? "opacity-100 scale-110" : "opacity-0 group-hover:opacity-100"
+          )}
+          aria-label='Копировать'
         >
-          <Copy className="h-3 w-3" />
+          {copied ? (
+            <Check className='h-3.5 w-3.5 text-green-500' />
+          ) : (
+            <CopyIcon className='h-3.5 w-3.5 text-muted-foreground' />
+          )}
         </button>
 
-        {/* Текст сообщения */}
-        <p className="text-sm whitespace-pre-wrap break-words">{message.text}</p>
+        {/* Текст */}
+        <p className='leading-relaxed'>{message.text}</p>
 
-        {/* Время */}
-        <div
-          className={cn(
-            "flex items-center gap-1 mt-1",
-            isOwn ? "justify-end" : "justify-start"
-          )}
-        >
+        {/* Время + статус */}
+        <div className='flex items-center justify-end gap-1.5 mt-1'>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <span
                   className={cn(
-                    "text-xs",
+                    "text-xs opacity-70",
                     isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
                   )}
                 >
                   {formatRelativeTime(message.createdAt)}
                 </span>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent side='top'>
                 <p>{formatAbsoluteTime(message.createdAt)}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
+          {/* Статус только для своих */}
+          {isOwn && showStatus && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className='text-primary-foreground/70'>
+                    {deliveryStatus === "sending" ? (
+                      <Clock className='h-3.5 w-3.5 animate-pulse' />
+                    ) : deliveryStatus === "read" ? (
+                      <CheckCheck className='h-3.5 w-3.5 text-blue-400' />
+                    ) : (
+                      <Check className='h-3.5 w-3.5' />
+                    )}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side='top'>
+                  {deliveryStatus === "sending"
+                    ? "Отправляется..."
+                    : deliveryStatus === "read"
+                      ? "Прочитано"
+                      : "Отправлено"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
-
-        {/* Статус доставки (только для своих, минималистично, без текста) */}
-        {isOwn && showStatus && (
-          <span
-            className={cn(
-              "absolute right-2 bottom-2",
-              "text-primary-foreground/60"
-            )}
-            aria-label={`status-${deliveryStatus}`}
-          >
-            {deliveryStatus === "sending" ? (
-              <Clock className="h-3 w-3 opacity-60" />
-            ) : deliveryStatus === "read" ? (
-              <CheckCheck className="h-3 w-3" />
-            ) : (
-              <Check className="h-3 w-3" />
-            )}
-          </span>
-        )}
       </div>
     </div>
   );

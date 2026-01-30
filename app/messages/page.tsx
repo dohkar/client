@@ -2,13 +2,23 @@
 
 import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useChatsList, useChatMessages, useSendMessage, useMarkAsRead } from "@/hooks/use-chats";
+import {
+  useChatsList,
+  useChatMessages,
+  useSendMessage,
+  useMarkAsRead,
+} from "@/hooks/use-chats";
 import { useAuthStore } from "@/stores";
-import { ChatList, ChatHeader, MessageList, MessageInput, EmptyState } from "@/components/features/chats";
+import {
+  ChatList,
+  ChatHeader,
+  MessageList,
+  MessageInput,
+  EmptyState,
+} from "@/components/features/chats";
 import { useNotifications } from "@/components/features/chats/hooks/use-notifications";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ROUTES } from "@/constants";
 import { cn } from "@/lib/utils";
 import type { Message, MessagesResponse } from "@/types/chat";
 import type { InfiniteData } from "@tanstack/react-query";
@@ -48,8 +58,11 @@ function MessagesPageContent() {
 
   // Получаем сообщения активного чата
   const messagesQuery = useChatMessages(selectedChatId, !!selectedChatId);
-  const { isConnected: isWsConnected, isConnecting: isWsConnecting, useFallback: isWsFallback } =
-    useSocket();
+  const {
+    isConnected: isWsConnected,
+    isConnecting: isWsConnecting,
+    useFallback: isWsFallback,
+  } = useSocket();
 
   // Мутации
   const sendMessageMutation = useSendMessage();
@@ -76,10 +89,7 @@ function MessagesPageContent() {
     const timeoutId = setTimeout(() => {
       const now = Date.now();
       const last = lastMarkedRef.current;
-      if (
-        last?.chatId === selectedChatId &&
-        now - last.at < MARK_AS_READ_DEBOUNCE_MS
-      ) {
+      if (last?.chatId === selectedChatId && now - last.at < MARK_AS_READ_DEBOUNCE_MS) {
         return;
       }
       lastMarkedRef.current = { chatId: selectedChatId, at: now };
@@ -113,7 +123,8 @@ function MessagesPageContent() {
 
   // Объединяем все страницы сообщений и удаляем дубликаты
   const allMessages: Message[] = useMemo(() => {
-    const pages = (messagesQuery.data as InfiniteData<MessagesResponse> | undefined)?.pages || [];
+    const pages =
+      (messagesQuery.data as InfiniteData<MessagesResponse> | undefined)?.pages || [];
     const messages = pages.flatMap((page) => page.messages);
 
     // Удаляем дубликаты по ID (приоритет у реальных сообщений)
@@ -162,13 +173,15 @@ function MessagesPageContent() {
     return other?.userId || null;
   }, [selectedChat, user?.id]);
 
-  const isOtherTyping = otherParticipantId ? typingUserIds.has(otherParticipantId) : false;
-  const isOtherOnline = otherParticipantId ? onlineUserIds.has(otherParticipantId) : undefined;
+  const isOtherTyping = otherParticipantId
+    ? typingUserIds.has(otherParticipantId)
+    : false;
+  const isOtherOnline = otherParticipantId
+    ? onlineUserIds.has(otherParticipantId)
+    : undefined;
 
   // Подсчет сообщений от текущего пользователя (для валидации)
-  const userMessagesCount = allMessages.filter(
-    (msg) => msg.senderId === user?.id
-  ).length;
+  const userMessagesCount = allMessages.filter((msg) => msg.senderId === user?.id).length;
 
   // Проверка на спам в support-чате (3 сообщения подряд без ответа)
   const showSpamHint = useMemo(() => {
@@ -203,11 +216,7 @@ function MessagesPageContent() {
     if (!selectedChatId || !user?.id || document.hidden) return;
 
     const lastMessage = allMessages[allMessages.length - 1];
-    if (
-      lastMessage &&
-      lastMessage.senderId !== user.id &&
-      !lastMessage.isRead
-    ) {
+    if (lastMessage && lastMessage.senderId !== user.id && !lastMessage.isRead) {
       showNotification(
         "Новое сообщение",
         lastMessage.text.substring(0, 50) + (lastMessage.text.length > 50 ? "..." : "")
@@ -220,8 +229,8 @@ function MessagesPageContent() {
   // Показываем loading пока идет инициализация
   if (!isInitialized || isLoadingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Skeleton className="h-8 w-64" />
+      <div className='min-h-screen flex items-center justify-center'>
+        <Skeleton className='h-8 w-64' />
       </div>
     );
   }
@@ -232,11 +241,11 @@ function MessagesPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Сообщения</h1>
+    <div className='bg-background'>
+      <div className='container mx-auto px-1 py-1 lg:px-2 lg:py-4'>
+        <h1 className='text-2xl font-bold mb-6 hidden lg:block'>Сообщения</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-180px)]">
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-154px)]'>
           {/* Список чатов */}
           <Card
             className={cn(
@@ -244,8 +253,8 @@ function MessagesPageContent() {
               selectedChatId && "hidden lg:flex"
             )}
           >
-            <div className="border-b p-4">
-              <h2 className="font-semibold">Все чаты</h2>
+            <div className='border-b p-4'>
+              <h2 className='font-semibold'>Все чаты</h2>
             </div>
             <ChatList
               chats={chats}
@@ -292,7 +301,7 @@ function MessagesPageContent() {
                 />
               </>
             ) : (
-              <EmptyState type="select-chat" />
+              <EmptyState type='select-chat' />
             )}
           </Card>
         </div>
@@ -305,8 +314,8 @@ export default function MessagesPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <Skeleton className="h-8 w-64" />
+        <div className='min-h-screen flex items-center justify-center'>
+          <Skeleton className='h-8 w-64' />
         </div>
       }
     >
