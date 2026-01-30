@@ -10,6 +10,7 @@ export interface PropertyFilters {
   roomsMin: number | null;
   areaMin: number | null;
   region: "Chechnya" | "Ingushetia" | "Other" | "all";
+  cityId: string | null;
   sortBy: "price-asc" | "price-desc" | "date-desc" | "relevance";
 }
 
@@ -36,6 +37,7 @@ const defaultFilters: PropertyFilters = {
   roomsMin: null,
   areaMin: null,
   region: "all",
+  cityId: null,
   sortBy: "relevance",
 };
 
@@ -74,14 +76,12 @@ export const usePropertyStore = create<PropertyState>()(
       }),
       // Миграция для старых версий store
       migrate: (persistedState: unknown, version: number) => {
-        if (version === 0) {
-          // Если была старая версия с properties/selectedProperty, удаляем их
-          const state = persistedState as Partial<PropertyState>;
-          return {
-            filters: state.filters || defaultFilters,
-          };
+        const state = persistedState as { filters?: Partial<PropertyFilters> };
+        const filters = state?.filters ? { ...defaultFilters, ...state.filters } : defaultFilters;
+        if (filters.cityId === undefined) {
+          (filters as PropertyFilters).cityId = null;
         }
-        return persistedState as { filters: PropertyFilters };
+        return { filters };
       },
     }
   )

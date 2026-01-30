@@ -6,6 +6,7 @@
  */
 
 import { apiClient } from "@/lib/api-client";
+import { API_ENDPOINTS } from "@/constants/routes";
 import {
   registerRegionMapping,
   getRegionNameById,
@@ -14,12 +15,18 @@ import {
   type RegionName
 } from "@/lib/regions";
 import type { PropertyBackend } from "@/types/property";
+import type { PaginatedResponse } from "@/types";
 
 /**
  * Кэш для маппинга названия региона -> regionId
  * Заполняется при первом запросе списка недвижимости
  */
 const regionNameToIdCache = new Map<RegionName, string>();
+
+/**
+ * Флаг для отслеживания процесса инициализации
+ */
+let isInitializing = false;
 
 /**
  * Инициализирует кэш регионов на основе данных недвижимости
@@ -39,6 +46,50 @@ export function initializeRegionCache(properties: PropertyBackend[]): void {
       regionNameToIdCache.set(regionName, region.id);
       registerRegionMapping(region.id, regionName);
     }
+  }
+}
+
+/**
+ * Предварительно инициализирует кэш регионов, запрашивая список недвижимости
+ * Используется для заполнения кэша перед созданием объявления
+ */
+export async function ensureRegionCacheInitialized(): Promise<void> {
+  // Если кэш уже заполнен, ничего не делаем
+  if (regionNameToIdCache.size > 0) {
+    return;
+  }
+
+  // Если уже идет инициализация, ждем её завершения
+  if (isInitializing) {
+    // Ждем до 5 секунд, пока кэш не заполнится
+    let attempts = 0;
+    while (isInitializing && attempts < 50) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+      if (regionNameToIdCache.size > 0) {
+        return;
+      }
+    }
+    return;
+  }
+
+  try {
+    isInitializing = true;
+    
+    // Запрашиваем список недвижимости с минимальными параметрами для получения регионов
+    const response = await apiClient.get<PaginatedResponse<PropertyBackend>>(
+      `${API_ENDPOINTS.properties.list}?limit=10`
+    );
+    
+    // Инициализируем кэш на основе полученных данных
+    if (response.data && response.data.length > 0) {
+      initializeRegionCache(response.data);
+    }
+  } catch (error) {
+    console.error("Ошибка при инициализации кэша регионов:", error);
+    // Не пробрасываем ошибку, чтобы не блокировать работу формы
+  } finally {
+    isInitializing = false;
   }
 }
 

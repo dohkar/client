@@ -15,11 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CitySearchSelect } from "@/components/features/CitySearchSelect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { useQuery } from "@tanstack/react-query";
 import { propertyService } from "@/services/property.service";
-import { getRegionIdByName } from "@/services/region.service";
-import { REGION_OPTIONS } from "@/lib/search-constants";
+import { getRegionIdByName, ensureRegionCacheInitialized } from "@/services/region.service";
+import { regionsService } from "@/services/regions.service";
+import { REGION_BACKEND_TO_NAME } from "@/lib/regions";
 import {
   uploadService,
   validateImageFiles,
@@ -65,6 +68,7 @@ const propertySchema = z.object({
   price: z.number().min(1, "Цена должна быть больше 0"),
   location: z.string().min(5, "Адрес должен быть не менее 5 символов"),
   region: z.enum(["Chechnya", "Ingushetia", "Other"]),
+  cityId: z.string().uuid().optional().or(z.literal("")),
   type: z.enum(["apartment", "house", "land", "commercial"]),
   rooms: z.number().optional(),
   area: z.number().min(1, "Площадь должна быть больше 0"),
@@ -133,6 +137,13 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
     }
   }, [initialData?.images]);
 
+  // Инициализируем кэш регионов при загрузке компонента
+  useEffect(() => {
+    ensureRegionCacheInitialized().catch((error) => {
+      console.error("Ошибка при инициализации кэша регионов:", error);
+    });
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -146,6 +157,7 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       price: initialData?.price || 0,
       location: initialData?.location || "",
       region: initialData?.region || "Other",
+      cityId: initialData?.cityId ?? "",
       type: initialData?.type || "apartment",
       rooms: initialData?.rooms,
       area: initialData?.area || 0,
@@ -154,6 +166,23 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       latitude: initialData?.latitude,
       longitude: initialData?.longitude,
     },
+  });
+
+  // Регионы и города с API (после useForm, т.к. используем watch)
+  const selectedRegion = watch("region");
+  const { data: regions = [] } = useQuery({
+    queryKey: ["regions"],
+    queryFn: () => regionsService.getRegions(),
+    staleTime: 10 * 60 * 1000,
+  });
+  const regionIdForCities = regions.find(
+    (r) => REGION_BACKEND_TO_NAME[r.name as keyof typeof REGION_BACKEND_TO_NAME] === selectedRegion
+  )?.id;
+  const { data: cities = [] } = useQuery({
+    queryKey: ["cities", regionIdForCities],
+    queryFn: () => regionsService.getCities(regionIdForCities!),
+    enabled: !!regionIdForCities,
+    staleTime: 10 * 60 * 1000,
   });
 
   // Инициализация отформатированных значений
@@ -340,8 +369,28 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
 
     setIsLoading(true);
     try {
+      // Убеждаемся, что кэш регионов инициализирован
+      await ensureRegionCacheInitialized();
+      
       // Получаем regionId по названию региона
-      const regionId = getRegionIdByName(data.region);
+      let regionId = getRegionIdByName(data.region);
+      
+      // Если regionId не найден, пытаемся получить его из initialData (при редактировании)
+      if (!regionId && isEdit && initialData) {
+        const propertyId = initialData.id;
+        // При редактировании можно попробовать получить regionId из бэкенда
+        // Для этого нужно загрузить полные данные недвижимости
+        if (propertyId) {
+          try {
+            const fullProperty = await propertyService.getPropertyById(propertyId);
+            // После загрузки кэш должен быть заполнен, пробуем снова
+            regionId = getRegionIdByName(data.region);
+          } catch (error) {
+            console.error("Ошибка при загрузке данных недвижимости:", error);
+          }
+        }
+      }
+      
       if (!regionId) {
         toast.error("Регион не найден. Пожалуйста, обновите страницу и попробуйте снова.");
         setIsLoading(false);
@@ -364,9 +413,10 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       const apiData = {
         title: data.title,
         price: data.price,
-        currency: "RUB" as const, // Всегда рубли
+        currency: "RUB" as const,
         location: data.location,
-        regionId: regionId, // Используем regionId вместо region enum
+        regionId,
+        cityId: data.cityId && data.cityId.trim() ? data.cityId : undefined,
         type: typeMap[data.type] || "APARTMENT",
         rooms: data.rooms,
         area: data.area,
@@ -504,8 +554,8 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
             )}
           </div>
 
-          {/* Регион и Тип недвижимости */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Регион, город и тип недвижимости */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="region" className="text-base font-medium flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -513,9 +563,10 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
               </Label>
               <Select
                 value={watch("region")}
-                onValueChange={(value) =>
-                  setValue("region", value as "Chechnya" | "Ingushetia" | "Other")
-                }
+                onValueChange={(value) => {
+                  setValue("region", value as "Chechnya" | "Ingushetia" | "Other");
+                  setValue("cityId", ""); // сброс города при смене региона
+                }}
               >
                 <SelectTrigger className="h-11 text-base">
                   <SelectValue />
@@ -527,6 +578,14 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
                 </SelectContent>
               </Select>
             </div>
+
+            <CitySearchSelect
+              value={watch("cityId") || ""}
+              onValueChange={(value) => setValue("cityId", value)}
+              cities={cities}
+              disabled={!regionIdForCities}
+              placeholder={cities.length === 0 ? "Нет городов" : "Поиск или выбор города"}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="type" className="text-base font-medium flex items-center gap-2">

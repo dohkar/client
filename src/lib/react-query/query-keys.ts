@@ -37,6 +37,9 @@ function normalizeSearchParams(
   if (params.region !== undefined) {
     normalized.region = params.region;
   }
+  if (params.cityId !== undefined && params.cityId.trim().length > 0) {
+    normalized.cityId = params.cityId;
+  }
   if (params.sortBy !== undefined) {
     normalized.sortBy = params.sortBy;
   }
@@ -98,5 +101,16 @@ export const queryKeys = {
     all: ["user"] as const,
     profile: (id: string) => ["user", "profile", id] as const,
     listings: (userId: string) => ["user", "listings", userId] as const,
+  },
+
+  // Chats
+  chats: {
+    all: ["chats"] as const,
+    list: () => ["chats", "list"] as const,
+    detail: (chatId: string) => ["chats", "detail", chatId] as const,
+    messages: (chatId: string, cursor?: string) =>
+      cursor
+        ? (["chats", "messages", chatId, cursor] as const)
+        : (["chats", "messages", chatId] as const),
   },
 } as const;

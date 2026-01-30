@@ -20,6 +20,7 @@ export function useProperties(params?: PropertySearchParams) {
     areaMin: params.areaMin,
     // Конвертируем название региона в regionId через кэш
     regionId: params.region ? getRegionIdByName(params.region) : undefined,
+    cityId: params.cityId,
     sortBy: params.sortBy,
     page: params.page,
     limit: params.limit,

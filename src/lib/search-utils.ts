@@ -14,6 +14,7 @@ function normalizeFiltersForComparison(
   roomsMin: number | null;
   areaMin: number | null;
   region: "Chechnya" | "Ingushetia" | "Other" | "all" | undefined;
+  cityId: string | undefined;
   sortBy: "price-asc" | "price-desc" | "date-desc" | "relevance" | undefined;
 } {
   // Проверяем, является ли это PropertyFilters (имеет roomsMin)
@@ -27,6 +28,7 @@ function normalizeFiltersForComparison(
       roomsMin: propFilters.roomsMin ?? null,
       areaMin: propFilters.areaMin ?? null,
       region: propFilters.region === "all" ? undefined : propFilters.region,
+      cityId: propFilters.cityId ?? undefined,
       sortBy: propFilters.sortBy === "relevance" ? undefined : propFilters.sortBy,
     };
   }
@@ -41,6 +43,7 @@ function normalizeFiltersForComparison(
     roomsMin: params.rooms ?? null,
     areaMin: params.areaMin ?? null,
     region: params.region,
+    cityId: params.cityId,
     sortBy: params.sortBy,
   };
 }
@@ -64,6 +67,7 @@ export function areFiltersEqual(
     normalizedA.roomsMin === normalizedB.roomsMin &&
     normalizedA.areaMin === normalizedB.areaMin &&
     normalizedA.region === normalizedB.region &&
+    (normalizedA.cityId ?? "") === (normalizedB.cityId ?? "") &&
     normalizedA.sortBy === normalizedB.sortBy
   );
 }
@@ -90,6 +94,11 @@ export function searchParamsToFilters(
   // Region - только если задан
   if (params.region !== undefined) {
     result.region = params.region || "all";
+  }
+
+  // CityId - только если задан
+  if (params.cityId !== undefined && params.cityId.trim().length > 0) {
+    result.cityId = params.cityId;
   }
 
   // PriceMin - всегда устанавливаем (null если не задан)
@@ -147,6 +156,12 @@ export function getFiltersFromSearchParams(
     if (validRegions.includes(regionParam as "Chechnya" | "Ingushetia" | "Other")) {
       result.region = regionParam as "Chechnya" | "Ingushetia" | "Other";
     }
+  }
+
+  // Парсинг cityId - UUID города
+  const cityIdParam = searchParams.get("cityId");
+  if (cityIdParam && cityIdParam.trim().length > 0) {
+    result.cityId = cityIdParam.trim();
   }
 
   // Парсинг чисел с правильной обработкой пустых строк и "0"
@@ -217,6 +232,8 @@ export function buildApiSearchParams(
     params.areaMin = filters.areaMin;
   if (filters.region !== "all")
     params.region = filters.region as "Chechnya" | "Ingushetia" | "Other";
+  if (filters.cityId && filters.cityId.trim().length > 0)
+    params.cityId = filters.cityId.trim();
 
   return params;
 }
@@ -245,6 +262,11 @@ export function buildSearchUrl(
   // Region - только если не "all"
   if (filters.region !== "all") {
     params.set("region", filters.region as "Chechnya" | "Ingushetia" | "Other");
+  }
+
+  // CityId - только если задан
+  if (filters.cityId && filters.cityId.trim().length > 0) {
+    params.set("cityId", filters.cityId.trim());
   }
 
   // PriceMin - только если не null/undefined (0 - валидное значение!)

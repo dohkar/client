@@ -297,6 +297,23 @@ export interface paths {
         patch: operations["PropertiesController_update"];
         trace?: never;
     };
+    "/api/properties/{id}/related": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить похожие объявления */
+        get: operations["PropertiesController_findRelated"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/favorites": {
         parameters: {
             query?: never;
@@ -502,6 +519,229 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/chats/property": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Создать или получить чат по объявлению */
+        post: operations["ChatsController_createPropertyChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/support": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Создать или получить чат поддержки */
+        post: operations["ChatsController_createSupportChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить список чатов пользователя */
+        get: operations["ChatsController_getUserChats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить сообщения чата с cursor pagination */
+        get: operations["ChatsController_getChatMessages"];
+        put?: never;
+        /** Отправить сообщение */
+        post: operations["ChatsController_sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Пометить все сообщения как прочитанные */
+        post: operations["ChatsController_markMessagesAsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/support/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить все чаты поддержки (только для админов/поддержки) */
+        get: operations["ChatsController_getSupportChats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/assign-support": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Назначить сотрудника поддержки в чат */
+        post: operations["ChatsController_assignSupportAgent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/regions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить список регионов */
+        get: operations["RegionsController_findAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/regions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить регион по ID с городами */
+        get: operations["RegionsController_findOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить список городов */
+        get: operations["CitiesController_findCities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить все заявки (только админ/поддержка) */
+        get: operations["InboxController_getAllRequests"];
+        put?: never;
+        /** Создать заявку (контакт или жалобу) */
+        post: operations["InboxController_createRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inbox/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить заявку по ID */
+        get: operations["InboxController_getRequestById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inbox/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Обновить статус заявки */
+        patch: operations["InboxController_updateStatus"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -571,6 +811,11 @@ export interface components {
             location: string;
             /** @example 550e8400-e29b-41d4-a716-446655440000 */
             regionId: string;
+            /**
+             * @description ID города (опционально)
+             * @example 660e8400-e29b-41d4-a716-446655440001
+             */
+            cityId?: string;
             /** @enum {string} */
             type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
             /** @example 3 */
@@ -593,6 +838,16 @@ export interface components {
              *     ]
              */
             features?: string[];
+            /**
+             * @description Широта
+             * @example 43.3156
+             */
+            latitude?: number;
+            /**
+             * @description Долгота
+             * @example 45.6949
+             */
+            longitude?: number;
         };
         PropertyResponseDto: {
             id: string;
@@ -604,6 +859,10 @@ export interface components {
             regionId: string;
             /** @description Region relation (optional, may be included in response) */
             region?: Record<string, never>;
+            /** @description ID города */
+            cityId?: string;
+            /** @description Город (если указан) */
+            city?: Record<string, never>;
             /** @enum {string} */
             type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
             rooms?: number;
@@ -619,6 +878,10 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+            /** @description Широта */
+            latitude?: number;
+            /** @description Долгота */
+            longitude?: number;
         };
         UpdatePropertyDto: {
             /** @example Квартира в центре Грозного */
@@ -631,6 +894,11 @@ export interface components {
             location?: string;
             /** @example 550e8400-e29b-41d4-a716-446655440000 */
             regionId?: string;
+            /**
+             * @description ID города (опционально)
+             * @example 660e8400-e29b-41d4-a716-446655440001
+             */
+            cityId?: string;
             /** @enum {string} */
             type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
             /** @example 3 */
@@ -654,6 +922,16 @@ export interface components {
             features?: string[];
             /** @enum {string} */
             status?: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+            /**
+             * @description Широта
+             * @example 43.3156
+             */
+            latitude?: number;
+            /**
+             * @description Долгота
+             * @example 45.6949
+             */
+            longitude?: number;
         };
         FavoriteResponseDto: {
             id: string;
@@ -665,11 +943,133 @@ export interface components {
         };
         UpdateUserRoleDto: {
             /** @enum {string} */
-            role: "USER" | "PREMIUM" | "ADMIN";
+            role: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT";
         };
         UpdatePropertyStatusDto: {
             /** @enum {string} */
             status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+        };
+        CreatePropertyChatDto: {
+            /**
+             * @description ID объявления недвижимости
+             * @example 550e8400-e29b-41d4-a716-446655440000
+             */
+            propertyId: string;
+        };
+        ChatParticipantResponseDto: {
+            /** @example 550e8400-e29b-41d4-a716-446655440000 */
+            id: string;
+            /** @example 550e8400-e29b-41d4-a716-446655440001 */
+            userId: string;
+            /**
+             * @example BUYER
+             * @enum {string}
+             */
+            role: "BUYER" | "SELLER" | "SUPPORT";
+        };
+        ChatResponseDto: {
+            /** @example 550e8400-e29b-41d4-a716-446655440000 */
+            id: string;
+            /**
+             * @example PROPERTY
+             * @enum {string}
+             */
+            type: "PROPERTY" | "SUPPORT";
+            /** @example 550e8400-e29b-41d4-a716-446655440001 */
+            propertyId: string | null;
+            /** @example false */
+            isArchived: boolean;
+            /**
+             * Format: date-time
+             * @example 2024-01-20T10:30:00Z
+             */
+            lastMessageAt: string | null;
+            /** @example Здравствуйте, интересует ваше объявление */
+            lastMessageText: string | null;
+            /**
+             * Format: date-time
+             * @example 2024-01-20T10:00:00Z
+             */
+            createdAt: string;
+            participants: components["schemas"]["ChatParticipantResponseDto"][];
+            /**
+             * @description Количество непрочитанных сообщений
+             * @example 0
+             */
+            unreadCount: number;
+            /** @description Информация об объявлении (если тип PROPERTY) */
+            property?: Record<string, never>;
+        };
+        MessageResponseDto: {
+            /** @example 550e8400-e29b-41d4-a716-446655440000 */
+            id: string;
+            /** @example 550e8400-e29b-41d4-a716-446655440001 */
+            chatId: string;
+            /** @example 550e8400-e29b-41d4-a716-446655440002 */
+            senderId: string;
+            /** @example Здравствуйте, интересует ваше объявление */
+            text: string;
+            /** @example false */
+            isRead: boolean;
+            /**
+             * Format: date-time
+             * @example null
+             */
+            readAt: string | null;
+            /**
+             * Format: date-time
+             * @example 2024-01-20T10:30:00Z
+             */
+            createdAt: string;
+        };
+        MessagesResponseDto: {
+            messages: components["schemas"]["MessageResponseDto"][];
+            /**
+             * @description ID следующего сообщения для cursor pagination (null если это последняя страница)
+             * @example 550e8400-e29b-41d4-a716-446655440000
+             */
+            nextCursor: string | null;
+            /**
+             * @description Есть ли еще сообщения для загрузки
+             * @example true
+             */
+            hasMore: boolean;
+        };
+        SendMessageDto: {
+            /**
+             * @description Текст сообщения
+             * @example Здравствуйте, интересует ваше объявление
+             */
+            text: string;
+        };
+        AssignSupportDto: {
+            /**
+             * @description ID сотрудника поддержки для назначения
+             * @example 550e8400-e29b-41d4-a716-446655440000
+             */
+            supportUserId: string;
+        };
+        CreateInboxRequestDto: {
+            /**
+             * @example CONTACT
+             * @enum {string}
+             */
+            category: "CONTACT" | "COMPLAINT";
+            /**
+             * @example MEDIUM
+             * @enum {string}
+             */
+            severity?: "LOW" | "MEDIUM" | "HIGH";
+            /** @example Иван Петров */
+            name: string;
+            /** @example ivan@example.com */
+            email?: string;
+            /** @example +79123456789 */
+            phone?: string;
+            /** @example Здравствуйте, хочу уточнить... */
+            message: string;
+            /** @example uuid */
+            propertyId?: string;
         };
     };
     responses: never;
@@ -1001,6 +1401,8 @@ export interface operations {
                 rooms?: number;
                 areaMin?: number;
                 regionId?: string;
+                /** @description Фильтр по городу */
+                cityId?: string;
                 sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance";
                 page?: number;
                 limit?: number;
@@ -1181,6 +1583,28 @@ export interface operations {
             };
             /** @description Объявление не найдено */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PropertiesController_findRelated: {
+        parameters: {
+            query: {
+                limit: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список похожих объявлений */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1542,6 +1966,440 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Service is healthy */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChatsController_createPropertyChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePropertyChatDto"];
+            };
+        };
+        responses: {
+            /** @description Чат создан или получен */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatResponseDto"];
+                };
+            };
+            /** @description Нельзя создать чат со своим объявлением */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Объявление не найдено */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChatsController_createSupportChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Чат поддержки создан или получен */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatResponseDto"];
+                };
+            };
+        };
+    };
+    ChatsController_getUserChats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список чатов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatResponseDto"][];
+                };
+            };
+        };
+    };
+    ChatsController_getChatMessages: {
+        parameters: {
+            query?: {
+                /** @description Cursor для пагинации (ID последнего загруженного сообщения) */
+                cursor?: string;
+                /** @description Количество сообщений для загрузки */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список сообщений */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessagesResponseDto"];
+                };
+            };
+            /** @description Нет доступа к чату */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Чат не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChatsController_sendMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendMessageDto"];
+            };
+        };
+        responses: {
+            /** @description Сообщение отправлено */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+            /** @description Запрещенный контент в первых двух сообщениях */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Нет доступа к чату */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Чат не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Превышен лимит запросов */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChatsController_markMessagesAsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сообщения помечены как прочитанные */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Нет доступа к чату */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Чат не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChatsController_getSupportChats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список всех чатов поддержки */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatResponseDto"][];
+                };
+            };
+            /** @description Нет прав доступа */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChatsController_assignSupportAgent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignSupportDto"];
+            };
+        };
+        responses: {
+            /** @description Сотрудник поддержки назначен */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Некорректные данные */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Нет прав доступа */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Чат не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RegionsController_findAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список регионов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RegionsController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Регион с городами */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Регион не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CitiesController_findCities: {
+        parameters: {
+            query?: {
+                /** @description Фильтр по региону (UUID) */
+                regionId?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список городов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InboxController_getAllRequests: {
+        parameters: {
+            query: {
+                category: string;
+                severity: string;
+                status: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список заявок */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InboxController_createRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInboxRequestDto"];
+            };
+        };
+        responses: {
+            /** @description Заявка создана */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Некорректные данные */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InboxController_getRequestById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    InboxController_updateStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
