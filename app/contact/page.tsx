@@ -29,11 +29,27 @@ export default function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Здесь можно добавить логику отправки формы
     try {
-      // await submitForm(formData);
-      logger.log("Form submitted:", formData);
-      // Сброс формы после успешной отправки
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+      const response = await fetch(`${API_URL}/api/inbox`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          category: "CONTACT",
+          severity: "MEDIUM",
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+
       setFormData({ name: "", email: "", message: "" });
       toast.success("Сообщение отправлено успешно!");
     } catch (error) {

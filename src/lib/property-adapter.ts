@@ -66,5 +66,10 @@ export function adaptProperty(backend: PropertyBackend): Property {
       backend.area > 0 ? Math.round(backend.price / backend.area) : undefined,
     latitude: backend.latitude,
     longitude: backend.longitude,
+    cityId: backend.cityId ?? undefined,
+    city:
+      backend.city && "name" in backend.city && typeof (backend.city as { name: string }).name === "string"
+        ? (backend.city as { name: string }).name
+        : undefined,
   };
 }

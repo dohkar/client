@@ -34,6 +34,7 @@ export const propertyService = {
     if (params?.rooms) queryParams.append("rooms", params.rooms.toString());
     if (params?.areaMin) queryParams.append("areaMin", params.areaMin.toString());
     if (params?.regionId) queryParams.append("regionId", params.regionId);
+    if (params?.cityId) queryParams.append("cityId", params.cityId);
     if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -45,6 +46,12 @@ export const propertyService = {
 
     // OpenAPI spec has content?: never, but API returns PaginatedResponse
     const response = await apiClient.get<any>(endpoint) as PaginatedResponse<PropertyBackend>;
+    
+    // Инициализируем кэш регионов на основе полученных данных
+    if (response.data && response.data.length > 0) {
+      initializeRegionCache(response.data);
+    }
+    
     return {
       ...response,
       data: response.data.map(adaptProperty),
@@ -58,6 +65,12 @@ export const propertyService = {
     const response = await apiClient.get<ApiPropertyGetByIdResponse>(
       API_ENDPOINTS.properties.getById(id)
     );
+    
+    // Инициализируем кэш регионов на основе полученных данных
+    if (response.region && "id" in response.region && "name" in response.region) {
+      initializeRegionCache([response as PropertyBackend]);
+    }
+    
     return adaptProperty(response); // Directly adapt the response
   },
 

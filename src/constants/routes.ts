@@ -54,6 +54,15 @@ export const API_ENDPOINTS = {
     getById: (id: string) => `/api/users/${id}`,
   },
 
+  // Regions & Cities
+  regions: {
+    list: "/api/regions",
+    getById: (id: string) => `/api/regions/${id}`,
+  },
+  cities: {
+    list: "/api/cities",
+  },
+
   // Properties
   properties: {
     list: "/api/properties",
@@ -86,5 +95,23 @@ export const API_ENDPOINTS = {
   upload: {
     avatar: "/api/upload/avatar",
     images: "/api/upload/images",
+  },
+
+  // Chats
+  chats: {
+    list: "/api/chats",
+    createProperty: "/api/chats/property",
+    createSupport: "/api/chats/support",
+    messages: (chatId: string) => `/api/chats/${chatId}/messages`,
+    sendMessage: (chatId: string) => `/api/chats/${chatId}/messages`,
+    markRead: (chatId: string) => `/api/chats/${chatId}/read`,
+  },
+
+  // Inbox (CONTACT + COMPLAINT)
+  inbox: {
+    create: "/api/inbox",
+    list: "/api/inbox",
+    getById: (id: string) => `/api/inbox/${id}`,
+    updateStatus: (id: string) => `/api/inbox/${id}/status`,
   },
 } as const;

@@ -3,9 +3,9 @@
 import { HeroSearch } from "@/components/features/hero-search";
 import { CategoryShowcase } from "@/components/features/category-showcase";
 import { PropertyGrid } from "@/components/features/property-grid";
+import { PropertyGridSkeleton } from "@/components/features/property-grid-skeleton";
 import { CTASection } from "@/components/features/cta-section";
 import { useProperties } from "@/hooks/use-properties";
-import { Spinner } from "@/components/ui";
 
 export default function HomePage() {
   const { data, isLoading } = useProperties({ limit: 6 });
@@ -29,9 +29,7 @@ export default function HomePage() {
             </p> */}
           </div>
           {isLoading ? (
-            <div className='flex justify-center items-center py-12'>
-              <Spinner className='w-8 h-8' />
-            </div>
+            <PropertyGridSkeleton count={6} />
           ) : (
             <PropertyGrid properties={data?.data || []} limit={6} />
           )}

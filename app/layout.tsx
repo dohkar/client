@@ -2,22 +2,26 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { ConditionalFooter } from "@/components/layout/ConditionalFooter";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { SupportButton } from "@/components/features/chats/SupportButton";
 import { APP_CONFIG } from "@/constants";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ReactQueryProvider } from "@/lib/react-query/provider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -32,9 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='ru' suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider
           attribute='class'
           defaultTheme='light'
@@ -46,8 +48,10 @@ export default function RootLayout({
               <div className='flex min-h-screen flex-col'>
                 <Header />
                 <main className='flex-1 pb-20 md:pb-0'>{children}</main>
-                <Footer />
+                <ConditionalFooter />
                 <MobileBottomNav />
+                <SupportButton />
+                <SpeedInsights />
               </div>
               <Toaster />
             </ErrorBoundary>
