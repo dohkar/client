@@ -11,6 +11,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ReactQueryProvider } from "@/lib/react-query/provider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,6 +53,7 @@ export default function RootLayout({
                 <MobileBottomNav />
                 <SupportButton />
                 <SpeedInsights />
+                <Analytics />
               </div>
               <Toaster />
             </ErrorBoundary>
