@@ -48,9 +48,9 @@ export type SocketEventMap = {
 
 export type TypingOutboundPayload = { chatId: string; isTyping: boolean };
 
-export type SocketAck<T = unknown> = {
+export type SocketAck<T = string | Message> = {
   status: "success" | "error";
-  message?: string | Message;
+  message?: T;
   count?: number;
 };
 
@@ -196,7 +196,7 @@ class SocketClient {
     chatId: string,
     text: string,
     clientMessageId: string,
-    callback?: (ack: SocketAck<{ message: Message }>) => void
+    callback?: (ack: SocketAck<Message | string>) => void
   ): void {
     if (!this.socket) {
       callback?.({

@@ -2,31 +2,35 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { socketClient, type SocketEventMap } from "@/lib/socket/socket-client";
+import {
+  socketClient,
+  type SocketEventMap,
+  type SocketAck,
+} from "@/lib/socket/socket-client";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { useAuthStore } from "@/stores";
+import { cookieStorage } from "@/lib/cookie-storage";
 import type { Message, Chat, MessagesResponse } from "@/types/chat";
 import { logger } from "@/lib/utils/logger";
 
 /**
  * Хук для работы с WebSocket подключением
+ * Передаём JWT в handshake (auth.token), т.к. при cross-origin (Vercel → Render)
+ * cookies фронта не отправляются на WebSocket.
  */
 export function useSocket() {
   const { user, isAuthenticated } = useAuthStore();
-  // Триггер для перерендера при connect/disconnect
   const [, forceUpdate] = useState(0);
 
-  // В проде access_token обычно httpOnly — JS его не видит.
-  // Для WS авторизации используем cookie в handshake (withCredentials).
-  const shouldUseFallback = !isAuthenticated || !user;
+  const token = typeof window === "undefined" ? null : cookieStorage.getAccessToken();
+  const isWsReady = Boolean(isAuthenticated && user && token);
 
   useEffect(() => {
-    if (shouldUseFallback) {
+    if (!isWsReady) {
       socketClient.disconnect();
       return;
     }
-
-    const socket = socketClient.connect();
+    const socket = socketClient.connect(token!);
 
     const handleConnect = () => {
       logger.debug("[useSocket] Connected");
@@ -45,18 +49,16 @@ export function useSocket() {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
     };
-  }, [isAuthenticated, user, shouldUseFallback]);
+  }, [isWsReady, token]);
 
   const socket = socketClient.getSocket();
-  const isWsConnected = !shouldUseFallback && socketClient.isConnected();
-  const isConnecting = !shouldUseFallback && !!socket && !socketClient.isConnected();
+  const isConnected = isWsReady && socketClient.isConnected();
+  const isConnecting = isWsReady && Boolean(socket) && !socketClient.isConnected();
 
   return {
-    isConnected: isWsConnected,
+    isConnected,
     isConnecting,
-    // fallback включаем, если не авторизован/нет user ИЛИ если WS сейчас не подключен
-    // Важно: при состоянии "connecting" не фолбечимся на REST, иначе WS никогда не "почувствуется".
-    useFallback: shouldUseFallback || !socket,
+    useFallback: !isWsReady || !socket || !isConnected,
     socket: socketClient.getSocket(),
   };
 }
@@ -322,7 +324,15 @@ export function useChatTypingAndPresence(chatId: string | null, enabled: boolean
   };
 }
 
-const ACK_TIMEOUT_MS = 17000;
+const ACK_TIMEOUT_MS = 10000;
+
+function isMessageAck(
+  ack: SocketAck<Message | string>
+): ack is SocketAck<Message> & { status: "success"; message: Message } {
+  return (
+    ack.status === "success" && ack.message != null && typeof ack.message !== "string"
+  );
+}
 
 function rollbackTempMessage(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -353,7 +363,7 @@ function rollbackTempMessage(
 export function useSendMessageWs() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const { isConnecting, useFallback } = useSocket();
+  const { isConnected, useFallback } = useSocket();
   const pendingAcksRef = useRef<
     Map<
       string,
@@ -364,7 +374,8 @@ export function useSendMessageWs() {
         tempMessageId: string;
         reject: (err: Error) => void;
       }
-    >>(new Map());
+    >
+  >(new Map());
 
   useEffect(() => {
     return () => {
@@ -385,7 +396,7 @@ export function useSendMessageWs() {
   const sendMessage = useCallback(
     (chatId: string, text: string, clientMessageId: string): Promise<Message> => {
       return new Promise((resolve, reject) => {
-        if (useFallback || !chatId || !user) {
+        if (useFallback || !isConnected || !chatId || !user) {
           reject(new Error("Not connected or chat not selected"));
           return;
         }
@@ -432,12 +443,7 @@ export function useSendMessageWs() {
 
         const timeoutId = setTimeout(() => {
           clearPending();
-          rollbackTempMessage(
-            queryClient,
-            chatId,
-            tempMessage.id,
-            clientMessageId
-          );
+          rollbackTempMessage(queryClient, chatId, tempMessage.id, clientMessageId);
           reject(new Error("ACK timeout"));
         }, ACK_TIMEOUT_MS);
 
@@ -496,14 +502,7 @@ export function useSendMessageWs() {
 
             resolve(saved);
           } else {
-            // Откатываем оптимистичное обновление при ошибке
-            rollbackTempMessage(
-              queryClient,
-              chatId,
-              tempMessage.id,
-              clientMessageId
-            );
-
+            rollbackTempMessage(queryClient, chatId, tempMessage.id, clientMessageId);
             reject(
               new Error(
                 typeof ack.message === "string" ? ack.message : "Failed to send message"
@@ -513,11 +512,11 @@ export function useSendMessageWs() {
         });
       });
     },
-    [user, useFallback, isConnecting, queryClient]
+    [user, useFallback, isConnected, queryClient]
   );
 
   return {
     sendMessage,
-    isConnected: !useFallback && !isConnecting && socketClient.isConnected(),
+    isConnected: !useFallback && isConnected,
   };
 }
