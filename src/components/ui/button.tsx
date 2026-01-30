@@ -1,33 +1,34 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:outline-none aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-5 shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98]",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-sm",
+          "bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-md hover:shadow-lg hover:brightness-105 active:brightness-95",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/95 shadow-sm",
+          "bg-gradient-to-b from-destructive to-destructive/90 text-destructive-foreground shadow-md hover:shadow-lg hover:brightness-105 active:brightness-95",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
+          "border border-input bg-background/70 backdrop-blur-sm hover:bg-accent/80 hover:border-accent-foreground/30 text-foreground shadow-sm hover:shadow active:bg-accent/60",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70",
-        ghost:
-          "hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
-        link: "text-primary underline-offset-4 hover:underline active:text-primary/80",
+          "bg-secondary/90 text-secondary-foreground shadow-sm hover:bg-secondary hover:shadow-md active:bg-secondary/80",
+        ghost: "hover:bg-accent/60 hover:text-accent-foreground active:bg-accent/40",
+        link: "text-primary underline-offset-4 hover:underline hover:text-primary/80 active:text-primary/70 p-0 h-auto",
+        // Дополнительный красивый вариант
+        fancy:
+          "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
       },
       size: {
-        default: "h-10 px-4 py-2 min-h-[44px] has-[>svg]:px-3",
-        sm: "h-9 rounded-md gap-1.5 px-3 min-h-[40px] has-[>svg]:px-2.5",
-        lg: "h-11 rounded-lg px-6 min-h-[48px] has-[>svg]:px-4",
-        icon: "size-10 min-w-[44px] min-h-[44px]",
-        "icon-sm": "size-9 min-w-[40px] min-h-[40px]",
-        "icon-lg": "size-11 min-w-[48px] min-h-[48px]",
+        default: "h-11 px-6 py-2 min-h-[44px] has-[>svg]:px-4",
+        sm: "h-9 rounded-lg px-4 min-h-[38px] has-[>svg]:px-3 gap-1.5",
+        lg: "h-12 rounded-xl px-8 text-base min-h-[52px] has-[>svg]:px-5",
+        icon: "size-11 rounded-xl min-w-[44px] min-h-[44px]",
+        "icon-sm": "size-9 rounded-lg min-w-[38px] min-h-[38px]",
+        "icon-lg": "size-12 rounded-xl min-w-[52px] min-h-[52px]",
       },
     },
     defaultVariants: {
