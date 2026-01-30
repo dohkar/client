@@ -114,7 +114,7 @@ export function Header() {
   // Мемоизируем имя пользователя для оптимизации
   const userName = useMemo(() => formatUserName(user?.name), [user?.name]);
   const userInitial = useMemo(() => userName.charAt(0).toUpperCase(), [userName]);
-  
+
   // Проверка роли админа
   const isAdmin = useMemo(() => user?.role?.toUpperCase() === "ADMIN", [user?.role]);
 
@@ -123,10 +123,7 @@ export function Header() {
       <div className='container mx-auto px-4 h-16 flex items-center justify-between'>
         {/* Logo */}
         <Link href={ROUTES.home} className='flex items-center gap-2 shrink-0 group'>
-          <div className='h-8 w-8 gradient-mountains rounded-md flex items-center justify-center shadow-md transition-transform group-hover:scale-105 md:hidden'>
-            <span className='text-white font-bold text-lg'>Д</span>
-          </div>
-          <div className='hidden md:flex items-center gap-2 px-3 py-1.5 gradient-mountains rounded-md shadow-md transition-transform group-hover:scale-105'>
+          <div className='flex items-center gap-2 px-3 py-1.5 gradient-mountains rounded-md shadow-md transition-transform group-hover:scale-105'>
             <span className='text-white font-bold text-lg tracking-tight'>Дохкар</span>
           </div>
         </Link>
@@ -179,7 +176,10 @@ export function Header() {
                     <DropdownMenuSeparator />
                     {isAdmin && (
                       <DropdownMenuItem asChild>
-                        <Link href={`${ROUTES.dashboard}/admin`} className='cursor-pointer text-red-600'>
+                        <Link
+                          href={`${ROUTES.dashboard}/admin`}
+                          className='cursor-pointer text-red-600'
+                        >
                           <Shield className='mr-2 h-4 w-4' />
                           Админ-панель
                         </Link>

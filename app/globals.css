@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -19,7 +19,7 @@
   --popover-foreground: oklch(0.25 0.01 60);
 
   /* Основной цвет - глубокий изумрудный зеленый (горные леса Кавказа) */
-  --primary: oklch(0.45 0.15 160); /* Насыщенный зеленый */
+  --primary: oklch(0.45 0.4 180); /* Насыщенный зеленый */
   --primary-foreground: oklch(0.99 0 0);
 
   /* Вторичный - теплый серый камень */
@@ -39,16 +39,16 @@
   --destructive-foreground: oklch(0.99 0 0);
 
   /* Границы и инпуты */
-  --border: oklch(0.90 0.005 75);
+  --border: oklch(0.9 0.005 75);
   --input: oklch(0.92 0.005 75);
   --ring: oklch(0.45 0.15 160);
 
   /* Графики */
-  --chart-1: oklch(0.45 0.15 160); /* Зеленый */
+  --chart-1: oklch(0.45 0.15 180); /* Зеленый */
   --chart-2: oklch(0.75 0.15 65); /* Золотой */
-  --chart-3: oklch(0.55 0.10 180); /* Голубой */
+  --chart-3: oklch(0.55 0.1 180); /* Голубой */
   --chart-4: oklch(0.65 0.12 45); /* Оранжевый */
-  --chart-5: oklch(0.50 0.08 120); /* Темно-зеленый */
+  --chart-5: oklch(0.5 0.08 120); /* Темно-зеленый */
 
   --radius: 0.5rem;
 
@@ -59,7 +59,7 @@
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(0.96 0.005 75);
   --sidebar-accent-foreground: oklch(0.25 0.01 60);
-  --sidebar-border: oklch(0.90 0.005 75);
+  --sidebar-border: oklch(0.9 0.005 75);
   --sidebar-ring: oklch(0.45 0.15 160);
 }
 
@@ -79,17 +79,17 @@
   --muted-foreground: oklch(0.65 0.015 75);
   --accent: oklch(0.72 0.16 65); /* Яркий золотой */
   --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.50 0.20 27);
+  --destructive: oklch(0.5 0.2 27);
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.32 0.01 60);
-  --input: oklch(0.30 0.01 60);
+  --input: oklch(0.3 0.01 60);
   --ring: oklch(0.58 0.16 160);
   --chart-1: oklch(0.58 0.16 160);
   --chart-2: oklch(0.72 0.16 65);
-  --chart-3: oklch(0.60 0.12 180);
+  --chart-3: oklch(0.6 0.12 180);
   --chart-4: oklch(0.68 0.13 45);
-  --chart-5: oklch(0.58 0.10 120);
-  --sidebar: oklch(0.20 0.01 60);
+  --chart-5: oklch(0.58 0.1 120);
+  --sidebar: oklch(0.2 0.01 60);
   --sidebar-foreground: oklch(0.96 0.005 75);
   --sidebar-primary: oklch(0.58 0.16 160);
   --sidebar-primary-foreground: oklch(0.99 0 0);
@@ -101,8 +101,8 @@
 
 @theme inline {
   /* Используем Inter для читабельности и современности */
-  --font-sans: 'Inter', 'Geist', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Geist Mono', 'SF Mono', monospace;
+  --font-sans: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", "SF Mono", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -147,7 +147,10 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1, "kern" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1,
+      "kern" 1;
   }
 
   /* Safe area insets для iOS */
@@ -220,40 +223,36 @@
 
   /* Кавказские паттерны для декоративных элементов */
   .pattern-caucasus {
-    background-image:
-      repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 10px,
-        oklch(0.45 0.15 160 / 0.03) 10px,
-        oklch(0.45 0.15 160 / 0.03) 20px
-      );
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      oklch(0.45 0.15 160 / 0.03) 10px,
+      oklch(0.45 0.15 160 / 0.03) 20px
+    );
   }
 
   /* Градиенты в стиле гор */
   .gradient-mountains {
     background: linear-gradient(
       135deg,
-      oklch(0.45 0.15 160) 0%,
-      oklch(0.42 0.12 155) 50%,
-      oklch(0.38 0.10 150) 100%
+      oklch(0.45 0.15 180) 0%,
+      oklch(0.42 0.12 175) 50%,
+      oklch(0.38 0.1 160) 100%
     );
   }
 
   .background-mountains {
     /* background: url('/images/mountains.jpg') no-repeat center center; */
     /* background: url('https://img.freepik.com/premium-photo/scenic-view-mountains-against-sky-sunrise_1048944-7757387.jpg?semt=ais_hybrid&w=740') no-repeat center center; */
-    background: url('https://avatars.mds.yandex.net/i?id=366621b0a1025d34460a4c710ed27b643acac8af-5305635-images-thumbs&n=13') no-repeat center center;
+    background: url("https://avatars.mds.yandex.net/i?id=366621b0a1025d34460a4c710ed27b643acac8af-5305635-images-thumbs&n=13")
+      no-repeat center center;
     background-size: cover;
   }
 
   /* Золотой акцент */
   .gradient-gold {
-    background: linear-gradient(
-      135deg,
-      oklch(0.75 0.15 65) 0%,
-      oklch(0.72 0.14 60) 100%
-    );
+    background: linear-gradient(135deg, oklch(0.75 0.15 65) 0%, oklch(0.72 0.14 60) 100%);
   }
 
   .text-gold {
@@ -351,7 +350,7 @@
 
   /* Левая цветная полоска-индикатор */
   .toast-base::before {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     top: 0;
@@ -359,8 +358,6 @@
     width: 4px;
     background: var(--border);
   }
-
-
 
   /* Иконка wrapper */
   .toast-icon-wrapper {
@@ -375,35 +372,35 @@
 
   /* Иконка успеха - улучшенный контраст */
   .toast-icon-success {
-    background: linear-gradient(145deg, oklch(0.50 0.14 160), oklch(0.44 0.13 155));
+    background: linear-gradient(145deg, oklch(0.5 0.14 160), oklch(0.44 0.13 155));
     color: oklch(0.98 0 0);
     box-shadow: 0 2px 6px oklch(0.45 0.15 160 / 0.35);
   }
 
   /* Иконка ошибки */
   .toast-icon-error {
-    background: linear-gradient(145deg, oklch(0.56 0.19 27), oklch(0.50 0.17 25));
+    background: linear-gradient(145deg, oklch(0.56 0.19 27), oklch(0.5 0.17 25));
     color: oklch(0.98 0 0);
-    box-shadow: 0 2px 6px oklch(0.55 0.20 27 / 0.35);
+    box-shadow: 0 2px 6px oklch(0.55 0.2 27 / 0.35);
   }
 
   /* Иконка предупреждения */
   .toast-icon-warning {
-    background: linear-gradient(145deg, oklch(0.76 0.14 65), oklch(0.70 0.13 60));
+    background: linear-gradient(145deg, oklch(0.76 0.14 65), oklch(0.7 0.13 60));
     color: oklch(0.18 0.02 60);
     box-shadow: 0 2px 6px oklch(0.75 0.15 65 / 0.35);
   }
 
   /* Иконка информации */
   .toast-icon-info {
-    background: linear-gradient(145deg, oklch(0.56 0.15 250), oklch(0.50 0.13 245));
+    background: linear-gradient(145deg, oklch(0.56 0.15 250), oklch(0.5 0.13 245));
     color: oklch(0.98 0 0);
     box-shadow: 0 2px 6px oklch(0.55 0.16 250 / 0.35);
   }
 
   /* Иконка загрузки */
   .toast-icon-loading {
-    background: linear-gradient(145deg, oklch(0.56 0.04 260), oklch(0.50 0.03 255));
+    background: linear-gradient(145deg, oklch(0.56 0.04 260), oklch(0.5 0.03 255));
     color: oklch(0.98 0 0);
     box-shadow: 0 2px 6px oklch(0.55 0.05 260 / 0.3);
   }
@@ -525,23 +522,23 @@
 
   /* Стили по типам - цветные полоски */
   .toast-success::before {
-    background: linear-gradient(180deg, oklch(0.50 0.14 160), oklch(0.44 0.12 155));
+    background: linear-gradient(180deg, oklch(0.5 0.14 160), oklch(0.44 0.12 155));
   }
 
   .toast-error::before {
-    background: linear-gradient(180deg, oklch(0.56 0.19 27), oklch(0.50 0.17 25));
+    background: linear-gradient(180deg, oklch(0.56 0.19 27), oklch(0.5 0.17 25));
   }
 
   .toast-warning::before {
-    background: linear-gradient(180deg, oklch(0.76 0.14 65), oklch(0.70 0.12 60));
+    background: linear-gradient(180deg, oklch(0.76 0.14 65), oklch(0.7 0.12 60));
   }
 
   .toast-info::before {
-    background: linear-gradient(180deg, oklch(0.56 0.15 250), oklch(0.50 0.13 245));
+    background: linear-gradient(180deg, oklch(0.56 0.15 250), oklch(0.5 0.13 245));
   }
 
   .toast-loading::before {
-    background: linear-gradient(180deg, oklch(0.56 0.04 260), oklch(0.50 0.03 255));
+    background: linear-gradient(180deg, oklch(0.56 0.04 260), oklch(0.5 0.03 255));
   }
 
   /* Анимации появления/исчезновения - ускоренные */
@@ -686,7 +683,7 @@
   }
 
   .dark .toast-icon-error {
-    background: linear-gradient(145deg, oklch(0.60 0.17 27), oklch(0.54 0.15 25));
+    background: linear-gradient(145deg, oklch(0.6 0.17 27), oklch(0.54 0.15 25));
     color: oklch(0.98 0 0);
     box-shadow: 0 2px 8px oklch(0.58 0.18 27 / 0.4);
   }

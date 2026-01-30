@@ -47,9 +47,9 @@ export default function DashboardPage() {
   // Показываем загрузку во время инициализации
   if (!isInitialized || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground">Загрузка...</p>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-center'>
+          <p className='text-muted-foreground'>Загрузка...</p>
         </div>
       </div>
     );
@@ -99,7 +99,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className='min-h-screen bg-muted/30'>
+    <div className='min-h-[calc(100vh-65px)] bg-muted/30'>
       <div className='container mx-auto px-4 py-6 sm:py-8 md:py-12'>
         <div className='max-w-6xl mx-auto'>
           <div className='mb-6 sm:mb-8'>
@@ -119,9 +119,7 @@ export default function DashboardPage() {
                   <Card className='hover:shadow-lg transition-shadow cursor-pointer border-primary/20'>
                     <CardContent className='p-4 sm:p-6'>
                       <div className='flex items-center justify-between mb-3 sm:mb-4'>
-                        <Icon
-                          className={`w-6 h-6 sm:w-8 sm:h-8 ${stat.color}`}
-                        />
+                        <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${stat.color}`} />
                         <span className='text-2xl sm:text-3xl font-bold'>
                           {stat.value}
                         </span>
@@ -144,9 +142,7 @@ export default function DashboardPage() {
               <Link href={ROUTES.sell} className='flex-1'>
                 <Button className='w-full btn-caucasus min-h-[44px]'>
                   <Home className='w-4 h-4 mr-2' />
-                  <span className='text-sm sm:text-base'>
-                    Разместить объявление
-                  </span>
+                  <span className='text-sm sm:text-base'>Разместить объявление</span>
                 </Button>
               </Link>
               <Link href={`${ROUTES.dashboard}/profile`} className='flex-1'>

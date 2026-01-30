@@ -116,7 +116,9 @@ export function HeroSearch() {
               {/* Search button */}
               <Button
                 type='submit'
-                className='h-12 px-8 font-semibold'
+                variant={"default"}
+                size={"lg"}
+                className='h-12 px-6 font-semibold text-md hover:bg-primary/60 transition-all duration-75 active:translate-y-px'
                 aria-label='Начать поиск'
                 disabled={Boolean(errors.query)} // простая блокировка если инпут пустой
               >
@@ -126,18 +128,18 @@ export function HeroSearch() {
           </form>
 
           {/* Popular cities */}
-          <div className="flex justify-center">
-            <div className="flex flex-wrap gap-3 bg-black/30 backdrop-blur-lg rounded-2xl px-5 py-2 shadow-lg border border-white/10">
+          <div className='flex justify-center'>
+            <div className='flex flex-wrap gap-3 bg-black/30 backdrop-blur-lg rounded-2xl px-5 py-2 shadow-lg border border-white/10'>
               {POPULAR_CITIES.map((city) => (
                 <button
                   key={city}
                   onClick={() => performSearch({ query: city, dealType: validDealType })}
-                  className="flex cursor-pointer items-center gap-2 px-4 py-1.5 bg-transparent border border-primary/40 rounded-full hover:border-primary/80 hover:bg-primary/10 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold text-gold font-medium"
+                  className='flex cursor-pointer items-center gap-2 px-4 py-1.5 bg-transparent border border-primary/40 rounded-full hover:border-primary/80 hover:bg-primary/10 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold text-gold font-medium'
                   style={{
                     boxShadow: "0 1.5px 0 0 oklch(0.75 0.15 65 / 0.3)",
                   }}
                 >
-                  <MapPin className="h-4 w-4 text-gold" />
+                  <MapPin className='h-4 w-4 text-gold' />
                   {city}
                 </button>
               ))}
