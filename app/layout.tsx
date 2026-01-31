@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
@@ -47,7 +48,13 @@ export default function RootLayout({
           <ReactQueryProvider>
             <ErrorBoundary>
               <div className='flex min-h-screen flex-col'>
-                <Header />
+                <Suspense
+                  fallback={
+                    <header className='sticky top-0 z-50 w-full border-b bg-background/95 h-16' />
+                  }
+                >
+                  <Header />
+                </Suspense>
                 <main className='flex-1 pb-20 md:pb-0'>{children}</main>
                 <ConditionalFooter />
                 <MobileBottomNav />

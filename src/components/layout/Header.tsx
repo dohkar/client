@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useCallback, useMemo, useState } from "react";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Menu,
@@ -11,6 +12,7 @@ import {
   User,
   LogOut,
   LayoutDashboard,
+  List,
   Heart,
   UserCircle,
   Shield,
@@ -34,21 +36,124 @@ const CATEGORIES = [
   { name: "Коммерция", href: `${ROUTES.search}?type=commercial` },
 ] as const;
 
+const USER_MENU_ITEMS = [
+  { href: ROUTES.dashboard, icon: LayoutDashboard, label: "Кабинет" },
+  { href: `${ROUTES.dashboard}/profile`, icon: UserCircle, label: "Профиль" },
+  { href: ROUTES.messages, icon: MessageSquare, label: "Сообщения" },
+  { href: ROUTES.favorites, icon: Heart, label: "Избранное" },
+  { href: `${ROUTES.dashboard}/listings`, icon: List, label: "Мои объявления" },
+] as const;
+
+function CategoryLinks({
+  categories,
+}: {
+  categories: { name: string; href: string; isActive: boolean }[];
+}) {
+  return (
+    <>
+      {categories.map((cat) => (
+        <Link
+          key={cat.name}
+          href={cat.href}
+          className={cn(
+            "relative py-1 transition-colors hover:text-primary",
+            cat.isActive && "text-primary font-semibold",
+            "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-primary after:transition-all after:duration-300",
+            cat.isActive ? "after:w-full" : "after:w-0 hover:after:w-full"
+          )}
+          aria-current={cat.isActive ? "page" : undefined}
+        >
+          {cat.name}
+        </Link>
+      ))}
+    </>
+  );
+}
+
+function UserMenuLinks({ isAdmin }: { isAdmin: boolean }) {
+  return (
+    <>
+      {isAdmin && (
+        <Link href={`${ROUTES.dashboard}/admin`}>
+          <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-red-600'>
+            <Shield className='h-4 w-4 shrink-0' />
+            Админ-панель
+          </div>
+        </Link>
+      )}
+      {USER_MENU_ITEMS.map(({ href, icon: Icon, label }) => (
+        <Link href={href} key={href}>
+          <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
+            <Icon className='h-4 w-4 shrink-0' />
+            {label}
+          </div>
+        </Link>
+      ))}
+    </>
+  );
+}
+
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const { isAuthenticated, user, logout } = useAuthStore();
   const { isMobileMenuOpen, toggleMobileMenu, setMobileMenuOpen } = useUIStore();
-  const [isClosing, setIsClosing] = useState(false);
-  const isPortalVisible = isMobileMenuOpen || isClosing;
 
-  const userName = useMemo(() => formatUserName(user?.name), [user?.name]);
-  const userInitial = useMemo(() => userName.charAt(0).toUpperCase(), [userName]);
-  const isAdmin = useMemo(() => user?.role?.toUpperCase() === "ADMIN", [user?.role]);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Блокировка скролла при открытом или закрывающемся мобильном меню
+  const mobileMenuPanelRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isAdmin = user?.role === "admin";
+  const userName = formatUserName(user?.name);
+  const userInitial = userName.charAt(0).toUpperCase();
+
+  // Вычисляем актуальные категории
+  const categories = useMemo(() => {
+    return CATEGORIES.map((cat) => {
+      const type = new URLSearchParams(cat.href.split("?")[1] || "").get("type");
+      const isActive = pathname === ROUTES.search && searchParams.get("type") === type;
+      return { ...cat, isActive };
+    });
+  }, [pathname, searchParams]);
+
+  // Управление анимацией мобильного меню
   useEffect(() => {
-    if (isPortalVisible) {
+    if (isMobileMenuOpen) {
+      setShowMenu(true);
+      setIsAnimating(false);
+      if (timeoutId.current) clearTimeout(timeoutId.current);
+      timeoutId.current = setTimeout(() => {
+        setIsAnimating(true);
+        timeoutId.current = null;
+      }, 20);
+      return () => {
+        if (timeoutId.current) clearTimeout(timeoutId.current);
+      };
+    }
+    if (showMenu) {
+      setIsAnimating(false);
+      if (timeoutId.current) clearTimeout(timeoutId.current);
+      timeoutId.current = setTimeout(() => {
+        setShowMenu(false);
+        timeoutId.current = null;
+      }, 300);
+      return () => {
+        if (timeoutId.current) clearTimeout(timeoutId.current);
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobileMenuOpen]);
+
+  // Запрет скролла body при открытом мобильном меню
+  useEffect(() => {
+    if (showMenu) {
       document.body.style.overflow = "hidden";
       document.body.style.overflowX = "hidden";
     } else {
@@ -59,326 +164,298 @@ export function Header() {
       document.body.style.removeProperty("overflow");
       document.body.style.removeProperty("overflow-x");
     };
-  }, [isPortalVisible]);
+  }, [showMenu]);
 
-  // Закрытие меню при смене страницы
+  // Закрытие меню при смене route
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname, setMobileMenuOpen]);
 
-  const closeMobileMenu = useCallback(() => {
-    setMobileMenuOpen(false);
-    setIsClosing(true);
-  }, [setMobileMenuOpen]);
+  // Закрыть мобильное меню
+  const closeMobileMenu = useCallback(
+    () => setMobileMenuOpen(false),
+    [setMobileMenuOpen]
+  );
 
+  // Закрытие меню overlay-кликом
+  const handleOverlayClick = closeMobileMenu;
+
+  // Возврат фокуса на меню-кнопку
   useEffect(() => {
-    if (!isClosing) return;
-    const t = setTimeout(() => setIsClosing(false), 300);
-    return () => clearTimeout(t);
-  }, [isClosing]);
+    if (!showMenu && menuBtnRef.current && document.activeElement === document.body) {
+      menuBtnRef.current.focus({ preventScroll: true });
+    }
+  }, [showMenu]);
 
-  const handleOverlayClick = useCallback(() => {
-    closeMobileMenu();
-  }, [closeMobileMenu]);
-
-  const handleMenuClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-
-  // Закрытие по Escape
+  // Escape — закрытие меню
   useEffect(() => {
-    if (!isMobileMenuOpen) return;
-    const handleEscape = (e: KeyboardEvent) => {
+    if (!showMenu) return;
+    const handle = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeMobileMenu();
     };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isMobileMenuOpen, closeMobileMenu]);
+    document.addEventListener("keydown", handle);
+    return () => document.removeEventListener("keydown", handle);
+  }, [showMenu, closeMobileMenu]);
 
+  // Tab-фокус внутри мобильного меню (фокус трап)
+  useEffect(() => {
+    if (!showMenu || !isAnimating || !mobileMenuPanelRef.current) return;
+    closeBtnRef.current?.focus({ preventScroll: true });
+    const panel = mobileMenuPanelRef.current;
+    const selector =
+      'button:not([disabled]):not([tabindex="-1"]), [href]:not([tabindex="-1"]), input:not([tabindex="-1"]), select:not([tabindex="-1"]), textarea:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Tab" || !panel) return;
+      const focusables = Array.from(panel.querySelectorAll<HTMLElement>(selector)).filter(
+        (el) => el.offsetParent !== null && !el.hasAttribute("disabled")
+      );
+      if (!focusables.length) return;
+      const [first, ...rest] = focusables;
+      const last = rest[rest.length - 1] || first;
+      const active = document.activeElement as HTMLElement;
+      if (e.shiftKey) {
+        if (active === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    panel.addEventListener("keydown", onKeyDown);
+    return () => panel.removeEventListener("keydown", onKeyDown);
+  }, [showMenu, isAnimating]);
+
+  // Logout (PC version)
   const handleLogout = useCallback(async () => {
+    setIsLoggingOut(true);
     try {
       await logout();
       router.push(ROUTES.home);
-    } catch {
-      router.push(ROUTES.home);
+    } finally {
+      setIsLoggingOut(false);
     }
   }, [logout, router]);
 
+  // Logout (Mobile menu)
+  const handleMobileLogout = useCallback(() => {
+    if (isLoggingOut) return;
+    closeMobileMenu();
+    setTimeout(handleLogout, 300);
+  }, [isLoggingOut, closeMobileMenu, handleLogout]);
+
+  // ──────────────────────────────────────────────────────────────────────────────
+
   return (
     <header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/75 transition-shadow'>
-      <div className='container mx-auto px-4 h-16 flex items-center justify-between'>
-        {/* Логотип */}
+      <span role='status' aria-live='polite' className='sr-only'>
+        {isMobileMenuOpen ? "Меню открыто" : "Меню закрыто"}
+      </span>
+      <div className='container mx-auto px-4 h-16 flex items-center justify-between gap-4'>
+        {/* Branding */}
         <Link
           href={ROUTES.home}
-          className='flex items-center group shrink-0 focus:outline-none'
+          className='flex items-center group shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md'
+          aria-label='Дохкар — на главную'
         >
-          <span
-            className='
-              text-2xl md:text-3xl font-extrabold tracking-[0.025em]
-              bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900
-              bg-clip-text text-transparent
-              transition-all duration-300
-              group-hover:scale-105 group-hover:drop-shadow-md
-            '
-          >
+          <span className='text-xl md:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 bg-clip-text text-transparent transition-all duration-200 group-hover:opacity-90'>
             Дохкар
           </span>
         </Link>
-
-        {/* Навигация десктоп */}
-        <nav className='hidden md:flex items-center gap-8 text-sm font-medium'>
-          {CATEGORIES.map((cat) => (
-            <Link
-              key={cat.name}
-              href={cat.href}
-              className={cn(
-                "relative py-1 transition-colors hover:text-primary",
-                pathname.includes(cat.href.split("?")[0]) && "text-primary font-semibold",
-                "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-primary after:transition-all after:duration-300",
-                pathname.includes(cat.href.split("?")[0])
-                  ? "after:w-full"
-                  : "after:w-0 hover:after:w-full"
-              )}
-            >
-              {cat.name}
-            </Link>
-          ))}
+        {/* Desktop Nav */}
+        <nav
+          className='hidden md:flex items-center gap-10 text-sm font-medium'
+          aria-label='Категории'
+        >
+          <CategoryLinks categories={categories} />
         </nav>
-
-        {/* Правая часть */}
-        <div className='flex items-center gap-3 md:gap-4'>
-          {/* Авторизация десктоп */}
-          <div className='hidden md:flex items-center gap-3'>
+        {/* Actions */}
+        <div className='flex items-center gap-2 md:gap-3'>
+          <div className='hidden md:flex items-center gap-2'>
             {isAuthenticated ? (
               <>
-                <Link href={ROUTES.favorites}>
-                  <Button variant='ghost' size='icon' className='h-9 w-9'>
+                <Link href={ROUTES.favorites} aria-label='Избранное'>
+                  <Button variant='ghost' size='icon-sm' className='shrink-0'>
                     <Heart className='h-5 w-5' />
                   </Button>
                 </Link>
-
-                <HoverCard openDelay={80} closeDelay={200}>
+                <HoverCard openDelay={100} closeDelay={150}>
                   <HoverCardTrigger asChild>
                     <Link
                       href={`${ROUTES.dashboard}/profile`}
-                      className='flex items-center gap-2.5 hover:opacity-90 transition'
+                      className='flex items-center gap-2 hover:opacity-90 transition shrink-0'
+                      aria-label='Профиль'
                     >
-                      <Avatar className='h-9 w-9 border border-border/60 shadow-sm'>
+                      <Avatar className='h-8 w-8 border border-border/60 shadow-sm shrink-0'>
                         <AvatarImage src={user?.avatar} alt={userName} />
-                        <AvatarFallback className='bg-primary/10 text-primary font-medium'>
+                        <AvatarFallback className='bg-primary/10 text-primary text-sm font-medium'>
                           {userInitial}
                         </AvatarFallback>
                       </Avatar>
-                      <span className='hidden lg:inline font-medium text-sm text-foreground/90'>
+                      <span className='hidden lg:inline font-medium text-sm text-foreground/90 truncate max-w-[120px]'>
                         {userName}
                       </span>
                     </Link>
                   </HoverCardTrigger>
-
                   <HoverCardContent
                     align='end'
-                    sideOffset={12}
-                    className='w-64 p-2 shadow-2xl rounded-xl'
+                    sideOffset={8}
+                    className='w-56 p-1.5 shadow-xl rounded-xl'
                   >
-                    <div className='space-y-1'>
-                      {isAdmin && (
-                        <Link href={`${ROUTES.dashboard}/admin`}>
-                          <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-red-600'>
-                            <Shield className='h-4 w-4' />
-                            Админ-панель
-                          </div>
-                        </Link>
-                      )}
-                      <Link href={ROUTES.dashboard}>
-                        <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
-                          <LayoutDashboard className='h-4 w-4' />
-                          Кабинет
-                        </div>
-                      </Link>
-                      <Link href={`${ROUTES.dashboard}/profile`}>
-                        <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
-                          <UserCircle className='h-4 w-4' />
-                          Профиль
-                        </div>
-                      </Link>
-                      <Link href={`${ROUTES.messages}`}>
-                        <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
-                          <MessageSquare className='h-4 w-4' /> {/* или другой иконкой */}
-                          Сообщения
-                        </div>
-                      </Link>
-                      <Link href={ROUTES.favorites}>
-                        <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
-                          <Heart className='h-4 w-4' />
-                          Избранное
-                        </div>
-                      </Link>
-                      <Link href={`${ROUTES.dashboard}/listings`}>
-                        <div className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
-                          <LayoutDashboard className='h-4 w-4' />
-                          Мои объявления
-                        </div>
-                      </Link>
+                    <div className='space-y-0.5'>
+                      <UserMenuLinks isAdmin={isAdmin} />
                     </div>
-
-                    <div className='pt-2 mt-1 border-t'>
-                      <div
+                    <div className='pt-1.5 mt-1 border-t'>
+                      <button
+                        type='button'
                         onClick={handleLogout}
-                        className='flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-destructive/10 cursor-pointer text-destructive'
+                        className='flex w-full items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-destructive/10 cursor-pointer text-destructive'
+                        disabled={isLoggingOut}
                       >
-                        <LogOut className='h-4 w-4' />
-                        Выйти
-                      </div>
+                        <LogOut className='h-4 w-4 shrink-0' />
+                        {isLoggingOut ? "Выход…" : "Выйти"}
+                      </button>
                     </div>
                   </HoverCardContent>
                 </HoverCard>
               </>
             ) : (
               <Link href={ROUTES.login}>
-                <Button variant='outline' size='sm' className='gap-2'>
+                <Button variant='outline' size='sm' className='gap-1.5 shrink-0'>
                   <User className='h-4 w-4' />
                   Войти
                 </Button>
               </Link>
             )}
           </div>
-
-          {/* Кнопка Разместить */}
-          <Link href={ROUTES.sell}>
-            <Button className='bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all h-10 px-4 md:px-6 gap-2'>
-              <PlusCircle className='h-4.5 w-4.5' />
+          <Link href={ROUTES.sell} className='shrink-0'>
+            <Button
+              size='sm'
+              className='bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all h-9 md:h-10 px-3 md:px-5 gap-1.5'
+            >
+              <PlusCircle className='size-5' />
               <span className='hidden sm:inline'>Разместить</span>
-              <span className='sm:hidden'>+</span>
             </Button>
           </Link>
-
-          {/* Кнопка мобильного меню */}
           <button
-            className='md:hidden p-2 hover:bg-accent rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center'
+            ref={menuBtnRef}
+            type='button'
+            className={cn(
+              "md:hidden p-2.5 hover:bg-accent rounded-xl transition-colors flex items-center justify-center touch-manipulation",
+              "min-h-[44px] min-w-[44px]"
+            )}
             onClick={toggleMobileMenu}
             aria-label={isMobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
+            aria-expanded={isMobileMenuOpen}
           >
-            {isMobileMenuOpen ? <X className='h-6 w-6' /> : <Menu className='h-6 w-6' />}
+            {isMobileMenuOpen ? <X className='h-5 w-5' /> : <Menu className='h-5 w-5' />}
           </button>
         </div>
       </div>
-
-      {/* Мобильное меню: портал поверх всего с непрозрачной панелью */}
+      {/* Мобильное меню */}
       {typeof document !== "undefined" &&
-        isPortalVisible &&
+        showMenu &&
         createPortal(
-          <div className='fixed inset-0 z-[100] md:hidden' aria-hidden='true'>
-            {/* Оверлей — более мягкий, чуть прозрачнее */}
+          <div className='fixed inset-0 z-[100] md:hidden'>
             <div
               className={cn(
-                "absolute inset-0 bg-black/20 backdrop-blur-md transition-opacity duration-400",
-                isClosing && "opacity-0"
+                "absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300",
+                !isAnimating && "opacity-0 pointer-events-none"
               )}
+              aria-hidden={!isAnimating}
               onClick={handleOverlayClick}
             />
-
-            {/* Панель меню — светлая, с лёгким blur, скруглённые углы слева */}
             <div
+              ref={mobileMenuPanelRef}
               role='dialog'
               aria-modal='true'
-              aria-label='Меню навигации'
+              aria-label='Мобильное меню'
+              aria-labelledby='header-mobile-menu-title'
+              data-state={isAnimating ? "open" : "closed"}
               className={cn(
-                "absolute top-0 right-0 bottom-0 w-80 max-w-[90vw]",
-                "bg-background/95 backdrop-blur-xl border-l border-border/50",
-                "shadow-2xl rounded-l-3xl overflow-hidden",
-                "transition-transform duration-400 ease-out",
-                isClosing ? "translate-x-full" : "translate-x-0"
+                "absolute top-0 right-0 bottom-0 w-80 max-w-[90vw] flex flex-col bg-background border-l border-border/50 shadow-2xl rounded-l-3xl overflow-hidden transition-transform duration-300 ease-out",
+                "data-[state=closed]:translate-x-full",
+                "data-[state=open]:translate-x-0"
               )}
-              onClick={handleMenuClick}
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Шапка: логотип + крестик */}
-              <div className='sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-background/80 backdrop-blur-md border-b border-border/40'>
-                <span className='text-xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent'>
-                  Дохкар
-                </span>
-                <button
+              <div className='sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-background/95 backdrop-blur-md border-b border-border/40 shrink-0'>
+                <Link
+                  href={ROUTES.home}
                   onClick={closeMobileMenu}
-                  className='p-2 cursor-pointer flex items-center justify-center rounded-full hover:bg-accent transition-colors focus:outline-none'
+                  className='text-xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent'
+                  tabIndex={0}
+                >
+                  <span id='header-mobile-menu-title'>Дохкар</span>
+                </Link>
+                <button
+                  ref={closeBtnRef}
+                  type='button'
+                  onClick={closeMobileMenu}
+                  className='p-2.5 rounded-full hover:bg-accent transition-colors focus:outline-none'
                   aria-label='Закрыть меню'
                 >
-                  <X className='h-6 w-6 text-foreground' />
+                  <X className='h-6 w-6' />
                 </button>
               </div>
-
-              {/* Контент с прокруткой */}
-              <div className='flex-1 overflow-y-auto overscroll-contain px-4 py-6'>
-                {/* Категории */}
-                <div className='space-y-2 mb-8'>
-                  <p className='px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+              <div className='flex-1 overflow-y-auto px-4 py-6 space-y-8'>
+                <div className='space-y-2'>
+                  <p className='px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                     Категории
                   </p>
-                  {CATEGORIES.map((cat) => (
+                  {categories.map((cat) => (
                     <Link
                       key={cat.name}
                       href={cat.href}
-                      className='flex items-center px-5 py-3.5 text-base font-medium rounded-xl hover:bg-accent/70 active:bg-accent transition-colors'
-                      onClick={() => closeMobileMenu()}
+                      className={cn(
+                        "flex items-center px-4 py-3.5 text-base font-medium rounded-xl hover:bg-accent/70 active:bg-accent transition-colors min-h-[48px]",
+                        cat.isActive && "text-primary font-semibold"
+                      )}
+                      aria-current={cat.isActive ? "page" : undefined}
+                      onClick={closeMobileMenu}
                     >
                       {cat.name}
                     </Link>
                   ))}
                 </div>
-
-                {/* Аккаунт */}
                 {isAuthenticated ? (
-                  <div className='space-y-2'>
-                    <p className='px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                  <div className='space-y-2 border-t pt-5'>
+                    <p className='px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                       Аккаунт
                     </p>
-
                     {isAdmin && (
-                      <Link href={`${ROUTES.dashboard}/admin`}>
-                        <div className='flex items-center gap-3.5 px-5 py-3.5 rounded-xl hover:bg-red-500/10 text-red-600 transition-colors'>
+                      <Link href={`${ROUTES.dashboard}/admin`} onClick={closeMobileMenu}>
+                        <div className='flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-red-500/10 text-red-600 transition-colors min-h-[48px]'>
                           <Shield className='h-5 w-5' />
                           Админ-панель
                         </div>
                       </Link>
                     )}
-
-                    <Link href={ROUTES.dashboard}>
-                      <div className='flex items-center gap-3.5 px-5 py-3.5 rounded-xl hover:bg-accent/70 transition-colors'>
-                        <LayoutDashboard className='h-5 w-5' />
-                        Кабинет
-                      </div>
-                    </Link>
-
-                    <Link href={`${ROUTES.dashboard}/profile`}>
-                      <div className='flex items-center gap-3.5 px-5 py-3.5 rounded-xl hover:bg-accent/70 transition-colors'>
-                        <UserCircle className='h-5 w-5' />
-                        Профиль
-                      </div>
-                    </Link>
-
-                    <Link href={ROUTES.favorites}>
-                      <div className='flex items-center gap-3.5 px-5 py-3.5 rounded-xl hover:bg-accent/70 transition-colors'>
-                        <Heart className='h-5 w-5' />
-                        Избранное
-                      </div>
-                    </Link>
-
-                    <div
-                      onClick={() => {
-                        closeMobileMenu();
-                        handleLogout();
-                      }}
-                      className='flex items-center gap-3.5 px-5 py-3.5 rounded-xl hover:bg-destructive/10 text-destructive transition-colors cursor-pointer'
+                    {USER_MENU_ITEMS.map(({ href, icon: Icon, label }) => (
+                      <Link href={href} onClick={closeMobileMenu} key={href}>
+                        <div className='flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-accent/70 transition-colors min-h-[48px]'>
+                          <Icon className='h-5 w-5' />
+                          {label}
+                        </div>
+                      </Link>
+                    ))}
+                    <button
+                      type='button'
+                      onClick={handleMobileLogout}
+                      disabled={isLoggingOut}
+                      className='flex w-full items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-destructive/10 text-destructive transition-colors min-h-[48px] text-left text-base font-medium disabled:opacity-60 disabled:pointer-events-none'
                     >
                       <LogOut className='h-5 w-5' />
-                      Выйти
-                    </div>
+                      {isLoggingOut ? "Выход…" : "Выйти"}
+                    </button>
                   </div>
                 ) : (
-                  <div className='px-4'>
-                    <Link href={ROUTES.login}>
+                  <div className='px-3'>
+                    <Link href={ROUTES.login} onClick={closeMobileMenu}>
                       <Button
                         variant='default'
                         className='w-full py-6 text-base font-medium rounded-xl'
-                        onClick={() => closeMobileMenu()}
                       >
                         Войти / Зарегистрироваться
                       </Button>
