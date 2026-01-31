@@ -60,27 +60,26 @@ export function HorizontalFilters({
   onAreaMinChange,
   onAreaMinBlur,
 }: HorizontalFiltersProps) {
-
   return (
     <div
-      className="w-full overflow-x-auto pb-2 hide-scrollbar"
+      className='w-full overflow-x-auto py-2 hide-scrollbar'
       style={{
         WebkitOverflowScrolling: "touch",
       }}
     >
       {/* Горизонтальная панель фильтров (адаптивно) */}
       <div
-        className="
+        className='
           flex flex-nowrap items-stretch gap-2
           snap-x snap-mandatory
           md:gap-3
           max-w-full
-        "
+        '
       >
         {/* Тип недвижимости */}
-        <div className="w-[140px] min-w-0 shrink-0 sm:w-[160px]">
+        <div className='w-[140px] min-w-0 shrink-0 sm:w-[160px]'>
           <Select value={filters.type} onValueChange={onTypeChange}>
-            <SelectTrigger className="h-10 sm:h-11 px-3 text-xs sm:text-base w-full min-w-0 flex-shrink-0">
+            <SelectTrigger className='h-10 sm:h-11 px-3 text-xs sm:text-base w-full min-w-0 flex-shrink-0'>
               <SelectValue>{getTypeLabel(filters.type)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -88,7 +87,7 @@ export function HorizontalFilters({
                 <SelectItem
                   key={option.value}
                   value={option.value}
-                  className="text-xs sm:text-sm"
+                  className='text-xs sm:text-sm'
                 >
                   {option.label}
                 </SelectItem>
@@ -98,26 +97,26 @@ export function HorizontalFilters({
         </div>
 
         {/* Цена - Popover с инпутами */}
-        <div className="min-w-[120px] flex-shrink-0">
+        <div className='min-w-[120px] flex-shrink-0'>
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                variant="outline"
-                className="h-10 sm:h-11 px-3 w-full justify-between text-xs sm:text-base"
+                variant='outline'
+                className='h-10 sm:h-11 px-3 w-full justify-between text-xs sm:text-base'
               >
-                <span className="truncate max-w-[70px] sm:max-w-[110px]">
+                <span className='truncate max-w-[70px] sm:max-w-[110px]'>
                   {getPriceLabel(filters)}
                 </span>
-                <ChevronDown className="w-4 h-4 opacity-50 shrink-0" />
+                <ChevronDown className='w-4 h-4 opacity-50 shrink-0' />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-72 sm:w-80 p-4" align="start" sideOffset={8}>
-              <div className="space-y-3">
-                <div className="flex gap-3">
-                  <div className="relative w-1/2">
+            <PopoverContent className='w-72 sm:w-80 p-4' align='start' sideOffset={8}>
+              <div className='space-y-3'>
+                <div className='flex gap-3'>
+                  <div className='relative w-1/2'>
                     <Input
-                      type="text"
-                      placeholder="0"
+                      type='text'
+                      placeholder='0'
                       value={localPriceMin}
                       onChange={(e) => {
                         const val = e.target.value.replace(/[^\d]/g, "");
@@ -125,17 +124,17 @@ export function HorizontalFilters({
                       }}
                       onBlur={onPriceMinBlur}
                       className={`pl-9 text-xs sm:text-base ${priceErrors.priceMin ? "border-destructive" : ""}`}
-                      autoComplete="off"
-                      inputMode="numeric"
+                      autoComplete='off'
+                      inputMode='numeric'
                     />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm">
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm'>
                       от
                     </span>
                   </div>
-                  <div className="relative w-1/2">
+                  <div className='relative w-1/2'>
                     <Input
-                      type="text"
-                      placeholder="5 000 000"
+                      type='text'
+                      placeholder='5 000 000'
                       value={localPriceMax}
                       onChange={(e) => {
                         const val = e.target.value.replace(/[^\d]/g, "");
@@ -143,16 +142,16 @@ export function HorizontalFilters({
                       }}
                       onBlur={onPriceMaxBlur}
                       className={`pl-9 text-xs sm:text-base ${priceErrors.priceMax ? "border-destructive" : ""}`}
-                      autoComplete="off"
-                      inputMode="numeric"
+                      autoComplete='off'
+                      inputMode='numeric'
                     />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm">
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm'>
                       до
                     </span>
                   </div>
                 </div>
                 {(priceErrors.priceMin || priceErrors.priceMax) && (
-                  <div className="text-xs text-destructive space-y-1">
+                  <div className='text-xs text-destructive space-y-1'>
                     {priceErrors.priceMin && <p>{priceErrors.priceMin}</p>}
                     {priceErrors.priceMax && <p>{priceErrors.priceMax}</p>}
                   </div>
@@ -174,9 +173,9 @@ export function HorizontalFilters({
         </div>
 
         {/* Регион */}
-        <div className="w-[130px] min-w-0 shrink-0 sm:w-[160px]">
+        <div className='w-[130px] min-w-0 shrink-0 sm:w-[160px]'>
           <Select value={filters.region} onValueChange={onRegionChange}>
-            <SelectTrigger className="h-10 sm:h-11 px-3 text-xs sm:text-base w-full">
+            <SelectTrigger className='h-10 sm:h-11 px-3 text-xs sm:text-base w-full'>
               <SelectValue>{getRegionLabel(filters.region)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -184,7 +183,7 @@ export function HorizontalFilters({
                 <SelectItem
                   key={option.value}
                   value={option.value}
-                  className="text-xs sm:text-sm"
+                  className='text-xs sm:text-sm'
                 >
                   {option.label}
                 </SelectItem>
@@ -194,14 +193,14 @@ export function HorizontalFilters({
         </div>
 
         {/* Комнаты */}
-        <div className="w-[100px] min-w-0 shrink-0 sm:w-[120px]">
+        <div className='w-[100px] min-w-0 shrink-0 sm:w-[120px]'>
           <Select
             value={filters.roomsMin?.toString() || "all"}
             onValueChange={(value) =>
               onRoomsChange(value === "all" ? null : Number(value))
             }
           >
-            <SelectTrigger className="h-8 sm:h-9 px-3 text-xs sm:text-base w-full">
+            <SelectTrigger className='h-8 sm:h-9 px-3 text-xs sm:text-base w-full'>
               <SelectValue>{getRoomsLabel(filters.roomsMin)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -209,7 +208,7 @@ export function HorizontalFilters({
                 <SelectItem
                   key={option.value}
                   value={option.value}
-                  className="text-xs sm:text-sm"
+                  className='text-xs sm:text-sm'
                 >
                   {option.label}
                 </SelectItem>
@@ -219,36 +218,36 @@ export function HorizontalFilters({
         </div>
 
         {/* Площадь - Popover с инпутом */}
-        <div className="min-w-[120px] flex-shrink-0">
+        <div className='min-w-[120px] flex-shrink-0'>
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                variant="outline"
-                className="h-8 sm:h-9 px-3 w-full justify-between text-xs sm:text-base"
+                variant='outline'
+                className='h-8 sm:h-9 px-3 w-full justify-between text-xs sm:text-base'
               >
-                <span className="truncate max-w-[60px] sm:max-w-[90px]">
+                <span className='truncate max-w-[60px] sm:max-w-[90px]'>
                   {getAreaLabel(filters.areaMin)}
                 </span>
-                <ChevronDown className="w-4 h-4 opacity-50 shrink-0" />
+                <ChevronDown className='w-4 h-4 opacity-50 shrink-0' />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-36 sm:w-48 p-4" align="start" sideOffset={8}>
-              <div className="space-y-3">
-                <div className="relative">
+            <PopoverContent className='w-36 sm:w-48 p-4' align='start' sideOffset={8}>
+              <div className='space-y-3'>
+                <div className='relative'>
                   <Input
-                    type="text"
-                    placeholder="От"
+                    type='text'
+                    placeholder='От'
                     value={localAreaMin}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^\d]/g, "");
                       onAreaMinChange(val);
                     }}
                     onBlur={onAreaMinBlur}
-                    className="pl-9 text-xs sm:text-base"
-                    autoComplete="off"
-                    inputMode="numeric"
+                    className='pl-9 text-xs sm:text-base'
+                    autoComplete='off'
+                    inputMode='numeric'
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm">
+                  <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm'>
                     от
                   </span>
                 </div>
@@ -258,10 +257,10 @@ export function HorizontalFilters({
         </div>
 
         {/* Сортировка */}
-        <div className="min-w-[120px] flex-shrink-0 ml-auto snap-end">
+        <div className='min-w-[120px] flex-shrink-0 ml-auto snap-end'>
           <Select value={filters.sortBy} onValueChange={onSortChange}>
-            <SelectTrigger className="h-8 sm:h-9 px-3 w-full text-xs sm:text-base">
-              <ArrowUpDown className="w-4 h-4 mr-2 opacity-50 hidden sm:block" />
+            <SelectTrigger className='h-8 sm:h-9 px-3 w-full text-xs sm:text-base'>
+              <ArrowUpDown className='w-4 h-4 mr-2 opacity-50 hidden sm:block' />
               <SelectValue>
                 {SORT_OPTIONS.find((opt) => opt.value === filters.sortBy)?.label ||
                   "По популярности"}
@@ -272,7 +271,7 @@ export function HorizontalFilters({
                 <SelectItem
                   key={option.value}
                   value={option.value}
-                  className="text-xs sm:text-sm"
+                  className='text-xs sm:text-sm'
                 >
                   {option.label}
                 </SelectItem>
