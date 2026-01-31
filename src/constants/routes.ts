@@ -84,11 +84,17 @@ export const API_ENDPOINTS = {
   admin: {
     statistics: "/api/admin/statistics",
     users: "/api/admin/users",
-    properties: "/api/admin/properties",
+    getUserById: (id: string) => `/api/admin/users/${id}`,
+    banUser: (id: string) => `/api/admin/users/${id}/ban`,
+    unbanUser: (id: string) => `/api/admin/users/${id}/unban`,
     updateUserRole: (id: string) => `/api/admin/users/${id}/role`,
-    updatePropertyStatus: (id: string) => `/api/admin/properties/${id}/status`,
     deleteUser: (id: string) => `/api/admin/users/${id}`,
+    properties: "/api/admin/properties",
+    updatePropertyStatus: (id: string) => `/api/admin/properties/${id}/status`,
     deleteProperty: (id: string) => `/api/admin/properties/${id}`,
+    auditLogs: "/api/admin/audit-logs",
+    chats: "/api/admin/chats",
+    closeChat: (id: string) => `/api/admin/chats/${id}/close`,
   },
 
   // Upload

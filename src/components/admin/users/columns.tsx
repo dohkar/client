@@ -20,10 +20,25 @@ export type UserWithCount = AdminUser & {
   propertiesCount?: number;
 };
 
+const ROLE_OPTIONS: Array<{
+  value: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
+  label: string;
+  Icon: typeof UserIcon;
+  badgeClass: string;
+}> = [
+  { value: "USER", label: "USER", Icon: UserIcon, badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
+  { value: "PREMIUM", label: "PREMIUM", Icon: Crown, badgeClass: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+  { value: "ADMIN", label: "ADMIN", Icon: Shield, badgeClass: "bg-red-50 text-red-700 border-red-200" },
+  { value: "SUPPORT", label: "SUPPORT", Icon: UserIcon, badgeClass: "bg-green-50 text-green-700 border-green-200" },
+  { value: "MODERATOR", label: "MODERATOR", Icon: Shield, badgeClass: "bg-purple-50 text-purple-700 border-purple-200" },
+];
+
 export const createUserColumns = (
-  onRoleChange: (userId: string, role: "USER" | "PREMIUM" | "ADMIN") => void,
+  onRoleChange: (userId: string, role: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR") => void,
   onDelete: (userId: string) => void,
-  isDeleting: boolean
+  onBan?: (userId: string, reason?: string, bannedUntil?: string) => void,
+  onUnban?: (userId: string) => void,
+  isDeleting?: boolean
 ): ColumnDef<UserWithCount>[] => [
   {
     accessorKey: "email",
@@ -66,84 +81,35 @@ export const createUserColumns = (
     ),
     cell: ({ row }) => {
       const user = row.original;
+      const current = ROLE_OPTIONS.find((r) => r.value === user.role) ?? ROLE_OPTIONS[0];
       return (
         <Select
           value={user.role}
           onValueChange={(value) =>
-            onRoleChange(user.id, value as "USER" | "PREMIUM" | "ADMIN")
+            onRoleChange(user.id, value as "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR")
           }
         >
           <SelectTrigger className="w-36 min-h-[36px]">
             <SelectValue>
-              {user.role === "ADMIN" && (
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-red-500" />
-                  <Badge
-                    variant="outline"
-                    className="bg-red-50 text-red-700 border-red-200"
-                  >
-                    ADMIN
-                  </Badge>
-                </div>
-              )}
-              {user.role === "PREMIUM" && (
-                <div className="flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-yellow-500" />
-                  <Badge
-                    variant="outline"
-                    className="bg-yellow-50 text-yellow-700 border-yellow-200"
-                  >
-                    PREMIUM
-                  </Badge>
-                </div>
-              )}
-              {user.role === "USER" && (
-                <div className="flex items-center gap-2">
-                  <UserIcon className="w-4 h-4 text-blue-500" />
-                  <Badge
-                    variant="outline"
-                    className="bg-blue-50 text-blue-700 border-blue-200"
-                  >
-                    USER
-                  </Badge>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <current.Icon className="w-4 h-4" />
+                <Badge variant="outline" className={current.badgeClass}>
+                  {current.label}
+                </Badge>
+              </div>
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="USER">
-              <div className="flex items-center gap-2">
-                <UserIcon className="w-4 h-4 text-blue-500" />
-                <Badge
-                  variant="outline"
-                  className="bg-blue-50 text-blue-700 border-blue-200"
-                >
-                  USER
-                </Badge>
-              </div>
-            </SelectItem>
-            <SelectItem value="PREMIUM">
-              <div className="flex items-center gap-2">
-                <Crown className="w-4 h-4 text-yellow-500" />
-                <Badge
-                  variant="outline"
-                  className="bg-yellow-50 text-yellow-700 border-yellow-200"
-                >
-                  PREMIUM
-                </Badge>
-              </div>
-            </SelectItem>
-            <SelectItem value="ADMIN">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-red-500" />
-                <Badge
-                  variant="outline"
-                  className="bg-red-50 text-red-700 border-red-200"
-                >
-                  ADMIN
-                </Badge>
-              </div>
-            </SelectItem>
+            {ROLE_OPTIONS.map((r) => (
+              <SelectItem key={r.value} value={r.value}>
+                <div className="flex items-center gap-2">
+                  <r.Icon className="w-4 h-4" />
+                  <Badge variant="outline" className={r.badgeClass}>
+                    {r.label}
+                  </Badge>
+                </div>
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       );
@@ -185,24 +151,49 @@ export const createUserColumns = (
     id: "actions",
     cell: ({ row }) => {
       const user = row.original;
+      const isBanned = user.bannedAt && (!user.bannedUntil || new Date(user.bannedUntil) > new Date());
       return (
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={() => {
-            if (
-              confirm(
-                `Вы уверены, что хотите удалить пользователя ${user.email || user.name || user.id}?`
-              )
-            ) {
-              onDelete(user.id);
-            }
-          }}
-          disabled={isDeleting}
-          className="min-h-[36px]"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          {onBan && !isBanned && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onBan(user.id)}
+              className="min-h-[36px]"
+              title="Заблокировать"
+            >
+              Бан
+            </Button>
+          )}
+          {onUnban && isBanned && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onUnban(user.id)}
+              className="min-h-[36px]"
+              title="Разблокировать"
+            >
+              Разбан
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => {
+              if (
+                confirm(
+                  `Вы уверены, что хотите удалить пользователя ${user.email || user.name || user.id}?`
+                )
+              ) {
+                onDelete(user.id);
+              }
+            }}
+            disabled={isDeleting}
+            className="min-h-[36px]"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       );
     },
   },

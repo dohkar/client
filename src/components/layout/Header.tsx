@@ -380,7 +380,6 @@ export function Header() {
                         className='w-full py-6 text-base font-medium rounded-xl'
                         onClick={() => closeMobileMenu()}
                       >
-                        <User className='mr-3 h-5 w-5' />
                         Войти / Зарегистрироваться
                       </Button>
                     </Link>

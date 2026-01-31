@@ -197,6 +197,8 @@ export type AdminUsersParams = {
   page?: number;
   limit?: number;
   search?: string;
+  role?: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
+  status?: "active" | "banned";
 };
 export type AdminPropertiesParams = {
   page?: number;
@@ -204,26 +206,38 @@ export type AdminPropertiesParams = {
   search?: string;
   status?: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
   type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+  regionId?: string;
+  sortBy?: "date-desc" | "date-asc" | "views-desc";
+};
+export type AdminUpdatePropertyStatusRequest = {
+  status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+  rejectionReason?: string;
 };
 export type AdminUpdateUserRoleParams = {
   id: string;
 };
-export type AdminUpdateUserRoleRequest = RequestBody<
-  "/api/admin/users/{id}/role",
-  "patch"
->;
+export type AdminUpdateUserRoleRequest = {
+  role: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
+};
 export type AdminUpdatePropertyStatusParams = {
   id: string;
 };
-export type AdminUpdatePropertyStatusRequest = RequestBody<
-  "/api/admin/properties/{id}/status",
-  "patch"
->;
 export type AdminDeleteUserParams = {
   id: string;
 };
 export type AdminDeletePropertyParams = {
   id: string;
+};
+export type AdminAuditLogsParams = {
+  page?: number;
+  limit?: number;
+  entityType?: string;
+  userId?: string;
+};
+export type AdminChatsParams = {
+  page?: number;
+  limit?: number;
+  type?: "PROPERTY" | "SUPPORT";
 };
 
 // Upload endpoints (не в OpenAPI spec, определяем вручную)

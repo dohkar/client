@@ -383,21 +383,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/properties": {
+    "/api/admin/users/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Получить список объявлений */
-        get: operations["AdminController_getProperties"];
+        /** Получить пользователя по ID (карточка) */
+        get: operations["AdminController_getUserById"];
+        put?: never;
+        post?: never;
+        /** Удалить пользователя (soft delete) */
+        delete: operations["AdminController_deleteUser"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/{id}/ban": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Заблокировать пользователя */
+        post: operations["AdminController_banUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/{id}/unban": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Разблокировать пользователя */
+        patch: operations["AdminController_unbanUser"];
         trace?: never;
     };
     "/api/admin/users/{id}/role": {
@@ -417,6 +452,23 @@ export interface paths {
         patch: operations["AdminController_updateUserRole"];
         trace?: never;
     };
+    "/api/admin/properties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить список объявлений */
+        get: operations["AdminController_getProperties"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/properties/{id}/status": {
         parameters: {
             query?: never;
@@ -434,23 +486,6 @@ export interface paths {
         patch: operations["AdminController_updatePropertyStatus"];
         trace?: never;
     };
-    "/api/admin/users/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Удалить пользователя */
-        delete: operations["AdminController_deleteUser"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/admin/properties/{id}": {
         parameters: {
             query?: never;
@@ -466,6 +501,57 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/admin/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить логи действий */
+        get: operations["AdminController_getAuditLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/chats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить список чатов */
+        get: operations["AdminController_getChats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/chats/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Закрыть чат (архивировать) */
+        patch: operations["AdminController_closeChat"];
         trace?: never;
     };
     "/api/upload/avatar": {
@@ -738,7 +824,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Обновить статус заявки */
+        /** Обновить статус заявки (с комментарием администратора) */
         patch: operations["InboxController_updateStatus"];
         trace?: never;
     };
@@ -941,13 +1027,21 @@ export interface components {
             createdAt: string;
             property: components["schemas"]["PropertyResponseDto"];
         };
+        BanUserDto: {
+            /** @description Причина бана */
+            reason?: string;
+            /** @description Дата окончания бана (ISO 8601) */
+            bannedUntil?: string;
+        };
         UpdateUserRoleDto: {
             /** @enum {string} */
-            role: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT";
+            role: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
         };
         UpdatePropertyStatusDto: {
             /** @enum {string} */
             status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+            /** @description Причина отклонения (при смене на PENDING или отклонении) */
+            rejectionReason?: string;
         };
         CreatePropertyChatDto: {
             /**
@@ -1070,6 +1164,15 @@ export interface components {
             message: string;
             /** @example uuid */
             propertyId?: string;
+        };
+        UpdateInboxStatusDto: {
+            /**
+             * @description Новый статус заявки
+             * @enum {string}
+             */
+            status: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+            /** @description Комментарий администратора */
+            adminComment?: string;
         };
     };
     responses: never;
@@ -1719,6 +1822,8 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 search?: string;
+                role?: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
+                status?: "active" | "banned";
             };
             header?: never;
             path?: never;
@@ -1735,23 +1840,111 @@ export interface operations {
             };
         };
     };
-    AdminController_getProperties: {
+    AdminController_getUserById: {
         parameters: {
-            query?: {
-                page?: number;
-                limit?: number;
-                search?: string;
-                status?: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
-                type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Список объявлений */
+            /** @description Пользователь найден */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Пользователь не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_deleteUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Пользователь удален */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Пользователь не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_banUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BanUserDto"];
+            };
+        };
+        responses: {
+            /** @description Пользователь заблокирован */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Пользователь не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_unbanUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Пользователь разблокирован */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Пользователь не найден */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1775,6 +1968,32 @@ export interface operations {
         };
         responses: {
             /** @description Роль изменена */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_getProperties: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                search?: string;
+                status?: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+                type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+                regionId?: string;
+                sortBy?: "date-desc" | "date-asc" | "views-desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список объявлений */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1807,26 +2026,6 @@ export interface operations {
             };
         };
     };
-    AdminController_deleteUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Пользователь удален */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AdminController_deleteProperty: {
         parameters: {
             query?: never;
@@ -1840,6 +2039,85 @@ export interface operations {
         responses: {
             /** @description Объявление удалено */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Объявление не найдено */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_getAuditLogs: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                entityType?: string;
+                userId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список логов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_getChats: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                type?: "PROPERTY" | "SUPPORT";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список чатов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_closeChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Чат закрыт */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Чат не найден */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2398,7 +2676,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateInboxStatusDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

@@ -13,7 +13,8 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
     <ol
       data-slot='breadcrumb-list'
       className={cn(
-        "text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5",
+        "flex items-center gap-1.5 sm:gap-2.5 text-sm md:text-base",
+        "overflow-x-auto scrollbar-hide px-1 py-2 whitespace-nowrap",
         className
       )}
       {...props}
@@ -22,28 +23,22 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
 }
 
 function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
-  return (
-    <li
-      data-slot='breadcrumb-item'
-      className={cn("inline-flex items-center gap-1.5", className)}
-      {...props}
-    />
-  );
+  return <li data-slot='breadcrumb-item' className={cn("", className)} {...props} />;
 }
 
 function BreadcrumbLink({
   asChild,
   className,
   ...props
-}: React.ComponentProps<"a"> & {
-  asChild?: boolean;
-}) {
+}: React.ComponentProps<"a"> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "a";
-
   return (
     <Comp
-      data-slot='breadcrumb-link'
-      className={cn("hover:text-primary transition-colors font-medium", className)}
+      className={cn(
+        "text-muted-foreground hover:text-primary transition-colors font-medium",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded",
+        className
+      )}
       {...props}
     />
   );
@@ -56,7 +51,7 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
       role='link'
       aria-disabled='true'
       aria-current='page'
-      className={cn("text-foreground font-normal", className)}
+      className={cn("text-foreground font-semibold", className)}
       {...props}
     />
   );
@@ -72,10 +67,13 @@ function BreadcrumbSeparator({
       data-slot='breadcrumb-separator'
       role='presentation'
       aria-hidden='true'
-      className={cn("[&>svg]:size-3.5", className)}
+      className={cn(
+        "[&>svg]:size-3.5 flex items-center text-muted-foreground/70 flex-shrink-0",
+        className
+      )}
       {...props}
     >
-      {children ?? <ChevronRight />}
+      {children ?? <ChevronRight className='h-4 w-4' />}
     </li>
   );
 }
@@ -86,11 +84,14 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<"span"
       data-slot='breadcrumb-ellipsis'
       role='presentation'
       aria-hidden='true'
-      className={cn("flex size-9 items-center justify-center", className)}
+      className={cn(
+        "flex size-8 items-center justify-center text-muted-foreground",
+        className
+      )}
       {...props}
     >
       <MoreHorizontal className='size-4' />
-      <span className='sr-only'>Больше</span>
+      <span className='sr-only'>Ещё</span>
     </span>
   );
 }

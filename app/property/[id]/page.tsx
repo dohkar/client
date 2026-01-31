@@ -15,6 +15,7 @@ import {
   Square,
   Building2,
   Copy,
+  Loader2,
 } from "lucide-react";
 import {
   Breadcrumb,
@@ -659,25 +660,29 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                       <div className='pt-2'>
                         <Dialog open={complaintOpen} onOpenChange={setComplaintOpen}>
                           <DialogTrigger asChild>
-                            <button
-                              type='button'
-                              className='inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors'
+                            <Button
+                              variant='clear'
+                              className='inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-destructive transition-colors'
                             >
-                              <Flag className='h-4 w-4' />
+                              <Flag />
                               Пожаловаться
-                            </button>
+                            </Button>
                           </DialogTrigger>
-                          <DialogContent>
+
+                          <DialogContent hasCloseIcon={false} className='sm:max-w-md'>
                             <DialogHeader>
                               <DialogTitle>Пожаловаться на объявление</DialogTitle>
-                              <DialogDescription>
-                                Выберите причину и при желании добавьте комментарий.
+                              <DialogDescription className='text-sm'>
+                                Выберите причину и добавьте комментарий.
                               </DialogDescription>
                             </DialogHeader>
 
-                            <div className='space-y-3'>
+                            <div className='space-y-5 py-2'>
+                              {/* Причина */}
                               <div className='space-y-2'>
-                                <div className='text-sm font-medium'>Причина</div>
+                                <label className='text-sm font-medium'>
+                                  Причина жалобы
+                                </label>
                                 <Select
                                   value={complaintReason}
                                   onValueChange={setComplaintReason}
@@ -686,44 +691,62 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                                     <SelectValue placeholder='Выберите причину' />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value='SCAM'>Мошенничество</SelectItem>
+                                    <SelectItem value='SCAM'>
+                                      Мошенничество / обман
+                                    </SelectItem>
                                     <SelectItem value='WRONG_INFO'>
                                       Недостоверная информация
                                     </SelectItem>
-                                    <SelectItem value='DUPLICATE'>Дубликат</SelectItem>
-                                    <SelectItem value='SPAM'>Спам</SelectItem>
-                                    <SelectItem value='OTHER'>Другое</SelectItem>
+                                    <SelectItem value='DUPLICATE'>
+                                      Дубликат объявления
+                                    </SelectItem>
+                                    <SelectItem value='SPAM'>Спам / реклама</SelectItem>
+                                    <SelectItem value='OTHER'>
+                                      Другое (укажите ниже)
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
 
+                              {/* Комментарий */}
                               <div className='space-y-2'>
-                                <div className='text-sm font-medium'>
-                                  Комментарий (опционально)
-                                </div>
+                                <label className='text-sm font-medium'>
+                                  Комментарий (необязательно)
+                                </label>
                                 <Textarea
                                   value={complaintComment}
                                   onChange={(e) => setComplaintComment(e.target.value)}
-                                  placeholder='Опишите проблему...'
+                                  placeholder='Опишите подробнее проблему...'
+                                  className='min-h-[80px] resize-none'
                                 />
                               </div>
                             </div>
 
-                            <DialogFooter>
+                            <DialogFooter className='gap-3 sm:gap-4'>
                               <Button
                                 variant='outline'
                                 type='button'
                                 onClick={() => setComplaintOpen(false)}
                                 disabled={complaintSubmitting}
+                                className='cursor-pointer'
                               >
                                 Отмена
                               </Button>
                               <Button
+                                variant='destructive'
                                 type='button'
                                 onClick={handleSubmitComplaint}
-                                disabled={complaintSubmitting}
+                                disabled={complaintSubmitting || !complaintReason}
+                                className='cursor-pointer min-w-[120px]'
                               >
-                                {complaintSubmitting ? "Отправка..." : "Отправить"}
+                                {complaintSubmitting ? (
+                                  <span className='flex items-center gap-2'>
+                                    <Loader2 className='h-4 w-4 animate-spin' />
+                                    Отправка...
+                                  </span>
+                                ) : (
+                                  "Отправить жалобу"
+                                )}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
