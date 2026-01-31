@@ -9,15 +9,18 @@ import { Heart, MapPin } from "lucide-react";
 import { useFavorites } from "@/hooks/use-favorites";
 import type { Property } from "@/types/property";
 import { formatPrice, formatDate } from "@/lib/utils/format";
+import { getCloudinaryBlurUrl, isCloudinaryUrl } from "@/lib/cloudinary-url";
 
 interface PropertyCardProps {
   property: Property;
   hideFavoriteButton?: boolean;
+  priority?: boolean;
 }
 
 export function PropertyCard({
   property,
   hideFavoriteButton = false,
+  priority = false,
 }: PropertyCardProps) {
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
   
@@ -31,16 +34,23 @@ export function PropertyCard({
   };
   const pricePerMeter = Math.round(property.price / property.area);
 
+  // Генерируем blur placeholder для Cloudinary изображений
+  const imageSrc = property.image || "/placeholder.svg";
+  const blurDataURL = isCloudinaryUrl(imageSrc) ? getCloudinaryBlurUrl(imageSrc) : undefined;
+
   return (
     <Link href={`/property/${property.id}`} className='group'>
       <div className='property-card h-full flex flex-col'>
         <div className='relative aspect-[4/3] overflow-hidden bg-muted'>
           <Image
-            src={property.image || "/placeholder.svg"}
+            src={imageSrc}
             alt={property.title}
             fill
             className='object-cover group-hover:scale-105 transition-transform duration-300'
             sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+            priority={priority}
+            placeholder={blurDataURL ? "blur" : "empty"}
+            blurDataURL={blurDataURL}
           />
 
           {/* Gradient Overlay */}

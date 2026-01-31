@@ -1,30 +1,5 @@
 import { Metadata } from "next";
-import { cache } from "react";
-import { logger } from "@/lib/utils/logger";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
-// Кэшированная функция для получения объявления (используется и в metadata, и в page)
-const getProperty = cache(async (id: string) => {
-  try {
-    const response = await fetch(`${API_URL}/api/properties/${id}`, {
-      next: { revalidate: 60 }, // ISR: обновление каждые 60 секунд
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error("Failed to fetch property");
-    }
-
-    const data = await response.json();
-    return data.status === "success" ? data.data : null;
-  } catch (error) {
-    logger.error("Error fetching property:", error);
-    return null;
-  }
-});
+import { getProperty } from "@/lib/server/property";
 
 export async function generateMetadata({
   params,
@@ -54,9 +29,19 @@ export async function generateMetadata({
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dohkar.ru";
   const fullImageUrl = ogImage.startsWith("http") ? ogImage : `${siteUrl}${ogImage}`;
 
+  const keywords = [
+    property.type === "apartment" ? "квартира" : property.type === "house" ? "дом" : "участок",
+    property.region,
+    property.city,
+    "недвижимость",
+    "купить",
+    "продажа",
+  ].filter((k): k is string => Boolean(k));
+
   return {
     title,
     description,
+    keywords,
     openGraph: {
       title,
       description,

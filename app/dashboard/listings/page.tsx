@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Eye, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { formatCurrency } from "@/lib/utils/format";
 import { formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
@@ -84,11 +85,13 @@ export default function ListingsPage() {
                 `}
               >
                 <CardContent className="p-0">
-                  <div className="relative group">
-                    <img
+                  <div className="relative group h-48">
+                    <Image
                       src={property.image}
                       alt={property.title}
-                      className="w-full h-48 object-cover rounded-t-xl"
+                      fill
+                      className="object-cover rounded-t-xl"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                     <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button

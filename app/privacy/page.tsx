@@ -3,6 +3,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Shield, Lock, Eye, FileCheck } from "lucide-react";
 
 export default function PrivacyPage() {
+  // Генерируем дату на сервере один раз
+  const lastUpdated = "29 января 2026 г.";
+
   return (
     <Container size='lg' className='py-6 sm:py-8 md:py-12'>
       <div className='space-y-6 sm:space-y-8'>
@@ -192,12 +195,7 @@ export default function PrivacyPage() {
               </a>
             </p>
             <p className='text-xs text-center text-muted-foreground mt-2'>
-              Последнее обновление:{" "}
-              {new Date().toLocaleDateString("ru-RU", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              Последнее обновление: {lastUpdated}
             </p>
           </CardContent>
         </Card>

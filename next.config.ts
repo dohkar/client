@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import withBundleAnalyzer from "@next/bundle-analyzer";
+
 const nextConfig: NextConfig = {
   /* config options here */
 
@@ -20,15 +22,21 @@ const nextConfig: NextConfig = {
         hostname: "**",
       },
     ],
-    dangerouslyAllowSVG: true, // если хотите SVG, опционально
-    // или можно просто отключить domains и remotePatterns для полного разрешения (Next 13+)
-    // unoptimized: true, // <- альтернативный способ (отключает оптимизацию и ограничения)
+    dangerouslyAllowSVG: true,
   },
 
   // Экспериментальные функции
   experimental: {
     // Оптимизация производительности
-    optimizePackageImports: ["lucide-react", "@radix-ui/react-icons"],
+    optimizePackageImports: [
+      "lucide-react",
+      "@radix-ui/react-icons",
+      "date-fns",
+      "recharts",
+    ],
+    // PPR отключен - требует Suspense на всех динамических страницах
+    // Можно включить позже после рефакторинга dashboard страниц
+    // cacheComponents: true,
   },
 
   // Компрессия
@@ -62,4 +70,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer({ enabled: process.env.ANALYZE === "true" })(
+  nextConfig
+);

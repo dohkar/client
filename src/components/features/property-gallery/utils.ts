@@ -1,3 +1,4 @@
+import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-url";
 import type { MediaItem } from "./types";
 
 /**
@@ -8,7 +9,7 @@ export function imagesToMediaItems(images: string[]): MediaItem[] {
     id: `image-${index}`,
     type: "image" as const,
     src,
-    preview: src, // Для SSR используем тот же URL
+    preview: getOptimizedCloudinaryUrl(src, { width: 100, quality: 60 }), // Маленький preview
     alt: `Изображение ${index + 1}`,
   }));
 }
@@ -29,12 +30,12 @@ export function isVideo(item: MediaItem): boolean {
 
 /**
  * Получает URL для отображения (preview для SSR, src для client)
+ * Автоматически применяет Cloudinary оптимизацию
  */
 export function getMediaUrl(item: MediaItem, usePreview = false): string {
-  if (usePreview && item.preview) {
-    return item.preview;
-  }
-  return item.src;
+  const url = usePreview && item.preview ? item.preview : item.src;
+  // URL уже оптимизирован через cloudinary-loader в next/image
+  return url;
 }
 
 /**

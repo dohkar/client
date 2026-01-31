@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ROUTES } from "@/constants";
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
+  // Используем статическое значение для build time
+  const currentYear = 2026;
 
   return (
     <footer className='bg-muted/30 border-t'>
