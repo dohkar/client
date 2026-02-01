@@ -7,16 +7,19 @@ import {
   getPriceLabel,
   getRoomsLabel,
   getAreaLabel,
+  getCityLabel,
 } from "./FilterLabels";
 
 interface ActiveFiltersProps {
   filters: SearchFiltersDisplay;
   activeFiltersCount: number;
+  selectedCityName: string | null;
   localPriceMin: string;
   localPriceMax: string;
   onTypeReset: () => void;
   onPriceReset: () => void;
   onRegionReset: () => void;
+  onCityReset: () => void;
   onRoomsReset: () => void;
   onAreaReset: () => void;
   onResetAll: () => void;
@@ -25,9 +28,11 @@ interface ActiveFiltersProps {
 export function ActiveFilters({
   filters,
   activeFiltersCount,
+  selectedCityName,
   onTypeReset,
   onPriceReset,
   onRegionReset,
+  onCityReset,
   onRoomsReset,
   onAreaReset,
   onResetAll,
@@ -36,7 +41,6 @@ export function ActiveFilters({
 
   return (
     <div className='flex flex-wrap items-center gap-2 mt-3'>
-      {/* <span className='text-sm text-muted-foreground'>Активные фильтры:</span> */}
       {filters.type !== "all" && (
         <Button variant='secondary' size='sm' className='h-7 gap-1' onClick={onTypeReset}>
           {getTypeLabel(filters.type)}
@@ -62,6 +66,17 @@ export function ActiveFilters({
           onClick={onRegionReset}
         >
           {getRegionLabel(filters.region)}
+          <X className='w-3 h-3' />
+        </Button>
+      )}
+      {filters.cityId && (
+        <Button
+          variant='secondary'
+          size='sm'
+          className='h-7 gap-1'
+          onClick={onCityReset}
+        >
+          {getCityLabel(selectedCityName)}
           <X className='w-3 h-3' />
         </Button>
       )}

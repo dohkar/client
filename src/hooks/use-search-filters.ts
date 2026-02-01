@@ -4,7 +4,6 @@ import { useTransition } from "react";
 import {
   parseSearchParams,
   mergeSearchParams,
-  buildSearchParams,
   type SearchFiltersDisplay,
 } from "@/lib/search-params";
 import { SEARCH_CONSTANTS } from "@/lib/search-constants";
@@ -16,10 +15,7 @@ import { ROUTES } from "@/constants";
  */
 export function useParsedSearchFilters(): SearchFiltersDisplay {
   const searchParams = useSearchParams();
-  return useMemo(
-    () => parseSearchParams(searchParams).filters,
-    [searchParams]
-  );
+  return useMemo(() => parseSearchParams(searchParams).filters, [searchParams]);
 }
 
 /**
@@ -69,6 +65,8 @@ interface UseSearchFiltersReturn {
   handlePriceMinBlur: () => void;
   handlePriceMaxBlur: () => void;
 
+  handleCityChange: (cityId: string | null) => void;
+  handleCityReset: () => void;
   handleTypeReset: () => void;
   handlePriceReset: () => void;
   handleRegionReset: () => void;
@@ -84,10 +82,7 @@ interface UseSearchFiltersReturn {
   isPending: boolean;
 }
 
-function validatePrices(
-  min: string,
-  max: string
-): PriceValidationErrors {
+function validatePrices(min: string, max: string): PriceValidationErrors {
   const errors: PriceValidationErrors = {};
   const minNum = min.trim() ? Number(min.trim()) : null;
   const maxNum = max.trim() ? Number(max.trim()) : null;
@@ -139,7 +134,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
 
   /** Синхронизация draft с URL при навигации (назад/вперёд) */
   useEffect(() => {
-    setDraftQueryState(appliedFilters.query);
+    setDraftQueryState(appliedFilters.query ?? "");
     setDraftPriceMinState(
       appliedFilters.priceMin != null ? String(appliedFilters.priceMin) : ""
     );
@@ -149,7 +144,12 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     setDraftAreaMinState(
       appliedFilters.areaMin != null ? String(appliedFilters.areaMin) : ""
     );
-  }, [appliedFilters.query, appliedFilters.priceMin, appliedFilters.priceMax, appliedFilters.areaMin]);
+  }, [
+    appliedFilters.query,
+    appliedFilters.priceMin,
+    appliedFilters.priceMax,
+    appliedFilters.areaMin,
+  ]);
 
   /** Обновить URL */
   const updateFilters = useCallback(
@@ -215,8 +215,11 @@ export function useSearchFilters(): UseSearchFiltersReturn {
         return;
       }
       setPriceErrors({});
-      const num = trimmed ? (Number(trimmed) || null) : null;
-      if (num !== null && (num < 0 || (appliedFilters.priceMax != null && num > appliedFilters.priceMax))) {
+      const num = trimmed ? Number(trimmed) || null : null;
+      if (
+        num !== null &&
+        (num < 0 || (appliedFilters.priceMax != null && num > appliedFilters.priceMax))
+      ) {
         setPriceErrors({
           priceMin: "Минимальная цена не может быть больше максимальной",
           priceMax: "Максимальная цена не может быть меньше минимальной",
@@ -239,8 +242,11 @@ export function useSearchFilters(): UseSearchFiltersReturn {
         return;
       }
       setPriceErrors({});
-      const num = trimmed ? (Number(trimmed) || null) : null;
-      if (num !== null && (num < 0 || (appliedFilters.priceMin != null && num < appliedFilters.priceMin))) {
+      const num = trimmed ? Number(trimmed) || null : null;
+      if (
+        num !== null &&
+        (num < 0 || (appliedFilters.priceMin != null && num < appliedFilters.priceMin))
+      ) {
         setPriceErrors({
           priceMin: "Минимальная цена не может быть больше максимальной",
           priceMax: "Максимальная цена не может быть меньше минимальной",
@@ -257,7 +263,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
   const applyDraftAreaMin = useCallback(
     (value: string) => {
       const trimmed = value.trim();
-      const num = trimmed ? (Number(trimmed) || null) : null;
+      const num = trimmed ? Number(trimmed) || null : null;
       if (num !== null && num < 0) return;
       if (num !== appliedFilters.areaMin) {
         updateFilters({ areaMin: num }, { resetPage: false });
@@ -335,7 +341,13 @@ export function useSearchFilters(): UseSearchFiltersReturn {
   );
   const handleRegionChange = useCallback(
     (region: SearchFiltersDisplay["region"]) => {
-      updateFilters({ region });
+      updateFilters({ region, cityId: null });
+    },
+    [updateFilters]
+  );
+  const handleCityChange = useCallback(
+    (cityId: string | null) => {
+      updateFilters({ cityId: cityId || null });
     },
     [updateFilters]
   );
@@ -382,15 +394,28 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     applyDraftPriceMax(draftPriceMax);
   }, [draftPriceMax, applyDraftPriceMax]);
 
-  const handleTypeReset = useCallback(() => updateFilters({ type: "all" }), [updateFilters]);
+  const handleTypeReset = useCallback(
+    () => updateFilters({ type: "all" }),
+    [updateFilters]
+  );
   const handlePriceReset = useCallback(() => {
     updateFilters({ priceMin: null, priceMax: null });
     setDraftPriceMinState("");
     setDraftPriceMaxState("");
     setPriceErrors({});
   }, [updateFilters]);
-  const handleRegionReset = useCallback(() => updateFilters({ region: "all" }), [updateFilters]);
-  const handleRoomsReset = useCallback(() => updateFilters({ roomsMin: null }), [updateFilters]);
+  const handleRegionReset = useCallback(
+    () => updateFilters({ region: "all" }),
+    [updateFilters]
+  );
+  const handleCityReset = useCallback(
+    () => updateFilters({ cityId: null }),
+    [updateFilters]
+  );
+  const handleRoomsReset = useCallback(
+    () => updateFilters({ roomsMin: null }),
+    [updateFilters]
+  );
   const handleAreaReset = useCallback(() => {
     updateFilters({ areaMin: null }, { resetPage: false });
     setDraftAreaMinState("");
@@ -434,6 +459,8 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     handleAreaMinBlur,
     handlePriceMinBlur,
     handlePriceMaxBlur,
+    handleCityChange,
+    handleCityReset,
     handleTypeReset,
     handlePriceReset,
     handleRegionReset,

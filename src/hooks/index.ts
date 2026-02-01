@@ -4,6 +4,7 @@ export * from "./use-media-query";
 export * from "./use-click-outside";
 export * from "./use-amenities";
 export { useSearchFilters, useParsedSearchFilters } from "./use-search-filters";
+export { useCities } from "./use-cities";
 export { useProfile } from "./use-profile";
 
 // Optimistic updates hooks

@@ -24,7 +24,7 @@ const buttonVariants = cva(
           "bg-transparent text-foreground shadow-none hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground p-0",
       },
       size: {
-        default: "h-11 px-6 py-2 min-h-[44px] has-[>svg]:px-2",
+        default: "h-11 px-6 py-2 min-h-[44px] has-[>svg]:px-4",
         sm: "h-9 rounded-lg px-4 min-h-[38px] has-[>svg]:px-3 gap-1.5",
         lg: "h-12 rounded-xl px-8 text-base min-h-[52px] has-[>svg]:px-5",
         icon: "size-11 rounded-xl min-w-[44px] min-h-[44px]",

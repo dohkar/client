@@ -20,7 +20,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { useQuery } from "@tanstack/react-query";
 import { propertyService } from "@/services/property.service";
-import { getRegionIdByName, ensureRegionCacheInitialized } from "@/services/region.service";
+import {
+  getRegionIdByName,
+  ensureRegionCacheInitialized,
+} from "@/services/region.service";
 import { regionsService } from "@/services/regions.service";
 import { REGION_BACKEND_TO_NAME } from "@/lib/regions";
 import {
@@ -59,8 +62,6 @@ interface ImagePreview {
   isUploading: boolean;
   error?: string;
 }
-
-
 
 // Схема валидации без images как массива URL
 const propertySchema = z.object({
@@ -107,7 +108,11 @@ const parseFormattedNumber = (value: string): number => {
   return isNaN(num) ? 0 : num;
 };
 
-export function PropertyForm({ onSuccess, initialData, isEdit = false }: PropertyFormProps) {
+export function PropertyForm({
+  onSuccess,
+  initialData,
+  isEdit = false,
+}: PropertyFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
@@ -176,7 +181,9 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
     staleTime: 10 * 60 * 1000,
   });
   const regionIdForCities = regions.find(
-    (r) => REGION_BACKEND_TO_NAME[r.name as keyof typeof REGION_BACKEND_TO_NAME] === selectedRegion
+    (r) =>
+      REGION_BACKEND_TO_NAME[r.name as keyof typeof REGION_BACKEND_TO_NAME] ===
+      selectedRegion
   )?.id;
   const { data: cities = [] } = useQuery({
     queryKey: ["cities", regionIdForCities],
@@ -211,7 +218,11 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
     }
 
     // Если координаты уже есть и адрес не изменился, не геокодируем
-    if (initialData?.latitude && initialData?.longitude && locationValue === initialData.location) {
+    if (
+      initialData?.latitude &&
+      initialData?.longitude &&
+      locationValue === initialData.location
+    ) {
       return;
     }
 
@@ -221,7 +232,7 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       try {
         const API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || "";
         const result = await geocodeAddress(locationValue, API_KEY);
-        
+
         if (result) {
           setValue("latitude", result.latitude);
           setValue("longitude", result.longitude);
@@ -242,7 +253,7 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       } finally {
         setIsGeocoding(false);
       }
-    }, 1000);
+    }, 3000);
 
     return () => {
       if (geocodeTimeoutRef.current) {
@@ -322,7 +333,9 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
             return p;
           })
         );
-        toast.error(error instanceof Error ? error.message : "Ошибка загрузки изображений");
+        toast.error(
+          error instanceof Error ? error.message : "Ошибка загрузки изображений"
+        );
       } finally {
         setIsUploading(false);
         // Очищаем input
@@ -371,10 +384,10 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
     try {
       // Убеждаемся, что кэш регионов инициализирован
       await ensureRegionCacheInitialized();
-      
+
       // Получаем regionId по названию региона
       let regionId = getRegionIdByName(data.region);
-      
+
       // Если regionId не найден, пытаемся получить его из initialData (при редактировании)
       if (!regionId && isEdit && initialData) {
         const propertyId = initialData.id;
@@ -390,9 +403,11 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
           }
         }
       }
-      
+
       if (!regionId) {
-        toast.error("Регион не найден. Пожалуйста, обновите страницу и попробуйте снова.");
+        toast.error(
+          "Регион не найден. Пожалуйста, обновите страницу и попробуйте снова."
+        );
         setIsLoading(false);
         return;
       }
@@ -449,48 +464,54 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
   const isSubmitDisabled = isLoading || hasUploadingImages;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
       {/* Основная информация */}
-      <Card className="border-primary/20 shadow-lg transition-all hover:shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Home className="w-5 h-5 text-primary" />
+      <Card className='border-primary/20 shadow-lg transition-all hover:shadow-xl'>
+        <CardHeader className='bg-gradient-to-r from-primary/5 to-primary/10 border-b'>
+          <CardTitle className='flex items-center gap-2 text-xl'>
+            <Home className='w-5 h-5 text-primary' />
             Основная информация
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-6 space-y-6">
+        <CardContent className='pt-6 space-y-6'>
           {/* Заголовок */}
-          <div className="space-y-2">
-            <Label htmlFor="title" className="text-base font-medium flex items-center gap-2">
-              <FileText className="w-4 h-4 text-muted-foreground" />
+          <div className='space-y-2'>
+            <Label
+              htmlFor='title'
+              className='text-base font-medium flex items-center gap-2'
+            >
+              <FileText className='w-4 h-4 text-muted-foreground' />
               Заголовок объявления *
             </Label>
             <Textarea
-              id="title"
+              id='title'
               {...register("title")}
-              placeholder="Например: 3-комнатная квартира в центре"
+              placeholder='Например: 3-комнатная квартира в центре'
               rows={2}
-              className="text-base resize-none min-h-[60px]"
+              className='text-base resize-none min-h-[60px]'
             />
             {errors.title && (
-              <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-                <AlertCircle className="w-4 h-4" />
+              <p className='text-sm text-destructive flex items-center gap-1 mt-1'>
+                <AlertCircle className='w-4 h-4' />
                 {errors.title.message}
               </p>
             )}
           </div>
 
           {/* Цена - полная ширина с иконкой */}
-          <div className="space-y-2">
-            <Label htmlFor="price" className="text-base font-medium flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-muted-foreground" />
+          <div className='space-y-2'>
+            <Label
+              htmlFor='price'
+              className='text-base font-medium flex items-center gap-2'
+            >
+              <DollarSign className='w-4 h-4 text-muted-foreground' />
               Цена (₽) *
             </Label>
-            <div className="relative">
+            <div className='relative'>
               <Input
-                id="price"
-                type="text"
-                inputMode="numeric"
+                id='price'
+                type='text'
+                inputMode='numeric'
                 value={priceDisplay}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -510,55 +531,59 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
                     setPriceDisplay("");
                   }
                 }}
-                placeholder="5 000 000"
-                className="h-11 text-base pl-10 font-medium"
-                aria-label="Цена недвижимости в рублях"
+                placeholder='5 000 000'
+                className='h-11 text-base pl-10 font-medium'
+                aria-label='Цена недвижимости в рублях'
               />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
+              <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium'>
                 ₽
               </span>
             </div>
             {errors.price && (
-              <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-                <AlertCircle className="w-4 h-4" />
+              <p className='text-sm text-destructive flex items-center gap-1 mt-1'>
+                <AlertCircle className='w-4 h-4' />
                 {errors.price.message}
               </p>
             )}
           </div>
 
           {/* Адрес */}
-          <div className="space-y-2">
-            <Label htmlFor="location" className="text-base font-medium flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-muted-foreground" />
-              Адрес *
-              {isGeocoding && (
-                <Spinner className="w-4 h-4 ml-2" />
-              )}
+          <div className='space-y-2'>
+            <Label
+              htmlFor='location'
+              className='text-base font-medium flex items-center gap-2'
+            >
+              <MapPin className='w-4 h-4 text-muted-foreground' />
+              Адрес *{isGeocoding && <Spinner className='w-4 h-4 ml-2' />}
             </Label>
             <Input
-              id="location"
+              id='location'
               {...register("location")}
-              placeholder="г. Грозный, ул. Ленина, д. 10"
-              className="h-11 text-base"
+              placeholder='г. Грозный, ул. Ленина, д. 10'
+              className='h-11 text-base'
             />
             {errors.location && (
-              <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-                <AlertCircle className="w-4 h-4" />
+              <p className='text-sm text-destructive flex items-center gap-1 mt-1'>
+                <AlertCircle className='w-4 h-4' />
                 {errors.location.message}
               </p>
             )}
             {watch("latitude") && watch("longitude") && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Координаты: {watch("latitude")?.toFixed(6)}, {watch("longitude")?.toFixed(6)}
+              <p className='text-xs text-muted-foreground mt-1'>
+                Координаты: {watch("latitude")?.toFixed(6)},{" "}
+                {watch("longitude")?.toFixed(6)}
               </p>
             )}
           </div>
 
           {/* Регион, город и тип недвижимости */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="region" className="text-base font-medium flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+            <div className='space-y-2'>
+              <Label
+                htmlFor='region'
+                className='text-base font-medium flex items-center gap-2'
+              >
+                <MapPin className='w-4 h-4 text-muted-foreground' />
                 Регион *
               </Label>
               <Select
@@ -568,13 +593,13 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
                   setValue("cityId", ""); // сброс города при смене региона
                 }}
               >
-                <SelectTrigger className="h-11 text-base">
+                <SelectTrigger className='h-11 text-base'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Chechnya">Чечня</SelectItem>
-                  <SelectItem value="Ingushetia">Ингушетия</SelectItem>
-                  <SelectItem value="Other">Другое</SelectItem>
+                  <SelectItem value='Chechnya'>Чечня</SelectItem>
+                  <SelectItem value='Ingushetia'>Ингушетия</SelectItem>
+                  <SelectItem value='Other'>Другое</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -587,9 +612,12 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
               placeholder={cities.length === 0 ? "Нет городов" : "Поиск или выбор города"}
             />
 
-            <div className="space-y-2">
-              <Label htmlFor="type" className="text-base font-medium flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-muted-foreground" />
+            <div className='space-y-2'>
+              <Label
+                htmlFor='type'
+                className='text-base font-medium flex items-center gap-2'
+              >
+                <Building2 className='w-4 h-4 text-muted-foreground' />
                 Тип недвижимости *
               </Label>
               <Select
@@ -598,47 +626,53 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
                   setValue("type", value as "apartment" | "house" | "land" | "commercial")
                 }
               >
-                <SelectTrigger className="h-11 text-base">
+                <SelectTrigger className='h-11 text-base'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="apartment">Квартира</SelectItem>
-                  <SelectItem value="house">Дом</SelectItem>
-                  <SelectItem value="land">Земельный участок</SelectItem>
-                  <SelectItem value="commercial">Коммерческая</SelectItem>
+                  <SelectItem value='apartment'>Квартира</SelectItem>
+                  <SelectItem value='house'>Дом</SelectItem>
+                  <SelectItem value='land'>Земельный участок</SelectItem>
+                  <SelectItem value='commercial'>Коммерческая</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* Количество комнат и Площадь - динамически */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             {showRooms && (
-              <div className="space-y-2 animate-in fade-in slide-in-from-left-2 duration-300">
-                <Label htmlFor="rooms" className="text-base font-medium flex items-center gap-2">
-                  <DoorOpen className="w-4 h-4 text-muted-foreground" />
+              <div className='space-y-2 animate-in fade-in slide-in-from-left-2 duration-300'>
+                <Label
+                  htmlFor='rooms'
+                  className='text-base font-medium flex items-center gap-2'
+                >
+                  <DoorOpen className='w-4 h-4 text-muted-foreground' />
                   Количество комнат
                 </Label>
                 <Input
-                  id="rooms"
-                  type="number"
+                  id='rooms'
+                  type='number'
                   {...register("rooms", { valueAsNumber: true })}
-                  placeholder="3"
-                  className="h-11 text-base"
+                  placeholder='3'
+                  className='h-11 text-base'
                 />
               </div>
             )}
 
             <div className={`space-y-2 ${showRooms ? "" : "md:col-span-2"}`}>
-              <Label htmlFor="area" className="text-base font-medium flex items-center gap-2">
-                <Ruler className="w-4 h-4 text-muted-foreground" />
+              <Label
+                htmlFor='area'
+                className='text-base font-medium flex items-center gap-2'
+              >
+                <Ruler className='w-4 h-4 text-muted-foreground' />
                 Площадь (м²) *
               </Label>
-              <div className="relative">
+              <div className='relative'>
                 <Input
-                  id="area"
-                  type="text"
-                  inputMode="decimal"
+                  id='area'
+                  type='text'
+                  inputMode='decimal'
                   value={areaDisplay}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -646,9 +680,10 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
                     const cleaned = value.replace(/[^\d.,]/g, "").replace(",", ".");
                     // Разрешаем только одну точку
                     const parts = cleaned.split(".");
-                    const formatted = parts.length > 2 
-                      ? parts[0] + "." + parts.slice(1).join("")
-                      : cleaned;
+                    const formatted =
+                      parts.length > 2
+                        ? parts[0] + "." + parts.slice(1).join("")
+                        : cleaned;
                     setAreaDisplay(formatted);
                     const num = parseFloat(formatted) || 0;
                     setValue("area", num, { shouldValidate: true });
@@ -659,17 +694,17 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
                       setAreaDisplay(String(num));
                     }
                   }}
-                  placeholder="75.5"
-                  className="h-11 text-base pr-10 font-medium"
-                  aria-label="Площадь недвижимости в квадратных метрах"
+                  placeholder='75.5'
+                  className='h-11 text-base pr-10 font-medium'
+                  aria-label='Площадь недвижимости в квадратных метрах'
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
+                <span className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium'>
                   м²
                 </span>
               </div>
               {errors.area && (
-                <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-                  <AlertCircle className="w-4 h-4" />
+                <p className='text-sm text-destructive flex items-center gap-1 mt-1'>
+                  <AlertCircle className='w-4 h-4' />
                   {errors.area.message}
                 </p>
               )}
@@ -679,24 +714,24 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       </Card>
 
       {/* Описание */}
-      <Card className="border-primary/20 shadow-lg transition-all hover:shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <FileText className="w-5 h-5 text-primary" />
+      <Card className='border-primary/20 shadow-lg transition-all hover:shadow-xl'>
+        <CardHeader className='bg-gradient-to-r from-primary/5 to-primary/10 border-b'>
+          <CardTitle className='flex items-center gap-2 text-xl'>
+            <FileText className='w-5 h-5 text-primary' />
             Описание
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-base font-medium">
+        <CardContent className='pt-6'>
+          <div className='space-y-2'>
+            <Label htmlFor='description' className='text-base font-medium'>
               Подробное описание недвижимости *
             </Label>
             <Textarea
-              id="description"
+              id='description'
               {...register("description")}
-              placeholder="Опишите недвижимость подробно: расположение, состояние, особенности, инфраструктуру рядом..."
+              placeholder='Опишите недвижимость подробно: расположение, состояние, особенности, инфраструктуру рядом...'
               rows={8}
-              className="text-base resize-y"
+              className='text-base resize-y'
               maxLength={8000}
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
@@ -707,26 +742,25 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
                 }
               }}
             />
-            <div className="flex items-center justify-between text-xs mt-1">
-              <span className="flex items-center gap-1">
+            <div className='flex items-center justify-between text-xs mt-1'>
+              <span className='flex items-center gap-1'>
                 {errors.description ? (
-                  <span className="text-destructive flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
+                  <span className='text-destructive flex items-center gap-1'>
+                    <AlertCircle className='w-3 h-3' />
                     {errors.description.message}
                   </span>
                 ) : (
-                  <span className="text-muted-foreground">
-                    Минимум 50 символов
-                  </span>
+                  <span className='text-muted-foreground'>Минимум 50 символов</span>
                 )}
               </span>
               <span
-                className={`font-medium transition-colors ${(watch("description")?.length || 0) >= 7600
-                  ? "text-destructive"
-                  : (watch("description")?.length || 0) >= 7000
-                    ? "text-amber-600 dark:text-amber-500"
-                    : "text-muted-foreground"
-                  }`}
+                className={`font-medium transition-colors ${
+                  (watch("description")?.length || 0) >= 7600
+                    ? "text-destructive"
+                    : (watch("description")?.length || 0) >= 7000
+                      ? "text-amber-600 dark:text-amber-500"
+                      : "text-muted-foreground"
+                }`}
               >
                 {watch("description")?.length || 0} / 8000
               </span>
@@ -764,19 +798,19 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
       /> */}
 
       {/* Изображения */}
-      <Card className="border-primary/20 shadow-lg transition-all hover:shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
-          <CardTitle className="flex items-center justify-between text-xl">
-            <div className="flex items-center gap-2">
-              <ImageIcon className="w-5 h-5 text-primary" />
+      <Card className='border-primary/20 shadow-lg transition-all hover:shadow-xl'>
+        <CardHeader className='bg-gradient-to-r from-primary/5 to-primary/10 border-b'>
+          <CardTitle className='flex items-center justify-between text-xl'>
+            <div className='flex items-center gap-2'>
+              <ImageIcon className='w-5 h-5 text-primary' />
               Изображения
             </div>
-            <span className="text-sm font-normal text-muted-foreground bg-background px-3 py-1 rounded-full border">
+            <span className='text-sm font-normal text-muted-foreground bg-background px-3 py-1 rounded-full border'>
               {imagePreviews.length} / {MAX_IMAGES_PER_PROPERTY}
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-6 space-y-4">
+        <CardContent className='pt-6 space-y-4'>
           {/* Dropzone / Upload Button */}
           <div
             onClick={handleSelectClick}
@@ -787,23 +821,23 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
               ${imagesError ? "border-destructive bg-destructive/5" : "border-muted-foreground/30"}
             `}
           >
-            <div className="flex flex-col items-center gap-3">
+            <div className='flex flex-col items-center gap-3'>
               {isUploading ? (
                 <>
-                  <Spinner className="w-12 h-12 text-primary" />
-                  <p className="text-sm font-medium text-foreground">Загрузка...</p>
-                  <p className="text-xs text-muted-foreground">Пожалуйста, подождите</p>
+                  <Spinner className='w-12 h-12 text-primary' />
+                  <p className='text-sm font-medium text-foreground'>Загрузка...</p>
+                  <p className='text-xs text-muted-foreground'>Пожалуйста, подождите</p>
                 </>
               ) : (
                 <>
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Upload className="w-8 h-8 text-primary" />
+                  <div className='w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center'>
+                    <Upload className='w-8 h-8 text-primary' />
                   </div>
                   <div>
-                    <p className="text-base font-semibold text-foreground mb-1">
+                    <p className='text-base font-semibold text-foreground mb-1'>
                       Нажмите для выбора изображений
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className='text-sm text-muted-foreground'>
                       JPG, PNG или WebP. Максимум {MAX_FILE_SIZE / 1024 / 1024}MB на файл
                     </p>
                   </div>
@@ -814,37 +848,35 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
             {/* Hidden File Input */}
             <input
               ref={fileInputRef}
-              type="file"
+              type='file'
               accept={ALLOWED_IMAGE_TYPES.join(",")}
               multiple
               onChange={handleFilesSelect}
-              className="hidden"
+              className='hidden'
               disabled={imagePreviews.length >= MAX_IMAGES_PER_PROPERTY}
             />
           </div>
 
-
-
           {/* Error Message */}
           {imagesError && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
-              <p className="text-sm text-destructive">{imagesError}</p>
+            <div className='p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2'>
+              <AlertCircle className='w-5 h-5 text-destructive shrink-0' />
+              <p className='text-sm text-destructive'>{imagesError}</p>
             </div>
           )}
 
           {/* Image Previews Grid */}
           {imagePreviews.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4'>
               {imagePreviews.map((preview) => (
                 <div
                   key={preview.id}
-                  className="relative group aspect-4/3 rounded-lg overflow-hidden border-2 border-border hover:border-primary/50 transition-all duration-200"
+                  className='relative group aspect-4/3 rounded-lg overflow-hidden border-2 border-border hover:border-primary/50 transition-all duration-200'
                 >
                   {/* Image */}
                   <img
                     src={preview.previewUrl}
-                    alt="Превью"
+                    alt='Превью'
                     className={`
                       w-full h-full object-cover
                       ${preview.error ? "opacity-50" : ""}
@@ -853,17 +885,17 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
 
                   {/* Loading Overlay */}
                   {preview.isUploading && (
-                    <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                      <Spinner className="w-8 h-8 text-white" />
+                    <div className='absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center backdrop-blur-sm'>
+                      <Spinner className='w-8 h-8 text-white' />
                     </div>
                   )}
 
                   {/* Error Overlay */}
                   {preview.error && (
-                    <div className="absolute inset-0 bg-destructive/30 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                      <div className="text-center p-2">
-                        <AlertCircle className="w-6 h-6 text-destructive mx-auto" />
-                        <p className="text-xs text-destructive mt-1 font-medium">
+                    <div className='absolute inset-0 bg-destructive/30 rounded-lg flex items-center justify-center backdrop-blur-sm'>
+                      <div className='text-center p-2'>
+                        <AlertCircle className='w-6 h-6 text-destructive mx-auto' />
+                        <p className='text-xs text-destructive mt-1 font-medium'>
                           {preview.error}
                         </p>
                       </div>
@@ -872,18 +904,18 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
 
                   {/* Success Indicator */}
                   {preview.uploadedUrl && !preview.error && !preview.isUploading && (
-                    <div className="absolute top-2 left-2 w-7 h-7 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                    <div className='absolute top-2 left-2 w-7 h-7 bg-green-500 rounded-full flex items-center justify-center shadow-lg'>
                       <svg
-                        className="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                        className='w-4 h-4 text-white'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
                       >
                         <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
                           strokeWidth={3}
-                          d="M5 13l4 4L19 7"
+                          d='M5 13l4 4L19 7'
                         />
                       </svg>
                     </div>
@@ -891,14 +923,14 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
 
                   {/* Remove Button */}
                   <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                    type='button'
+                    variant='destructive'
+                    size='icon'
+                    className='absolute top-2 right-2 w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg'
                     onClick={() => removeImage(preview.id)}
                     disabled={preview.isUploading}
                   >
-                    <X className="w-4 h-4" />
+                    <X className='w-4 h-4' />
                   </Button>
                 </div>
               ))}
@@ -907,36 +939,38 @@ export function PropertyForm({ onSuccess, initialData, isEdit = false }: Propert
 
           {/* Empty State */}
           {imagePreviews.length === 0 && !isUploading && (
-            <div className="text-center py-8 text-muted-foreground">
-              <ImageIcon className="w-16 h-16 mx-auto mb-3 opacity-30" />
-              <p className="text-sm font-medium">Изображения ещё не добавлены</p>
-              <p className="text-xs mt-1">Добавьте хотя бы одно изображение для объявления</p>
+            <div className='text-center py-8 text-muted-foreground'>
+              <ImageIcon className='w-16 h-16 mx-auto mb-3 opacity-30' />
+              <p className='text-sm font-medium'>Изображения ещё не добавлены</p>
+              <p className='text-xs mt-1'>
+                Добавьте хотя бы одно изображение для объявления
+              </p>
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* Кнопка отправки */}
-      <div className="flex justify-end gap-4 pt-4">
+      <div className='flex justify-end gap-4 pt-4'>
         <Button
-          type="submit"
-          className="btn-caucasus min-w-[200px] h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+          type='submit'
+          className='btn-caucasus min-w-[200px] h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all'
           disabled={isSubmitDisabled}
         >
           {isLoading ? (
             <>
-              <Spinner className="w-5 h-5 mr-2" />
+              <Spinner className='w-5 h-5 mr-2' />
               {isEdit ? "Сохранение..." : "Создание..."}
             </>
           ) : hasUploadingImages ? (
             <>
-              <Spinner className="w-5 h-5 mr-2" />
+              <Spinner className='w-5 h-5 mr-2' />
               Загрузка изображений...
             </>
           ) : (
             <>
               {isEdit ? "Сохранить изменения" : "Создать объявление"}
-              <ChevronRight className="w-5 h-5 ml-2" />
+              <ChevronRight className='w-5 h-5 ml-2' />
             </>
           )}
         </Button>

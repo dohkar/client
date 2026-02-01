@@ -53,3 +53,7 @@ export function getAreaLabel(areaMin: number | null | undefined): string {
   }
   return "Площадь";
 }
+
+export function getCityLabel(cityName: string | null | undefined): string {
+  return cityName?.trim() || "Город";
+}

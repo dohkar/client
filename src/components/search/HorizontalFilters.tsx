@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { ArrowUpDown, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,17 +25,21 @@ import {
   getPriceLabel,
   getRoomsLabel,
   getAreaLabel,
+  getCityLabel,
 } from "./FilterLabels";
+import type { CityDto } from "@/types/property";
 import type { PriceValidationErrors } from "@/hooks/use-search-filters";
 
 interface HorizontalFiltersProps {
   filters: SearchFiltersDisplay;
+  cities: CityDto[];
   localPriceMin: string;
   localPriceMax: string;
   localAreaMin?: string;
   priceErrors?: PriceValidationErrors;
   onTypeChange: (type: SearchFiltersDisplay["type"]) => void;
   onRegionChange: (region: SearchFiltersDisplay["region"]) => void;
+  onCityChange: (cityId: string | null) => void;
   onRoomsChange: (rooms: number | null) => void;
   onSortChange: (sortBy: SearchFiltersDisplay["sortBy"]) => void;
   onPriceMinChange: (value: string) => void;
@@ -45,12 +52,14 @@ interface HorizontalFiltersProps {
 
 export function HorizontalFilters({
   filters,
+  cities,
   localPriceMin,
   localPriceMax,
   localAreaMin = "",
   priceErrors = {},
   onTypeChange,
   onRegionChange,
+  onCityChange,
   onRoomsChange,
   onSortChange,
   onPriceMinChange,
@@ -60,6 +69,10 @@ export function HorizontalFilters({
   onAreaMinChange,
   onAreaMinBlur,
 }: HorizontalFiltersProps) {
+  const selectedCityName = filters.cityId
+    ? (cities.find((c) => c.id === filters.cityId)?.name ?? null)
+    : null;
+  const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
   return (
     <div
       className='w-full overflow-x-auto py-2 hide-scrollbar'
@@ -102,7 +115,7 @@ export function HorizontalFilters({
             <PopoverTrigger asChild>
               <Button
                 variant='outline'
-                className='h-10 sm:h-11 px-3 w-full justify-between text-xs sm:text-base'
+                className='h-10 sm:h-11 px-4 w-full justify-between text-xs sm:text-base'
               >
                 <span className='truncate max-w-[70px] sm:max-w-[110px]'>
                   {getPriceLabel(filters)}
@@ -190,6 +203,59 @@ export function HorizontalFilters({
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Город */}
+        <div className='w-[140px] min-w-0 shrink-0 sm:w-[180px]'>
+          <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant='outline'
+                className='h-10 sm:h-11 px-3 w-full justify-between text-xs sm:text-base'
+              >
+                <span className='truncate'>{getCityLabel(selectedCityName)}</span>
+                <ChevronDown className='w-4 h-4 opacity-50 shrink-0' />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className='w-[var(--radix-popover-trigger-width)] max-h-[280px] overflow-hidden flex flex-col p-0'
+              align='start'
+              sideOffset={8}
+            >
+              <div className='p-2 border-b shrink-0'>
+                <button
+                  type='button'
+                  className='w-full text-left text-xs sm:text-sm py-1.5 px-2 rounded hover:bg-accent'
+                  onClick={() => {
+                    onCityChange(null);
+                    setCityPopoverOpen(false);
+                  }}
+                >
+                  Все города
+                </button>
+              </div>
+              <div className='overflow-y-auto flex-1 min-h-0'>
+                {cities.map((city) => (
+                  <button
+                    key={city.id}
+                    type='button'
+                    className='w-full text-left text-xs sm:text-sm py-2 px-3 hover:bg-accent truncate'
+                    onClick={() => {
+                      onCityChange(city.id);
+                      setCityPopoverOpen(false);
+                    }}
+                  >
+                    {city.name}
+                  </button>
+                ))}
+                {cities.length === 0 && (
+                  <div className='py-4 text-center text-xs text-muted-foreground'>
+                    Нет городов
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Комнаты */}

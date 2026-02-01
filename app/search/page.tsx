@@ -4,7 +4,9 @@ import { useMemo, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useProperties } from "@/hooks/use-properties";
 import { useSearchFilters } from "@/hooks/use-search-filters";
+import { useCities } from "@/hooks/use-cities";
 import { toPropertySearchParams } from "@/lib/search-params";
+import { getRegionIdByName } from "@/services/region.service";
 import { SEARCH_CONSTANTS, PROPERTY_TYPE_LABELS } from "@/lib/search-constants";
 import { Spinner } from "@/components/ui";
 import {
@@ -43,6 +45,8 @@ function SearchPageContent() {
     handleAreaMinBlur,
     handlePriceMinBlur,
     handlePriceMaxBlur,
+    handleCityChange,
+    handleCityReset,
     handleTypeReset,
     handlePriceReset,
     handleRegionReset,
@@ -54,6 +58,16 @@ function SearchPageContent() {
     setCurrentPage,
     isPending,
   } = useSearchFilters();
+
+  const regionId =
+    appliedFilters.region !== "all"
+      ? getRegionIdByName(appliedFilters.region)
+      : undefined;
+  const { data: cities = [] } = useCities(regionId ?? undefined);
+  const selectedCityName =
+    appliedFilters.cityId != null
+      ? cities.find((c) => c.id === appliedFilters.cityId)?.name ?? null
+      : null;
 
   // Параметры для API из URL (appliedFilters уже содержат page/limit)
   const apiParams = useMemo(
@@ -76,6 +90,7 @@ function SearchPageContent() {
     if (appliedFilters.roomsMin != null) count++;
     if (appliedFilters.areaMin != null) count++;
     if (appliedFilters.region && appliedFilters.region !== "all") count++;
+    if (appliedFilters.cityId && appliedFilters.cityId.trim().length > 0) count++;
     return count;
   }, [appliedFilters]);
 
@@ -121,12 +136,14 @@ function SearchPageContent() {
         {/* Горизонтальные фильтры */}
         <HorizontalFilters
           filters={appliedFilters}
+          cities={cities}
           localPriceMin={draftPriceMin}
           localPriceMax={draftPriceMax}
           localAreaMin={draftAreaMin}
           priceErrors={priceErrors}
           onTypeChange={handleTypeChange}
           onRegionChange={handleRegionChange}
+          onCityChange={handleCityChange}
           onRoomsChange={handleRoomsChange}
           onSortChange={handleSortChange}
           onPriceMinChange={setDraftPriceMin}
@@ -141,11 +158,13 @@ function SearchPageContent() {
         <ActiveFilters
           filters={appliedFilters}
           activeFiltersCount={activeFiltersCount}
+          selectedCityName={selectedCityName}
           localPriceMin={draftPriceMin}
           localPriceMax={draftPriceMax}
           onTypeReset={handleTypeReset}
           onPriceReset={handlePriceReset}
           onRegionReset={handleRegionReset}
+          onCityReset={handleCityReset}
           onRoomsReset={handleRoomsReset}
           onAreaReset={handleAreaReset}
           onResetAll={handleResetAll}

@@ -19,7 +19,10 @@ import { Input } from "@/components/ui/input";
 import { Filter, Building2, DollarSign, Ruler, MapPin } from "lucide-react";
 import { useUIStore } from "@/stores";
 import { useSearchFilters } from "@/hooks/use-search-filters";
+import { useCities } from "@/hooks/use-cities";
+import { getRegionIdByName } from "@/services/region.service";
 import { PROPERTY_TYPE_OPTIONS, REGION_OPTIONS } from "@/lib/search-constants";
+import { CitySearchSelect } from "@/components/features/CitySearchSelect";
 
 export function MobileFilterDrawer() {
   const { isFilterModalOpen, openFilterModal, closeFilterModal } = useUIStore();
@@ -33,6 +36,7 @@ export function MobileFilterDrawer() {
     setDraftPriceMax: setLocalPriceMax,
     handleTypeChange,
     handleRegionChange,
+    handleCityChange,
     handleRoomsChange,
     handleAreaMinChange,
     handlePriceMinBlur,
@@ -42,6 +46,10 @@ export function MobileFilterDrawer() {
     isPending,
   } = useSearchFilters();
 
+  const regionId =
+    filters.region !== "all" ? getRegionIdByName(filters.region) : undefined;
+  const { data: cities = [] } = useCities(regionId ?? undefined);
+
   const activeFiltersCount = [
     filters.query?.trim(),
     filters.type !== "all",
@@ -50,6 +58,7 @@ export function MobileFilterDrawer() {
     filters.roomsMin != null,
     filters.areaMin != null,
     filters.region !== "all",
+    filters.cityId?.trim(),
   ].filter(Boolean).length;
 
   return (
@@ -241,6 +250,17 @@ export function MobileFilterDrawer() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Город */}
+            <div>
+              <CitySearchSelect
+                label="Город"
+                value={filters.cityId ?? ""}
+                onValueChange={(value) => handleCityChange(value || null)}
+                cities={cities}
+                placeholder={cities.length === 0 ? "Загрузка городов…" : "Все города"}
+              />
             </div>
           </div>
 

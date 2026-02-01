@@ -72,17 +72,22 @@ function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
               <p className='text-sm font-mono text-destructive'>{error.message}</p>
             </div>
           )}
-          <div className='flex gap-2'>
-            <Button aria-label='Попробовать снова' onClick={resetError} variant='default'>
+          <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
+            <Button
+              aria-label='Попробовать снова'
+              onClick={resetError}
+              variant='default'
+              className='w-full sm:w-auto'
+            >
               Попробовать снова
             </Button>
             <Button
               aria-label='Обновить страницу'
               onClick={() => window.location.reload()}
               variant='outline'
-              className='truncate'
+              className='w-full sm:w-auto'
             >
-              Обновить
+              Обновить страницу
             </Button>
           </div>
         </CardContent>
