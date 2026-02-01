@@ -6,7 +6,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { maskContact } from "../lib/utils";
+import { maskContact } from "@/lib/contact-utils";
 import {
   ERROR_MESSAGES,
   OTP_LENGTH,

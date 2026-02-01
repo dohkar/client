@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useAuthStore } from "@/stores/auth.store";
 import { ROUTES } from "@/constants";
 
-import { normalizeContact } from "../lib/utils";
+import { normalizeContact } from "@/lib/contact-utils";
 import { useAuthModalStore } from "../model/auth-modal.store";
 import { SUCCESS_AUTO_CLOSE_DELAY } from "../model/constants";
 import { ERROR_MESSAGES } from "../model/constants";

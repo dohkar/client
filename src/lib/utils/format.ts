@@ -1,3 +1,5 @@
+import { formatPhoneInput as formatPhoneInputFromContact } from "../contact-utils";
+
 /**
  * Форматирует дату в читаемый формат
  * @param date - дата для форматирования
@@ -393,68 +395,10 @@ export function maskPhone(
 
 /**
  * Форматирует ввод телефона в реальном времени (для input)
- * Улучшенная версия с поддержкой copy/paste и правильной обработкой удаления
+ * Использует @/lib/contact-utils для единообразия по проекту
  * @param value - текущее значение
- * @param previousValue - предыдущее значение (для определения направления)
- * @returns отформатированное значение
+ * @param _previousValue - не используется, оставлен для обратной совместимости
  */
-export function formatPhoneInput(value: string, previousValue?: string): string {
-  // Убираем все кроме цифр и +
-  let digits = value.replace(/[^\d+]/g, "");
-  
-  // Нормализация: 8 → +7
-  if (digits.startsWith("8") && digits.length > 1) {
-    digits = "+7" + digits.slice(1);
-  }
-  
-  // Если начинается с 9 (без +7), добавляем +7
-  if (digits.startsWith("9") && !digits.startsWith("+")) {
-    digits = "+7" + digits;
-  }
-  
-  // Если начинается с 7 (без +), добавляем +
-  if (digits.startsWith("7") && !digits.startsWith("+")) {
-    digits = "+" + digits;
-  }
-  
-  // Убираем лишние + из середины
-  const hasPlus = digits.startsWith("+");
-  digits = digits.replace(/\+/g, "");
-  if (hasPlus) digits = "+" + digits;
-  
-  // Извлекаем только цифры для форматирования
-  const nums = digits.replace(/\D/g, "");
-  
-  // Ограничиваем длину (11 цифр для российского номера)
-  const maxDigits = 11;
-  const limitedNums = nums.slice(0, maxDigits);
-  
-  // Если пусто, возвращаем пустую строку
-  if (limitedNums.length === 0) return "";
-  
-  // Если только одна цифра (7), возвращаем +7
-  if (limitedNums.length === 1) {
-    return limitedNums === "7" ? "+7" : `+${limitedNums}`;
-  }
-  
-  // Форматируем по мере ввода: +7 (XXX) XXX-XX-XX
-  const country = limitedNums.slice(0, 1); // 7
-  const code = limitedNums.slice(1, 4); // XXX
-  const part1 = limitedNums.slice(4, 7); // XXX
-  const part2 = limitedNums.slice(7, 9); // XX
-  const part3 = limitedNums.slice(9, 11); // XX
-  
-  if (limitedNums.length <= 4) {
-    // +7 (XXX
-    return `+${country} (${code}`;
-  } else if (limitedNums.length <= 7) {
-    // +7 (XXX) XXX
-    return `+${country} (${code}) ${part1}`;
-  } else if (limitedNums.length <= 9) {
-    // +7 (XXX) XXX-XX
-    return `+${country} (${code}) ${part1}-${part2}`;
-  } else {
-    // +7 (XXX) XXX-XX-XX
-    return `+${country} (${code}) ${part1}-${part2}-${part3}`;
-  }
+export function formatPhoneInput(value: string, _previousValue?: string): string {
+  return formatPhoneInputFromContact(value);
 }

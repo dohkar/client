@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/constants";
 
-import { detectContactType, validateContact, formatPhoneInput } from "../lib/utils";
+import { detectContactType, validateContact, formatPhoneInput } from "@/lib/contact-utils";
 import { ERROR_MESSAGES } from "../model/constants";
 import { cn } from "@/lib/utils";
 

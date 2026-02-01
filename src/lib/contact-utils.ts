@@ -1,8 +1,17 @@
 /**
- * Утилиты для модального окна авторизации
+ * Утилиты для ввода и валидации контактов (email и телефон).
+ * Использовать везде, где нужен ввод номера телефона или email.
  */
 
-import { EMAIL_REGEX, PHONE_REGEX } from "../model/constants";
+/** Regex для валидации email */
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Regex для валидации номера телефона (Россия)
+ * Поддерживает форматы: +7 (XXX) XXX-XX-XX, +7XXXXXXXXXX, 8XXXXXXXXXX, 7XXXXXXXXXX
+ */
+export const PHONE_REGEX =
+  /^(\+7|8|7)?[\s\-]?\(?[0-9]{3}\)?[\s\-]?[0-9]{3}[\s\-]?[0-9]{2}[\s\-]?[0-9]{2}$|^\+7\s?\([0-9]{3}\)\s?[0-9]{3}[\s\-]?[0-9]{2}[\s\-]?[0-9]{2}$/;
 
 /** Тип контакта */
 export type ContactType = "email" | "phone" | "invalid";
@@ -92,7 +101,7 @@ export function normalizeContact(contact: string): {
 }
 
 /**
- * Форматирует номер телефона в реальном времени
+ * Форматирует номер телефона в реальном времени при вводе
  * 89281234567 -> +7 (928) 123-45-67
  */
 export function formatPhoneInput(input: string): string {

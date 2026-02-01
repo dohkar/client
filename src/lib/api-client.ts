@@ -144,7 +144,14 @@ class ApiClient {
       this.activeRequests.delete(effectiveKey);
 
       // Если 401, пытаемся обновить токен (только один раз)
-      if (response.status === 401 && retryCount === 0) {
+      // Не делаем refresh для login/register — там 401 значит «неверный логин или пароль»
+      const isLoginOrRegister =
+        endpoint.includes("/auth/login") || endpoint.includes("/auth/register");
+      if (
+        response.status === 401 &&
+        retryCount === 0 &&
+        !isLoginOrRegister
+      ) {
         try {
           await this.refreshAccessToken();
           // Повторяем запрос - новый токен уже в httpOnly cookie
@@ -158,8 +165,11 @@ class ApiClient {
           // API возвращает { status, data } - извлекаем data
           return retryJson.data !== undefined ? retryJson.data : retryJson;
         } catch (refreshError) {
-          // Перенаправляем на login при неудачном refresh
-          if (typeof window !== "undefined") {
+          // Не редиректим, если просто нет refresh token (пользователь не залогинен)
+          const isNoRefreshToken =
+            refreshError instanceof Error &&
+            refreshError.message === "Refresh token отсутствует";
+          if (!isNoRefreshToken && typeof window !== "undefined") {
             window.location.href = ROUTES.login;
           }
           throw refreshError;
