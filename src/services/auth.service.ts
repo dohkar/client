@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import { cookieStorage } from "@/lib/cookie-storage";
 import { API_ENDPOINTS } from "@/constants/routes";
+import { API_URL } from "@/constants/config";
 import type {
   AuthLoginRequest,
   AuthRegisterRequest,
@@ -88,14 +89,42 @@ export const authService = {
   },
 
   /**
-   * Обновление токена
+   * Обновление токена (для 401 retry и для явного вызова)
    */
   async refreshToken(): Promise<void> {
-    // No need to get refreshToken from client-side cookieStorage
-    // The backend is expected to read httpOnly cookies automatically
-    await apiClient.post<void>("/api/auth/refresh");
-    // After refresh, verify user status
-    await this.getCurrentUser();
+    const ok = await this.silentRefresh();
+    if (ok) await this.getCurrentUser();
+  },
+
+  /**
+   * Тихий refresh: POST refresh с токеном из cookie, сохраняет новую пару в cookie.
+   * Возвращает true при успехе, false при ошибке (для планировщика silent re-auth).
+   */
+  async silentRefresh(): Promise<boolean> {
+    const baseUrl = API_URL;
+    const refreshToken = cookieStorage.getRefreshToken();
+    if (!refreshToken) return false;
+
+    try {
+      const response = await fetch(`${baseUrl}/api/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+        credentials: "include",
+      });
+
+      if (!response.ok) return false;
+
+      const json = await response.json();
+      const data = json.data ?? json;
+      if (data.accessToken && data.refreshToken) {
+        cookieStorage.saveTokens(data.accessToken, data.refreshToken);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   },
 
   /**
@@ -113,16 +142,24 @@ export const authService = {
   // не представлены в текущей OpenAPI спецификации
 
   /**
-   * Получить OAuth URL
+   * Получить OAuth URL (для popup/redirect и для привязки аккаунта)
    */
-  getOAuthUrl(provider: "google" | "yandex" | "vk"): string {
-    // Базовый URL БЕЗ глобального префикса /api — он уже есть в API_ENDPOINTS
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-    const endpoints = {
+  getOAuthUrl(
+    provider: "google" | "yandex" | "vk",
+    options?: { state?: string }
+  ): string {
+    const baseUrl = API_URL;
+    const endpoints: Record<string, string> = {
       google: API_ENDPOINTS.auth.google,
       yandex: API_ENDPOINTS.auth.yandex,
       vk: API_ENDPOINTS.auth.vk,
     };
-    return `${baseUrl}${endpoints[provider]}`;
+    const path = endpoints[provider] ?? "";
+    const url = `${baseUrl}${path}`;
+    if (options?.state) {
+      const separator = url.includes("?") ? "&" : "?";
+      return `${url}${separator}state=${encodeURIComponent(options.state)}`;
+    }
+    return url;
   },
 };

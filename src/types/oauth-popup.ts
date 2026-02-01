@@ -1,7 +1,7 @@
 import type { User } from "./common";
 
 /** Допустимые типы сообщений от popup к opener */
-export type OAuthPopupMessageType = "oauth:success" | "oauth:error";
+export type OAuthPopupMessageType = "oauth:success" | "oauth:error" | "oauth:linked";
 
 export interface OAuthPopupMessageSuccess {
   type: "oauth:success";
@@ -13,7 +13,16 @@ export interface OAuthPopupMessageError {
   error: string;
 }
 
-export type OAuthPopupMessage = OAuthPopupMessageSuccess | OAuthPopupMessageError;
+export interface OAuthPopupMessageLinked {
+  type: "oauth:linked";
+  user: User;
+  provider: "google" | "yandex";
+}
+
+export type OAuthPopupMessage =
+  | OAuthPopupMessageSuccess
+  | OAuthPopupMessageError
+  | OAuthPopupMessageLinked;
 
 /** Проверка, что payload — успешное сообщение */
 export function isOAuthSuccess(
@@ -36,6 +45,18 @@ export function isOAuthError(data: unknown): data is OAuthPopupMessageError {
     "type" in data &&
     (data as OAuthPopupMessageError).type === "oauth:error" &&
     "error" in data
+  );
+}
+
+/** Проверка, что payload — сообщение о привязке аккаунта */
+export function isOAuthLinked(data: unknown): data is OAuthPopupMessageLinked {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "type" in data &&
+    (data as OAuthPopupMessageLinked).type === "oauth:linked" &&
+    "user" in data &&
+    "provider" in data
   );
 }
 

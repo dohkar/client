@@ -4,9 +4,28 @@ import { cookieStorage } from "@/lib/cookie-storage";
 import type { User } from "@/types";
 import type { UserResponseDto } from "@/lib/api-types";
 import { persist } from "zustand/middleware";
+import {
+  startSilentAuthScheduler,
+  stopSilentAuthScheduler,
+} from "@/lib/silent-auth-scheduler";
+
+let silentAuthCleanup: (() => void) | null = null;
+
+function startSilentAuthIfNeeded(): void {
+  if (typeof window === "undefined") return;
+  if (!cookieStorage.getRefreshToken()) return;
+  silentAuthCleanup?.();
+  silentAuthCleanup = startSilentAuthScheduler(() => authService.silentRefresh());
+}
+
+function stopSilentAuth(): void {
+  silentAuthCleanup?.();
+  silentAuthCleanup = null;
+  stopSilentAuthScheduler();
+}
 
 // Function to map UserResponseDto to User
-function mapUserResponseToUser(userResponse: UserResponseDto): User {
+function mapUserResponseToUser(userResponse: UserResponseDto & { provider?: string }): User {
   return {
     id: userResponse.id,
     name: userResponse.name,
@@ -16,6 +35,7 @@ function mapUserResponseToUser(userResponse: UserResponseDto): User {
     isPremium: userResponse.isPremium,
     role: userResponse.role as User["role"],
     createdAt: userResponse.createdAt,
+    provider: userResponse.provider as User["provider"],
   };
 }
 
@@ -65,6 +85,7 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+          startSilentAuthIfNeeded();
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : "Ошибка входа";
           set({
@@ -112,6 +133,7 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+          startSilentAuthIfNeeded();
         } catch (error: unknown) {
           const errorMessage =
             error instanceof Error ? error.message : "Неверный код";
@@ -124,14 +146,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
+        stopSilentAuth();
         try {
-          // Сервер очистит httpOnly cookies
           await authService.logout();
         } catch (error: unknown) {
           // Logging error is not critical, state should be cleared anyway
-          // Optionally report to monitoring in production
         } finally {
-          // Очищаем состояние (httpOnly cookies очищаются сервером)
           set({
             user: null,
             isAuthenticated: false,
@@ -210,4 +230,16 @@ export const useAuthStore = create<AuthState>()(
 // Initialize on client-side only, on module load
 if (typeof window !== "undefined") {
   void useAuthStore.getState().initialize();
+
+  // Сброс состояния при редиректе на логин после неудачного refresh (401)
+  window.addEventListener("auth:session-expired", () => {
+    stopSilentAuth();
+    cookieStorage.clearTokens();
+    useAuthStore.setState({
+      user: null,
+      isAuthenticated: false,
+      isInitialized: true,
+      error: null,
+    });
+  });
 }

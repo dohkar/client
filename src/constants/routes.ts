@@ -14,6 +14,7 @@ export const ROUTES = {
   sell: "/sell",
   // User
   dashboard: "/dashboard",
+  dashboardSettings: "/dashboard/settings",
   favorites: "/favorites",
   profile: (id: string) => `/profile/${id}`,
   messages: "/messages",

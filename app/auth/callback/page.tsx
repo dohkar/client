@@ -7,6 +7,7 @@ import { authService } from "@/services/auth.service";
 import { cookieStorage } from "@/lib/cookie-storage";
 import { Spinner } from "@/components/ui/spinner";
 import { ROUTES } from "@/constants";
+import { toast } from "sonner";
 import type { User } from "@/types";
 
 function LoadingState() {
@@ -65,6 +66,54 @@ function AuthCallbackHandler() {
 
     const handleCallback = async () => {
       try {
+        const linked = searchParams.get("linked");
+        const errorParam = searchParams.get("error");
+
+        if (linked === "google" || linked === "yandex") {
+          const providerName = linked === "google" ? "Google" : "Яндекс";
+          toast.success(`${providerName} привязан к аккаунту`);
+          if (typeof window !== "undefined") {
+            window.history.replaceState({}, "", "/auth/callback");
+          }
+          const isPopup = !!window.opener;
+          void useAuthStore.getState().checkAuth().then(async () => {
+            const userResponse = await authService.getCurrentUser();
+            if (userResponse) {
+              const user = mapUserResponseToUser(userResponse);
+              useAuthStore.getState().setUser(user);
+            }
+            if (isPopup && window.opener) {
+              const u = useAuthStore.getState().user;
+              const providerParam = searchParams.get("linked");
+              if (u && (providerParam === "google" || providerParam === "yandex")) {
+                window.opener.postMessage(
+                  {
+                    type: "oauth:linked" as const,
+                    user: u,
+                    provider: providerParam,
+                  },
+                  window.location.origin
+                );
+              }
+              window.close();
+            } else {
+              router.push(ROUTES.dashboardSettings);
+            }
+          });
+          return;
+        }
+
+        if (errorParam === "login_required") {
+          toast.error("Войдите в аккаунт, чтобы привязать способ входа");
+          router.push(ROUTES.login);
+          return;
+        }
+        if (errorParam === "link_failed") {
+          toast.error("Не удалось привязать аккаунт");
+          router.push(ROUTES.dashboardSettings);
+          return;
+        }
+
         const accessToken = searchParams.get("access_token");
         const refreshToken = searchParams.get("refresh_token");
 

@@ -72,6 +72,9 @@ export enum UserRole {
   MODERATOR = "MODERATOR",
 }
 
+/** Провайдер входа (LOCAL, GOOGLE, YANDEX, VK) */
+export type AuthProviderType = "LOCAL" | "GOOGLE" | "YANDEX" | "VK";
+
 /**
  * Интерфейс пользователя
  */
@@ -84,4 +87,6 @@ export interface User {
   isPremium: boolean;
   role: UserRole;
   createdAt: string;
+  /** Текущий привязанный OAuth-провайдер (если есть) */
+  provider?: AuthProviderType;
 }

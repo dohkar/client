@@ -8,10 +8,12 @@ import { toast } from "sonner";
 import { ROUTES } from "@/constants";
 import {
   isOAuthError,
+  isOAuthLinked,
   isOAuthSuccess,
   type OAuthPopupProvider,
 } from "@/types/oauth-popup";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-media-query";
 
 const POPUP_WIDTH = 500;
 const POPUP_HEIGHT = 600;
@@ -27,7 +29,7 @@ function getPopupPosition(): { left: number; top: number } {
   return { left, top };
 }
 
-const OAUTH_MESSAGE_TYPES = ["oauth:success", "oauth:error"] as const;
+const OAUTH_MESSAGE_TYPES = ["oauth:success", "oauth:error", "oauth:linked"] as const;
 
 function getAllowedOrigins(): string[] {
   if (typeof window === "undefined") return [];
@@ -55,6 +57,8 @@ export interface OAuthPopupButtonProps
   icon?: React.ReactNode;
   className?: string;
   onSuccessRedirect?: string;
+  /** state для OAuth (например "link" для привязки аккаунта) */
+  oauthState?: string;
 }
 
 export const OAuthPopupButton = forwardRef<
@@ -68,17 +72,26 @@ export const OAuthPopupButton = forwardRef<
     className,
     onSuccessRedirect = ROUTES.dashboard,
     disabled = false,
+    oauthState,
     ...rest
   },
   ref
 ) {
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
+  const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(false);
   const popupRef = useRef<Window | null>(null);
   const listenerRef = useRef<((event: MessageEvent) => void) | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const completedRef = useRef(false);
+
+  const getOAuthUrl = useCallback(() => {
+    return authService.getOAuthUrl(
+      provider,
+      oauthState ? { state: oauthState } : undefined
+    );
+  }, [provider, oauthState]);
 
   const cleanup = useCallback(() => {
     if (listenerRef.current && typeof window !== "undefined") {
@@ -97,19 +110,34 @@ export const OAuthPopupButton = forwardRef<
   const openOAuthPopup = useCallback(() => {
     if (typeof window === "undefined") return;
 
+    const url = getOAuthUrl();
+    const preferRedirect =
+      isMobile ||
+      (typeof window !== "undefined" && window.innerWidth < 768);
+
+    if (preferRedirect) {
+      window.location.href = url;
+      return;
+    }
+
     if (popupRef.current && !popupRef.current.closed) {
       popupRef.current.focus();
       return;
     }
 
-    const url = authService.getOAuthUrl(provider);
     const { left, top } = getPopupPosition();
     const features = `width=${POPUP_WIDTH},height=${POPUP_HEIGHT},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`;
     const popup = window.open(url, "oauth-popup", features);
 
     if (!popup) {
       toast.error("Всплывающее окно заблокировано", {
-        description: "Разрешите всплывающие окна для этого сайта",
+        description: "Разрешите всплывающие окна или войдите в этом окне",
+        action: {
+          label: "Войти в этом окне",
+          onClick: () => {
+            window.location.href = url;
+          },
+        },
       });
       return;
     }
@@ -145,6 +173,18 @@ export const OAuthPopupButton = forwardRef<
         return;
       }
 
+      if (isOAuthLinked(event.data)) {
+        setUser(event.data.user);
+        useAuthStore.setState({
+          isAuthenticated: true,
+          isInitialized: true,
+          error: null,
+        });
+        const name = event.data.provider === "google" ? "Google" : "Яндекс";
+        toast.success(`${name} привязан к аккаунту`);
+        return;
+      }
+
       if (isOAuthError(event.data)) {
         toast.error("Ошибка авторизации", {
           description: event.data.error,
@@ -168,6 +208,9 @@ export const OAuthPopupButton = forwardRef<
     }, 500);
   }, [
     provider,
+    oauthState,
+    getOAuthUrl,
+    isMobile,
     cleanup,
     setUser,
     onSuccessRedirect,

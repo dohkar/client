@@ -170,6 +170,7 @@ class ApiClient {
             refreshError instanceof Error &&
             refreshError.message === "Refresh token отсутствует";
           if (!isNoRefreshToken && typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("auth:session-expired"));
             window.location.href = ROUTES.login;
           }
           throw refreshError;

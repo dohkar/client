@@ -11,6 +11,7 @@ import { uploadService, validateImageFile, ALLOWED_IMAGE_TYPES } from "@/service
 import { useAuthStore } from "@/stores";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/react-query/query-keys";
+import type { User } from "@/types";
 
 const profileSchema = z.object({
   name: z
@@ -47,16 +48,18 @@ export function useProfile() {
     queryFn: async () => {
       const response = await authService.getCurrentUser();
       if (response) {
-        setUser({
+        const user: User = {
           id: response.id,
           name: response.name,
           email: response.email,
           phone: response.phone,
           avatar: response.avatar,
           isPremium: response.isPremium,
-          role: response.role as "user" | "premium" | "admin",
+          role: response.role as User["role"],
           createdAt: response.createdAt,
-        });
+          provider: (response as User & { provider?: User["provider"] }).provider,
+        };
+        setUser(user);
       }
       return response;
     },
@@ -94,15 +97,16 @@ export function useProfile() {
     mutationFn: (data: ProfileFormData) => usersService.updateUser(data),
     onSuccess: async () => {
       const updatedUser = await authService.getCurrentUser();
-      const userForStore = {
+      const userForStore: User = {
         id: updatedUser.id,
         name: updatedUser.name,
         email: updatedUser.email,
         phone: updatedUser.phone,
         avatar: updatedUser.avatar,
         isPremium: updatedUser.isPremium,
-        role: updatedUser.role as "user" | "premium" | "admin",
+        role: updatedUser.role as User["role"],
         createdAt: updatedUser.createdAt,
+        provider: (updatedUser as User & { provider?: User["provider"] }).provider,
       };
       setUser(userForStore);
       queryClient.setQueryData(queryKeys.auth.user(), updatedUser);
@@ -145,15 +149,16 @@ export function useProfile() {
 
         // Обновляем данные пользователя
         const updatedUser = await authService.getCurrentUser();
-        const userForStore = {
+        const userForStore: User = {
           id: updatedUser.id,
           name: updatedUser.name,
           email: updatedUser.email,
           phone: updatedUser.phone,
           avatar: updatedUser.avatar,
           isPremium: updatedUser.isPremium,
-          role: updatedUser.role as "user" | "premium" | "admin",
+          role: updatedUser.role as User["role"],
           createdAt: updatedUser.createdAt,
+          provider: (updatedUser as User & { provider?: User["provider"] }).provider,
         };
         setUser(userForStore);
         queryClient.setQueryData(queryKeys.auth.user(), updatedUser);
