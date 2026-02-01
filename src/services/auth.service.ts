@@ -61,6 +61,33 @@ export const authService = {
   },
 
   /**
+   * Отправить SMS-код на номер телефона (для входа по коду)
+   */
+  async sendCode(phone: string): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>("/api/auth/send-code", {
+      phone,
+    });
+  },
+
+  /**
+   * Подтвердить код и войти/зарегистрироваться по SMS
+   * Сохраняет токены в cookies и возвращает данные пользователя
+   */
+  async verifyCode(
+    phone: string,
+    code: string
+  ): Promise<UserGetMeResponse> {
+    const response = await apiClient.post<{
+      accessToken: string;
+      refreshToken: string;
+      user: UserGetMeResponse;
+    }>("/api/auth/phone/verify", { phone, code });
+
+    cookieStorage.saveTokens(response.accessToken, response.refreshToken);
+    return response.user;
+  },
+
+  /**
    * Обновление токена
    */
   async refreshToken(): Promise<void> {

@@ -33,6 +33,10 @@ interface AuthState {
     phone: string;
     password: string;
   }) => Promise<void>;
+  /** Отправить SMS-код на телефон (для входа по коду в модалке) */
+  sendOtp: (phone: string) => Promise<void>;
+  /** Подтвердить код и войти по SMS */
+  verifyOtp: (params: { phone: string; code: string }) => Promise<void>;
   setUser: (user: User | null) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
@@ -85,6 +89,32 @@ export const useAuthStore = create<AuthState>()(
         } catch (error: unknown) {
           const errorMessage =
             error instanceof Error ? error.message : "Ошибка регистрации";
+          set({
+            error: errorMessage,
+            isLoading: false,
+          });
+          throw error;
+        }
+      },
+
+      sendOtp: async (phone: string) => {
+        await authService.sendCode(phone);
+      },
+
+      verifyOtp: async ({ phone, code }: { phone: string; code: string }) => {
+        set({ isLoading: true, error: null });
+        try {
+          const userResponse = await authService.verifyCode(phone, code);
+          const user = mapUserResponseToUser(userResponse as UserResponseDto);
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Неверный код";
           set({
             error: errorMessage,
             isLoading: false,

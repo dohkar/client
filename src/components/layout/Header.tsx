@@ -24,6 +24,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { useAuthModal } from "@/components/features/auth-modal"; // временно: редирект на /auth/login
 import { useAuthStore, useUIStore } from "@/stores";
 import { ROUTES } from "@/constants";
 import { formatUserName } from "@/lib/utils/format-name";
@@ -100,6 +101,7 @@ export function Header() {
 
   const { isAuthenticated, user, logout } = useAuthStore();
   const { isMobileMenuOpen, toggleMobileMenu, setMobileMenuOpen } = useUIStore();
+  // const { openAuthModal } = useAuthModal(); // временно: редирект на /auth/login
 
   const [showMenu, setShowMenu] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -321,12 +323,15 @@ export function Header() {
                 </HoverCard>
               </>
             ) : (
-              <Link href={ROUTES.login}>
-                <Button variant='outline' size='sm' className='gap-1.5 shrink-0'>
-                  <User className='h-4 w-4' />
-                  Войти
-                </Button>
-              </Link>
+              <Button
+                variant='outline'
+                size='sm'
+                className='gap-1.5 shrink-0'
+                onClick={() => router.push(ROUTES.login)}
+              >
+                <User className='h-4 w-4' />
+                Войти
+              </Button>
             )}
           </div>
           <Link href={ROUTES.sell} className='shrink-0'>
