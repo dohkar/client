@@ -17,6 +17,7 @@ import {
   UserCircle,
   Shield,
   MessageSquare,
+  UserIcon,
 } from "lucide-react";
 import {
   HoverCard,
@@ -29,6 +30,7 @@ import { useAuthStore, useUIStore } from "@/stores";
 import { ROUTES } from "@/constants";
 import { formatUserName } from "@/lib/utils/format-name";
 import { cn } from "@/lib/utils";
+import { UserRole } from "@/types";
 
 const CATEGORIES = [
   { name: "Квартиры", href: `${ROUTES.search}?type=apartment` },
@@ -71,7 +73,7 @@ function CategoryLinks({
   );
 }
 
-function UserMenuLinks({ isAdmin }: { isAdmin: boolean }) {
+function UserMenuLinks({ isAdmin, isSupport }: { isAdmin: boolean; isSupport: boolean }) {
   return (
     <>
       {isAdmin && (
@@ -79,6 +81,14 @@ function UserMenuLinks({ isAdmin }: { isAdmin: boolean }) {
           <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-red-600'>
             <Shield className='h-4 w-4 shrink-0' />
             Админ-панель
+          </div>
+        </Link>
+      )}
+      {isSupport && (
+        <Link href={`${ROUTES.dashboard}/support`}>
+          <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-green-600'>
+            <UserIcon className='h-4 w-4 shrink-0' />
+            Поддержка
           </div>
         </Link>
       )}
@@ -112,7 +122,8 @@ export function Header() {
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === UserRole.ADMIN;
+  const isSupport = user?.role === UserRole.SUPPORT;
   const userName = formatUserName(user?.name);
   const userInitial = userName.charAt(0).toUpperCase();
 
@@ -306,7 +317,7 @@ export function Header() {
                     className='w-56 p-1.5 shadow-xl rounded-xl'
                   >
                     <div className='space-y-0.5'>
-                      <UserMenuLinks isAdmin={isAdmin} />
+                      <UserMenuLinks isAdmin={isAdmin} isSupport={isSupport} />
                     </div>
                     <div className='pt-1.5 mt-1 border-t'>
                       <button

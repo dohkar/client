@@ -85,7 +85,7 @@ export default function DashboardPage() {
       href: "/messages",
       color: "text-accent",
     },
-    ...(user?.role === "admin"
+    ...(user?.role && user.role.toUpperCase() === "ADMIN"
       ? [
           {
             title: "Админ панель",

@@ -1,3 +1,4 @@
+export * from "./OAuthPopupButton";
 export * from "./category-showcase";
 export * from "./cta-section";
 export * from "./features-section";

@@ -64,7 +64,13 @@ export type DealType = "buy" | "rent" | "daily";
 /**
  * Тип пользователя
  */
-export type UserRole = "user" | "premium" | "admin";
+export enum UserRole {
+  USER = "USER",
+  PREMIUM = "PREMIUM",
+  ADMIN = "ADMIN",
+  SUPPORT = "SUPPORT",
+  MODERATOR = "MODERATOR",
+}
 
 /**
  * Интерфейс пользователя
