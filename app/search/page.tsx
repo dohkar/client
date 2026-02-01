@@ -4,7 +4,7 @@ import { useMemo, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useProperties } from "@/hooks/use-properties";
 import { useSearchFilters } from "@/hooks/use-search-filters";
-import { buildApiSearchParams } from "@/lib/search-utils";
+import { toPropertySearchParams } from "@/lib/search-params";
 import { SEARCH_CONSTANTS, PROPERTY_TYPE_LABELS } from "@/lib/search-constants";
 import { Spinner } from "@/components/ui";
 import {
@@ -26,7 +26,7 @@ import { ROUTES } from "@/constants";
 function SearchPageContent() {
   const router = useRouter();
 
-  // Единый хук для управления фильтрами (draft/applied разделение)
+  // URL — единственный источник истины для фильтров
   const {
     appliedFilters,
     draftPriceMin,
@@ -52,16 +52,17 @@ function SearchPageContent() {
     priceErrors,
     currentPage,
     setCurrentPage,
+    isPending,
   } = useSearchFilters();
 
-  // Корректно мемоизированные параметры для запроса (appliedFilters, currentPage)
-  const urlSearchParams = useMemo(
-    () => buildApiSearchParams(appliedFilters, currentPage, SEARCH_CONSTANTS.ITEMS_PER_PAGE),
-    [appliedFilters, currentPage]
+  // Параметры для API из URL (appliedFilters уже содержат page/limit)
+  const apiParams = useMemo(
+    () => toPropertySearchParams(appliedFilters, SEARCH_CONSTANTS.ITEMS_PER_PAGE),
+    [appliedFilters]
   );
 
   // Хук получения данных: обрабатывает undefined/null данных и ошибки
-  const { data, isLoading, error } = useProperties(urlSearchParams);
+  const { data, isLoading, error } = useProperties(apiParams);
   const properties = Array.isArray(data?.data) ? data.data : [];
   const totalPages = typeof data?.totalPages === "number" ? data.totalPages : 0;
 
@@ -164,7 +165,7 @@ function SearchPageContent() {
 
           <SearchResults
             properties={properties}
-            isLoading={isLoading}
+            isLoading={isLoading || isPending}
             error={error}
             currentPage={currentPage}
             totalPages={totalPages}

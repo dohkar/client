@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Menu,
@@ -28,16 +28,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // import { useAuthModal } from "@/components/features/auth-modal"; // временно: редирект на /auth/login
 import { useAuthStore, useUIStore } from "@/stores";
 import { ROUTES } from "@/constants";
+import { useParsedSearchFilters } from "@/hooks/use-search-filters";
 import { formatUserName } from "@/lib/utils/format-name";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/types";
+import type { PropertyType } from "@/types/property";
 
-const CATEGORIES = [
-  { name: "Квартиры", href: `${ROUTES.search}?type=apartment` },
-  { name: "Дома", href: `${ROUTES.search}?type=house` },
-  { name: "Участки", href: `${ROUTES.search}?type=land` },
-  { name: "Коммерция", href: `${ROUTES.search}?type=commercial` },
-] as const;
+const CATEGORIES: Array<{
+  name: string;
+  href: string;
+  type: PropertyType;
+}> = [
+  { name: "Квартиры", href: `${ROUTES.search}?type=apartment`, type: "apartment" },
+  { name: "Дома", href: `${ROUTES.search}?type=house`, type: "house" },
+  { name: "Участки", href: `${ROUTES.search}?type=land`, type: "land" },
+  { name: "Коммерция", href: `${ROUTES.search}?type=commercial`, type: "commercial" },
+];
 
 const USER_MENU_ITEMS = [
   { href: ROUTES.dashboard, icon: LayoutDashboard, label: "Кабинет" },
@@ -107,7 +113,7 @@ function UserMenuLinks({ isAdmin, isSupport }: { isAdmin: boolean; isSupport: bo
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const filters = useParsedSearchFilters();
 
   const { isAuthenticated, user, logout } = useAuthStore();
   const { isMobileMenuOpen, toggleMobileMenu, setMobileMenuOpen } = useUIStore();
@@ -127,14 +133,15 @@ export function Header() {
   const userName = formatUserName(user?.name);
   const userInitial = userName.charAt(0).toUpperCase();
 
-  // Вычисляем актуальные категории
-  const categories = useMemo(() => {
-    return CATEGORIES.map((cat) => {
-      const type = new URLSearchParams(cat.href.split("?")[1] || "").get("type");
-      const isActive = pathname === ROUTES.search && searchParams.get("type") === type;
-      return { ...cat, isActive };
-    });
-  }, [pathname, searchParams]);
+  // Категории с подсветкой активного типа из URL (распарсенного через useParsedSearchFilters)
+  const categories = useMemo(
+    () =>
+      CATEGORIES.map((cat) => ({
+        ...cat,
+        isActive: pathname === ROUTES.search && filters.type === cat.type,
+      })),
+    [pathname, filters.type]
+  );
 
   // Управление анимацией мобильного меню
   useEffect(() => {

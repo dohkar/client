@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { PropertyFilters } from "@/stores";
+import type { SearchFiltersDisplay } from "@/lib/search-params";
 import {
   PROPERTY_TYPE_OPTIONS,
   REGION_OPTIONS,
@@ -26,15 +26,15 @@ import {
 import type { PriceValidationErrors } from "@/hooks/use-search-filters";
 
 interface HorizontalFiltersProps {
-  filters: PropertyFilters;
+  filters: SearchFiltersDisplay;
   localPriceMin: string;
   localPriceMax: string;
   localAreaMin?: string;
   priceErrors?: PriceValidationErrors;
-  onTypeChange: (type: PropertyFilters["type"]) => void;
-  onRegionChange: (region: PropertyFilters["region"]) => void;
+  onTypeChange: (type: SearchFiltersDisplay["type"]) => void;
+  onRegionChange: (region: SearchFiltersDisplay["region"]) => void;
   onRoomsChange: (rooms: number | null) => void;
-  onSortChange: (sortBy: PropertyFilters["sortBy"]) => void;
+  onSortChange: (sortBy: SearchFiltersDisplay["sortBy"]) => void;
   onPriceMinChange: (value: string) => void;
   onPriceMaxChange: (value: string) => void;
   onPriceMinBlur: () => void;

@@ -1,9 +1,14 @@
-import type { PropertyFilters } from "@/stores";
 import {
   PROPERTY_TYPE_LABELS,
   REGION_LABELS,
   SORT_LABELS,
 } from "@/lib/search-constants";
+
+/** Минимальный тип для отображения ценового диапазона */
+interface PriceFilters {
+  priceMin?: number | null;
+  priceMax?: number | null;
+}
 
 /**
  * Утилиты для получения лейблов фильтров
@@ -20,14 +25,14 @@ export function getSortLabel(sortBy: string): string {
   return SORT_LABELS[sortBy] || "По популярности";
 }
 
-export function getPriceLabel(filters: PropertyFilters): string {
-  if (filters.priceMin && filters.priceMax) {
+export function getPriceLabel(filters: PriceFilters): string {
+  if (filters.priceMin != null && filters.priceMax != null) {
     return `${filters.priceMin.toLocaleString()} - ${filters.priceMax.toLocaleString()} ₽`;
   }
-  if (filters.priceMin) {
+  if (filters.priceMin != null) {
     return `от ${filters.priceMin.toLocaleString()} ₽`;
   }
-  if (filters.priceMax) {
+  if (filters.priceMax != null) {
     return `до ${filters.priceMax.toLocaleString()} ₽`;
   }
   return "Цена";

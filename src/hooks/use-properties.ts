@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { propertyService } from "@/services/property.service";
 import { getRegionIdByName } from "@/services/region.service";
@@ -31,6 +31,7 @@ export function useProperties(params?: PropertySearchParams) {
     queryFn: () => propertyService.getProperties(apiParams),
     staleTime: 60 * 1000, // 1 minute
     retry: 2,
+    placeholderData: keepPreviousData, // Показываем предыдущие данные при смене фильтров
   });
 }
 

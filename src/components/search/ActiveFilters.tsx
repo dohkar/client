@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { PropertyFilters } from "@/stores";
+import type { SearchFiltersDisplay } from "@/lib/search-params";
 import {
   getTypeLabel,
   getRegionLabel,
@@ -10,7 +10,7 @@ import {
 } from "./FilterLabels";
 
 interface ActiveFiltersProps {
-  filters: PropertyFilters;
+  filters: SearchFiltersDisplay;
   activeFiltersCount: number;
   localPriceMin: string;
   localPriceMax: string;

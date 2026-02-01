@@ -24,7 +24,7 @@ import { PROPERTY_TYPE_OPTIONS, REGION_OPTIONS } from "@/lib/search-constants";
 export function MobileFilterDrawer() {
   const { isFilterModalOpen, openFilterModal, closeFilterModal } = useUIStore();
 
-  // Используем единый hook для управления фильтрами
+  // Используем единый hook для управления фильтрами (updateFilters с replace: true)
   const {
     appliedFilters: filters,
     draftPriceMin: localPriceMin,
@@ -39,7 +39,18 @@ export function MobileFilterDrawer() {
     handlePriceMaxBlur,
     handleResetAll,
     priceErrors,
+    isPending,
   } = useSearchFilters();
+
+  const activeFiltersCount = [
+    filters.query?.trim(),
+    filters.type !== "all",
+    filters.priceMin != null,
+    filters.priceMax != null,
+    filters.roomsMin != null,
+    filters.areaMin != null,
+    filters.region !== "all",
+  ].filter(Boolean).length;
 
   return (
     <>
@@ -243,14 +254,14 @@ export function MobileFilterDrawer() {
             </Button>
             <Button
               onClick={() => {
-                // Применяем изменения цен перед закрытием
                 handlePriceMinBlur();
                 handlePriceMaxBlur();
                 closeFilterModal();
               }}
+              disabled={isPending}
               className="w-full sm:w-auto"
             >
-              Применить
+              {isPending ? "Применяем…" : "Применить"}
             </Button>
           </DialogFooter>
         </DialogContent>
