@@ -1,5 +1,5 @@
 import { API_URL, ROUTES } from "@/constants";
-import { cookieStorage } from "@/lib/cookie-storage";
+import { accessTokenStorage } from "@/lib/access-token-storage";
 import type { ApiError, ExtendedError, NetworkError } from "@/types";
 
 /**
@@ -12,9 +12,8 @@ interface ApiResponse<T> {
 }
 
 /**
- * Базовый класс для работы с API
- * Использует httpOnly cookies для хранения токенов (управляются сервером)
- * Поддерживает отмену запросов через AbortController
+ * Базовый класс для работы с API.
+ * Access token — в памяти; refresh — в HttpOnly cookie (отправляется с credentials: 'include').
  */
 class ApiClient {
   private baseUrl: string;
@@ -46,7 +45,7 @@ class ApiClient {
   }
 
   /**
-   * Обновить access token используя refresh token
+   * Обновить access token: POST /auth/refresh с credentials (refresh в HttpOnly cookie).
    */
   private async refreshAccessToken(): Promise<void> {
     if (this.isRefreshing && this.refreshPromise) {
@@ -56,17 +55,10 @@ class ApiClient {
     this.isRefreshing = true;
     this.refreshPromise = (async () => {
       try {
-        const currentRefreshToken = cookieStorage.getRefreshToken();
-        if (!currentRefreshToken) {
-          throw new Error("Refresh token отсутствует");
-        }
-
         const response = await fetch(`${this.baseUrl}/api/auth/refresh`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ refreshToken: currentRefreshToken }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
           credentials: "include",
         });
 
@@ -75,10 +67,9 @@ class ApiClient {
         }
 
         const json = await response.json();
-        // API возвращает { status, data } - извлекаем data
-        const data = json.data || json;
-        if (data.accessToken && data.refreshToken) {
-          cookieStorage.saveTokens(data.accessToken, data.refreshToken);
+        const data = json.data ?? json;
+        if (data.accessToken) {
+          accessTokenStorage.setAccessToken(data.accessToken);
         } else {
           throw new Error("Неверный формат ответа");
         }
@@ -124,8 +115,7 @@ class ApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    // Добавляем Authorization header если есть токен в cookies
-    const accessToken = cookieStorage.getAccessToken();
+    const accessToken = accessTokenStorage.getAccessToken();
     if (accessToken) {
       headers["Authorization"] = `Bearer ${accessToken}`;
     }
@@ -145,31 +135,47 @@ class ApiClient {
 
       // Если 401, пытаемся обновить токен (только один раз)
       // Не делаем refresh для login/register — там 401 значит «неверный логин или пароль»
+      // Не делаем refresh для /auth/refresh — если refresh вернул 401, выходим (защита от цикла)
       const isLoginOrRegister =
         endpoint.includes("/auth/login") || endpoint.includes("/auth/register");
+      const isRefreshEndpoint = endpoint.includes("/auth/refresh");
       if (
         response.status === 401 &&
         retryCount === 0 &&
-        !isLoginOrRegister
+        !isLoginOrRegister &&
+        !isRefreshEndpoint
       ) {
+        const hadAccessToken = !!accessToken;
         try {
           await this.refreshAccessToken();
-          // Повторяем запрос - новый токен уже в httpOnly cookie
-          const retryResponse = await fetch(url, config);
+          const newToken = accessTokenStorage.getAccessToken();
+          const retryHeaders: Record<string, string> = {
+            "Content-Type": "application/json",
+            ...(options.headers as Record<string, string>),
+          };
+          if (newToken) {
+            retryHeaders["Authorization"] = `Bearer ${newToken}`;
+          }
+          const retryConfig: RequestInit = {
+            ...options,
+            headers: retryHeaders,
+            credentials: "include",
+            signal: controller.signal,
+          };
+          const retryResponse = await fetch(url, retryConfig);
 
           if (!retryResponse.ok) {
             throw await this.handleError(retryResponse);
           }
 
           const retryJson = await retryResponse.json();
-          // API возвращает { status, data } - извлекаем data
           return retryJson.data !== undefined ? retryJson.data : retryJson;
         } catch (refreshError) {
-          // Не редиректим, если просто нет refresh token (пользователь не залогинен)
-          const isNoRefreshToken =
+          const isRefreshFailed =
             refreshError instanceof Error &&
-            refreshError.message === "Refresh token отсутствует";
-          if (!isNoRefreshToken && typeof window !== "undefined") {
+            (refreshError.message === "Не удалось обновить токен" ||
+              refreshError.message === "Неверный формат ответа");
+          if (isRefreshFailed && hadAccessToken && typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("auth:session-expired"));
             window.location.href = ROUTES.login;
           }

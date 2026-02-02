@@ -20,7 +20,7 @@ export function PropertyCard({
   hideFavoriteButton = false,
 }: PropertyCardProps) {
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
-  
+
   const favorite = isFavorite(property.id);
   const isPending = isMutating(property.id);
 
@@ -32,8 +32,11 @@ export function PropertyCard({
   const pricePerMeter = Math.round(property.price / property.area);
 
   return (
-    <Link href={`/property/${property.id}`} className='group'>
-      <div className='property-card h-full flex flex-col'>
+    <Link
+      href={`/property/${property.id}`}
+      className='group w-full max-w-full sm:max-w-[330px] mx-auto'
+    >
+      <div className='property-card h-full min-h-[410px] flex flex-col'>
         <div className='relative aspect-[4/3] overflow-hidden bg-muted'>
           <Image
             src={property.image || "/placeholder.svg"}
@@ -67,7 +70,9 @@ export function PropertyCard({
               disabled={isPending}
               aria-label={favorite ? "Удалить из избранного" : "Добавить в избранное"}
             >
-              <Heart className={`w-4 h-4 transition-transform ${favorite ? "fill-current scale-110" : ""} ${isPending ? "animate-pulse" : ""}`} />
+              <Heart
+                className={`w-4 h-4 transition-transform ${favorite ? "fill-current scale-110" : ""} ${isPending ? "animate-pulse" : ""}`}
+              />
             </Button>
           )}
         </div>

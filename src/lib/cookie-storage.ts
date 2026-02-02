@@ -1,5 +1,7 @@
 /**
- * Управление JWT токенами в cookies
+ * Управление данными в cookies.
+ * Для auth: access token хранится в памяти (access-token-storage),
+ * refresh — в HttpOnly cookie (устанавливает сервер). Этот модуль для токенов не используется.
  */
 
 const ACCESS_TOKEN_KEY = "access_token";

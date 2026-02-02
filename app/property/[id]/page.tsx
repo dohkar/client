@@ -16,6 +16,7 @@ import {
   Building2,
   Copy,
   Loader2,
+  ArrowLeft,
 } from "lucide-react";
 import {
   Breadcrumb,
@@ -70,6 +71,9 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
 
   // For "show phone" button
   const [showPhone, setShowPhone] = useState(false);
+
+  // For description expand/collapse
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   // For share functionality
   const [copied, setCopied] = useState(false);
@@ -126,7 +130,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     try {
       const chat = await createChatMutation.mutateAsync(property.id);
       router.push(`${ROUTES.messages}?chatId=${chat.id}`);
-    } catch (error) {
+    } catch {
       // Ошибка обработается в хуке
     }
   };
@@ -310,23 +314,39 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
   return (
     <div className='min-h-screen flex flex-col bg-background'>
       <main className='flex-1 pb-12'>
-        {/* Навигационная цепочка */}
+        {/* Навигация: кнопка назад + breadcrumb */}
         <div className='container mx-auto px-4 py-4'>
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTES.home}>Главная</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTES.search}>Недвижимость</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{property.title}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <div
+            className='flex items-center gap-3 mb-2 overflow-x-auto scrollbar-none'
+            style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
+          >
+            <Button
+              variant='clear'
+              size='sm'
+              onClick={() => router.back()}
+              className='text-muted-foreground hover:text-foreground -ml-2 rounded-full p-2 hover:bg-muted shrink-0'
+              aria-label='Вернуться назад'
+            >
+              <ArrowLeft className='w-4 h-4' />
+            </Button>
+            <Breadcrumb className='min-w-0 flex-1'>
+              <BreadcrumbList className='flex flex-nowrap min-w-0'>
+                <BreadcrumbItem className='shrink-0'>
+                  <BreadcrumbLink href={ROUTES.home}>Главная</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className='shrink-0' />
+                <BreadcrumbItem className='shrink-0'>
+                  <BreadcrumbLink href={ROUTES.search}>Недвижимость</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className='shrink-0' />
+                <BreadcrumbItem className='shrink-0 min-w-0'>
+                  <BreadcrumbPage className='truncate block text-ellipsis overflow-hidden'>
+                    {property.title}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
         </div>
 
         <div className='container mx-auto px-4'>
@@ -453,10 +473,25 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               </div>
 
               {/* Описание */}
-              <div className='bg-card rounded-xl border border-border p-6'>
+              <div className='bg-card rounded-xl border border-border p-6 overflow-hidden'>
                 <h2 className='text-xl font-semibold mb-4'>Описание</h2>
-                <div className='prose prose-stone max-w-none text-muted-foreground whitespace-pre-line'>
-                  {property.description}
+                <div className='min-w-0'>
+                  <div
+                    className={`text-muted-foreground whitespace-pre-line break-words [overflow-wrap:anywhere] ${
+                      !isDescriptionExpanded ? "line-clamp-5" : ""
+                    }`}
+                  >
+                    {property.description}
+                  </div>
+                  {property.description && property.description.length > 300 && (
+                    <Button
+                      variant='link'
+                      className='p-0 h-auto mt-2 text-primary'
+                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                    >
+                      {isDescriptionExpanded ? "Свернуть" : "Показать полностью"}
+                    </Button>
+                  )}
                 </div>
               </div>
 

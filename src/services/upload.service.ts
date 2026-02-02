@@ -1,6 +1,6 @@
 import { API_URL } from "@/constants";
 import { API_ENDPOINTS } from "@/constants/routes";
-import { cookieStorage } from "@/lib/cookie-storage";
+import { accessTokenStorage } from "@/lib/access-token-storage";
 
 /**
  * Результат загрузки аватара
@@ -96,7 +96,7 @@ export const uploadService = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const accessToken = cookieStorage.getAccessToken();
+    const accessToken = accessTokenStorage.getAccessToken();
 
     const response = await fetch(`${API_URL}${API_ENDPOINTS.upload.avatar}`, {
       method: "POST",
@@ -133,7 +133,7 @@ export const uploadService = {
       formData.append("files", file);
     });
 
-    const accessToken = cookieStorage.getAccessToken();
+    const accessToken = accessTokenStorage.getAccessToken();
 
     const response = await fetch(`${API_URL}${API_ENDPOINTS.upload.images}`, {
       method: "POST",

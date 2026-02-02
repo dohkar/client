@@ -58,19 +58,22 @@ class SocketClient {
   private socket: Socket | null = null;
   private token: string | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 10;
-  private reconnectDelay = 1000; // начальная задержка 1 секунда
+  private maxReconnectAttempts = 3;
+  private reconnectDelay = 1000;
 
   /**
-   * Подключение к WebSocket серверу
+   * Подключение к WebSocket серверу. Без токена не подключаемся (меньше шума в консоли).
    */
-  connect(token?: string): Socket {
-    const normalizedToken = token || null;
+  connect(token?: string): Socket | null {
+    const normalizedToken = token && token.trim() ? token.trim() : null;
+    if (!normalizedToken) {
+      this.disconnect();
+      return null;
+    }
     if (this.socket?.connected && this.token === normalizedToken) {
       return this.socket;
     }
 
-    // Отключаем старое соединение если токен изменился
     if (this.socket && this.token !== normalizedToken) {
       this.disconnect();
     }
@@ -78,13 +81,13 @@ class SocketClient {
     this.token = normalizedToken;
 
     this.socket = io(`${SOCKET_URL}/chats`, {
-      ...(normalizedToken ? { auth: { token: normalizedToken } } : {}),
+      auth: { token: normalizedToken },
       withCredentials: true,
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: this.reconnectDelay,
-      reconnectionDelayMax: 10000,
+      reconnectionDelayMax: 5000,
     });
 
     this.setupEventListeners();
@@ -108,18 +111,17 @@ class SocketClient {
     });
 
     this.socket.on("connect_error", (error: Error & { data?: { code?: number } }) => {
-      logger.error("[WS] Connection error:", error.message);
-
-      // Auth-ошибка (401/403): отключаем сокет, чтобы useFallback включился и чат не "залипал"
+      const msg = error.message || "";
       const isAuthError =
         error.data?.code === 401 ||
         error.data?.code === 403 ||
-        /unauthorized|forbidden|not authorized|401|403/i.test(error.message || "");
+        /unauthorized|forbidden|not authorized|401|403/i.test(msg);
       if (isAuthError) {
-        logger.debug("[WS] Auth error, disconnecting to allow REST fallback");
+        logger.warn("[WS] Auth error (401/Unauthorized), disconnecting");
         this.disconnect();
         return;
       }
+      logger.error("[WS] Connection error:", msg);
 
       this.reconnectAttempts++;
 

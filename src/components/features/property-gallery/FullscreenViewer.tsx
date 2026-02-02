@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@/lib/utils";
 import type { MediaItem } from "./types";
 import { MediaSlide } from "./MediaSlide";
 import { GalleryControls } from "./GalleryControls";
@@ -16,6 +16,7 @@ type FullscreenViewerProps = {
   zoom: number;
   onClose: () => void;
   onIndexChange: (index: number) => void;
+  onZoomChange?: (zoom: number) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
@@ -29,6 +30,7 @@ export function FullscreenViewer({
   zoom,
   onClose,
   onIndexChange,
+  onZoomChange,
   onZoomIn,
   onZoomOut,
   onResetZoom,
@@ -156,11 +158,11 @@ export function FullscreenViewer({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center"
+      className='fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center'
       onClick={handleBackdropClick}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Галерея медиа"
+      role='dialog'
+      aria-modal='true'
+      aria-label='Галерея медиа'
     >
       {/* Анимация появления */}
       <div
@@ -170,11 +172,11 @@ export function FullscreenViewer({
         )}
       >
         {/* Embla Carousel */}
-        <div className="flex-1 flex items-center justify-center overflow-hidden">
-          <div ref={emblaRef} className="w-full h-full overflow-hidden">
-            <div className="flex h-full">
+        <div className='flex-1 flex items-center justify-center overflow-hidden'>
+          <div ref={emblaRef} className='w-full h-full overflow-hidden'>
+            <div className='flex h-full'>
               {media.map((item, index) => (
-                <div key={item.id} className="flex-[0_0_100%] min-w-0 h-full">
+                <div key={item.id} className='flex-[0_0_100%] min-w-0 h-full'>
                   <MediaSlide
                     item={item}
                     index={index}
@@ -187,6 +189,7 @@ export function FullscreenViewer({
                           ? onResetZoom
                           : undefined
                     }
+                    onZoomChange={onZoomChange ?? (() => {})}
                   />
                 </div>
               ))}

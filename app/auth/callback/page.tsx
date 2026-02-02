@@ -4,7 +4,8 @@ import { Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores";
 import { authService } from "@/services/auth.service";
-import { cookieStorage } from "@/lib/cookie-storage";
+import { accessTokenStorage } from "@/lib/access-token-storage";
+import { API_URL } from "@/constants/config";
 import { Spinner } from "@/components/ui/spinner";
 import { ROUTES } from "@/constants";
 import { toast } from "sonner";
@@ -114,17 +115,35 @@ function AuthCallbackHandler() {
           return;
         }
 
-        const accessToken = searchParams.get("access_token");
-        const refreshToken = searchParams.get("refresh_token");
+        const accessTokenFromUrl = searchParams.get("access_token");
+        const refreshTokenFromUrl = searchParams.get("refresh_token");
 
-        if (accessToken && refreshToken) {
-          cookieStorage.saveTokens(accessToken, refreshToken);
-          if (typeof window !== "undefined") {
-            window.history.replaceState({}, "", "/auth/callback");
+        if (accessTokenFromUrl && refreshTokenFromUrl) {
+          try {
+            const response = await fetch(`${API_URL}/api/auth/finalize-oauth`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                accessToken: accessTokenFromUrl,
+                refreshToken: refreshTokenFromUrl,
+              }),
+              credentials: "include",
+            });
+            if (response.ok) {
+              const json = await response.json();
+              const data = json.data ?? json;
+              if (data.accessToken) {
+                accessTokenStorage.setAccessToken(data.accessToken);
+              }
+            }
+          } finally {
+            if (typeof window !== "undefined") {
+              window.history.replaceState({}, "", "/auth/callback");
+            }
           }
         }
 
-        if (!cookieStorage.getAccessToken()) {
+        if (!accessTokenStorage.getAccessToken()) {
           if (isPopup) {
             sendToOpenerAndClose("oauth:error", {
               error: "Токены не получены",

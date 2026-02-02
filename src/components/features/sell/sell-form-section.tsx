@@ -16,11 +16,9 @@ import { toast } from "sonner";
 
 function FormErrorFallback() {
   return (
-    <Card className="border-destructive">
+    <Card className='border-destructive'>
       <CardHeader>
-        <CardTitle className="text-destructive">
-          Ошибка загрузки формы
-        </CardTitle>
+        <CardTitle className='text-destructive'>Ошибка загрузки формы</CardTitle>
         <CardDescription>
           Произошла ошибка при загрузке формы. Пожалуйста, обновите страницу.
         </CardDescription>
@@ -28,8 +26,8 @@ function FormErrorFallback() {
       <CardContent>
         <Button
           onClick={() => window.location.reload()}
-          variant="default"
-          aria-label="Обновить страницу"
+          variant='default'
+          aria-label='Обновить страницу'
         >
           Обновить страницу
         </Button>
@@ -51,28 +49,28 @@ export function SellFormSection() {
 
   return (
     <div
-      className="min-h-screen bg-muted/30"
+      className='min-h-screen bg-muted/30'
       style={{
         animation: "fadeIn 0.5s ease-out",
       }}
     >
-      <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className='container mx-auto px-2 sm:px-4 py-6 sm:py-8 md:py-12'>
+        <div className='max-w-4xl mx-auto space-y-6'>
           <a
-            href="#property-form"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg"
+            href='#property-form'
+            className='sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg'
           >
             Перейти к форме
           </a>
-          <div className="mb-6 sm:mb-8 space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+          <div className='mb-6 sm:mb-8 space-y-2'>
+            <h1 className='text-2xl sm:text-3xl font-bold text-foreground'>
               Разместить объявление
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className='text-sm sm:text-base text-muted-foreground'>
               Заполните форму ниже, чтобы разместить ваше объявление
             </p>
           </div>
-          <div id="property-form">
+          <div id='property-form'>
             <ErrorBoundary fallback={FormErrorFallback}>
               <PropertyForm onSuccess={handleSuccess} />
             </ErrorBoundary>

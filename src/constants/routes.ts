@@ -15,6 +15,7 @@ export const ROUTES = {
   // User
   dashboard: "/dashboard",
   dashboardSettings: "/dashboard/settings",
+  dashboardSupport: "/dashboard/support",
   favorites: "/favorites",
   profile: (id: string) => `/profile/${id}`,
   messages: "/messages",

@@ -1,10 +1,10 @@
 /**
  * Планировщик проактивного обновления access token до истечения (silent re-auth).
- * Запускается при наличии refresh token; при visibilitychange (возврат во вкладку) проверяет сессию.
+ * Запускается при наличии access token в памяти; refresh отправляется в HttpOnly cookie.
  */
 
 import { getAccessTokenExpiration } from "./jwt-utils";
-import { cookieStorage } from "./cookie-storage";
+import { accessTokenStorage } from "./access-token-storage";
 
 const REFRESH_BEFORE_EXP_SEC = 90;
 const CHECK_INTERVAL_MS = 60_000;
@@ -31,9 +31,8 @@ function clearTimers(): void {
 function scheduleNextRefresh(refreshFn: RefreshFn): void {
   if (typeof window === "undefined") return;
 
-  const accessToken = cookieStorage.getAccessToken();
-  const refreshToken = cookieStorage.getRefreshToken();
-  if (!accessToken || !refreshToken) {
+  const accessToken = accessTokenStorage.getAccessToken();
+  if (!accessToken) {
     clearTimers();
     return;
   }
@@ -66,13 +65,12 @@ export function startSilentAuthScheduler(refreshFn: RefreshFn): () => void {
   scheduleNextRefresh(refreshFn);
 
   checkIntervalId = setInterval(() => {
-    const accessToken = cookieStorage.getAccessToken();
-    const refreshToken = cookieStorage.getRefreshToken();
-    if (!refreshToken) {
+    const accessToken = accessTokenStorage.getAccessToken();
+    if (!accessToken) {
       clearTimers();
       return;
     }
-    const exp = getAccessTokenExpiration(accessToken ?? "");
+    const exp = getAccessTokenExpiration(accessToken);
     if (exp === null) return;
     const nowSec = Date.now() / 1000;
     if (exp - REFRESH_BEFORE_EXP_SEC <= nowSec) {
@@ -84,10 +82,9 @@ export function startSilentAuthScheduler(refreshFn: RefreshFn): () => void {
 
   const onVisibilityChange = () => {
     if (document.visibilityState === "visible") {
-      const accessToken = cookieStorage.getAccessToken();
-      const refreshToken = cookieStorage.getRefreshToken();
-      if (!refreshToken) return;
-      const exp = getAccessTokenExpiration(accessToken ?? "");
+      const accessToken = accessTokenStorage.getAccessToken();
+      if (!accessToken) return;
+      const exp = getAccessTokenExpiration(accessToken);
       if (exp !== null && exp - REFRESH_BEFORE_EXP_SEC <= Date.now() / 1000) {
         void refreshFn().then((ok) => {
           if (ok) scheduleNextRefresh(refreshFn);

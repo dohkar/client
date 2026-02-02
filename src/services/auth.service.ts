@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import { cookieStorage } from "@/lib/cookie-storage";
+import { accessTokenStorage } from "@/lib/access-token-storage";
 import { API_ENDPOINTS } from "@/constants/routes";
 import { API_URL } from "@/constants/config";
 import type {
@@ -9,7 +9,8 @@ import type {
 } from "@/lib/api-types";
 
 /**
- * Сервис для работы с авторизацией
+ * Сервис для работы с авторизацией.
+ * Access token — только в памяти; refresh — в HttpOnly cookie (управляется сервером).
  */
 export const authService = {
   /**
@@ -25,13 +26,10 @@ export const authService = {
   async login(credentials: AuthLoginRequest): Promise<UserGetMeResponse> {
     const response = await apiClient.post<{
       accessToken: string;
-      refreshToken: string;
       user: UserGetMeResponse;
     }>("/api/auth/login/phone-password", credentials);
 
-    // Сохраняем токены в cookies
-    cookieStorage.saveTokens(response.accessToken, response.refreshToken);
-
+    accessTokenStorage.setAccessToken(response.accessToken);
     return response.user;
   },
 
@@ -42,13 +40,10 @@ export const authService = {
     try {
       const response = await apiClient.post<{
         accessToken: string;
-        refreshToken: string;
         user: UserGetMeResponse;
       }>("/api/auth/register/phone-password", data);
 
-      // Сохраняем токены в cookies
-      cookieStorage.saveTokens(response.accessToken, response.refreshToken);
-
+      accessTokenStorage.setAccessToken(response.accessToken);
       return response.user;
     } catch (error) {
       if (error instanceof Error) {
@@ -72,7 +67,6 @@ export const authService = {
 
   /**
    * Подтвердить код и войти/зарегистрироваться по SMS
-   * Сохраняет токены в cookies и возвращает данные пользователя
    */
   async verifyCode(
     phone: string,
@@ -80,11 +74,10 @@ export const authService = {
   ): Promise<UserGetMeResponse> {
     const response = await apiClient.post<{
       accessToken: string;
-      refreshToken: string;
       user: UserGetMeResponse;
     }>("/api/auth/phone/verify", { phone, code });
 
-    cookieStorage.saveTokens(response.accessToken, response.refreshToken);
+    accessTokenStorage.setAccessToken(response.accessToken);
     return response.user;
   },
 
@@ -97,19 +90,17 @@ export const authService = {
   },
 
   /**
-   * Тихий refresh: POST refresh с токеном из cookie, сохраняет новую пару в cookie.
-   * Возвращает true при успехе, false при ошибке (для планировщика silent re-auth).
+   * Тихий refresh: POST refresh с credentials (refresh в HttpOnly cookie).
+   * Сохраняет новый access token в память.
    */
   async silentRefresh(): Promise<boolean> {
     const baseUrl = API_URL;
-    const refreshToken = cookieStorage.getRefreshToken();
-    if (!refreshToken) return false;
 
     try {
       const response = await fetch(`${baseUrl}/api/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
+        body: JSON.stringify({}),
         credentials: "include",
       });
 
@@ -117,8 +108,8 @@ export const authService = {
 
       const json = await response.json();
       const data = json.data ?? json;
-      if (data.accessToken && data.refreshToken) {
-        cookieStorage.saveTokens(data.accessToken, data.refreshToken);
+      if (data.accessToken) {
+        accessTokenStorage.setAccessToken(data.accessToken);
         return true;
       }
       return false;
@@ -128,13 +119,13 @@ export const authService = {
   },
 
   /**
-   * Выход из системы
+   * Выход из системы (очищаем access в памяти; refresh cookie очищает сервер)
    */
   async logout(): Promise<void> {
     try {
       await apiClient.post<void>(API_ENDPOINTS.auth.logout);
     } finally {
-      cookieStorage.clearTokens();
+      accessTokenStorage.clearAccessToken();
     }
   },
 

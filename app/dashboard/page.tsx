@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { useAuthStore } from "@/stores";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Heart, MessageSquare, Settings, Shield } from "lucide-react";
+import { Home, Heart, MessageSquare, Settings, Shield, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
@@ -149,6 +149,12 @@ export default function DashboardPage() {
                 <Button variant='outline' className='w-full min-h-[44px]'>
                   <Settings className='w-4 h-4 mr-2' />
                   <span className='text-sm sm:text-base'>Профиль</span>
+                </Button>
+              </Link>
+              <Link href={ROUTES.dashboardSupport} className='flex-1'>
+                <Button variant='outline' className='w-full min-h-[44px]'>
+                  <HelpCircle className='w-4 h-4 mr-2' />
+                  <span className='text-sm sm:text-base'>Поддержка</span>
                 </Button>
               </Link>
             </CardContent>

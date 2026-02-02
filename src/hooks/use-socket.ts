@@ -9,7 +9,7 @@ import {
 } from "@/lib/socket/socket-client";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { useAuthStore } from "@/stores";
-import { cookieStorage } from "@/lib/cookie-storage";
+import { accessTokenStorage } from "@/lib/access-token-storage";
 import type { Message, Chat, MessagesResponse } from "@/types/chat";
 import { logger } from "@/lib/utils/logger";
 
@@ -22,7 +22,8 @@ export function useSocket() {
   const { user, isAuthenticated } = useAuthStore();
   const [, forceUpdate] = useState(0);
 
-  const token = typeof window === "undefined" ? null : cookieStorage.getAccessToken();
+  const token =
+    typeof window === "undefined" ? null : accessTokenStorage.getAccessToken();
   const isWsReady = Boolean(isAuthenticated && user && token);
 
   useEffect(() => {
@@ -30,7 +31,8 @@ export function useSocket() {
       socketClient.disconnect();
       return;
     }
-    const socket = socketClient.connect(token!);
+    const socket = socketClient.connect(token ?? undefined);
+    if (!socket) return;
 
     const handleConnect = () => {
       logger.debug("[useSocket] Connected");
