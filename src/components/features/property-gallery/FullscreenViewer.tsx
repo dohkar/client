@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Альтернативная реализация lightbox на Embla Carousel.
+ * В текущей версии не используется: MediaGalleryClient рендерит только MediaGrid с встроенным fullscreen.
+ * Оставлен для возможного A/B или отдельного сценария (модальное окно галереи).
+ */
 import { useEffect, useCallback, useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { cn } from "@/lib/utils";

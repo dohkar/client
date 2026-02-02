@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { MediaItem } from "./types";
+import { GALLERY_CONFIG } from "./constants";
 import { getMediaUrl, getMediaAlt, isImage } from "./utils";
 import { ZoomIn, ZoomOut, Maximize2, Minimize2 } from "lucide-react";
 
@@ -13,16 +14,14 @@ type MediaSlideProps = {
   isActive: boolean;
   onZoomChange: (zoom: number) => void;
   onDoubleClick?: () => void;
-  onLoadingChange?: (loaded: boolean) => void;
+  /** loaded === true — загрузка завершена (успех или ошибка), родитель скрывает спиннер; при успехе index кешируется */
+  onLoadingChange?: (loaded: boolean, index?: number) => void;
   className?: string;
 };
 
-const MAX_PAN_OFFSET = 450;
-const MIN_PAN_OFFSET = -450;
-const MIN_ZOOM = 1;
-const MAX_ZOOM = 3;
-const ZOOM_STEP = 0.35;
-const DOUBLE_TAP_DELAY = 300; // ms
+const { MAX_PAN_OFFSET, MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, DOUBLE_TAP_DELAY_MS } =
+  GALLERY_CONFIG;
+const MIN_PAN_OFFSET = -MAX_PAN_OFFSET;
 
 export function MediaSlide({
   item,
@@ -39,13 +38,16 @@ export function MediaSlide({
   const [isDragging, setIsDragging] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Добавим состояние для лоадера и после fade-in
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  /** Один источник правды: только isFaded для плавного появления; спиннер в MediaGrid */
   const [isFaded, setIsFaded] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTouch = useRef<{ x: number; y: number } | null>(null);
-  const lastTouchTime = useRef<number | null>(null); // Use ref for time
+  const lastTouchTime = useRef<number | null>(null);
+  const zoomRef = useRef(zoom);
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
 
   const isImageItem = isImage(item);
   const canZoom = isImageItem && zoom > 1;
@@ -128,7 +130,7 @@ export function MediaSlide({
         const now = Date.now();
         if (
           lastTouchTime.current &&
-          now - lastTouchTime.current < DOUBLE_TAP_DELAY &&
+          now - lastTouchTime.current < DOUBLE_TAP_DELAY_MS &&
           lastTouch.current
         ) {
           // Double tap detected
@@ -319,47 +321,49 @@ export function MediaSlide({
     [canZoom, isDragging]
   );
 
-  // Wheel event for zoom (desktop)
+  // Wheel event for zoom (desktop); zoomRef — актуальное значение без устаревшего замыкания
   useEffect(() => {
     const ref = containerRef.current;
     if (!ref || !isImageItem) return;
 
     const onWheel = (e: WheelEvent) => {
-      // Only zoom if ctrl key or if panMode is enabled (image is zoomable)
       if (!isActive) return;
       if (Math.abs(e.deltaY) < 5) return;
-      if (!canZoom && e.deltaY < 0) {
+      const currentZoom = zoomRef.current;
+      const zoomed = currentZoom > MIN_ZOOM;
+      if (!zoomed && e.deltaY < 0) {
         handleZoomIn();
+        e.preventDefault();
         return;
       }
-      if (zoom > MIN_ZOOM || e.deltaY < 0) {
+      if (currentZoom > MIN_ZOOM || e.deltaY < 0) {
         if (e.deltaY < 0) {
           handleZoomIn();
         } else {
           handleZoomOut();
         }
+        e.preventDefault();
       }
-      e.preventDefault();
     };
 
     ref.addEventListener("wheel", onWheel, { passive: false });
-    return () => {
-      ref.removeEventListener("wheel", onWheel);
-    };
-  }, [zoom, isActive, canZoom, isImageItem]);
+    return () => ref.removeEventListener("wheel", onWheel);
+  }, [isActive, isImageItem]);
 
   const handleImageLoad = useCallback(() => {
-    setIsLoading(false);
-    onLoadingChange?.(true);
+    onLoadingChange?.(true, index);
     requestAnimationFrame(() => setIsFaded(true));
-  }, [onLoadingChange]);
+  }, [onLoadingChange, index]);
 
-  // При смене слайда сбрасываем только локальное состояние. Родителю НЕ шлём "loading" —
-  // иначе после быстрой загрузки из кеша effect перезаписывает "loaded" и спиннер снова включается.
+  /** При ошибке загрузки передаём true, чтобы родитель скрыл спиннер; индекс кешируется — при возврате к слайду спиннер не показываем */
+  const handleImageError = useCallback(() => {
+    onLoadingChange?.(true, index);
+    setIsFaded(true);
+  }, [onLoadingChange, index]);
+
   useEffect(() => {
-    setIsLoading(true);
     setIsFaded(false);
-  }, [item, index]);
+  }, [item.src, index]);
 
   return (
     <div
@@ -425,7 +429,7 @@ export function MediaSlide({
             priority={index < 3}
             sizes='(max-width: 1280px) 100vw, 1280px'
             onLoad={handleImageLoad}
-            // Next.js v13+ native only triggers onLoad after decode, not before!
+            onError={handleImageError}
           />
         </>
       ) : (

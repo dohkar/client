@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Полоска миниатюр для FullscreenViewer.
+ * В MediaGrid используется встроенная полоска с MediaThumbnail.
+ */
 import Image from "next/image";
 import { Play } from "lucide-react";
 import { cn } from "@/lib/utils";

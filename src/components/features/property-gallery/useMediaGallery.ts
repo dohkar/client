@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Хук состояния для FullscreenViewer (open/close, index, zoom).
+ * Не используется в текущей версии: галерея управляется состоянием внутри MediaGrid.
+ */
 import { useState, useEffect, useCallback, useRef } from "react";
 
 const MIN_ZOOM = 1;

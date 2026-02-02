@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Кнопки управления для FullscreenViewer (закрыть, prev/next, zoom).
+ * Используется только внутри FullscreenViewer; в MediaGrid свои кнопки.
+ */
 import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

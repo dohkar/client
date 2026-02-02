@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, X as CloseIcon, Maximize2 } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { MediaItem } from "./types";
+import { GALLERY_CONFIG } from "./constants";
 import { MediaThumbnail } from "./MediaThumbnail";
 import { MediaSlide } from "./MediaSlide";
 
@@ -34,9 +35,20 @@ export function MediaGrid({
   const mainSlideRef = useRef<HTMLDivElement | null>(null);
   const thumbsRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
-  const slideChangeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** В браузере setTimeout возвращает number */
+  const slideChangeTimeoutRef = useRef<number | null>(null);
+  /** Индексы слайдов, которые уже загружались — при переключении назад спиннер не показываем */
+  const loadedIndicesRef = useRef<Set<number>>(new Set());
+  const prevMediaRef = useRef(media);
 
-  const SLIDE_CHANGE_DELAY_MS = 120;
+  // Сброс состояния при смене массива media (другое объявление / обновление данных), не на первом монте
+  useEffect(() => {
+    if (prevMediaRef.current === media) return;
+    prevMediaRef.current = media;
+    setCurrentIndex(0);
+    loadedIndicesRef.current.clear();
+    setIsLoading(true);
+  }, [media]);
 
   // Центрируем активную миниатюру на полоске при смене currentIndex
   useEffect(() => {
@@ -51,15 +63,23 @@ export function MediaGrid({
     }
   }, [currentIndex]);
 
-  // Плавная смена слайда: сначала fade (loading), через короткую задержку — смена индекса, затем появление нового слайда
+  // Плавная смена слайда; проверку кеша делаем до setState, чтобы избежать race condition
   const scheduleSlideChange = useCallback((getNextIndex: (prev: number) => number) => {
+    if (slideChangeTimeoutRef.current) {
+      clearTimeout(slideChangeTimeoutRef.current);
+      slideChangeTimeoutRef.current = null;
+    }
     setZoom(1);
     setIsLoading(true);
-    if (slideChangeTimeoutRef.current) clearTimeout(slideChangeTimeoutRef.current);
-    slideChangeTimeoutRef.current = setTimeout(() => {
-      setCurrentIndex(getNextIndex);
+    slideChangeTimeoutRef.current = window.setTimeout(() => {
+      setCurrentIndex((prev) => {
+        const next = getNextIndex(prev);
+        const wasLoaded = loadedIndicesRef.current.has(next);
+        if (wasLoaded) setIsLoading(false);
+        return next;
+      });
       slideChangeTimeoutRef.current = null;
-    }, SLIDE_CHANGE_DELAY_MS);
+    }, GALLERY_CONFIG.SLIDE_CHANGE_DELAY_MS);
   }, []);
 
   useEffect(() => {
@@ -121,19 +141,7 @@ export function MediaGrid({
     }, 200);
   };
 
-  // Видео: play только у активного, у остальных pause (и сброс на начало)
-  useEffect(() => {
-    document
-      .querySelectorAll<HTMLVideoElement>("video[data-gallery-vid]")
-      .forEach((v, idx) => {
-        if (idx === currentIndex) {
-          v.play().catch(() => {});
-        } else {
-          v.pause();
-          v.currentTime = 0;
-        }
-      });
-  }, [currentIndex, fullscreen]);
+  // Видео управляется через isActive в MediaSlide (один слайд в DOM). data-gallery-vid не используется.
 
   // "заглушка" при отсутствии фото/видео
   if (media.length === 0) {
@@ -161,6 +169,9 @@ export function MediaGrid({
       {/* Главный слайд — стиль как на Циан */}
       <div
         ref={mainSlideRef}
+        role='region'
+        aria-label={`Галерея изображений, ${media.length} элементов`}
+        aria-roledescription='Галерея с миниатюрами'
         tabIndex={0}
         className={cn(
           "relative rounded-2xl overflow-hidden bg-neutral-900 outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
@@ -172,7 +183,6 @@ export function MediaGrid({
         onKeyDown={(e) => {
           if (e.key === "Enter") handleToggleFullscreen();
         }}
-        aria-label='Галерея фотографий'
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -200,7 +210,11 @@ export function MediaGrid({
             isLoading ? "opacity-0" : "opacity-100",
             fullscreen && "max-h-[100vh] max-w-full mx-auto"
           )}
-          onLoadingChange={(loaded) => setIsLoading(!loaded)}
+          onLoadingChange={(loaded, slideIndex) => {
+            if (loaded && slideIndex !== undefined)
+              loadedIndicesRef.current.add(slideIndex);
+            setIsLoading(!loaded);
+          }}
         />
 
         {/* Кнопка полноэкранного режима / закрыть — справа сверху */}
@@ -264,6 +278,7 @@ export function MediaGrid({
               fullscreen && "bottom-6 left-6 text-base px-4 py-2"
             )}
             aria-live='polite'
+            aria-atomic='true'
           >
             <span>{currentIndex + 1}</span>
             <span className='mx-1.5 text-white/70'>/</span>
