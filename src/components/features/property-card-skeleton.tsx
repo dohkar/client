@@ -7,14 +7,14 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 export function PropertyCardSkeleton() {
   return (
-    <div className='h-full min-h-[410px] flex flex-col rounded-lg overflow-hidden border border-border bg-card w-full max-w-full sm:max-w-[330px] mx-auto'>
+    <div className='h-full min-h-[410px] flex flex-col rounded-lg overflow-hidden border border-border bg-card w-full max-w-full mx-auto'>
       {/* Изображение */}
       <Skeleton className='relative aspect-4/3 w-full rounded-none' />
 
       {/* Контент */}
       <div className='p-4 sm:p-5 space-y-2 sm:space-y-3 flex-1 flex flex-col'>
         {/* Цена */}
-        <div className='space-y-1'>
+        <div className='space-y-1 flex items-center justify-between'>
           <Skeleton className='h-6 sm:h-7 w-32' />
           <Skeleton className='h-4 w-20' />
         </div>

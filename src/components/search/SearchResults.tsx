@@ -4,6 +4,7 @@ import { Empty } from "@/components/ui/empty";
 import { PropertyCard } from "@/components/features/property-card";
 import { PaginationBlock } from "./PaginationBlock";
 import type { Property } from "@/types/property";
+import { PropertyGridSkeleton } from "../features";
 
 interface SearchResultsProps {
   properties: Property[];
@@ -28,13 +29,7 @@ export function SearchResults({
 }: SearchResultsProps) {
   if (isLoading) {
     // Показываем скелетоны-заглушки, пока подгружаются данные
-    return (
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className='h-64 bg-muted animate-pulse rounded-lg' />
-        ))}
-      </div>
-    );
+    return <PropertyGridSkeleton count={8} />;
   }
 
   if (error) {
@@ -77,7 +72,7 @@ export function SearchResults({
   // Показываем реальные карточки и пагинацию
   return (
     <>
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 sm:gap-4'>
         {properties.map((property) => (
           <PropertyCard key={property.id} property={property} />
         ))}

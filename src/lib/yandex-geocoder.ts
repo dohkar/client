@@ -1,130 +1,195 @@
 /**
  * Утилита для геокодирования адресов через Yandex Maps API
- * Преобразует адрес в координаты (широта, долгота)
+ * Структурированный ввод (регион, город, улица, дом) и разбор компонентов из ответа
  */
 
-interface GeocodeResult {
+/** Структурированный адрес для геокодирования — собираем строку запроса сами */
+export interface StructuredAddressInput {
+  region?: string;
+  city?: string;
+  street?: string;
+  house?: string;
+}
+
+/** Структурированные компоненты адреса из ответа геокодера */
+export interface AddressComponents {
+  region?: string;
+  city?: string;
+  street?: string;
+  house?: string;
+}
+
+export interface GeocodeResult {
   latitude: number;
   longitude: number;
   formattedAddress: string;
+  components: AddressComponents;
+}
+
+export interface ReverseGeocodeResult {
+  formattedAddress: string;
+  components: AddressComponents;
+}
+
+interface GeocoderResponseGeoObject {
+  Point?: { pos?: string };
+  metaDataProperty?: {
+    GeocoderMetaData?: {
+      text?: string;
+      Address?: {
+        Components?: Array<{ kind?: string; name?: string }>;
+      };
+    };
+  };
+}
+
+interface GeocoderResponse {
+  response?: {
+    GeoObjectCollection?: {
+      featureMember?: Array<{ GeoObject?: GeocoderResponseGeoObject }>;
+    };
+  };
 }
 
 /**
- * Геокодирование адреса через Yandex Maps Geocoder API
- * @param address - адрес для геокодирования
+ * Собирает строку запроса из структурированных полей
+ * Формат: "город, улица дом" (регион добавляется при необходимости)
+ */
+function buildGeocodeQuery(input: StructuredAddressInput): string {
+  const parts: string[] = [];
+  if (input.region?.trim()) parts.push(input.region.trim());
+  if (input.city?.trim()) parts.push(input.city.trim());
+  const streetHouse = [input.street?.trim(), input.house?.trim()]
+    .filter(Boolean)
+    .join(" ");
+  if (streetHouse) parts.push(streetHouse);
+  return parts.join(", ");
+}
+
+/**
+ * Извлекает компоненты адреса из ответа геокодера по kind
+ */
+function parseAddressComponents(
+  components: Array<{ kind?: string; name?: string }> | undefined
+): AddressComponents {
+  const result: AddressComponents = {};
+  if (!Array.isArray(components)) return result;
+
+  const byKind = (k: string) => components.find((c) => c.kind === k)?.name;
+
+  const province = byKind("province") ?? byKind("area");
+  if (province) result.region = province;
+
+  const locality = byKind("locality") ?? byKind("district");
+  if (locality) result.city = locality;
+
+  const street = byKind("street");
+  if (street) result.street = street;
+
+  const house = byKind("house");
+  if (house) result.house = house;
+
+  return result;
+}
+
+/**
+ * Геокодирование структурированного адреса
+ * @param input - регион, город, улица, дом — строка запроса собирается внутри
  * @param apiKey - опциональный API ключ Yandex Maps
- * @returns координаты и отформатированный адрес
  */
 export async function geocodeAddress(
-  address: string,
+  input: StructuredAddressInput,
   apiKey?: string
 ): Promise<GeocodeResult | null> {
-  if (!address || address.trim().length < 3) {
+  const query = buildGeocodeQuery(input);
+  if (!query || query.length < 3) {
     return null;
   }
 
   try {
-    // Используем Yandex Geocoder HTTP API
-    // Примечание: для Geocoder API используется другой endpoint и формат ключа
     const apiKeyParam = apiKey ? `&apikey=${apiKey}` : "";
-    const url = `https://geocode-maps.yandex.ru/1.x/?format=json&geocode=${encodeURIComponent(address)}${apiKeyParam}&lang=ru_RU&results=1`;
+    const url = `https://geocode-maps.yandex.ru/1.x/?format=json&geocode=${encodeURIComponent(query)}${apiKeyParam}&lang=ru_RU&results=1`;
 
     const response = await fetch(url);
-    
+
     if (!response.ok) {
-      // Если 403, возможно нужен другой API ключ или настройки
-      if (response.status === 403) {
-        console.warn("Геокодирование: 403 ошибка. Попробуйте без API ключа или проверьте настройки.");
-        // Пробуем без ключа
-        if (apiKey) {
-          const urlWithoutKey = `https://geocode-maps.yandex.ru/1.x/?format=json&geocode=${encodeURIComponent(address)}&lang=ru_RU&results=1`;
-          const retryResponse = await fetch(urlWithoutKey);
-          if (!retryResponse.ok) {
-            return null;
-          }
-          const retryData = await retryResponse.json();
-          return parseGeocodeResponse(retryData, address);
-        }
+      if (response.status === 403 && apiKey) {
+        const urlWithoutKey = `https://geocode-maps.yandex.ru/1.x/?format=json&geocode=${encodeURIComponent(query)}&lang=ru_RU&results=1`;
+        const retryResponse = await fetch(urlWithoutKey);
+        if (!retryResponse.ok) return null;
+        const retryData = (await retryResponse.json()) as GeocoderResponse;
+        return parseGeocodeResponse(retryData, query);
       }
-      console.error("Ошибка геокодирования:", response.status);
       return null;
     }
 
-    const data = await response.json();
-    return parseGeocodeResponse(data, address);
-  } catch (error) {
-    console.error("Ошибка при геокодировании адреса:", error);
+    const data = (await response.json()) as GeocoderResponse;
+    return parseGeocodeResponse(data, query);
+  } catch {
     return null;
   }
 }
 
-/**
- * Парсинг ответа геокодера
- */
-function parseGeocodeResponse(data: any, fallbackAddress: string): GeocodeResult | null {
-  // Проверяем наличие результатов
-  if (
-    !data.response?.GeoObjectCollection?.featureMember ||
-    data.response.GeoObjectCollection.featureMember.length === 0
-  ) {
-    return null;
-  }
+function parseGeocodeResponse(
+  data: GeocoderResponse,
+  fallbackAddress: string
+): GeocodeResult | null {
+  const members = data.response?.GeoObjectCollection?.featureMember;
+  if (!members?.length) return null;
 
-  // Берем первый результат
-  const geoObject = data.response.GeoObjectCollection.featureMember[0].GeoObject;
-  const pos = geoObject.Point.pos.split(" "); // Формат: "долгота широта"
+  const geoObject = members[0].GeoObject;
+  if (!geoObject?.Point?.pos) return null;
+
+  const pos = geoObject.Point.pos.split(" ");
   const longitude = parseFloat(pos[0]);
   const latitude = parseFloat(pos[1]);
-  
-  // Проверяем валидность координат
-  if (isNaN(latitude) || isNaN(longitude)) {
-    return null;
-  }
+  if (isNaN(latitude) || isNaN(longitude)) return null;
 
-  const formattedAddress = geoObject.metaDataProperty?.GeocoderMetaData?.text || fallbackAddress;
+  const meta = geoObject.metaDataProperty?.GeocoderMetaData;
+  const formattedAddress = meta?.text ?? fallbackAddress;
+  const rawComponents = meta?.Address?.Components;
+  const components = parseAddressComponents(rawComponents);
 
   return {
     latitude,
     longitude,
     formattedAddress,
+    components,
   };
 }
 
 /**
- * Обратное геокодирование - преобразование координат в адрес
- * @param latitude - широта
- * @param longitude - долгота
- * @param apiKey - опциональный API ключ Yandex Maps
- * @returns адрес
+ * Обратное геокодирование — координаты в структурированный адрес
  */
 export async function reverseGeocode(
   latitude: number,
   longitude: number,
   apiKey?: string
-): Promise<string | null> {
+): Promise<ReverseGeocodeResult | null> {
   try {
     const apiKeyParam = apiKey ? `&apikey=${apiKey}` : "";
     const url = `https://geocode-maps.yandex.ru/1.x/?format=json&geocode=${longitude},${latitude}${apiKeyParam}&lang=ru_RU`;
 
     const response = await fetch(url);
-    
-    if (!response.ok) {
-      return null;
-    }
+    if (!response.ok) return null;
 
-    const data = await response.json();
+    const data = (await response.json()) as GeocoderResponse;
+    const members = data.response?.GeoObjectCollection?.featureMember;
+    if (!members?.length) return null;
 
-    if (
-      !data.response?.GeoObjectCollection?.featureMember ||
-      data.response.GeoObjectCollection.featureMember.length === 0
-    ) {
-      return null;
-    }
+    const geoObject = members[0].GeoObject;
+    const meta = geoObject?.metaDataProperty?.GeocoderMetaData;
+    const formattedAddress = meta?.text ?? null;
+    if (!formattedAddress) return null;
 
-    const geoObject = data.response.GeoObjectCollection.featureMember[0].GeoObject;
-    return geoObject.metaDataProperty?.GeocoderMetaData?.text || null;
-  } catch (error) {
-    console.error("Ошибка при обратном геокодировании:", error);
+    const rawComponents = meta?.Address?.Components;
+    const components = parseAddressComponents(rawComponents);
+
+    return {
+      formattedAddress,
+      components,
+    };
+  } catch {
     return null;
   }
 }

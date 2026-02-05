@@ -8,7 +8,7 @@ import { CTASection } from "@/components/features/cta-section";
 import { useProperties } from "@/hooks/use-properties";
 
 export default function HomePage() {
-  const { data, isLoading } = useProperties({ limit: 6 });
+  const { data, isLoading } = useProperties({ limit: 12 });
 
   return (
     <div className='min-h-screen flex flex-col'>
@@ -19,7 +19,7 @@ export default function HomePage() {
         {/* <FeaturesSection /> */}
 
         {/* Лучшие предложения */}
-        <section className='container mx-auto px-4 py-8 sm:py-12 md:py-16'>
+        <section className='container mx-auto px-1 py-8 sm:py-12 md:py-16'>
           <div className='text-center mb-8 sm:mb-12'>
             <h2 className='text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-4'>
               Лучшие предложения
@@ -29,9 +29,9 @@ export default function HomePage() {
             </p> */}
           </div>
           {isLoading ? (
-            <PropertyGridSkeleton count={6} />
+            <PropertyGridSkeleton count={12} />
           ) : (
-            <PropertyGrid properties={data?.data || []} limit={6} />
+            <PropertyGrid properties={data?.data || []} limit={12} />
           )}
         </section>
 

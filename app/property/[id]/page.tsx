@@ -317,7 +317,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
         {/* Навигация: кнопка назад + breadcrumb */}
         <div className='container mx-auto px-4 py-4'>
           <div
-            className='flex items-center gap-3 mb-2 overflow-x-auto scrollbar-none'
+            className='flex items-center gap-2 pl-2 mb-2 overflow-x-auto scrollbar-none'
             style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
           >
             <Button

@@ -50,7 +50,9 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useAmenities } from "@/hooks/use-amenities";
-import { geocodeAddress } from "@/lib/yandex-geocoder";
+import { geocodeAddress, reverseGeocode } from "@/lib/yandex-geocoder";
+import { YandexMap } from "@/components/features/yandex-map";
+import { REGION_LABELS } from "@/lib/search-constants";
 
 // Интерфейс для превью изображений
 interface ImagePreview {
@@ -63,6 +65,16 @@ interface ImagePreview {
   error?: string;
 }
 
+/** Собирает строку адреса из компонентов */
+function buildLocationFromComponents(c: {
+  region?: string;
+  city?: string;
+  street?: string;
+  house?: string;
+}): string {
+  return [c.region, c.city, c.street, c.house].filter(Boolean).join(", ");
+}
+
 // Схема валидации без images как массива URL
 const propertySchema = z.object({
   title: z.string().min(10, "Заголовок должен быть не менее 10 символов"),
@@ -70,6 +82,8 @@ const propertySchema = z.object({
   location: z.string().min(5, "Адрес должен быть не менее 5 символов"),
   region: z.enum(["Chechnya", "Ingushetia", "Other"]),
   cityId: z.string().uuid().optional().or(z.literal("")),
+  street: z.string().optional(),
+  house: z.string().optional(),
   type: z.enum(["apartment", "house", "land", "commercial"]),
   rooms: z.number().optional(),
   area: z.number().min(1, "Площадь должна быть больше 0"),
@@ -163,6 +177,8 @@ export function PropertyForm({
       location: initialData?.location || "",
       region: initialData?.region || "Other",
       cityId: initialData?.cityId ?? "",
+      street: "",
+      house: "",
       type: initialData?.type || "apartment",
       rooms: initialData?.rooms,
       area: initialData?.area || 0,
@@ -202,65 +218,105 @@ export function PropertyForm({
     }
   }, [initialData?.price, initialData?.area]);
 
-  // Автоматическое геокодирование адреса
-  const locationValue = watch("location");
-  useEffect(() => {
-    // Очищаем предыдущий таймаут
-    if (geocodeTimeoutRef.current) {
-      clearTimeout(geocodeTimeoutRef.current);
-    }
+  // Геокодирование по структурированному адресу (регион, город, улица, дом)
+  const cityId = watch("cityId");
+  const street = watch("street");
+  const house = watch("house");
 
-    // Если адрес слишком короткий, не геокодируем
-    if (!locationValue || locationValue.length < 5) {
+  useEffect(() => {
+    if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
+
+    const regionRu =
+      REGION_LABELS[selectedRegion] ?? (selectedRegion === "Other" ? "Россия" : "");
+    const cityName = cities.find((c) => c.id === cityId)?.name ?? "";
+    const query = buildLocationFromComponents({
+      region: regionRu,
+      city: cityName,
+      street: street?.trim(),
+      house: house?.trim(),
+    });
+
+    if (!query || query.length < 5) {
       setValue("latitude", undefined);
       setValue("longitude", undefined);
       return;
     }
 
-    // Если координаты уже есть и адрес не изменился, не геокодируем
-    if (
-      initialData?.latitude &&
-      initialData?.longitude &&
-      locationValue === initialData.location
-    ) {
-      return;
-    }
-
-    // Debounce - ждем 1 секунду после последнего изменения
     setIsGeocoding(true);
     geocodeTimeoutRef.current = setTimeout(async () => {
       try {
         const API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || "";
-        const result = await geocodeAddress(locationValue, API_KEY);
+        const result = await geocodeAddress(
+          {
+            region: regionRu,
+            city: cityName,
+            street: street?.trim(),
+            house: house?.trim(),
+          },
+          API_KEY
+        );
 
         if (result) {
           setValue("latitude", result.latitude);
           setValue("longitude", result.longitude);
-          // Обновляем адрес на более точный, если геокодер вернул улучшенную версию
-          if (result.formattedAddress !== locationValue) {
-            setValue("location", result.formattedAddress);
-          }
-          toast.success("Координаты определены автоматически");
+          setValue("location", result.formattedAddress);
+          if (result.components.street) setValue("street", result.components.street);
+          if (result.components.house) setValue("house", result.components.house);
+          toast.success("Координаты определены");
         } else {
           setValue("latitude", undefined);
           setValue("longitude", undefined);
           toast.warning("Не удалось определить координаты. Проверьте адрес.");
         }
-      } catch (error) {
-        console.error("Ошибка геокодирования:", error);
+      } catch {
         setValue("latitude", undefined);
         setValue("longitude", undefined);
       } finally {
         setIsGeocoding(false);
       }
-    }, 3000);
+    }, 2000);
 
     return () => {
-      if (geocodeTimeoutRef.current) {
-        clearTimeout(geocodeTimeoutRef.current);
-      }
+      if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
     };
-  }, [locationValue, setValue, initialData]);
+  }, [selectedRegion, cityId, street, house, cities, setValue]);
+
+  // Держим location актуальным из компонентов, если геокодер ещё не сработал
+  const locationValue = watch("location");
+  useEffect(() => {
+    if (locationValue && locationValue.length >= 5) return;
+    const regionRu =
+      REGION_LABELS[selectedRegion] ?? (selectedRegion === "Other" ? "Россия" : "");
+    const cityName = cities.find((c) => c.id === cityId)?.name ?? "";
+    const built = buildLocationFromComponents({
+      region: regionRu,
+      city: cityName,
+      street: street?.trim(),
+      house: house?.trim(),
+    });
+    if (built && built.length >= 5) setValue("location", built);
+  }, [selectedRegion, cityId, street, house, cities, locationValue, setValue]);
+
+  const handleMapCoordinatesChange = useCallback(
+    async (lat: number, lon: number) => {
+      try {
+        const API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || "";
+        const result = await reverseGeocode(lat, lon, API_KEY);
+        if (result) {
+          setValue("latitude", lat);
+          setValue("longitude", lon);
+          setValue("location", result.formattedAddress);
+          if (result.components.street) setValue("street", result.components.street);
+          if (result.components.house) setValue("house", result.components.house);
+          toast.success("Адрес обновлён по положению на карте");
+        }
+      } catch {
+        setValue("latitude", lat);
+        setValue("longitude", lon);
+      }
+    },
+    [setValue]
+  );
 
   const propertyType = watch("type");
   const showRooms = propertyType === "apartment" || propertyType === "house";
@@ -425,11 +481,29 @@ export function PropertyForm({
       // Преобразуем features: ID -> Label для предустановленных, оставляем как есть для кастомных
       const featuresLabels = amenities.getFeaturesLabels();
 
+      let locationForApi = data.location;
+      if (!locationForApi || locationForApi.length < 5) {
+        const regionRu =
+          REGION_LABELS[data.region] ?? (data.region === "Other" ? "Россия" : "");
+        const cityName = cities.find((c) => c.id === data.cityId)?.name ?? "";
+        locationForApi = buildLocationFromComponents({
+          region: regionRu,
+          city: cityName,
+          street: data.street?.trim(),
+          house: data.house?.trim(),
+        });
+      }
+      if (!locationForApi || locationForApi.length < 5) {
+        toast.error("Укажите адрес: город, улицу и дом");
+        setIsLoading(false);
+        return;
+      }
+
       const apiData = {
         title: data.title,
         price: data.price,
         currency: "RUB" as const,
-        location: data.location,
+        location: locationForApi,
         regionId,
         cityId: data.cityId && data.cityId.trim() ? data.cityId : undefined,
         type: typeMap[data.type] || "APARTMENT",
@@ -547,37 +621,20 @@ export function PropertyForm({
             )}
           </div>
 
-          {/* Адрес */}
+          {/* Адрес — структурированные поля, геокодинг по ним */}
           <div className='space-y-2'>
-            <Label
-              htmlFor='location'
-              className='text-base font-medium flex items-center gap-2'
-            >
+            <Label className='text-base font-medium flex items-center gap-2'>
               <MapPin className='w-4 h-4 text-muted-foreground' />
               Адрес *{isGeocoding && <Spinner className='w-4 h-4 ml-2' />}
             </Label>
-            <Input
-              id='location'
-              {...register("location")}
-              placeholder='г. Грозный, ул. Ленина, д. 10'
-              className='h-11 text-base'
-            />
-            {errors.location && (
-              <p className='text-sm text-destructive flex items-center gap-1 mt-1'>
-                <AlertCircle className='w-4 h-4' />
-                {errors.location.message}
-              </p>
-            )}
-            {watch("latitude") && watch("longitude") && (
-              <p className='text-xs text-muted-foreground mt-1'>
-                Координаты: {watch("latitude")?.toFixed(6)},{" "}
-                {watch("longitude")?.toFixed(6)}
-              </p>
+            <input type='hidden' {...register("location")} />
+            {watch("location") && (
+              <p className='text-sm text-muted-foreground'>{watch("location")}</p>
             )}
           </div>
 
-          {/* Регион, город и тип недвижимости */}
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+          {/* Регион, город, улица, дом, тип */}
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
             <div className='space-y-2'>
               <Label
                 htmlFor='region'
@@ -590,7 +647,7 @@ export function PropertyForm({
                 value={watch("region")}
                 onValueChange={(value) => {
                   setValue("region", value as "Chechnya" | "Ingushetia" | "Other");
-                  setValue("cityId", ""); // сброс города при смене региона
+                  setValue("cityId", "");
                 }}
               >
                 <SelectTrigger className='h-11 text-base'>
@@ -612,6 +669,32 @@ export function PropertyForm({
               placeholder={cities.length === 0 ? "Нет городов" : "Поиск или выбор города"}
             />
 
+            <div className='space-y-2'>
+              <Label htmlFor='street' className='text-base font-medium'>
+                Улица
+              </Label>
+              <Input
+                id='street'
+                {...register("street")}
+                placeholder='ул. Ленина'
+                className='h-11 text-base'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='house' className='text-base font-medium'>
+                Дом
+              </Label>
+              <Input
+                id='house'
+                {...register("house")}
+                placeholder='10'
+                className='h-11 text-base'
+              />
+            </div>
+          </div>
+
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div className='space-y-2'>
               <Label
                 htmlFor='type'
@@ -638,6 +721,26 @@ export function PropertyForm({
               </Select>
             </div>
           </div>
+
+          {/* Карта — показываем точку, при перетаскивании обновляем адрес снаружи */}
+          {watch("latitude") != null &&
+            watch("longitude") != null &&
+            typeof watch("latitude") === "number" &&
+            typeof watch("longitude") === "number" && (
+              <div className='space-y-2'>
+                <Label className='text-base font-medium'>Расположение на карте</Label>
+                <p className='text-xs text-muted-foreground'>
+                  Перетащите маркер для уточнения точки
+                </p>
+                <YandexMap
+                  latitude={watch("latitude")!}
+                  longitude={watch("longitude")!}
+                  zoom={15}
+                  height={300}
+                  onChangeCoordinates={handleMapCoordinatesChange}
+                />
+              </div>
+            )}
 
           {/* Количество комнат и Площадь - динамически */}
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>

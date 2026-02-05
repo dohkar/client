@@ -32,10 +32,7 @@ export function PropertyCard({
   const pricePerMeter = Math.round(property.price / property.area);
 
   return (
-    <Link
-      href={`/property/${property.id}`}
-      className='group w-full max-w-full sm:max-w-[330px] mx-auto'
-    >
+    <Link href={`/property/${property.id}`} className='group w-full max-w-full mx-auto'>
       <div className='property-card h-full min-h-[410px] flex flex-col'>
         <div className='relative aspect-[4/3] overflow-hidden bg-muted'>
           <Image
@@ -78,10 +75,10 @@ export function PropertyCard({
         </div>
 
         {/* Content */}
-        <div className='p-4 sm:p-5 space-y-2 sm:space-y-3 flex-1 flex flex-col'>
+        <div className='p-2 sm:p-3 space-y-2 sm:space-y-3 flex-1 flex flex-col'>
           {/* Price */}
-          <div className='space-y-1'>
-            <p className='text-xl sm:text-2xl font-bold text-primary'>
+          <div className='space-y-1 flex justify-between items-center'>
+            <p className='text-lg sm:text-xl font-bold text-primary'>
               {formatPrice(property.price, property.currency)}
             </p>
             <p className='text-xs sm:text-sm text-muted-foreground'>

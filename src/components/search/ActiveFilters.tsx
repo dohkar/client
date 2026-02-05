@@ -40,7 +40,7 @@ export function ActiveFilters({
   if (activeFiltersCount === 0) return null;
 
   return (
-    <div className='flex flex-wrap items-center gap-2 mt-3'>
+    <div className='flex flex-wrap items-center gap-2 my-3'>
       {filters.type !== "all" && (
         <Button variant='secondary' size='sm' className='h-7 gap-1' onClick={onTypeReset}>
           {getTypeLabel(filters.type)}
@@ -70,12 +70,7 @@ export function ActiveFilters({
         </Button>
       )}
       {filters.cityId && (
-        <Button
-          variant='secondary'
-          size='sm'
-          className='h-7 gap-1'
-          onClick={onCityReset}
-        >
+        <Button variant='secondary' size='sm' className='h-7 gap-1' onClick={onCityReset}>
           {getCityLabel(selectedCityName)}
           <X className='w-3 h-3' />
         </Button>
