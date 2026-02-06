@@ -17,12 +17,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {
-  HorizontalFilters,
-  ActiveFilters,
-  SearchResults,
-} from "@/components/search";
+import { HorizontalFilters, ActiveFilters, SearchResults } from "@/components/search";
 import { ROUTES } from "@/constants";
+import Link from "next/link";
 
 // Основной компонент страницы поиска
 function SearchPageContent() {
@@ -41,7 +38,6 @@ function SearchPageContent() {
     handleRegionChange,
     handleRoomsChange,
     handleSortChange,
-    handleAreaMinChange,
     handleAreaMinBlur,
     handlePriceMinBlur,
     handlePriceMaxBlur,
@@ -66,7 +62,7 @@ function SearchPageContent() {
   const { data: cities = [] } = useCities(regionId ?? undefined);
   const selectedCityName =
     appliedFilters.cityId != null
-      ? cities.find((c) => c.id === appliedFilters.cityId)?.name ?? null
+      ? (cities.find((c) => c.id === appliedFilters.cityId)?.name ?? null)
       : null;
 
   // Параметры для API из URL (appliedFilters уже содержат page/limit)
@@ -114,7 +110,9 @@ function SearchPageContent() {
         <Breadcrumb className='mb-4'>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href={ROUTES.home}>Главная</BreadcrumbLink>
+              <BreadcrumbLink asChild>
+                <Link href={ROUTES.home}>Главная</Link>
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>

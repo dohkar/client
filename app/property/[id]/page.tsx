@@ -55,6 +55,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { logger } from "@/lib/utils/logger";
+import Link from "next/link";
 
 export default function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -332,7 +333,9 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             <Breadcrumb className='min-w-0 flex-1'>
               <BreadcrumbList className='flex flex-nowrap min-w-0'>
                 <BreadcrumbItem className='shrink-0'>
-                  <BreadcrumbLink href={ROUTES.home}>Главная</BreadcrumbLink>
+                  <BreadcrumbLink asChild>
+                    <Link href={ROUTES.home}>Главная</Link>
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className='shrink-0' />
                 <BreadcrumbItem className='shrink-0'>
