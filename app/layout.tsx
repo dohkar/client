@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
@@ -8,8 +9,10 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 // import { AuthModal } from "@/components/features/auth-modal"; // временно: редирект на /auth/login
 import { SupportButton } from "@/components/features/chats/SupportButton";
 import { APP_CONFIG } from "@/constants";
+import { THEME_COOKIE_NAME } from "@/constants/theme";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeInitScript } from "@/components/theme-init-script";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ReactQueryProvider } from "@/lib/react-query/provider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -32,20 +35,20 @@ export const metadata: Metadata = {
   description: APP_CONFIG.description,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const themeCookie = cookieStore.get(THEME_COOKIE_NAME)?.value;
+  const defaultTheme = themeCookie === "dark" ? "dark" : "light";
+
   return (
-    <html lang='ru' suppressHydrationWarning>
+    <html lang="ru" className={defaultTheme} suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider
-          attribute='class'
-          defaultTheme='light'
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeInitScript />
+        <ThemeProvider defaultTheme={defaultTheme}>
           <ReactQueryProvider>
             <ErrorBoundary>
               <div className='flex min-h-screen flex-col'>

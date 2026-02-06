@@ -33,6 +33,7 @@ import { formatUserName } from "@/lib/utils/format-name";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/types";
 import type { PropertyType } from "@/types/property";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const CATEGORIES: Array<{
   name: string;
@@ -300,6 +301,7 @@ export function Header() {
                     <Heart className='h-5 w-5' />
                   </Button>
                 </Link>
+                <ThemeToggle variant="icon" />
                 <HoverCard openDelay={100} closeDelay={150}>
                   <HoverCardTrigger asChild>
                     <Link
@@ -326,6 +328,13 @@ export function Header() {
                     <div className='space-y-0.5'>
                       <UserMenuLinks isAdmin={isAdmin} isSupport={isSupport} />
                     </div>
+                    {/* Тема в пользовательском меню — UX-корректное место для настроек отображения */}
+                    <div className="mt-1.5 pt-1.5 border-t">
+                      <p className="px-2.5 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Тема
+                      </p>
+                      <ThemeToggle variant="embed" />
+                    </div>
                     <div className='pt-1.5 mt-1 border-t'>
                       <button
                         type='button'
@@ -341,15 +350,19 @@ export function Header() {
                 </HoverCard>
               </>
             ) : (
-              <Button
-                variant='outline'
-                size='sm'
-                className='gap-1.5 shrink-0'
-                onClick={() => router.push(ROUTES.login)}
-              >
-                <User className='h-4 w-4' />
-                Войти
-              </Button>
+              <>
+                {/* Компактная иконка темы в хедере для неавторизованных пользователей */}
+                <ThemeToggle variant="icon" />
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='gap-1.5 shrink-0'
+                  onClick={() => router.push(ROUTES.login)}
+                >
+                  <User className='h-4 w-4' />
+                  Войти
+                </Button>
+              </>
             )}
           </div>
           <Link href={ROUTES.sell} className='shrink-0'>
@@ -463,6 +476,13 @@ export function Header() {
                         </div>
                       </Link>
                     ))}
+                    {/* Тема в мобильном меню (авторизованный пользователь) */}
+                    <div className="border-t pt-4 mt-2">
+                      <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                        Тема
+                      </p>
+                      <ThemeToggle variant="embed" />
+                    </div>
                     <button
                       type='button'
                       onClick={handleMobileLogout}
@@ -474,7 +494,15 @@ export function Header() {
                     </button>
                   </div>
                 ) : (
-                  <div className='px-3'>
+                  <div className='space-y-4'>
+                    {/* Тема в мобильном меню (неавторизованный пользователь) */}
+                    <div>
+                      <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                        Тема
+                      </p>
+                      <ThemeToggle variant="embed" />
+                    </div>
+                    <div className='px-3'>
                     <Link href={ROUTES.login} onClick={closeMobileMenu}>
                       <Button
                         variant='default'
@@ -483,6 +511,7 @@ export function Header() {
                         Войти / Зарегистрироваться
                       </Button>
                     </Link>
+                    </div>
                   </div>
                 )}
               </div>
