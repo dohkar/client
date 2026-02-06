@@ -13,10 +13,10 @@ import type { User } from "@/types";
 
 function LoadingState() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <Spinner className="w-8 h-8 mx-auto mb-4" />
-        <p className="text-muted-foreground">Авторизация...</p>
+    <div className='min-h-screen flex items-center justify-center'>
+      <div className='text-center'>
+        <Spinner className='w-8 h-8 mx-auto mb-4' />
+        <p className='text-muted-foreground'>Авторизация...</p>
       </div>
     </div>
   );
@@ -77,30 +77,33 @@ function AuthCallbackHandler() {
             window.history.replaceState({}, "", "/auth/callback");
           }
           const isPopup = !!window.opener;
-          void useAuthStore.getState().checkAuth().then(async () => {
-            const userResponse = await authService.getCurrentUser();
-            if (userResponse) {
-              const user = mapUserResponseToUser(userResponse);
-              useAuthStore.getState().setUser(user);
-            }
-            if (isPopup && window.opener) {
-              const u = useAuthStore.getState().user;
-              const providerParam = searchParams.get("linked");
-              if (u && (providerParam === "google" || providerParam === "yandex")) {
-                window.opener.postMessage(
-                  {
-                    type: "oauth:linked" as const,
-                    user: u,
-                    provider: providerParam,
-                  },
-                  window.location.origin
-                );
+          void useAuthStore
+            .getState()
+            .checkAuth()
+            .then(async () => {
+              const userResponse = await authService.getCurrentUser();
+              if (userResponse) {
+                const user = mapUserResponseToUser(userResponse);
+                useAuthStore.getState().setUser(user);
               }
-              window.close();
-            } else {
-              router.push(ROUTES.dashboardSettings);
-            }
-          });
+              if (isPopup && window.opener) {
+                const u = useAuthStore.getState().user;
+                const providerParam = searchParams.get("linked");
+                if (u && (providerParam === "google" || providerParam === "yandex")) {
+                  window.opener.postMessage(
+                    {
+                      type: "oauth:linked" as const,
+                      user: u,
+                      provider: providerParam,
+                    },
+                    window.location.origin
+                  );
+                }
+                window.close();
+              } else {
+                router.push(ROUTES.dashboardSettings);
+              }
+            });
           return;
         }
 
@@ -129,17 +132,33 @@ function AuthCallbackHandler() {
               }),
               credentials: "include",
             });
-            if (response.ok) {
-              const json = await response.json();
-              const data = json.data ?? json;
-              if (data.accessToken) {
-                accessTokenStorage.setAccessToken(data.accessToken);
+            const json = await response.json().catch(() => ({}));
+            const data = json.data ?? json;
+            if (response.ok && data?.accessToken) {
+              accessTokenStorage.setAccessToken(data.accessToken);
+              if (typeof window !== "undefined") {
+                window.history.replaceState({}, "", "/auth/callback");
               }
+            } else {
+              const errMsg =
+                data?.message || (response.ok ? "Нет accessToken в ответе" : "Ошибка финализации OAuth");
+              if (isPopup) {
+                sendToOpenerAndClose("oauth:error", { error: errMsg });
+                return;
+              }
+              toast.error(errMsg);
+              router.push(ROUTES.login);
+              return;
             }
-          } finally {
-            if (typeof window !== "undefined") {
-              window.history.replaceState({}, "", "/auth/callback");
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : "Ошибка сети";
+            if (isPopup) {
+              sendToOpenerAndClose("oauth:error", { error: msg });
+              return;
             }
+            toast.error(msg);
+            router.push(ROUTES.login);
+            return;
           }
         }
 
@@ -178,8 +197,7 @@ function AuthCallbackHandler() {
         if (error instanceof Error && error.name === "AbortError") {
           return;
         }
-        const message =
-          error instanceof Error ? error.message : "Ошибка авторизации";
+        const message = error instanceof Error ? error.message : "Ошибка авторизации";
         if (isPopup) {
           sendToOpenerAndClose("oauth:error", { error: message });
           return;

@@ -27,39 +27,7 @@ function getPopupPosition(): { left: number; top: number } {
 
 const OAUTH_MESSAGE_TYPES = ["oauth:success", "oauth:error", "oauth:linked"] as const;
 
-// Абсолютный вариант isAllowedOrigin для нужных доменов
-const ALLOWED_ORIGINS = [
-  // абc.example.com и все поддомены example.com
-  /\.example\.com$/i,
-  // любой поддомен .vercel.app (+ сам .vercel.app)
-  /\.vercel\.app$/i,
-  // дополнительно можно добавить сюда любые другие абсолютные домены
-  /^https:\/\/yourfrontend\.ru$/i,
-  /^https:\/\/yourprod\.app$/i,
-];
-
-function isAllowedOrigin(origin: string) {
-  try {
-    const url = new URL(origin);
-    const host = url.hostname;
-    // Проверяем по всем паттернам
-    for (const pattern of ALLOWED_ORIGINS) {
-      if (
-        typeof pattern === "object" &&
-        pattern instanceof RegExp &&
-        pattern.test(host)
-      ) {
-        return true;
-      }
-      if (typeof pattern === "string" && host === pattern) {
-        return true;
-      }
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
+// Убраны ALLOWED_ORIGINS и isAllowedOrigin
 
 function isValidOAuthMessage(data: unknown): data is { type: string } {
   return (
@@ -79,7 +47,7 @@ export interface OAuthPopupButtonProps
   icon?: React.ReactNode;
   className?: string;
   onSuccessRedirect?: string;
-  /** state для OAuth (например "link" для привязки аккаунта) */
+  /** state for OAuth (e.g., "link" for account linking) */
   oauthState?: string;
 }
 
@@ -166,15 +134,7 @@ export const OAuthPopupButton = forwardRef<HTMLButtonElement, OAuthPopupButtonPr
       setIsLoading(true);
 
       const handleMessage = (event: MessageEvent) => {
-        // Debug-лог для проверки, что реально приходит на проде
-        console.log("OAUTH MESSAGE", {
-          origin: event.origin,
-          data: event.data,
-        });
-
-        // УБРАНО: if (event.source !== popupRef.current) return;
-        if (!isAllowedOrigin(event.origin)) return;
-
+        // Убрана проверка isAllowedOrigin
         if (!isValidOAuthMessage(event.data)) return;
 
         completedRef.current = true;
@@ -222,14 +182,23 @@ export const OAuthPopupButton = forwardRef<HTMLButtonElement, OAuthPopupButtonPr
       listenerRef.current = handleMessage;
       window.addEventListener("message", handleMessage);
 
+      // Cross-Origin-Opener-Policy (COOP) may block reading "closed" property of the popup.
+      // In this case, don't rely on it for cleanup, only handle success/error through postMessage.
       pollRef.current = setInterval(() => {
-        if (popupRef.current?.closed) {
+        // Attempt to check .closed but ignore possible errors due to COOP
+        let isClosed = false;
+        try {
+          isClosed = !!popupRef.current?.closed;
+        } catch {
+          // Ignore error
+        }
+        if (isClosed) {
           if (!completedRef.current) {
             toast.info("Вход отменён", {
               description: "Окно авторизации было закрыто",
             });
+            cleanup();
           }
-          cleanup();
         }
       }, 500);
     }, [
@@ -245,9 +214,7 @@ export const OAuthPopupButton = forwardRef<HTMLButtonElement, OAuthPopupButtonPr
 
     useEffect(() => {
       return () => {
-        if (popupRef.current && !popupRef.current.closed) {
-          popupRef.current.close();
-        }
+        // Не трогаем .closed на кросс-оригин, просто чистим всё
         cleanup();
       };
     }, [cleanup]);
