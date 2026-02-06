@@ -10,6 +10,7 @@ const HIDE_FOOTER_PATHS = [
   "/dashboard",
   "/sell",
   "/admin",
+  "/favorites",
 ] as const;
 
 function shouldHideFooter(pathname: string): boolean {
