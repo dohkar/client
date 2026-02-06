@@ -339,7 +339,9 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className='shrink-0' />
                 <BreadcrumbItem className='shrink-0'>
-                  <BreadcrumbLink href={ROUTES.search}>Недвижимость</BreadcrumbLink>
+                  <BreadcrumbLink asChild>
+                    <Link href={ROUTES.search}>Недвижимость</Link>
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className='shrink-0' />
                 <BreadcrumbItem className='shrink-0 min-w-0'>
