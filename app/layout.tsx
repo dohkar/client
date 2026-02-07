@@ -16,7 +16,7 @@ import { ThemeInitScript } from "@/components/theme-init-script";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ReactQueryProvider } from "@/lib/react-query/provider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +45,7 @@ export default async function RootLayout({
   const defaultTheme = themeCookie === "dark" ? "dark" : "light";
 
   return (
-    <html lang="ru" className={defaultTheme} suppressHydrationWarning>
+    <html lang='ru' className={defaultTheme} suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeInitScript />
         <ThemeProvider defaultTheme={defaultTheme}>
@@ -59,7 +59,7 @@ export default async function RootLayout({
                 >
                   <Header />
                 </Suspense>
-                <main className='flex-1 pb-20 md:pb-0'>{children}</main>
+                <main className='flex-1 pb-20 md:pb-0 bg-muted/20'>{children}</main>
                 <ConditionalFooter />
                 <MobileBottomNav />
                 {/* <AuthModal /> */}

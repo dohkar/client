@@ -35,12 +35,12 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
   if (!mounted) {
     return (
       <Button
-        variant="ghost"
-        size="icon-sm"
+        variant='ghost'
+        size='icon-sm'
         className={cn("shrink-0", className)}
-        aria-label="Переключить тему"
+        aria-label='Переключить тему'
       >
-        <Sun className="h-5 w-5 opacity-0" aria-hidden />
+        <Sun className='h-5 w-5 opacity-0' aria-hidden />
       </Button>
     );
   }
@@ -48,7 +48,7 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
   if (variant === "embed") {
     return (
       <button
-        type="button"
+        type='button'
         onClick={toggleTheme}
         className={cn(
           "flex w-full items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors cursor-pointer",
@@ -58,26 +58,23 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
         aria-label={isDark ? "Включить светлую тему" : "Включить тёмную тему"}
       >
         <Icon
-          className="h-4 w-4 shrink-0 transition-transform duration-200 ease-out"
+          className='h-4 w-4 shrink-0 transition-transform duration-200 ease-out'
           aria-hidden
         />
-        {isDark ? "Тёмная" : "Светлая"}
+        {isDark ? "Тёмная тема" : "Светлая тема"}
       </button>
     );
   }
 
   return (
     <Button
-      variant="ghost"
-      size="icon-sm"
+      variant='ghost'
+      size='icon-sm'
       className={cn("shrink-0", className)}
       onClick={toggleTheme}
       aria-label={isDark ? "Включить светлую тему" : "Включить тёмную тему"}
     >
-      <Icon
-        className="h-5 w-5 transition-transform duration-200 ease-out"
-        aria-hidden
-      />
+      <Icon className='h-5 w-5 transition-transform duration-200 ease-out' aria-hidden />
     </Button>
   );
 }

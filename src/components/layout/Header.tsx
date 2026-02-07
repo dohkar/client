@@ -301,7 +301,7 @@ export function Header() {
                     <Heart className='h-5 w-5' />
                   </Button>
                 </Link>
-                <ThemeToggle variant="icon" />
+                <ThemeToggle variant='icon' />
                 <HoverCard openDelay={100} closeDelay={150}>
                   <HoverCardTrigger asChild>
                     <Link
@@ -329,11 +329,8 @@ export function Header() {
                       <UserMenuLinks isAdmin={isAdmin} isSupport={isSupport} />
                     </div>
                     {/* Тема в пользовательском меню — UX-корректное место для настроек отображения */}
-                    <div className="mt-1.5 pt-1.5 border-t">
-                      <p className="px-2.5 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Тема
-                      </p>
-                      <ThemeToggle variant="embed" />
+                    <div className='mt-1.5 pt-1.5 border-t'>
+                      <ThemeToggle variant='embed' />
                     </div>
                     <div className='pt-1.5 mt-1 border-t'>
                       <button
@@ -352,7 +349,7 @@ export function Header() {
             ) : (
               <>
                 {/* Компактная иконка темы в хедере для неавторизованных пользователей */}
-                <ThemeToggle variant="icon" />
+                <ThemeToggle variant='icon' />
                 <Button
                   variant='outline'
                   size='sm'
@@ -477,11 +474,11 @@ export function Header() {
                       </Link>
                     ))}
                     {/* Тема в мобильном меню (авторизованный пользователь) */}
-                    <div className="border-t pt-4 mt-2">
-                      <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    <div className='border-t pt-4 mt-2'>
+                      <p className='px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2'>
                         Тема
                       </p>
-                      <ThemeToggle variant="embed" />
+                      <ThemeToggle variant='embed' />
                     </div>
                     <button
                       type='button'
@@ -497,20 +494,20 @@ export function Header() {
                   <div className='space-y-4'>
                     {/* Тема в мобильном меню (неавторизованный пользователь) */}
                     <div>
-                      <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      <p className='px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2'>
                         Тема
                       </p>
-                      <ThemeToggle variant="embed" />
+                      <ThemeToggle variant='embed' />
                     </div>
                     <div className='px-3'>
-                    <Link href={ROUTES.login} onClick={closeMobileMenu}>
-                      <Button
-                        variant='default'
-                        className='w-full py-6 text-base font-medium rounded-xl'
-                      >
-                        Войти / Зарегистрироваться
-                      </Button>
-                    </Link>
+                      <Link href={ROUTES.login} onClick={closeMobileMenu}>
+                        <Button
+                          variant='default'
+                          className='w-full py-6 text-base font-medium rounded-xl'
+                        >
+                          Войти / Зарегистрироваться
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 )}

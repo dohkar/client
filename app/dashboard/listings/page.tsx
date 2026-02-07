@@ -21,7 +21,6 @@ import { formatCurrency } from "@/lib/utils/format";
 import { formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
 import { useDeleteWithUndo } from "@/hooks/use-undo-delete";
-import { PropertyCardSkeleton } from "@/components/features/property-card-skeleton";
 import { useMemo, useState } from "react";
 import type { Property } from "@/types/property";
 import type { PropertyType } from "@/types/property";
@@ -107,7 +106,7 @@ export default function ListingsPage() {
 
   if (isLoading) {
     return (
-      <div className='min-h-[70vh] bg-muted/10 py-8 sm:py-14'>
+      <div className='min-h-[70vh] py-8 sm:py-14'>
         <div className='container mx-auto px-2 md:px-4'>
           <div className='max-w-3xl mx-auto mb-8 sm:mb-12 text-center'>
             <h1 className='text-3xl sm:text-4xl font-bold mb-2 text-foreground'>
@@ -115,10 +114,37 @@ export default function ListingsPage() {
             </h1>
             <p className='text-base sm:text-lg text-muted-foreground'>Загрузка...</p>
           </div>
-          <div className='mx-auto max-w-7xl'>
+          <div className='mx-auto max-w-7xl space-y-6 sm:space-y-8'>
+            {/* Скелетон панели фильтров и поиска */}
+            <div className='flex flex-col sm:flex-row gap-3 sm:gap-4 animate-pulse'>
+              <div className='w-full sm:w-80 h-11 bg-muted rounded-md' />
+              <div className='w-32 h-11 bg-muted rounded-md hidden sm:block' />
+              <div className='w-32 h-11 bg-muted rounded-md hidden sm:block' />
+              <div className='w-32 h-11 bg-muted rounded-md hidden sm:block' />
+              <div className='w-36 h-11 bg-muted rounded-md ml-auto' />
+            </div>
+            {/* Скелетоны карточек объявлений */}
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8'>
               {Array.from({ length: 8 }).map((_, i) => (
-                <PropertyCardSkeleton key={i} />
+                <div
+                  key={i}
+                  className='rounded-xl border border-card/50 bg-card p-0 shadow-sm animate-pulse flex flex-col'
+                >
+                  <div className='h-40 bg-muted rounded-t-xl' />
+                  <div className='flex-1 flex flex-col gap-3 px-4 pt-4 pb-5'>
+                    <div className='h-5 w-1/2 bg-muted rounded mb-1' />
+                    <div className='h-4 w-1/3 bg-muted rounded mb-3' />
+                    <div className='flex flex-wrap gap-2 mb-2'>
+                      <div className='h-4 w-12 bg-muted rounded' />
+                      <div className='h-4 w-16 bg-muted rounded' />
+                    </div>
+                    <div className='h-4 w-20 bg-muted rounded mb-2' />
+                    <div className='mt-auto flex gap-2'>
+                      <div className='h-9 w-20 bg-muted rounded' />
+                      <div className='h-9 w-9 bg-muted rounded' />
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -128,7 +154,7 @@ export default function ListingsPage() {
   }
 
   return (
-    <div className='min-h-[70vh] bg-muted/10 py-6 sm:py-8 md:py-12'>
+    <div className='min-h-[70vh] py-6 sm:py-8 md:py-12'>
       <div className='container mx-auto px-2 md:px-4'>
         <div className='mb-6 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
           <div>
@@ -301,13 +327,13 @@ export default function ListingsPage() {
         )}
 
         {!data || data.length === 0 ? (
-          <Card className='border-primary/20 shadow-sm'>
-            <CardContent className='p-8 sm:p-12 text-center'>
-              <p className='text-sm sm:text-base text-muted-foreground mb-4'>
+          <Card className='w-full max-w-2xl min-h-[280px] mx-auto border-primary/20 shadow-sm bg-card flex items-center justify-center'>
+            <CardContent className='w-full flex flex-col items-center justify-center gap-6 py-16 sm:py-20 text-center'>
+              <p className='text-lg sm:text-xl text-muted-foreground'>
                 У вас пока нет объявлений
               </p>
               <Link href={ROUTES.sell}>
-                <Button className='btn-caucasus min-h-[44px]'>
+                <Button className='btn-caucasus min-h-[48px] px-8 text-lg'>
                   Создать первое объявление
                 </Button>
               </Link>
@@ -321,7 +347,7 @@ export default function ListingsPage() {
                 <Card
                   key={property.id}
                   className={`
-                  border-primary/20 transition-all
+                  border-primary/20 transition-all bg-card
                   ${
                     deleting
                       ? "opacity-50 scale-95 pointer-events-none"

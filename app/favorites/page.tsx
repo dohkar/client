@@ -1,7 +1,6 @@
 "use client";
 
 import { PropertyCard } from "@/components/features/property-card";
-import { PropertyCardSkeleton } from "@/components/features/property-card-skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,7 +102,7 @@ export default function FavoritesPage() {
   // Показываем фулл-скрин загрузку пока не инициализировались
   if (!isInitialized || authLoading) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-muted/10'>
+      <div className='min-h-screen flex items-center justify-center'>
         <div className='flex flex-col items-center justify-center gap-3'>
           <span className='inline-block w-6 h-6 border-4 border-primary border-t-transparent border-solid rounded-full animate-spin' />
           <p className='text-muted-foreground text-base'>Загрузка...</p>
@@ -120,18 +119,42 @@ export default function FavoritesPage() {
   // Скелетоны при загрузке
   if (isLoading) {
     return (
-      <div className='min-h-[70vh] bg-muted/10 py-8 sm:py-14'>
+      <div className='min-h-[70vh] py-8 sm:py-14'>
         <div className='container mx-auto px-2 md:px-4'>
           <div className='max-w-3xl mx-auto mb-8 sm:mb-12 text-center'>
             <h1 className='text-3xl sm:text-4xl font-bold mb-2 text-foreground'>
               Избранное
             </h1>
-            <p className='text-base sm:text-lg text-muted-foreground'>Загрузка...</p>
           </div>
-          <div className='mx-auto max-w-7xl'>
+          <div className='flex flex-col gap-6 max-w-4xl mx-auto'>
+            {/* Фильтры */}
+            <div className='flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-end pb-4'>
+              <div className='flex-1'>
+                <div className='h-10 bg-muted rounded-md w-full animate-pulse' />
+              </div>
+              <div className='w-40'>
+                <div className='h-10 bg-muted rounded-md w-full animate-pulse' />
+              </div>
+              <div className='w-40'>
+                <div className='h-10 bg-muted rounded-md w-full animate-pulse' />
+              </div>
+            </div>
+          </div>
+          <div className='mx-auto max-w-7xl mt-2'>
             <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 xl:gap-10'>
               {Array.from({ length: 8 }).map((_, i) => (
-                <PropertyCardSkeleton key={i} />
+                <div
+                  key={i}
+                  className='rounded-xl bg-card border border-card/50 shadow-sm overflow-hidden flex flex-col animate-pulse'
+                >
+                  <div className='w-full aspect-[4/3] bg-muted' />
+                  <div className='p-4 flex-1 flex flex-col gap-2'>
+                    <div className='h-6 w-2/3 bg-muted rounded mb-2' />
+                    <div className='h-4 w-1/3 bg-muted rounded mb-2' />
+                    <div className='h-4 w-1/2 bg-muted rounded' />
+                    <div className='mt-4 h-9 w-full bg-muted rounded' />
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -143,9 +166,9 @@ export default function FavoritesPage() {
   // Если избранное пустое
   if (!data.length) {
     return (
-      <div className='container mx-auto px-4 py-8 sm:py-20 min-h-[60vh] flex flex-col justify-center'>
+      <div className='container mx-auto px-4 py-8 sm:py-20 min-h-[70vh] flex flex-col justify-center'>
         <div className='max-w-xl mx-auto text-center'>
-          <Card className='border-primary/20 shadow-md bg-white/90'>
+          <Card className='border-primary/20 shadow-md bg-card'>
             <CardContent className='p-6 sm:p-12 flex flex-col items-center justify-center'>
               <Heart className='w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6 text-muted-foreground' />
               <h2 className='text-2xl sm:text-3xl font-bold mb-2'>Избранное пусто</h2>
@@ -179,7 +202,7 @@ export default function FavoritesPage() {
   };
 
   return (
-    <div className='min-h-[70vh] bg-muted/10 py-8 sm:py-14'>
+    <div className='min-h-[70vh] py-8 sm:py-14'>
       <div className='container mx-auto px-2 md:px-4'>
         <div className='max-w-3xl mx-auto mb-6 sm:mb-8 text-center'>
           <h1 className='text-3xl sm:text-4xl font-bold mb-2 text-foreground'>
@@ -366,15 +389,15 @@ export default function FavoritesPage() {
                   style={{ minHeight: 410 }}
                 >
                   <PropertyCard property={property} hideFavoriteButton />
-                  {/* Overlayed delete button */}
+                  {/* Overlayed delete button for all devices, always visible on mobile, hover on desktop */}
                   <Button
                     variant='destructive'
                     size='icon'
                     className={`
                       absolute z-20 top-2.5 right-2.5
-                      pointer-events-none opacity-0
-                      group-hover:pointer-events-auto group-hover:opacity-100
-                      sm:pointer-events-auto sm:opacity-100
+                      opacity-100 pointer-events-auto
+                      group-hover:opacity-100 group-hover:pointer-events-auto
+                      sm:opacity-0 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto
                       transition-opacity
                       shadow-xl rounded-full
                       flex items-center justify-center

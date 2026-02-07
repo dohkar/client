@@ -104,7 +104,7 @@ function SearchPageContent() {
   };
 
   return (
-    <div className='min-h-screen flex flex-col bg-background'>
+    <div className='min-h-screen flex flex-col'>
       <main className='flex-1 px-4 py-8 max-w-7xl mx-auto w-full'>
         {/* Breadcrumbs */}
         <Breadcrumb className='mb-4'>
