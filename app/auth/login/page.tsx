@@ -102,7 +102,7 @@ export default function LoginPage() {
   );
 
   return (
-    <div className='flex items-center justify-center min-h-[80vh] sm:min-h-[90vh] px-3 py-2 sm:px-4 sm:py-6 md:py-12 bg-muted/30 w-full'>
+    <div className='flex items-center justify-center min-h-[80vh] sm:min-h-[90vh] px-3 py-2 sm:px-4 sm:py-6 md:py-12 w-full'>
       <Card className='w-full max-w-md border-primary/30 shadow-xl rounded-2xl'>
         <CardHeader className='space-y-1 text-center py-6 px-4 sm:px-6'>
           <CardTitle className='text-lg sm:text-xl md:text-2xl font-bold'>
