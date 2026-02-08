@@ -157,10 +157,10 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent>
                 <a
-                  href='tel:+79990000000'
+                  href='tel:+79640260062'
                   className='text-primary hover:underline font-medium transition-colors'
                 >
-                  +7 (999) 000-00-00
+                  +7 (964) 026-00-62
                 </a>
               </CardContent>
             </Card>

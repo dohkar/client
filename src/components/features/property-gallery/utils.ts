@@ -43,3 +43,13 @@ export function getMediaUrl(item: MediaItem, usePreview = false): string {
 export function getMediaAlt(item: MediaItem, index: number): string {
   return item.alt || `Медиа ${index + 1}`;
 }
+
+/** Циклический предыдущий индекс в галерее. */
+export function getPrevIndex(current: number, length: number): number {
+  return current > 0 ? current - 1 : length - 1;
+}
+
+/** Циклический следующий индекс в галерее. */
+export function getNextIndex(current: number, length: number): number {
+  return current < length - 1 ? current + 1 : 0;
+}

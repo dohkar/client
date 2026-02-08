@@ -1,23 +1,15 @@
 "use client";
 
-import { use, useState } from "react";
-import { PropertyGallery } from "@/components/features/property-gallery";
+import { useCallback, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { toast } from "sonner";
+
+import PropertyGallery from "@/components/features/property-gallery";
 import { YandexMap } from "@/components/features/yandex-map";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  MapPin,
-  Calendar,
-  Eye,
-  Share2,
-  Heart,
-  Home,
-  Square,
-  Building2,
-  Copy,
-  Loader2,
-  ArrowLeft,
-} from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -26,17 +18,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useProperty } from "@/hooks/use-properties";
-import { useFavorites } from "@/hooks/use-favorites";
-import { useCreatePropertyChat } from "@/hooks/use-chats";
-import { useAuthStore } from "@/stores";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ROUTES } from "@/constants";
-import { formatDate, formatPhone, getPhoneHref } from "@/lib/utils/format";
-import { MessageSquare } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { Flag } from "lucide-react";
-import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -54,48 +35,89 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  MapPin,
+  Calendar,
+  Eye,
+  Share2,
+  Heart,
+  Home,
+  Square,
+  Building2,
+  Copy,
+  Loader2,
+  ArrowLeft,
+  MessageSquare,
+  Flag,
+} from "lucide-react";
+import { useProperty } from "@/hooks/use-properties";
+import { useFavorites } from "@/hooks/use-favorites";
+import { useCreatePropertyChat } from "@/hooks/use-chats";
+import { useAuthStore } from "@/stores";
+import { ROUTES } from "@/constants";
+import { formatDate, formatPhone, getPhoneHref } from "@/lib/utils/format";
 import { logger } from "@/lib/utils/logger";
-import Link from "next/link";
 
-export default function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+// Типизированное получение id из параметров
+function usePropertyId(): string | undefined {
+  const params = useParams();
+  if (
+    typeof params === "object" &&
+    params !== null &&
+    Object.prototype.hasOwnProperty.call(params, "id")
+  ) {
+    const idValue = (params as Record<string, string | string[] | undefined>).id;
+    return Array.isArray(idValue) ? idValue[0] : idValue;
+  }
+  return undefined;
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  apartment: "Квартира",
+  house: "Дом",
+  land: "Участок",
+  commercial: "Коммерческая",
+};
+
+export default function PropertyPage() {
+  const id = usePropertyId();
   const router = useRouter();
-  const { data: property, isLoading, error } = useProperty(id);
 
+  // Всегда вызываем хуки -- даже если данных нет!
+  const { data: property, isLoading, error } = useProperty(id ?? "");
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
   const createChatMutation = useCreatePropertyChat();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
 
-  const favorite = property ? isFavorite(property.id) : false;
-  const isPending = property ? isMutating(property.id) : false;
-
-  // For "show phone" button
+  // STATES
   const [showPhone, setShowPhone] = useState(false);
-
-  // For description expand/collapse
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-
-  // For share functionality
   const [copied, setCopied] = useState(false);
 
-  // Complaint modal state
   const [complaintOpen, setComplaintOpen] = useState(false);
   const [complaintReason, setComplaintReason] = useState<string>("");
   const [complaintComment, setComplaintComment] = useState<string>("");
   const [complaintSubmitting, setComplaintSubmitting] = useState(false);
 
+  // SELECTORS
+  const favorite = property ? isFavorite(property.id) : false;
+  const isPending = property ? isMutating(property.id) : false;
+
+  // MEMOIZED
+  const images = useMemo(() => {
+    if (property?.images?.length) return property.images;
+    if (property?.image) return [property.image];
+    return [];
+  }, [property]);
+
+  // HANDLERS
   const handleFavoriteClick = () => {
-    if (property) {
-      toggleFavorite(property.id, property);
-    }
+    if (!property) return;
+    toggleFavorite(property.id, property);
   };
 
-  // no-op: avoid console logging in prod
-
-  const handleShowPhone = () => {
-    setShowPhone(true);
-  };
+  const handleShowPhone = () => setShowPhone(true);
 
   const handleContactSeller = () => {
     if (typeof window !== "undefined" && property?.contact?.phone) {
@@ -103,36 +125,35 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     }
   };
 
-  const handleCopyLink = async () => {
-    if (typeof window !== "undefined") {
+  const handleCopyLink = useCallback(async () => {
+    if (typeof window !== "undefined" && window.location && window.navigator?.clipboard) {
       try {
-        await navigator.clipboard.writeText(window.location.href);
+        await window.navigator.clipboard.writeText(window.location.href);
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       } catch {
         setCopied(false);
+        toast.error("Не удалось скопировать ссылку");
       }
     }
-  };
+  }, []);
 
   const handleWriteToOwner = async () => {
     if (!isAuthenticated) {
       router.push(ROUTES.login);
       return;
     }
-
-    if (!property) return;
-
-    // Проверяем, не является ли пользователь владельцем
-    if (user?.id === property.userId) {
-      return; // Не показываем кнопку для владельца
-    }
-
+    if (!property || user?.id === property.userId) return;
     try {
       const chat = await createChatMutation.mutateAsync(property.id);
-      router.push(`${ROUTES.messages}?chatId=${chat.id}`);
-    } catch {
-      // Ошибка обработается в хуке
+      if (chat?.id) {
+        router.push(`${ROUTES.messages}?chatId=${chat.id}`);
+      } else {
+        toast.error("Ошибка создания чата");
+      }
+    } catch (err) {
+      logger.error("Failed to create chat", err);
+      toast.error("Ошибка создания чата");
     }
   };
 
@@ -142,17 +163,14 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
       router.push(ROUTES.login);
       return;
     }
-
     if (!complaintReason) {
       toast.error("Выберите причину жалобы");
       return;
     }
-
     try {
       setComplaintSubmitting(true);
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
       const message = `Жалоба на объявление ${property.id}\nПричина: ${complaintReason}\nКомментарий: ${complaintComment || "-"}`;
-
       const res = await fetch(`${API_URL}/api/inbox`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -167,28 +185,35 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
           propertyId: property.id,
         }),
       });
-
-      if (!res.ok) {
-        throw new Error("Failed to submit complaint");
-      }
-
+      if (!res.ok) throw new Error("Failed to submit complaint");
       toast.success("Жалоба отправлена");
       setComplaintOpen(false);
       setComplaintReason("");
       setComplaintComment("");
-    } catch (error) {
-      logger.error("Failed to submit complaint", error);
+    } catch (err) {
+      logger.error("Failed to submit complaint", err);
       toast.error("Не удалось отправить жалобу");
     } finally {
       setComplaintSubmitting(false);
     }
   };
 
+  // ==================================
+  // РЕНДЕРИНГ ПРОСТЫХ СОСТОЯНИЙ
+  // ==================================
+  if (!id) {
+    return (
+      <div className='container mx-auto px-4 py-12 text-center'>
+        <h1 className='text-2xl font-bold mb-4'>Объявление не найдено</h1>
+        <p className='text-muted-foreground'>ID объявления не указан или некорректен</p>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className='min-h-screen flex flex-col bg-background'>
         <main className='flex-1 pb-12'>
-          {/* Навигационная цепочка */}
           <div className='container mx-auto px-4 py-4'>
             <div className='flex items-center space-x-2'>
               <Skeleton className='h-5 w-16' />
@@ -198,12 +223,9 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               <Skeleton className='h-5 w-40' />
             </div>
           </div>
-
           <div className='container mx-auto px-4'>
             <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8'>
-              {/* Левая часть */}
               <div className='lg:col-span-8 space-y-6 sm:space-y-8'>
-                {/* Заголовок и кнопки */}
                 <div className='space-y-4'>
                   <div className='flex flex-wrap items-start justify-between gap-4'>
                     <Skeleton className='h-8 sm:h-10 w-3/4' />
@@ -213,22 +235,14 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                     </div>
                   </div>
                 </div>
-
-                {/* Галерея - Hero + Thumbs */}
                 <div className='space-y-3'>
                   <Skeleton className='aspect-video w-full rounded-xl' />
                   <div className='flex gap-2'>
-                    <Skeleton className='aspect-[4/3] flex-1 rounded-lg' />
-                    <Skeleton className='aspect-[4/3] flex-1 rounded-lg' />
-                    <Skeleton className='aspect-[4/3] flex-1 rounded-lg' />
-                    <Skeleton className='aspect-[4/3] flex-1 rounded-lg' />
+                    {[1, 2, 3, 4].map((i) => (
+                      <Skeleton key={i} className='aspect-4/3 flex-1 rounded-lg' />
+                    ))}
                   </div>
                 </div>
-
-                {/* Цена */}
-                {/*<Skeleton className='h-20 w-full rounded-xl' />*/}
-
-                {/* Характеристики */}
                 <div className='bg-card rounded-xl border border-border p-4 sm:p-6'>
                   <Skeleton className='h-6 w-32 mb-4 sm:mb-6' />
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-y-3 sm:gap-y-4 gap-x-4 sm:gap-x-8'>
@@ -243,8 +257,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                     ))}
                   </div>
                 </div>
-
-                {/* Описание */}
                 <div className='bg-card rounded-xl border border-border p-6'>
                   <Skeleton className='h-6 w-24 mb-4' />
                   <div className='space-y-2'>
@@ -254,32 +266,23 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                   </div>
                 </div>
               </div>
-
-              {/* Правая часть - Сайдбар */}
               <div className='lg:col-span-4'>
                 <div className='sticky top-24'>
                   <div className='bg-card rounded-xl border border-border p-4 sm:p-6 space-y-4'>
-                    {/* Цена */}
                     <div>
                       <Skeleton className='h-9 w-2/3 mb-2' />
                       <Skeleton className='h-5 w-1/2' />
                     </div>
-
-                    {/* Информация */}
                     <div className='space-y-3 pt-4 border-t border-border'>
                       <Skeleton className='h-5 w-full' />
                       <Skeleton className='h-5 w-3/4' />
                       <Skeleton className='h-5 w-2/3' />
                     </div>
-
-                    {/* Характеристики */}
                     <div className='grid grid-cols-2 gap-2 pt-2'>
                       {[1, 2, 3, 4].map((i) => (
                         <Skeleton key={i} className='h-16 w-full rounded-lg' />
                       ))}
                     </div>
-
-                    {/* Кнопки */}
                     <div className='space-y-2 pt-2'>
                       <Skeleton className='h-11 w-full rounded-lg' />
                       <Skeleton className='h-11 w-full rounded-lg' />
@@ -305,21 +308,25 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     );
   }
 
-  const pricePerMeter =
-    property.pricePerMeter || Math.round(property.price / property.area);
-  const images = property.images || [property.image];
+  // Подсчитываем цену за метр
+  const pricePerMeter: number =
+    property.pricePerMeter ||
+    (property.area ? Math.round(property.price / property.area) : 0);
 
-  // карта
-  // Вставьте сюда виджет карты (например, яндекс или google maps) по координатам property.latitude, property.longitude если есть
-
+  // ==================================
+  // ОСНОВНОЙ РЕНДЕР
+  // ==================================
   return (
     <div className='min-h-screen flex flex-col bg-background'>
       <main className='flex-1 pb-12'>
-        {/* Навигация: кнопка назад + breadcrumb */}
+        {/* Header navigation */}
         <div className='container mx-auto px-4 py-4'>
           <div
             className='flex items-center gap-2 pl-2 mb-2 overflow-x-auto scrollbar-none'
-            style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
+            style={{
+              WebkitOverflowScrolling: "touch",
+              overscrollBehaviorX: "contain",
+            }}
           >
             <Button
               variant='clear'
@@ -327,6 +334,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               onClick={() => router.back()}
               className='text-muted-foreground hover:text-foreground -ml-2 rounded-full p-2 hover:bg-muted shrink-0'
               aria-label='Вернуться назад'
+              type='button'
             >
               <ArrowLeft className='w-4 h-4' />
             </Button>
@@ -356,9 +364,9 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
 
         <div className='container mx-auto px-4'>
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8'>
-            {/* Основной контент */}
+            {/* ------------ Main Content ----------- */}
             <div className='lg:col-span-8 space-y-6 sm:space-y-8'>
-              {/* Заголовок и адрес */}
+              {/* Title + favorite/share */}
               <div className='space-y-4'>
                 <div className='flex flex-wrap items-start justify-between gap-4'>
                   <h1 className='text-xl sm:text-2xl md:text-3xl font-bold text-foreground text-balance flex-1 min-w-0'>
@@ -374,10 +382,11 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                       aria-label={
                         favorite ? "Удалить из избранного" : "Добавить в избранное"
                       }
-                      className={`min-h-[44px] min-w-[44px] ${isPending ? "opacity-70" : ""}`}
+                      className={`min-h-[44px] min-w-[44px]${isPending ? " opacity-70" : ""}`}
+                      type='button'
                     >
                       <Heart
-                        className={`w-5 h-5 transition-transform ${favorite ? "fill-current text-red-500 scale-110" : ""} ${isPending ? "animate-pulse" : ""}`}
+                        className={`w-5 h-5 transition-transform${favorite ? " fill-current text-red-500 scale-110" : ""}${isPending ? " animate-pulse" : ""}`}
                       />
                     </Button>
                     <div className='relative'>
@@ -409,71 +418,24 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               {/* Галерея */}
               <PropertyGallery images={images} />
 
-              {/* Цена */}
-              {/*<div className='bg-card rounded-xl border border-border p-4 sm:p-6'>
-                <div className='flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4'>
-                  <span className='text-2xl sm:text-3xl font-bold text-foreground'>
-                    {new Intl.NumberFormat("ru-RU", {
-                      style: "currency",
-                      currency: property.currency,
-                      maximumFractionDigits: 0,
-                    }).format(property.price)}
-                  </span>
-                  <span className='text-base sm:text-lg text-muted-foreground'>
-                    {new Intl.NumberFormat("ru-RU", {
-                      style: "currency",
-                      currency: property.currency,
-                      maximumFractionDigits: 0,
-                    }).format(pricePerMeter)}
-                    /м²
-                  </span>
-                </div>
-              </div>*/}
-
               {/* Характеристики */}
               <div className='bg-card rounded-xl border border-border p-4 sm:p-6'>
                 <h2 className='text-lg sm:text-xl font-semibold mb-4 sm:mb-6'>
                   Характеристики
                 </h2>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-y-3 sm:gap-y-4 gap-x-4 sm:gap-x-8'>
-                  <div className='flex justify-between items-baseline border-b border-border/50 pb-2'>
-                    <span className='text-muted-foreground'>Тип</span>
-                    <span className='font-medium text-foreground'>
-                      {property.type === "apartment"
-                        ? "Квартира"
-                        : property.type === "house"
-                          ? "Дом"
-                          : property.type === "land"
-                            ? "Участок"
-                            : "Коммерческая"}
-                    </span>
-                  </div>
-                  <div className='flex justify-between items-baseline border-b border-border/50 pb-2'>
-                    <span className='text-muted-foreground'>Площадь</span>
-                    <span className='font-medium text-foreground'>
-                      {property.area} м²
-                    </span>
-                  </div>
-                  {property.rooms !== undefined && property.rooms !== null && (
-                    <div className='flex justify-between items-baseline border-b border-border/50 pb-2'>
-                      <span className='text-muted-foreground'>Комнат</span>
-                      <span className='font-medium text-foreground'>
-                        {property.rooms}
-                      </span>
-                    </div>
+                  <InfoRow
+                    label='Тип'
+                    value={TYPE_LABELS[property.type] || "Коммерческая"}
+                  />
+                  <InfoRow label='Площадь' value={`${property.area} м²`} />
+                  {property.rooms != null && (
+                    <InfoRow label='Комнат' value={property.rooms} />
                   )}
-                  {property.floor !== undefined && property.floor !== null && (
-                    <div className='flex justify-between items-baseline border-b border-border/50 pb-2'>
-                      <span className='text-muted-foreground'>Этаж</span>
-                      <span className='font-medium text-foreground'>
-                        {property.floor}
-                      </span>
-                    </div>
+                  {property.floor != null && (
+                    <InfoRow label='Этаж' value={property.floor} />
                   )}
-                  <div className='flex justify-between items-baseline border-b border-border/50 pb-2'>
-                    <span className='text-muted-foreground'>Регион</span>
-                    <span className='font-medium text-foreground'>{property.region}</span>
-                  </div>
+                  <InfoRow label='Регион' value={property.region} />
                 </div>
               </div>
 
@@ -482,9 +444,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 <h2 className='text-xl font-semibold mb-4'>Описание</h2>
                 <div className='min-w-0'>
                   <div
-                    className={`text-muted-foreground whitespace-pre-line break-words [overflow-wrap:anywhere] ${
-                      !isDescriptionExpanded ? "line-clamp-5" : ""
-                    }`}
+                    className={`text-muted-foreground whitespace-pre-line wrap-break-word [overflow-wrap:anywhere]${!isDescriptionExpanded ? " line-clamp-5" : ""}`}
                   >
                     {property.description}
                   </div>
@@ -492,7 +452,8 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                     <Button
                       variant='link'
                       className='p-0 h-auto mt-2 text-primary'
-                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                      onClick={() => setIsDescriptionExpanded((v) => !v)}
+                      type='button'
                     >
                       {isDescriptionExpanded ? "Свернуть" : "Показать полностью"}
                     </Button>
@@ -501,7 +462,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               </div>
 
               {/* Удобства */}
-              {property.features && property.features.length > 0 && (
+              {!!property.features?.length && (
                 <div className='bg-card rounded-xl border border-border p-6'>
                   <h2 className='text-xl font-semibold mb-4'>Удобства</h2>
                   <div className='flex flex-wrap gap-2'>
@@ -540,18 +501,24 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               <div className='bg-card rounded-xl border border-border p-6'>
                 <h2 className='text-xl font-semibold mb-4'>Контакты</h2>
                 <div className='space-y-2'>
-                  <p className='text-foreground font-medium'>{property.contact.name}</p>
-                  <a
-                    href={getPhoneHref(property.contact.phone)}
-                    className='text-muted-foreground hover:text-primary transition-colors block'
-                  >
-                    {formatPhone(property.contact.phone, "international")}
-                  </a>
+                  <p className='text-foreground font-medium'>
+                    {property.contact?.name || "—"}
+                  </p>
+                  {property.contact?.phone ? (
+                    <a
+                      href={getPhoneHref(property.contact.phone)}
+                      className='text-muted-foreground hover:text-primary transition-colors block'
+                    >
+                      {formatPhone(property.contact.phone, "international")}
+                    </a>
+                  ) : (
+                    <span className='text-muted-foreground block'>Телефон не указан</span>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Сайдбар */}
+            {/* ------------ RIGHT SIDEBAR ----------- */}
             <div className='lg:col-span-4'>
               <div className='sticky top-24 space-y-6'>
                 <div className='bg-card rounded-xl border border-border p-4 sm:p-6'>
@@ -559,31 +526,34 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                     {/* Цена */}
                     <div>
                       <p className='text-2xl sm:text-3xl font-bold text-foreground'>
-                        {new Intl.NumberFormat("ru-RU", {
-                          style: "currency",
-                          currency: property.currency,
-                          maximumFractionDigits: 0,
-                        }).format(property.price)}
+                        {property.price && property.currency
+                          ? new Intl.NumberFormat("ru-RU", {
+                              style: "currency",
+                              currency: property.currency,
+                              maximumFractionDigits: 0,
+                            }).format(property.price)
+                          : "—"}
                       </p>
                       <p className='text-xs sm:text-sm text-muted-foreground'>
-                        {new Intl.NumberFormat("ru-RU", {
-                          style: "currency",
-                          currency: property.currency,
-                          maximumFractionDigits: 0,
-                        }).format(pricePerMeter)}
-                        /м²
+                        {property.currency && pricePerMeter
+                          ? `${new Intl.NumberFormat("ru-RU", {
+                              style: "currency",
+                              currency: property.currency,
+                              maximumFractionDigits: 0,
+                            }).format(pricePerMeter)}/м²`
+                          : "—"}
                       </p>
                     </div>
 
-                    {/* Информация о публикации */}
+                    {/* Информация о публикации, адрес, статус, просмотры */}
                     <div className='space-y-3 pt-4 border-t border-border'>
                       {/* Адрес */}
                       <div className='flex items-start gap-2 text-sm text-muted-foreground'>
                         <MapPin className='w-4 h-4 shrink-0 mt-0.5' />
-                        <span className='wrap-break-word'>{property.location}</span>
+                        <span className='wrap-break-word'>
+                          {property.location || "—"}
+                        </span>
                       </div>
-
-                      {/* Премиум badge */}
                       {property.isPremium && (
                         <div>
                           <Badge variant='secondary' className='rounded-md'>
@@ -591,8 +561,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                           </Badge>
                         </div>
                       )}
-
-                      {/* Дата и просмотры */}
                       <div className='flex flex-col gap-2 text-sm'>
                         {property.updatedAt && (
                           <div className='flex items-center gap-2 text-muted-foreground'>
@@ -612,64 +580,48 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                           </div>
                         )}
                       </div>
-
                       {/* Основные характеристики */}
                       <div className='grid grid-cols-2 gap-2 pt-2'>
-                        {property.rooms !== undefined && property.rooms !== null && (
-                          <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
-                            <Home className='w-4 h-4 text-muted-foreground shrink-0' />
-                            <div className='flex flex-col'>
-                              <span className='text-xs text-muted-foreground'>
-                                Комнат
-                              </span>
-                              <span className='text-sm font-medium'>
-                                {property.rooms}
-                              </span>
-                            </div>
-                          </div>
+                        {property.rooms != null && (
+                          <SidebarInfoCard
+                            icon={
+                              <Home className='w-4 h-4 text-muted-foreground shrink-0' />
+                            }
+                            label='Комнат'
+                            value={property.rooms}
+                          />
                         )}
-                        <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
-                          <Square className='w-4 h-4 text-muted-foreground shrink-0' />
-                          <div className='flex flex-col'>
-                            <span className='text-xs text-muted-foreground'>Площадь</span>
-                            <span className='text-sm font-medium'>
-                              {property.area} м²
-                            </span>
-                          </div>
-                        </div>
-                        {property.floor !== undefined && property.floor !== null && (
-                          <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
-                            <Building2 className='w-4 h-4 text-muted-foreground shrink-0' />
-                            <div className='flex flex-col'>
-                              <span className='text-xs text-muted-foreground'>Этаж</span>
-                              <span className='text-sm font-medium'>
-                                {property.floor}
-                              </span>
-                            </div>
-                          </div>
+                        <SidebarInfoCard
+                          icon={
+                            <Square className='w-4 h-4 text-muted-foreground shrink-0' />
+                          }
+                          label='Площадь'
+                          value={`${property.area} м²`}
+                        />
+                        {property.floor != null && (
+                          <SidebarInfoCard
+                            icon={
+                              <Building2 className='w-4 h-4 text-muted-foreground shrink-0' />
+                            }
+                            label='Этаж'
+                            value={property.floor}
+                          />
                         )}
                         <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
                           <Badge variant='secondary' className='text-xs'>
-                            {property.type === "apartment"
-                              ? "Квартира"
-                              : property.type === "house"
-                                ? "Дом"
-                                : property.type === "land"
-                                  ? "Участок"
-                                  : "Коммерческая"}
+                            {TYPE_LABELS[property.type] || "Коммерческая"}
                           </Badge>
                         </div>
                       </div>
                     </div>
-
                     {/* CTA кнопки */}
                     <div className='space-y-2 pt-2'>
-                      {/* Кнопка чата (только если пользователь не владелец) */}
                       {user?.id !== property.userId && (
                         <Button
                           className='w-full min-h-[44px]'
                           onClick={handleWriteToOwner}
                           disabled={createChatMutation.isPending}
+                          type='button'
                         >
                           <MessageSquare className='h-4 w-4 mr-2' />
                           {createChatMutation.isPending
@@ -682,6 +634,8 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                         className='w-full min-h-[44px]'
                         onClick={handleContactSeller}
                         asChild={false}
+                        type='button'
+                        disabled={!property.contact?.phone}
                       >
                         Связаться с продавцом
                       </Button>
@@ -689,13 +643,13 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                         variant='outline'
                         className='w-full min-h-[44px]'
                         onClick={handleShowPhone}
-                        disabled={showPhone}
+                        disabled={showPhone || !property.contact?.phone}
+                        type='button'
                       >
-                        {showPhone
+                        {showPhone && property.contact?.phone
                           ? formatPhone(property.contact.phone, "international")
                           : "Показать телефон"}
                       </Button>
-
                       {/* Жалоба (только на странице объявления) */}
                       <div className='pt-2'>
                         <Dialog open={complaintOpen} onOpenChange={setComplaintOpen}>
@@ -703,12 +657,12 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                             <Button
                               variant='clear'
                               className='inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-destructive transition-colors'
+                              type='button'
                             >
                               <Flag />
                               Пожаловаться
                             </Button>
                           </DialogTrigger>
-
                           <DialogContent hasCloseIcon={false} className='sm:max-w-md'>
                             <DialogHeader>
                               <DialogTitle>Пожаловаться на объявление</DialogTitle>
@@ -716,7 +670,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                                 Выберите причину и добавьте комментарий.
                               </DialogDescription>
                             </DialogHeader>
-
                             <div className='space-y-5 py-2'>
                               {/* Причина */}
                               <div className='space-y-2'>
@@ -747,7 +700,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                                   </SelectContent>
                                 </Select>
                               </div>
-
                               {/* Комментарий */}
                               <div className='space-y-2'>
                                 <label className='text-sm font-medium'>
@@ -761,7 +713,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                                 />
                               </div>
                             </div>
-
                             <DialogFooter className='gap-3 sm:gap-4'>
                               <Button
                                 variant='outline'
@@ -800,6 +751,35 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+// --------- Extracted Subcomponents (по синьорски) ------------------
+
+type InfoRowProps = { label: string; value: React.ReactNode };
+function InfoRow({ label, value }: InfoRowProps) {
+  return (
+    <div className='flex justify-between items-baseline border-b border-border/50 pb-2'>
+      <span className='text-muted-foreground'>{label}</span>
+      <span className='font-medium text-foreground'>{value}</span>
+    </div>
+  );
+}
+
+type SidebarInfoCardProps = {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+};
+function SidebarInfoCard({ icon, label, value }: SidebarInfoCardProps) {
+  return (
+    <div className='flex items-center gap-2 p-2 rounded-lg bg-muted/50'>
+      {icon}
+      <div className='flex flex-col'>
+        <span className='text-xs text-muted-foreground'>{label}</span>
+        <span className='text-sm font-medium'>{value}</span>
+      </div>
     </div>
   );
 }

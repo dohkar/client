@@ -8,4 +8,6 @@ export const GALLERY_CONFIG = {
   MIN_ZOOM: 1,
   MAX_ZOOM: 3,
   MAX_PAN_OFFSET: 450,
+  /** Минимальный deltaY колеса для срабатывания зума (игнор микро-движений). */
+  WHEEL_DELTA_THRESHOLD: 5,
 } as const;

@@ -8,6 +8,9 @@ export type MediaItem = {
   blurDataURL?: string;
 };
 
+/** Binary zoom contract between MediaGrid and MediaSlide. */
+export type GalleryZoomLevel = 1 | 2;
+
 export type AspectRatio = "4/3" | "16/9" | "1/1";
 
 export type MediaGalleryProps = {

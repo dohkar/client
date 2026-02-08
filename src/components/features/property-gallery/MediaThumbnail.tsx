@@ -1,38 +1,49 @@
 import Image from "next/image";
-import { Play } from "lucide-react";
+import { Play, ImageOff } from "lucide-react";
+import { memo, useState, useCallback, KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
 import type { MediaItem } from "./types";
 import { getMediaUrl, getMediaAlt, isVideo } from "./utils";
-import { memo, useCallback, KeyboardEvent } from "react";
 
-// Добавим больше расширяемости для размеров превью
-const sizeConfig = {
+const SIZE_CONFIG = {
   hero: {
     minHeight: "min-h-[240px]",
     sizes: "100vw",
     imageQuality: 85,
+    rounded: "rounded-xl",
+    shadow: "shadow-md hover:shadow-xl",
+    outline: "rounded-xl",
   },
   thumb: {
     minHeight: "min-h-[120px]",
     sizes: "20vw",
     imageQuality: 60,
+    rounded: "rounded-xl",
+    shadow: "shadow-md hover:shadow-xl",
+    outline: "rounded-xl",
   },
   strip: {
     minHeight: "min-h-0",
     sizes: "96px",
     imageQuality: 60,
+    rounded: "rounded-lg",
+    shadow: "shadow-sm hover:shadow",
+    outline: "rounded-lg",
   },
 } as const;
+
+type SizeKey = keyof typeof SIZE_CONFIG;
 
 interface MediaThumbnailProps {
   item: MediaItem;
   index: number;
   onClick: () => void;
-  size?: keyof typeof sizeConfig;
+  size?: SizeKey;
   lazy?: boolean;
-  /** "blur" допустим только при наличии item.blurDataURL (для удалённых URL Next.js требует blurDataURL). */
   placeholder?: "blur" | "empty";
   className?: string;
+  /** Позволяет переопределять класс для иконки play */
+  videoIconClassName?: string;
 }
 
 export const MediaThumbnail = memo(function MediaThumbnail({
@@ -43,10 +54,19 @@ export const MediaThumbnail = memo(function MediaThumbnail({
   lazy = false,
   placeholder = "empty",
   className,
+  videoIconClassName,
 }: MediaThumbnailProps) {
+  const sizeProps = SIZE_CONFIG[size];
   const isVideoItem = isVideo(item);
-  const hasBlurData = !isVideoItem && item.blurDataURL;
+  const hasBlurData = !isVideoItem && Boolean(item.blurDataURL);
   const effectivePlaceholder = placeholder === "blur" && hasBlurData ? "blur" : "empty";
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  // Альт-текст и aria-label
+  const altText =
+    getMediaAlt(item, index) || (isVideoItem ? "Видео превью" : "Фото недвижимости");
+  const ariaLabel = `${isVideoItem ? "Видеозапись" : "Изображение"}: ${altText}`;
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
@@ -58,60 +78,114 @@ export const MediaThumbnail = memo(function MediaThumbnail({
     [onClick]
   );
 
-  // Улучшаем альт-текст для SEO и доступности
-  const altText =
-    getMediaAlt(item, index) || (isVideoItem ? "Видео превью" : "Фото недвижимости");
-
   const imageProps = {
     src: getMediaUrl(item, true),
     alt: altText,
     fill: true as const,
     className:
-      "object-cover w-full h-full transition-transform duration-300 ease-in-out group-hover:scale-105",
-    sizes: sizeConfig[size].sizes,
+      "object-cover w-full h-full transition-transform duration-300 ease-in-out md:group-hover:scale-105",
+    sizes: sizeProps.sizes,
     priority: size === "hero",
     draggable: false,
     placeholder: effectivePlaceholder as "blur" | "empty",
-    quality: sizeConfig[size]?.imageQuality,
+    quality: sizeProps.imageQuality,
     ...(effectivePlaceholder === "blur" && item.blurDataURL
       ? { blurDataURL: item.blurDataURL }
       : {}),
+    onLoad: () => setIsLoading(false),
+    onError: () => {
+      setHasError(true);
+      setIsLoading(false);
+    },
+    ...(lazy ? { loading: "lazy" as const } : {}),
   };
+
+  if (hasError) {
+    return (
+      <div
+        role='button'
+        tabIndex={0}
+        aria-label={ariaLabel}
+        onClick={onClick}
+        onKeyDown={handleKeyDown}
+        className={cn(
+          "relative group overflow-hidden flex items-center justify-center bg-neutral-100 cursor-pointer select-none focus:outline-none",
+          sizeProps.rounded,
+          sizeProps.shadow,
+          "aspect-4/3",
+          sizeProps.minHeight,
+          className
+        )}
+        data-testid={`media-thumbnail-${index}`}
+      >
+        <div className='flex flex-col items-center justify-center w-full h-full gap-1'>
+          <ImageOff
+            className='w-8 h-8 text-neutral-400 mx-auto mb-1'
+            aria-hidden='true'
+          />
+          <span className='text-xs text-neutral-500 text-center'>
+            Не удалось загрузить
+          </span>
+        </div>
+        <span
+          className={cn(
+            "absolute inset-0 bg-black/7 opacity-0 group-active:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none",
+            sizeProps.outline
+          )}
+        />
+        <span
+          className={cn(
+            "absolute inset-0 ring-primary/60 ring-2 opacity-0 group-focus:opacity-100 pointer-events-none transition-opacity",
+            sizeProps.outline
+          )}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
       role='button'
       tabIndex={0}
-      aria-label={altText}
+      aria-label={ariaLabel}
       onClick={onClick}
       onKeyDown={handleKeyDown}
       className={cn(
         "relative group overflow-hidden bg-neutral-200 focus:outline-none transition-shadow cursor-pointer select-none",
-        size === "strip"
-          ? "rounded-lg shadow-sm hover:shadow"
-          : "rounded-xl shadow-md hover:shadow-xl",
-        "aspect-[4/3]",
-        sizeConfig[size].minHeight,
+        sizeProps.rounded,
+        sizeProps.shadow,
+        "aspect-4/3",
+        sizeProps.minHeight,
         className
       )}
-      data-testid='media-thumbnail'
+      data-testid={`media-thumbnail-${index}`}
     >
+      {isLoading && (
+        <div className='absolute inset-0 bg-neutral-200 animate-pulse z-10' />
+      )}
+
       <Image {...imageProps} />
 
+      {/* Видео-оверлей, градиент сверху только для видео */}
       <div
         className={cn(
           "absolute inset-0 pointer-events-none transition",
-          isVideoItem ? "bg-gradient-to-t from-black/40 via-transparent to-black/20" : ""
+          isVideoItem && "bg-gradient-to-t from-black/40 via-transparent to-black/20"
         )}
         aria-hidden='true'
       />
 
-      {/* Видео иконка поверх превью */}
+      {/* Иконка видео поверх превью */}
       {isVideoItem && (
-        <div className='absolute inset-0 flex items-center justify-center z-10 pointer-events-none'>
-          <span className='flex items-center justify-center rounded-full bg-white/95 shadow-lg border border-black/10 w-16 h-16 transition-transform group-hover:scale-110 group-active:scale-95 group-hover:bg-brand/95'>
+        <div className='absolute inset-0 flex items-center justify-center z-20 pointer-events-none'>
+          <span
+            className={cn(
+              "flex items-center justify-center rounded-full bg-white/95 shadow-lg border border-black/10 w-16 h-16 transition-all duration-200 group-hover:scale-110 group-active:scale-95 group-hover:bg-brand/95 md:group-hover:scale-100 md:group-hover:bg-white/95",
+              videoIconClassName
+            )}
+          >
             <Play
-              className='h-8 w-8 text-primary'
+              className={cn("h-8 w-8 text-primary", videoIconClassName)}
               fill='currentColor'
               aria-label='Play video'
               focusable={false}
@@ -120,16 +194,27 @@ export const MediaThumbnail = memo(function MediaThumbnail({
         </div>
       )}
 
-      {/* Overlay для обратной связи при клике/тапе */}
-      <span className='absolute inset-0 bg-black/7 opacity-0 group-active:opacity-100 group-focus:opacity-100 transition-opacity rounded-xl pointer-events-none' />
+      {/* Overlay для обратной связи при клике/фокусе */}
+      <span
+        className={cn(
+          "absolute inset-0 bg-black/7 opacity-0 group-active:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none",
+          sizeProps.outline
+        )}
+      />
 
-      {/* Добавим плавный фокус и outline для айтемов */}
-      <span className='absolute inset-0 ring-primary/60 ring-2 opacity-0 group-focus:opacity-100 rounded-xl pointer-events-none transition-opacity' />
+      <span
+        className={cn(
+          "absolute inset-0 ring-primary/60 ring-2 opacity-0 group-focus:opacity-100 pointer-events-none transition-opacity",
+          sizeProps.outline
+        )}
+      />
 
-      {/* Доступное описание для скринридеров */}
-      <span className='sr-only'>
-        {isVideoItem ? "Видеозапись" : "Изображение"} {altText}
-      </span>
+      {/* Индикатор позиции для strip */}
+      {size === "strip" && (
+        <div className='absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded z-30 pointer-events-none select-none'>
+          {index + 1}
+        </div>
+      )}
     </div>
   );
 });

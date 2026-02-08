@@ -95,7 +95,7 @@ export function Footer() {
             <h3 className='font-semibold mb-4 text-foreground'>Контакты</h3>
             <ul className='space-y-2 text-sm text-muted-foreground'>
               <li>support@dohkar.ru</li>
-              <li>+7 (999) 000-00-00</li>
+              <li>+7 (964) 026-00-62</li>
               <li className='pt-2'>
                 <span className='block text-xs text-muted-foreground/70'>
                   Магас, пр. Борова 2

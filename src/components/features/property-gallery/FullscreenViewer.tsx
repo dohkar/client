@@ -8,7 +8,7 @@
 import { useEffect, useCallback, useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { cn } from "@/lib/utils";
-import type { MediaItem } from "./types";
+import type { MediaItem, GalleryZoomLevel } from "./types";
 import { MediaSlide } from "./MediaSlide";
 import { GalleryControls } from "./GalleryControls";
 import { GalleryThumbs } from "./GalleryThumbs";
@@ -18,10 +18,10 @@ type FullscreenViewerProps = {
   media: MediaItem[];
   isOpen: boolean;
   activeIndex: number;
-  zoom: number;
+  zoom: GalleryZoomLevel;
   onClose: () => void;
   onIndexChange: (index: number) => void;
-  onZoomChange?: (zoom: number) => void;
+  onZoomChange?: (zoom: GalleryZoomLevel) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
@@ -185,7 +185,7 @@ export function FullscreenViewer({
                   <MediaSlide
                     item={item}
                     index={index}
-                    zoom={index === activeIndex ? zoom : 1}
+                    zoom={index === activeIndex ? zoom : (1 as GalleryZoomLevel)}
                     isActive={index === activeIndex}
                     onDoubleClick={
                       index === activeIndex && zoom === 1

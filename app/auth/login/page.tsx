@@ -30,7 +30,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const contactPlaceholder = "+7 (999) 000-00-00";
+  const contactPlaceholder = "+7 (___) __-__-__";
 
   useEffect(() => {
     setError(null);
@@ -140,7 +140,13 @@ export default function LoginPage() {
                 provider='vk'
                 label='VK'
                 icon={
-                  <Image src='/vk.png' alt='' width={20} height={20} className='shrink-0' />
+                  <Image
+                    src='/vk.png'
+                    alt=''
+                    width={20}
+                    height={20}
+                    className='shrink-0'
+                  />
                 }
                 onSuccessRedirect={ROUTES.dashboard}
               />
