@@ -1035,7 +1035,7 @@ export interface components {
         };
         UpdateUserRoleDto: {
             /** @enum {string} */
-            role: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
+            role: "USER" | "PREMIUM" | "ADMIN";
         };
         UpdatePropertyStatusDto: {
             /** @enum {string} */
@@ -1059,7 +1059,7 @@ export interface components {
              * @example BUYER
              * @enum {string}
              */
-            role: "BUYER" | "SELLER" | "SUPPORT";
+            role: "BUYER" | "SELLER" | "ADMIN";
         };
         ChatResponseDto: {
             /** @example 550e8400-e29b-41d4-a716-446655440000 */
@@ -1822,7 +1822,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 search?: string;
-                role?: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
+                role?: "USER" | "PREMIUM" | "ADMIN";
                 status?: "active" | "banned";
             };
             header?: never;

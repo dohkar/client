@@ -10,7 +10,7 @@ export enum ChatType {
 export enum ChatParticipantRole {
   BUYER = "BUYER",
   SELLER = "SELLER",
-  SUPPORT = "SUPPORT",
+  ADMIN = "ADMIN",
 }
 
 export interface ChatParticipant {

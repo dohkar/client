@@ -21,7 +21,7 @@ export type UserWithCount = AdminUser & {
 };
 
 const ROLE_OPTIONS: Array<{
-  value: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
+  value: "USER" | "PREMIUM" | "ADMIN";
   label: string;
   Icon: typeof UserIcon;
   badgeClass: string;
@@ -29,12 +29,10 @@ const ROLE_OPTIONS: Array<{
   { value: "USER", label: "USER", Icon: UserIcon, badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
   { value: "PREMIUM", label: "PREMIUM", Icon: Crown, badgeClass: "bg-yellow-50 text-yellow-700 border-yellow-200" },
   { value: "ADMIN", label: "ADMIN", Icon: Shield, badgeClass: "bg-red-50 text-red-700 border-red-200" },
-  { value: "SUPPORT", label: "SUPPORT", Icon: UserIcon, badgeClass: "bg-green-50 text-green-700 border-green-200" },
-  { value: "MODERATOR", label: "MODERATOR", Icon: Shield, badgeClass: "bg-purple-50 text-purple-700 border-purple-200" },
 ];
 
 export const createUserColumns = (
-  onRoleChange: (userId: string, role: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR") => void,
+  onRoleChange: (userId: string, role: "USER" | "PREMIUM" | "ADMIN") => void,
   onDelete: (userId: string) => void,
   onBan?: (userId: string, reason?: string, bannedUntil?: string) => void,
   onUnban?: (userId: string) => void,
@@ -86,7 +84,7 @@ export const createUserColumns = (
         <Select
           value={user.role}
           onValueChange={(value) =>
-            onRoleChange(user.id, value as "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR")
+            onRoleChange(user.id, value as "USER" | "PREMIUM" | "ADMIN")
           }
         >
           <SelectTrigger className="w-36 min-h-[36px]">

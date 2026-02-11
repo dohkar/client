@@ -80,7 +80,7 @@ function CategoryLinks({
   );
 }
 
-function UserMenuLinks({ isAdmin, isSupport }: { isAdmin: boolean; isSupport: boolean }) {
+function UserMenuLinks({ isAdmin }: { isAdmin: boolean; }) {
   return (
     <>
       {isAdmin && (
@@ -91,7 +91,7 @@ function UserMenuLinks({ isAdmin, isSupport }: { isAdmin: boolean; isSupport: bo
           </div>
         </Link>
       )}
-      {isSupport && (
+      {isAdmin && (
         <Link href={`${ROUTES.dashboard}/support`}>
           <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-green-600'>
             <UserIcon className='h-4 w-4 shrink-0' />
@@ -130,7 +130,6 @@ export function Header() {
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAdmin = user?.role === UserRole.ADMIN;
-  const isSupport = user?.role === UserRole.SUPPORT;
   const userName = formatUserName(user?.name);
   const userInitial = userName.charAt(0).toUpperCase();
 
@@ -326,7 +325,7 @@ export function Header() {
                     className='w-56 p-1.5 shadow-xl rounded-xl'
                   >
                     <div className='space-y-0.5'>
-                      <UserMenuLinks isAdmin={isAdmin} isSupport={isSupport} />
+                      <UserMenuLinks isAdmin={isAdmin} />
                     </div>
                     {/* Тема в пользовательском меню — UX-корректное место для настроек отображения */}
                     <div className='mt-1.5 pt-1.5 border-t'>
