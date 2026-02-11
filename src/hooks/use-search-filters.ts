@@ -72,6 +72,10 @@ interface UseSearchFiltersReturn {
   handleRegionReset: () => void;
   handleRoomsReset: () => void;
   handleAreaReset: () => void;
+  handleQueryReset: () => void;
+  handleDealTypeChange: (dealType: SearchFiltersDisplay["dealType"]) => void;
+  handleDealTypeReset: () => void;
+  handleFloorReset: () => void;
   handleResetAll: () => void;
 
   priceErrors: PriceValidationErrors;
@@ -132,18 +136,21 @@ export function useSearchFilters(): UseSearchFiltersReturn {
   );
   const [priceErrors, setPriceErrors] = useState<PriceValidationErrors>({});
 
-  /** Синхронизация draft с URL при навигации (назад/вперёд) */
+  /** Синхронизация draft с URL при навигации (назад/вперёд). setState в microtask, чтобы не вызывать синхронный каскад рендеров в effect. */
   useEffect(() => {
-    setDraftQueryState(appliedFilters.query ?? "");
-    setDraftPriceMinState(
-      appliedFilters.priceMin != null ? String(appliedFilters.priceMin) : ""
-    );
-    setDraftPriceMaxState(
-      appliedFilters.priceMax != null ? String(appliedFilters.priceMax) : ""
-    );
-    setDraftAreaMinState(
-      appliedFilters.areaMin != null ? String(appliedFilters.areaMin) : ""
-    );
+    const q = appliedFilters.query ?? "";
+    const pMin =
+      appliedFilters.priceMin != null ? String(appliedFilters.priceMin) : "";
+    const pMax =
+      appliedFilters.priceMax != null ? String(appliedFilters.priceMax) : "";
+    const aMin =
+      appliedFilters.areaMin != null ? String(appliedFilters.areaMin) : "";
+    queueMicrotask(() => {
+      setDraftQueryState(q);
+      setDraftPriceMinState(pMin);
+      setDraftPriceMaxState(pMax);
+      setDraftAreaMinState(aMin);
+    });
   }, [
     appliedFilters.query,
     appliedFilters.priceMin,
@@ -420,6 +427,27 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     updateFilters({ areaMin: null }, { resetPage: false });
     setDraftAreaMinState("");
   }, [updateFilters]);
+  const handleQueryReset = useCallback(() => {
+    updateFilters({ query: "" });
+    setDraftQueryState("");
+  }, [updateFilters]);
+  const handleDealTypeChange = useCallback(
+    (dealType: SearchFiltersDisplay["dealType"]) => {
+      updateFilters({ dealType });
+    },
+    [updateFilters]
+  );
+  const handleDealTypeReset = useCallback(
+    () => updateFilters({ dealType: "all" }),
+    [updateFilters]
+  );
+  const handleFloorReset = useCallback(() => {
+    updateFilters({
+      floorMin: null,
+      floorMax: null,
+      floorNotFirst: null,
+    });
+  }, [updateFilters]);
   const handleResetAll = useCallback(() => {
     resetFilters();
     setDraftQueryState("");
@@ -466,6 +494,10 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     handleRegionReset,
     handleRoomsReset,
     handleAreaReset,
+    handleQueryReset,
+    handleDealTypeChange,
+    handleDealTypeReset,
+    handleFloorReset,
     handleResetAll,
     priceErrors,
     currentPage,

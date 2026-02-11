@@ -6,6 +6,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 import PropertyGallery from "@/components/features/property-gallery";
+import { PropertyCard } from "@/components/features/property-card";
 import { YandexMap } from "@/components/features/yandex-map";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +51,7 @@ import {
   MessageSquare,
   Flag,
 } from "lucide-react";
-import { useProperty } from "@/hooks/use-properties";
+import { useProperty, useRelatedProperties } from "@/hooks/use-properties";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useCreatePropertyChat } from "@/hooks/use-chats";
 import { useAuthStore } from "@/stores";
@@ -58,7 +59,19 @@ import { ROUTES } from "@/constants";
 import { formatDate, formatPhone, getPhoneHref } from "@/lib/utils/format";
 import { logger } from "@/lib/utils/logger";
 
-// Типизированное получение id из параметров
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Из сегмента URL извлекает id: поддержка /property/[id] и /property/[id-slug] */
+function extractPropertyIdFromSegment(segment: string | undefined): string | undefined {
+  if (!segment || !segment.trim()) return undefined;
+  const s = segment.trim();
+  if (UUID_REGEX.test(s)) return s;
+  if (s.length > 36 && s[36] === "-" && UUID_REGEX.test(s.slice(0, 36))) {
+    return s.slice(0, 36);
+  }
+  return s;
+}
+
 function usePropertyId(): string | undefined {
   const params = useParams();
   if (
@@ -67,7 +80,8 @@ function usePropertyId(): string | undefined {
     Object.prototype.hasOwnProperty.call(params, "id")
   ) {
     const idValue = (params as Record<string, string | string[] | undefined>).id;
-    return Array.isArray(idValue) ? idValue[0] : idValue;
+    const segment = Array.isArray(idValue) ? idValue[0] : idValue;
+    return extractPropertyIdFromSegment(segment);
   }
   return undefined;
 }
@@ -83,8 +97,10 @@ export default function PropertyPage() {
   const id = usePropertyId();
   const router = useRouter();
 
-  // Всегда вызываем хуки -- даже если данных нет!
+  // Всегда вызываем хуки в одном порядке (до любых return)
   const { data: property, isLoading, error } = useProperty(id ?? "");
+  const { data: relatedList = [], isLoading: relatedLoading } =
+    useRelatedProperties(id ?? undefined, 6);
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
   const createChatMutation = useCreatePropertyChat();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -108,7 +124,7 @@ export default function PropertyPage() {
   const images = useMemo(() => {
     if (property?.images?.length) return property.images;
     if (property?.image) return [property.image];
-    return [];
+    return ["/placeholder.svg"];
   }, [property]);
 
   // HANDLERS
@@ -308,14 +324,10 @@ export default function PropertyPage() {
     );
   }
 
-  // Подсчитываем цену за метр
   const pricePerMeter: number =
     property.pricePerMeter ||
     (property.area ? Math.round(property.price / property.area) : 0);
 
-  // ==================================
-  // ОСНОВНОЙ РЕНДЕР
-  // ==================================
   return (
     <div className='min-h-screen flex flex-col bg-background'>
       <main className='flex-1 pb-12'>
@@ -750,6 +762,28 @@ export default function PropertyPage() {
             </div>
           </div>
         </div>
+
+        {/* Похожие объявления */}
+        {relatedList.length > 0 && (
+          <section className='container mx-auto px-4 py-8 border-t'>
+            <h2 className='text-xl font-semibold mb-4'>Похожие объявления</h2>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+              {relatedList.map((p) => (
+                <PropertyCard key={p.id} property={p} />
+              ))}
+            </div>
+          </section>
+        )}
+        {relatedLoading && relatedList.length === 0 && property?.id && (
+          <section className='container mx-auto px-4 py-8 border-t'>
+            <h2 className='text-xl font-semibold mb-4'>Похожие объявления</h2>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className='h-[320px] rounded-lg bg-muted animate-pulse' />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Edit, Trash2, Eye, Plus, Search, SlidersHorizontal, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils/format";
@@ -26,6 +27,35 @@ import type { Property } from "@/types/property";
 import type { PropertyType } from "@/types/property";
 
 type SortOption = "date" | "price-asc" | "price-desc" | "area-asc" | "area-desc";
+
+const STATUS_LABELS: Record<string, string> = {
+  active: "Активно",
+  pending: "На модерации",
+  rejected: "Отклонено",
+  sold: "Продано",
+  archived: "Архив",
+};
+
+function StatusBadge({
+  status,
+  rejectionReason,
+}: {
+  status: Property["status"];
+  rejectionReason?: string | null;
+}) {
+  const label = STATUS_LABELS[status] ?? status;
+  const isRejected = status === "rejected";
+  return (
+    <Badge
+      variant={status === "active" ? "default" : status === "pending" ? "secondary" : "outline"}
+      className="text-xs"
+      title={isRejected && rejectionReason ? rejectionReason : undefined}
+    >
+      {label}
+      {isRejected && rejectionReason && " — см. причину"}
+    </Badge>
+  );
+}
 
 function declOfNum(n: number, forms: [string, string, string]) {
   return forms[
@@ -49,10 +79,13 @@ export default function ListingsPage() {
   const { deleteWithUndo, isDeleting } = useDeleteWithUndo();
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.properties.list({}),
+    queryKey: queryKeys.properties.list({ my: true }),
     queryFn: async () => {
-      const response = await propertyService.getProperties({ limit: 100 });
-      return response.data?.filter((p: Property) => p.userId === user?.id) || [];
+      const response = await propertyService.getProperties({
+        my: true,
+        limit: 100,
+      });
+      return response.data ?? [];
     },
     enabled: !!user,
   });
@@ -400,11 +433,16 @@ export default function ListingsPage() {
                       </div>
                     </div>
                     <div className='p-4 sm:p-5'>
+                      <div className='flex items-center gap-2 mb-2 flex-wrap'>
+                        <StatusBadge status={property.status} rejectionReason={property.rejectionReason} />
+                      </div>
                       <h3 className='font-semibold mb-2 line-clamp-2 text-sm sm:text-base'>
                         {property.title}
                       </h3>
                       <p className='text-xl sm:text-2xl font-bold text-primary mb-2'>
-                        {formatCurrency(property.price, property.currency)}
+                        {property.dealType === "BUY" && (property.price ?? 0) === 0
+                          ? "По договорённости"
+                          : formatCurrency(property.price ?? 0, property.currency)}
                       </p>
                       <p className='text-xs sm:text-sm text-muted-foreground line-clamp-1'>
                         {property.location}
@@ -414,7 +452,7 @@ export default function ListingsPage() {
                           Создано:{" "}
                           {formatDate(property.datePosted, "ru-RU", { relative: true })}
                         </span>
-                        <span>👁 {property.views || 0}</span>
+                        <span>👁 {property.views ?? 0}</span>
                       </div>
                     </div>
                   </CardContent>

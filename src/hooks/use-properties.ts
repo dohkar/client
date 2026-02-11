@@ -13,12 +13,15 @@ export function useProperties(params?: PropertySearchParams) {
   // Convert PropertySearchParams to ApiPropertyListParams
   const apiParams: ApiPropertyListParams | undefined = params ? {
     query: params.query,
+    dealType: params.dealType,
     type: params.type ? (params.type.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL") : undefined,
     priceMin: params.priceMin,
     priceMax: params.priceMax,
     rooms: params.rooms,
     areaMin: params.areaMin,
-    // Конвертируем название региона в regionId через кэш
+    floorMin: params.floorMin,
+    floorMax: params.floorMax,
+    floorNotFirst: params.floorNotFirst,
     regionId: params.region ? getRegionIdByName(params.region) : undefined,
     cityId: params.cityId,
     sortBy: params.sortBy,
@@ -75,6 +78,7 @@ export function useCreateProperty() {
       propertyService.createProperty(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.properties.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.properties.limits });
       toast.success("Объявление успешно создано");
     },
     onError: (error: Error) => {
@@ -137,5 +141,31 @@ export function useCategoryStats() {
     queryFn: () => propertyService.getCategoryStats(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
+  });
+}
+
+/**
+ * Похожие объявления для страницы объявления
+ */
+export function useRelatedProperties(propertyId: string | undefined, limit = 6) {
+  return useQuery({
+    queryKey: [...queryKeys.properties.detail(propertyId ?? ""), "related", limit],
+    queryFn: () => propertyService.getRelatedProperties(propertyId!, limit),
+    enabled: !!propertyId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 1,
+  });
+}
+
+/**
+ * Лимиты объявлений в месяц для текущего пользователя (при создании)
+ */
+export function usePropertyLimits(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.properties.limits,
+    queryFn: () => propertyService.getPropertyLimits(),
+    enabled,
+    staleTime: 60 * 1000, // 1 minute
+    retry: 1,
   });
 }

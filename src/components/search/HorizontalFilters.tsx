@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowUpDown, ChevronDown } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ArrowUpDown, ChevronDown, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,12 +12,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import type { SearchFiltersDisplay } from "@/lib/search-params";
 import {
   PROPERTY_TYPE_OPTIONS,
   REGION_OPTIONS,
   ROOMS_OPTIONS,
   SORT_OPTIONS,
+  SEARCH_DEAL_TYPE_OPTIONS,
 } from "@/lib/search-constants";
 import {
   getTypeLabel,
@@ -26,6 +28,7 @@ import {
   getRoomsLabel,
   getAreaLabel,
   getCityLabel,
+  getDealTypeLabel,
 } from "./FilterLabels";
 import type { CityDto } from "@/types/property";
 import type { PriceValidationErrors } from "@/hooks/use-search-filters";
@@ -48,6 +51,7 @@ interface HorizontalFiltersProps {
   onPriceMaxBlur: () => void;
   onAreaMinChange: (value: string) => void;
   onAreaMinBlur: () => void;
+  onDealTypeChange: (dealType: SearchFiltersDisplay["dealType"]) => void;
 }
 
 export function HorizontalFilters({
@@ -68,11 +72,36 @@ export function HorizontalFilters({
   onPriceMaxBlur,
   onAreaMinChange,
   onAreaMinBlur,
+  onDealTypeChange,
 }: HorizontalFiltersProps) {
   const selectedCityName = filters.cityId
     ? (cities.find((c) => c.id === filters.cityId)?.name ?? null)
     : null;
-  const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
+  const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
+  const [citySearchQuery, setCitySearchQuery] = useState("");
+
+  const filteredCities = useMemo(() => {
+    const q = citySearchQuery.trim().toLowerCase();
+    if (!q) return cities;
+    return cities.filter((c) => c.name.toLowerCase().includes(q));
+  }, [cities, citySearchQuery]);
+
+  const handleLocationPopoverOpenChange = (open: boolean) => {
+    setLocationPopoverOpen(open);
+    if (!open) setCitySearchQuery("");
+  };
+
+  const locationLabel =
+    filters.region === "all"
+      ? "Локация"
+      : selectedCityName
+        ? `${getRegionLabel(filters.region)} · ${selectedCityName}`
+        : getRegionLabel(filters.region);
+
+  const handleRegionSelect = (region: SearchFiltersDisplay["region"]) => {
+    onRegionChange(region);
+  };
+
   return (
     <div
       className='w-full overflow-x-auto py-2 hide-scrollbar'
@@ -89,6 +118,29 @@ export function HorizontalFilters({
           max-w-full
         '
       >
+        {/* Тип сделки */}
+        <div className='w-[110px] min-w-0 shrink-0 sm:w-[130px]'>
+          <Select
+            value={filters.dealType === "all" ? "all" : filters.dealType}
+            onValueChange={(v) => onDealTypeChange(v as SearchFiltersDisplay["dealType"])}
+          >
+            <SelectTrigger className='h-10 sm:h-11 px-3 text-xs sm:text-base w-full min-w-0 flex-shrink-0'>
+              <SelectValue>{getDealTypeLabel(filters.dealType)}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {SEARCH_DEAL_TYPE_OPTIONS.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className='text-xs sm:text-sm'
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Тип недвижимости */}
         <div className='w-[140px] min-w-0 shrink-0 sm:w-[160px]'>
           <Select value={filters.type} onValueChange={onTypeChange}>
@@ -185,75 +237,107 @@ export function HorizontalFilters({
           </Popover>
         </div>
 
-        {/* Регион */}
-        <div className='w-[130px] min-w-0 shrink-0 sm:w-[160px]'>
-          <Select value={filters.region} onValueChange={onRegionChange}>
-            <SelectTrigger className='h-10 sm:h-11 px-3 text-xs sm:text-base w-full'>
-              <SelectValue>{getRegionLabel(filters.region)}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {REGION_OPTIONS.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className='text-xs sm:text-sm'
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Город */}
-        <div className='w-[140px] min-w-0 shrink-0 sm:w-[180px]'>
-          <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
+        {/* Локация: регион + город в одном поповере */}
+        <div className='w-[140px] min-w-0 shrink-0 sm:w-[200px]'>
+          <Popover
+            open={locationPopoverOpen}
+            onOpenChange={handleLocationPopoverOpenChange}
+          >
             <PopoverTrigger asChild>
               <Button
                 variant='outline'
-                className='h-10 sm:h-11 px-3 w-full justify-between text-xs sm:text-base'
+                className='h-10 sm:h-11 px-3 w-full justify-between text-xs sm:text-base gap-1'
               >
-                <span className='truncate'>{getCityLabel(selectedCityName)}</span>
+                <MapPin className='w-3.5 h-3.5 shrink-0 opacity-70' />
+                <span className='truncate'>{locationLabel}</span>
                 <ChevronDown className='w-4 h-4 opacity-50 shrink-0' />
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className='w-[var(--radix-popover-trigger-width)] max-h-[280px] overflow-hidden flex flex-col p-0'
+              className='w-64 sm:w-72 p-0 overflow-hidden flex flex-col max-h-[min(70vh,400px)]'
               align='start'
               sideOffset={8}
             >
-              <div className='p-2 border-b shrink-0'>
-                <button
-                  type='button'
-                  className='w-full text-left text-xs sm:text-sm py-1.5 px-2 rounded hover:bg-accent'
-                  onClick={() => {
-                    onCityChange(null);
-                    setCityPopoverOpen(false);
-                  }}
-                >
-                  Все города
-                </button>
+              <div className='p-2 border-b bg-muted/40'>
+                <p className='text-xs font-medium text-muted-foreground px-2 py-1'>
+                  Регион
+                </p>
+                <div className='flex flex-wrap gap-1'>
+                  {REGION_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type='button'
+                      onClick={() =>
+                        handleRegionSelect(option.value as SearchFiltersDisplay["region"])
+                      }
+                      className={cn(
+                        "text-xs sm:text-sm py-1.5 px-2.5 rounded-md transition-colors",
+                        filters.region === option.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background hover:bg-accent cursor-pointer"
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className='overflow-y-auto flex-1 min-h-0'>
-                {cities.map((city) => (
-                  <button
-                    key={city.id}
-                    type='button'
-                    className='w-full text-left text-xs sm:text-sm py-2 px-3 hover:bg-accent truncate'
-                    onClick={() => {
-                      onCityChange(city.id);
-                      setCityPopoverOpen(false);
-                    }}
-                  >
-                    {city.name}
-                  </button>
-                ))}
-                {cities.length === 0 && (
-                  <div className='py-4 text-center text-xs text-muted-foreground'>
-                    Нет городов
+              {filters.region !== "all" && (
+                <div className='flex flex-col min-h-0 flex-1'>
+                  <p className='text-xs font-medium text-muted-foreground px-3 pt-2 pb-1'>
+                    Город
+                  </p>
+                  <div className='px-2 pb-2 shrink-0'>
+                    <div className='relative'>
+                      <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none' />
+                      <Input
+                        type='text'
+                        placeholder='Поиск города...'
+                        value={citySearchQuery}
+                        onChange={(e) => setCitySearchQuery(e.target.value)}
+                        className='h-8 pl-8 text-xs'
+                        autoComplete='off'
+                        aria-label='Поиск города'
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
+                  <div className='overflow-y-auto flex-1 min-h-0 pb-2'>
+                    <button
+                      type='button'
+                      className='w-full text-left text-xs sm:text-sm py-2 px-3 hover:bg-accent rounded-none'
+                      onClick={() => {
+                        onCityChange(null);
+                        setLocationPopoverOpen(false);
+                      }}
+                    >
+                      Все города
+                    </button>
+                    {filteredCities.map((city) => (
+                      <button
+                        key={city.id}
+                        type='button'
+                        className='w-full text-left text-xs sm:text-sm py-2 px-3 hover:bg-accent truncate'
+                        onClick={() => {
+                          onCityChange(city.id);
+                          setLocationPopoverOpen(false);
+                        }}
+                      >
+                        {city.name}
+                      </button>
+                    ))}
+                    {cities.length > 0 && filteredCities.length === 0 && (
+                      <div className='py-4 text-center text-xs text-muted-foreground'>
+                        Ничего не найдено
+                      </div>
+                    )}
+                    {cities.length === 0 && (
+                      <div className='py-4 text-center text-xs text-muted-foreground'>
+                        Нет городов
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </PopoverContent>
           </Popover>
         </div>

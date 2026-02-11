@@ -10,7 +10,9 @@ export const ROUTES = {
   register: "/auth/register",
   // Property
   search: "/search",
-  property: (id: string) => `/property/${id}`,
+  /** URL объявления: id или id-slug для SEO */
+  property: (id: string, slug?: string) =>
+    slug ? `/property/${id}-${slug}` : `/property/${id}`,
   sell: "/sell",
   // User
   dashboard: "/dashboard",
@@ -70,6 +72,8 @@ export const API_ENDPOINTS = {
     list: "/api/properties",
     search: "/api/properties/search",
     getById: (id: string) => `/api/properties/${id}`,
+    getRelated: (id: string) => `/api/properties/${id}/related`,
+    getLimits: "/api/properties/limits",
     create: "/api/properties",
     update: (id: string) => `/api/properties/${id}`,
     delete: (id: string) => `/api/properties/${id}`,

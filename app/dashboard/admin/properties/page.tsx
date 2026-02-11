@@ -37,7 +37,7 @@ function PropertyStatusDialog({
   isPending,
 }: {
   propertyId: string;
-  status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+  status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
   onClose: () => void;
   onConfirm: (rejectionReason?: string) => void;
   isPending: boolean;
@@ -46,6 +46,7 @@ function PropertyStatusDialog({
   const statusLabels: Record<string, string> = {
     ACTIVE: "Активное",
     PENDING: "На модерации",
+    REJECTED: "Отклонено",
     SOLD: "Продано",
     ARCHIVED: "Архив",
   };
@@ -95,10 +96,10 @@ export default function AdminPropertiesPage() {
   const [propertiesSortBy, setPropertiesSortBy] = useState<string>("date-desc");
   const [propertyStatusDialog, setPropertyStatusDialog] = useState<{
     propertyId: string;
-    status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+    status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
   } | null>(null);
 
-  const debouncedPropertiesSearch = useDebounce(propertiesSearch, 400);
+  const debouncedPropertiesSearch = useDebounce(propertiesSearch, 500);
 
   const { data: propertiesData, isLoading: propertiesLoading } = useQuery({
     queryKey: [
@@ -117,7 +118,7 @@ export default function AdminPropertiesPage() {
         search: debouncedPropertiesSearch || undefined,
         status:
           propertiesStatus !== "all"
-            ? (propertiesStatus as "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED")
+            ? (propertiesStatus as "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED")
             : undefined,
         type:
           propertiesType !== "all"
@@ -141,7 +142,7 @@ export default function AdminPropertiesPage() {
       rejectionReason,
     }: {
       propertyId: string;
-      status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+      status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
       rejectionReason?: string;
     }) => adminService.updatePropertyStatus(propertyId, { status, rejectionReason }),
     onSuccess: () => {
@@ -190,6 +191,7 @@ export default function AdminPropertiesPage() {
                   <SelectItem value='all'>Все статусы</SelectItem>
                   <SelectItem value='ACTIVE'>Активные</SelectItem>
                   <SelectItem value='PENDING'>На модерации</SelectItem>
+                  <SelectItem value='REJECTED'>Отклонённые</SelectItem>
                   <SelectItem value='SOLD'>Продано</SelectItem>
                   <SelectItem value='ARCHIVED'>Архив</SelectItem>
                 </SelectContent>

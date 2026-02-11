@@ -9,6 +9,7 @@ import { Heart, MapPin } from "lucide-react";
 import { useFavorites } from "@/hooks/use-favorites";
 import type { Property } from "@/types/property";
 import { formatPrice, formatDate } from "@/lib/utils/format";
+import { ROUTES } from "@/constants";
 
 interface PropertyCardProps {
   property: Property;
@@ -32,7 +33,10 @@ export function PropertyCard({
   const pricePerMeter = Math.round(property.price / property.area);
 
   return (
-    <Link href={`/property/${property.id}`} className='group w-full max-w-full mx-auto'>
+    <Link
+      href={ROUTES.property(property.id, property.slug)}
+      className='group w-full max-w-full mx-auto'
+    >
       <div className='property-card h-full min-h-[410px] flex flex-col'>
         <div className='relative aspect-[4/3] overflow-hidden bg-muted'>
           <Image

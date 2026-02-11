@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/error-boundary";
 import type { Property } from "@/types/property";
 import { PropertyForm } from "@/components/features/property-form";
+import { usePropertyLimits } from "@/hooks/use-properties";
+import { ROUTES } from "@/constants";
 import { toast } from "sonner";
 
 function FormErrorFallback() {
@@ -38,13 +40,14 @@ function FormErrorFallback() {
 
 export function SellFormSection() {
   const router = useRouter();
+  const { data: limits } = usePropertyLimits();
 
   const handleSuccess = (property: Property) => {
     toast.success("Объявление успешно создано!", {
       description: "Перенаправляем на страницу объявления...",
       duration: 3000,
     });
-    router.push(`/property/${property.id}`);
+    router.push(ROUTES.property(property.id, property.slug));
   };
 
   return (
@@ -69,6 +72,15 @@ export function SellFormSection() {
             <p className='text-sm sm:text-base text-muted-foreground'>
               Заполните форму ниже, чтобы разместить ваше объявление
             </p>
+            {limits && (
+              <p className='text-sm text-muted-foreground'>
+                Осталось{" "}
+                <span className='font-medium text-foreground'>
+                  {limits.remaining} из {limits.monthlyLimit}
+                </span>{" "}
+                объявлений в этом месяце
+              </p>
+            )}
           </div>
           <div id='property-form'>
             <ErrorBoundary fallback={FormErrorFallback}>

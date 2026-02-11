@@ -1,5 +1,8 @@
 export type PropertyType = "apartment" | "house" | "land" | "commercial";
-export type PropertyStatus = "active" | "pending" | "sold" | "archived";
+export type PropertyStatus = "active" | "pending" | "rejected" | "sold" | "archived";
+
+/** Тип сделки в API (бэкенд) */
+export type PropertyDealType = "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
 
 /** Регион (субъект РФ) с бэкенда */
 export interface RegionDto {
@@ -16,26 +19,30 @@ export interface CityDto {
   region?: { id: string; name: string };
 }
 
-// Backend property format (matches API response)
+// Backend property format (matches API response; price in rubles)
 export interface PropertyBackend {
   id: string;
+  slug?: string;
   title: string;
   price: number;
   currency: "RUB" | "USD";
   location: string;
   regionId: string;
   type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+  dealType?: PropertyDealType;
   cityId?: string | null;
-  /** API/OpenAPI может вернуть Record<string, never>; при наличии relation — { id, name, slug } */
   city?: { id: string; name: string; slug?: string | null } | Record<string, never> | null;
   rooms?: number;
   area: number;
   description: string;
   images: string[];
   features: string[];
-  status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+  status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
   views: number;
+  favoritesCount?: number;
   userId: string;
+  archivedAt?: string | null;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
   user?: {
@@ -45,50 +52,48 @@ export interface PropertyBackend {
     avatar?: string;
     isPremium?: boolean;
   };
-  region?: {
-    id: string;
-    name: string;
-  } | Record<string, never>;
+  region?: { id: string; name: string } | Record<string, never>;
   latitude?: number;
   longitude?: number;
+  floor?: number | null;
+  street?: string | null;
+  house?: string | null;
 }
 
 // Frontend property format (for compatibility)
 export interface Property {
   id: string;
+  slug: string;
   title: string;
   price: number;
   currency: "RUB" | "USD";
   location: string;
   region: "Chechnya" | "Ingushetia" | "Other";
   type: PropertyType;
+  dealType: PropertyDealType;
   rooms?: number;
   area: number;
-  image: string; // First image from images array
+  image: string;
   images: string[];
-  isPremium: boolean; // Based on user.isPremium
-  datePosted: string; // createdAt
+  isPremium: boolean;
+  datePosted: string;
   description: string;
   features: string[];
-  contact: {
-    name: string;
-    phone: string;
-  };
+  contact: { name: string; phone: string };
   status: PropertyStatus;
   views: number;
-  userId: string; // ID владельца
+  favoritesCount: number;
+  userId: string;
   createdAt: string;
   updatedAt: string;
-  // Additional computed fields
+  rejectionReason?: string | null;
   pricePerMeter?: number;
-  floor?: string;
+  floor?: number;
   totalFloors?: number;
   yearBuilt?: number;
   condition?: string;
-  // Город (название для отображения)
   city?: string | null;
   cityId?: string | null;
-  // Coordinates for map display
   latitude?: number;
   longitude?: number;
 }
@@ -106,12 +111,18 @@ export interface PropertyFilters {
 
 export interface PropertySearchParams {
   query?: string;
+  my?: boolean;
   type?: PropertyType;
+  dealType?: PropertyDealType;
   priceMin?: number;
   priceMax?: number;
   rooms?: number;
   areaMin?: number;
+  floorMin?: number;
+  floorMax?: number;
+  floorNotFirst?: boolean;
   region?: "Chechnya" | "Ingushetia" | "Other";
+  regionId?: string;
   cityId?: string;
   sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance";
   page?: number;

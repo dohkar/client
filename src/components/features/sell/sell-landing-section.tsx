@@ -24,106 +24,119 @@ const FEATURES = [
 
 export function SellLandingSection() {
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="container mx-auto px-4 py-8 sm:py-10 md:py-14">
-        <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
-          <div
-            className="text-center space-y-3 sm:space-y-4"
-            style={{
-              animation: "fadeIn 0.6s ease-out",
-            }}
-          >
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground leading-tight">
-              Продайте недвижимость быстро
-            </h1>
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2 leading-relaxed">
-              Разместите объявление на самой популярной платформе недвижимости в
-              Ингушетии и Чечне
-            </p>
-          </div>
-          <Card
-            className="border-primary/20 shadow-lg bg-background/80 backdrop-blur-md transition-all duration-300 hover:shadow-xl"
-            style={{
-              animation: "fadeIn 0.6s ease-out 0.2s both",
-            }}
-          >
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-lg sm:text-xl md:text-2xl">
-                Почему выбирают нас?
-              </CardTitle>
-              <CardDescription className="text-xs sm:text-sm md:text-base">
-                Всё необходимое для успешной продажи
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                {FEATURES.map((feature, index) => (
-                  <FeatureCard key={feature} feature={feature} index={index} />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+    <section className='min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/10 flex flex-col justify-center py-14 px-2'>
+      <div className='container max-w-3xl mx-auto space-y-10'>
+        {/* Hero */}
+        <div
+          className='text-center space-y-4'
+          style={{
+            animation: "fadeIn 0.8s cubic-bezier(.19,1,.22,1)",
+          }}
+        >
+          <h1 className='text-3xl sm:text-4xl md:text-5xl font-bold text-foreground drop-shadow-lg tracking-tight'>
+            Продайте недвижимость быстро
+          </h1>
+          <p className='text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed backdrop-blur rounded-lg px-2 py-1'>
+            Разместите объявление на самой популярной платформе недвижимости в{" "}
+            <span className='font-semibold text-primary'>Ингушетии</span> и{" "}
+            <span className='font-semibold text-accent'>Чечне</span>
+          </p>
+        </div>
 
-          <Card
-            className="relative overflow-hidden border-0 shadow-2xl text-white"
-            style={{
-              animation: "fadeIn 0.6s ease-out 0.4s both",
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent to-secondary opacity-90" />
-            <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
-            <CardContent className="relative p-6 sm:p-8 text-center space-y-4 sm:space-y-6">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight">
-                Готовы начать?
-              </h2>
-              <p className="text-sm sm:text-base md:text-lg text-white/95 leading-relaxed max-w-xl mx-auto">
-                Зарегистрируйтесь и разместите первое объявление бесплатно
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-                <Button
-                  asChild
-                  size="lg"
-                  className="bg-white text-primary hover:bg-white/95 gap-2 font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 min-h-[48px] w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
-                  aria-label="Перейти к регистрации для размещения объявления"
-                >
-                  <Link href={ROUTES.register} passHref>
-                    Разместить объявление
-                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="border-2 border-primary/90 text-primary hover:bg-primary/10 hover:border-primary backdrop-blur-sm min-h-[48px] w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-primary transition-all duration-300 hover:scale-105"
-                  aria-label="Войти в существующий аккаунт"
-                >
-                  <Link href={ROUTES.login} passHref>
-                    Уже есть аккаунт
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          <div
-            className="mt-6 sm:mt-8 md:mt-12 text-center text-xs sm:text-sm text-muted-foreground px-2 space-y-2"
-            style={{
-              animation: "fadeIn 0.6s ease-out 0.6s both",
-            }}
-          >
-            <p className="leading-relaxed">
-              Первое объявление — бесплатно. Премиум-продвижение — от 500₽/месяц.
+        {/* Why choose us */}
+        <Card
+          className='mx-auto border-0 shadow-xl bg-background/80 backdrop-blur-lg transition hover:shadow-2xl'
+          style={{
+            animation: "fadeIn 0.8s cubic-bezier(.19,1,.22,1) 0.2s both",
+          }}
+        >
+          <CardHeader className='pb-2 text-center'>
+            <CardTitle className='text-xl sm:text-2xl md:text-3xl font-bold text-primary'>
+              Почему выбирают нас?
+            </CardTitle>
+            <CardDescription className='text-base sm:text-lg md:text-xl text-muted-foreground'>
+              Всё необходимое для успешной продажи!
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className='grid sm:grid-cols-2 gap-4 pt-2'>
+              {FEATURES.map((feature, index) => (
+                <li key={feature}>
+                  <FeatureCard feature={feature} index={index} />
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        {/* Call to Action Gradient Card */}
+        <Card
+          className='relative overflow-hidden border-0 shadow-2xl rounded-2xl'
+          style={{
+            animation: "fadeIn 0.8s cubic-bezier(.19,1,.22,1) 0.4s both",
+          }}
+        >
+          <div className='absolute inset-0 z-0 bg-gradient-to-tr from-primary via-accent to-secondary opacity-95' />
+          <div className='absolute inset-0 z-0 bg-black/20 backdrop-blur-md' />
+          <CardContent className='relative z-10 p-8 sm:p-10 flex flex-col items-center gap-6 text-center'>
+            <h2 className='text-2xl sm:text-3xl md:text-4xl font-bold text-white drop-shadow-lg'>
+              Готовы начать?
+            </h2>
+            <p className='text-base sm:text-lg md:text-xl text-white/90 font-light leading-relaxed max-w-xl mx-auto'>
+              Зарегистрируйтесь и разместите первое объявление бесплатно.
             </p>
-            <Link
-              href={ROUTES.premium}
-              className="text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 rounded-sm transition-colors"
-              aria-label="Узнать больше о тарифах премиум-продвижения"
-            >
-              Узнать больше о тарифах →
-            </Link>
-          </div>
+            <div className='flex flex-col sm:flex-row gap-4 w-full sm:justify-center sm:items-center'>
+              <Button
+                asChild
+                size='lg'
+                className='bg-white/90 text-primary hover:bg-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-h-[48px] w-full sm:w-auto px-8'
+                aria-label='Перейти к регистрации для размещения объявления'
+              >
+                <Link href={ROUTES.register}>
+                  Разместить объявление
+                  <ArrowRight className='w-4 h-4 ml-2' aria-hidden='true' />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size='lg'
+                variant='outline'
+                className='border-2 border-white/80 bg-white/10 text-white hover:bg-white/20 hover:text-primary transition-all min-h-[48px] font-semibold w-full sm:w-auto px-8'
+                aria-label='Войти в существующий аккаунт'
+              >
+                <Link href={ROUTES.login}>Уже есть аккаунт</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Footer Info & Premium */}
+        <div
+          className='mt-8 text-center text-sm sm:text-base text-muted-foreground/90 max-w-xl mx-auto px-2 space-y-3'
+          style={{
+            animation: "fadeIn 0.8s cubic-bezier(.19,1,.22,1) 0.6s both",
+          }}
+        >
+          <p className='leading-relaxed font-medium'>
+            <span className='bg-primary/20 rounded px-2 mr-2'>
+              Первое объявление —{" "}
+              <span className='text-primary font-bold'>бесплатно</span>.
+            </span>
+            <br />
+            <span className='bg-accent/20 rounded px-2'>
+              Премиум-продвижение - от{" "}
+              <span className='font-bold text-accent'> 500₽/мес</span>.
+            </span>
+          </p>
+          <Link
+            href={ROUTES.premium}
+            className='inline-block mt-1 text-primary/90 hover:text-primary font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 rounded transition-colors'
+            aria-label='Узнать больше о тарифах премиум-продвижения'
+          >
+            Подробнее о премиум-продвижении →
+          </Link>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

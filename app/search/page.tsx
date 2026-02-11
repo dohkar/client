@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, Suspense } from "react";
+import { useMemo, Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useProperties } from "@/hooks/use-properties";
 import { useSearchFilters } from "@/hooks/use-search-filters";
 import { useCities } from "@/hooks/use-cities";
 import { toPropertySearchParams } from "@/lib/search-params";
-import { getRegionIdByName } from "@/services/region.service";
+import { getRegionIdByName, ensureRegionCacheInitialized } from "@/services/region.service";
 import { SEARCH_CONSTANTS, PROPERTY_TYPE_LABELS } from "@/lib/search-constants";
 import { Spinner } from "@/components/ui";
 import {
@@ -20,6 +20,8 @@ import {
 import { HorizontalFilters, ActiveFilters, SearchResults } from "@/components/search";
 import { ROUTES } from "@/constants";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Search, XIcon } from "lucide-react";
 
 // Основной компонент страницы поиска
 function SearchPageContent() {
@@ -28,6 +30,8 @@ function SearchPageContent() {
   // URL — единственный источник истины для фильтров
   const {
     appliedFilters,
+    draftQuery,
+    setDraftQuery,
     draftPriceMin,
     draftPriceMax,
     draftAreaMin,
@@ -48,12 +52,20 @@ function SearchPageContent() {
     handleRegionReset,
     handleRoomsReset,
     handleAreaReset,
+    handleQueryReset,
+    handleDealTypeChange,
+    handleDealTypeReset,
+    handleFloorReset,
     handleResetAll,
     priceErrors,
     currentPage,
     setCurrentPage,
     isPending,
   } = useSearchFilters();
+
+  useEffect(() => {
+    ensureRegionCacheInitialized().catch(() => {});
+  }, []);
 
   const regionId =
     appliedFilters.region !== "all"
@@ -80,11 +92,18 @@ function SearchPageContent() {
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (appliedFilters.query && appliedFilters.query.trim().length > 0) count++;
+    if (appliedFilters.dealType && appliedFilters.dealType !== "all") count++;
     if (appliedFilters.type && appliedFilters.type !== "all") count++;
     if (appliedFilters.priceMin != null) count++;
     if (appliedFilters.priceMax != null) count++;
     if (appliedFilters.roomsMin != null) count++;
     if (appliedFilters.areaMin != null) count++;
+    if (
+      appliedFilters.floorMin != null ||
+      appliedFilters.floorMax != null ||
+      appliedFilters.floorNotFirst === true
+    )
+      count++;
     if (appliedFilters.region && appliedFilters.region !== "all") count++;
     if (appliedFilters.cityId && appliedFilters.cityId.trim().length > 0) count++;
     return count;
@@ -93,6 +112,12 @@ function SearchPageContent() {
   // Страницы
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  // Reset поиска
+  const handleClearQuery = () => {
+    setDraftQuery("");
+    handleQueryReset();
   };
 
   // Reset кнопки в результатах
@@ -131,6 +156,29 @@ function SearchPageContent() {
           </BreadcrumbList>
         </Breadcrumb>
 
+        {/* Поле поиска по запросу */}
+        <div className='mb-4'>
+          <div className='relative max-w-xl'>
+            <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none' />
+            <Input
+              placeholder='Город, район, ключевые слова...'
+              value={draftQuery}
+              onChange={(e) => setDraftQuery(e.target.value)}
+              className='pl-9 h-12 text-base'
+              aria-label='Поиск по объявлениям'
+              autoComplete='off'
+            />
+            {draftQuery && (
+              <button
+                onClick={handleClearQuery}
+                className='absolute right-4 top-1/2 -translate-y-1/2 size-5 cursor-pointer text-muted-foreground'
+              >
+                <XIcon className='size-5' />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Горизонтальные фильтры */}
         <HorizontalFilters
           filters={appliedFilters}
@@ -150,6 +198,7 @@ function SearchPageContent() {
           onPriceMaxBlur={handlePriceMaxBlur}
           onAreaMinChange={setDraftAreaMin}
           onAreaMinBlur={handleAreaMinBlur}
+          onDealTypeChange={handleDealTypeChange}
         />
 
         {/* Активные фильтры */}
@@ -157,14 +206,17 @@ function SearchPageContent() {
           filters={appliedFilters}
           activeFiltersCount={activeFiltersCount}
           selectedCityName={selectedCityName}
-          localPriceMin={draftPriceMin}
-          localPriceMax={draftPriceMax}
           onTypeReset={handleTypeReset}
           onPriceReset={handlePriceReset}
-          onRegionReset={handleRegionReset}
-          onCityReset={handleCityReset}
+          onLocationReset={() => {
+            handleRegionReset();
+            handleCityReset();
+          }}
           onRoomsReset={handleRoomsReset}
           onAreaReset={handleAreaReset}
+          onQueryReset={handleQueryReset}
+          onDealTypeReset={handleDealTypeReset}
+          onFloorReset={handleFloorReset}
           onResetAll={handleResetAll}
         />
 

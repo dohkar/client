@@ -19,7 +19,8 @@ import type { AdminProperty } from "@/services/admin.service";
 export const createPropertyColumns = (
   onStatusChange: (
     propertyId: string,
-    status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED"
+    status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED",
+    rejectionReason?: string
   ) => void,
   onDelete: (propertyId: string) => void,
   isDeleting: boolean
@@ -82,7 +83,7 @@ export const createPropertyColumns = (
           onValueChange={(value) =>
             onStatusChange(
               property.id,
-              value as "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED"
+              value as "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED"
             )
           }
         >
@@ -100,6 +101,12 @@ export const createPropertyColumns = (
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-yellow-500" />
                 На модерации
+              </div>
+            </SelectItem>
+            <SelectItem value="REJECTED">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                Отклонено
               </div>
             </SelectItem>
             <SelectItem value="SOLD">

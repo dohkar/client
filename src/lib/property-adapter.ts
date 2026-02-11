@@ -37,18 +37,23 @@ export function adaptProperty(backend: PropertyBackend): Property {
     regionName = getRegionNameById(backend.regionId);
   }
 
+  const images = backend.images?.length ? backend.images : [];
+  const placeholder = "/placeholder.svg";
+
   return {
     id: backend.id,
+    slug: backend.slug ?? backend.id,
     title: backend.title,
     price: backend.price,
     currency: backend.currency,
     location: backend.location,
     region: regionName,
     type: typeMap[backend.type] || "apartment",
+    dealType: backend.dealType ?? "SALE",
     rooms: backend.rooms,
     area: backend.area,
-    image: backend.images?.[0] || "/placeholder.svg",
-    images: backend.images || [],
+    image: images[0] || placeholder,
+    images,
     isPremium: backend.user?.isPremium ?? false,
     datePosted: backend.createdAt,
     description: backend.description,
@@ -58,10 +63,12 @@ export function adaptProperty(backend: PropertyBackend): Property {
       phone: backend.user?.phone || "Не указано",
     },
     status: (backend.status.toLowerCase() as PropertyStatus) as Property["status"],
-    views: backend.views,
+    views: backend.views ?? 0,
+    favoritesCount: backend.favoritesCount ?? 0,
     userId: backend.userId,
     createdAt: backend.createdAt,
     updatedAt: backend.updatedAt,
+    rejectionReason: backend.rejectionReason ?? undefined,
     pricePerMeter:
       backend.area > 0 ? Math.round(backend.price / backend.area) : undefined,
     latitude: backend.latitude,
@@ -71,5 +78,6 @@ export function adaptProperty(backend: PropertyBackend): Property {
       backend.city && "name" in backend.city && typeof (backend.city as { name: string }).name === "string"
         ? (backend.city as { name: string }).name
         : undefined,
+    floor: backend.floor ?? undefined,
   };
 }

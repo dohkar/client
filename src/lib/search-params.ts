@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { PropertySearchParams } from "@/types/property";
+import type { PropertySearchParams, PropertyDealType } from "@/types/property";
 import type { PropertyType } from "@/types/property";
 
 /**
@@ -9,6 +9,10 @@ import type { PropertyType } from "@/types/property";
 const SearchParamsSchema = z
   .object({
     query: z.string().max(200).optional(),
+    dealType: z
+      .enum(["sale", "buy", "rent_out", "rent_in", "exchange"])
+      .optional()
+      .transform((v) => (v ? (v.toUpperCase().replace(" ", "_") as PropertyDealType) : undefined)),
     type: z
       .enum(["apartment", "house", "land", "commercial"])
       .optional()
@@ -53,6 +57,30 @@ const SearchParamsSchema = z
         .nullable()
         .catch(null)
     ),
+    floorMin: z.preprocess(
+      (v) => (v === "" ? undefined : v),
+      z.coerce
+        .number()
+        .min(0)
+        .max(200)
+        .optional()
+        .nullable()
+        .catch(null)
+    ),
+    floorMax: z.preprocess(
+      (v) => (v === "" ? undefined : v),
+      z.coerce
+        .number()
+        .min(0)
+        .max(200)
+        .optional()
+        .nullable()
+        .catch(null)
+    ),
+    floorNotFirst: z.preprocess(
+      (v) => v === "1" || v === "true",
+      z.boolean().optional().nullable().catch(null)
+    ),
     region: z
       .enum(["Chechnya", "Ingushetia", "Other"])
       .optional()
@@ -80,11 +108,15 @@ export type SearchParams = z.infer<typeof SearchParamsSchema>;
 /** Дефолтные значения для отображения в UI (полный объект) */
 export interface SearchFiltersDisplay {
   query: string;
+  dealType: PropertyDealType | "all";
   type: PropertyType | "all";
   priceMin: number | null;
   priceMax: number | null;
   roomsMin: number | null;
   areaMin: number | null;
+  floorMin: number | null;
+  floorMax: number | null;
+  floorNotFirst: boolean | null;
   region: "Chechnya" | "Ingushetia" | "Other" | "all";
   cityId: string | null;
   sortBy: "price-asc" | "price-desc" | "date-desc" | "relevance";
@@ -94,11 +126,15 @@ export interface SearchFiltersDisplay {
 
 const DEFAULT_DISPLAY: SearchFiltersDisplay = {
   query: "",
+  dealType: "all",
   type: "all",
   priceMin: null,
   priceMax: null,
   roomsMin: null,
   areaMin: null,
+  floorMin: null,
+  floorMax: null,
+  floorNotFirst: null,
   region: "all",
   cityId: null,
   sortBy: "relevance",
@@ -136,11 +172,15 @@ export function parseSearchParams(
   const d = result.data;
   const filters: SearchFiltersDisplay = {
     query: d.query?.trim() ?? "",
+    dealType: d.dealType ?? "all",
     type: (d.type ?? "all") as PropertyType | "all",
     priceMin: d.priceMin ?? null,
     priceMax: d.priceMax ?? null,
     roomsMin: d.roomsMin ?? null,
     areaMin: d.areaMin ?? null,
+    floorMin: d.floorMin ?? null,
+    floorMax: d.floorMax ?? null,
+    floorNotFirst: d.floorNotFirst ?? null,
     region: (d.region ?? "all") as "Chechnya" | "Ingushetia" | "Other" | "all",
     cityId: d.cityId?.trim() ?? null,
     sortBy: d.sortBy ?? "relevance",
@@ -162,6 +202,9 @@ export function buildSearchParams(
   if (filters.query && filters.query.trim().length > 0) {
     params.set("query", filters.query.trim());
   }
+  if (filters.dealType && filters.dealType !== "all") {
+    params.set("dealType", filters.dealType.toLowerCase());
+  }
   if (filters.type && filters.type !== "all") {
     params.set("type", filters.type);
   }
@@ -176,6 +219,15 @@ export function buildSearchParams(
   }
   if (filters.areaMin != null) {
     params.set("areaMin", String(filters.areaMin));
+  }
+  if (filters.floorMin != null) {
+    params.set("floorMin", String(filters.floorMin));
+  }
+  if (filters.floorMax != null) {
+    params.set("floorMax", String(filters.floorMax));
+  }
+  if (filters.floorNotFirst === true) {
+    params.set("floorNotFirst", "1");
   }
   if (filters.region && filters.region !== "all") {
     params.set("region", filters.region);
@@ -208,11 +260,15 @@ export function mergeSearchParams(
   const { filters: currentParsed } = parseSearchParams(current);
   const filterKeys = [
     "query",
+    "dealType",
     "type",
     "priceMin",
     "priceMax",
     "roomsMin",
     "areaMin",
+    "floorMin",
+    "floorMax",
+    "floorNotFirst",
     "region",
     "cityId",
     "sortBy",
@@ -248,6 +304,9 @@ export function toPropertySearchParams(
   if (filters.query && filters.query.trim().length > 0) {
     params.query = filters.query.trim();
   }
+  if (filters.dealType && filters.dealType !== "all") {
+    params.dealType = filters.dealType;
+  }
   if (filters.type !== "all") {
     params.type = filters.type as PropertyType;
   }
@@ -255,6 +314,9 @@ export function toPropertySearchParams(
   if (filters.priceMax != null) params.priceMax = filters.priceMax;
   if (filters.roomsMin != null) params.rooms = filters.roomsMin;
   if (filters.areaMin != null) params.areaMin = filters.areaMin;
+  if (filters.floorMin != null) params.floorMin = filters.floorMin;
+  if (filters.floorMax != null) params.floorMax = filters.floorMax;
+  if (filters.floorNotFirst === true) params.floorNotFirst = true;
   if (filters.region !== "all") {
     params.region = filters.region as "Chechnya" | "Ingushetia" | "Other";
   }

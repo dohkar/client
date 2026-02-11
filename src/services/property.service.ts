@@ -28,11 +28,17 @@ export const propertyService = {
     const queryParams = new URLSearchParams();
 
     if (params?.query) queryParams.append("query", params.query);
+    if (params?.my !== undefined) queryParams.append("my", String(params.my));
     if (params?.type) queryParams.append("type", params.type);
-    if (params?.priceMin) queryParams.append("priceMin", params.priceMin.toString());
-    if (params?.priceMax) queryParams.append("priceMax", params.priceMax.toString());
-    if (params?.rooms) queryParams.append("rooms", params.rooms.toString());
-    if (params?.areaMin) queryParams.append("areaMin", params.areaMin.toString());
+    if (params?.dealType) queryParams.append("dealType", params.dealType);
+    if (params?.priceMin != null) queryParams.append("priceMin", params.priceMin.toString());
+    if (params?.priceMax != null) queryParams.append("priceMax", params.priceMax.toString());
+    if (params?.rooms != null) queryParams.append("rooms", params.rooms.toString());
+    if (params?.areaMin != null) queryParams.append("areaMin", params.areaMin.toString());
+    if (params?.floorMin != null) queryParams.append("floorMin", params.floorMin.toString());
+    if (params?.floorMax != null) queryParams.append("floorMax", params.floorMax.toString());
+    if (params?.floorNotFirst !== undefined) queryParams.append("floorNotFirst", String(params.floorNotFirst));
+    if (params?.floorNotLast !== undefined) queryParams.append("floorNotLast", String(params.floorNotLast));
     if (params?.regionId) queryParams.append("regionId", params.regionId);
     if (params?.cityId) queryParams.append("cityId", params.cityId);
     if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
@@ -128,8 +134,37 @@ export const propertyService = {
    * Получить статистику по категориям недвижимости
    */
   async getCategoryStats(): Promise<Array<{ type: string; count: number }>> {
-    // Note: This endpoint is not in OpenAPI spec, using any temporarily
-    const response = await apiClient.get<any>(API_ENDPOINTS.properties.categoryStats);
-    return response as Array<{ type: string; count: number }>;
+    const response = await apiClient.get<Array<{ type: string; count: number }>>(
+      API_ENDPOINTS.properties.categoryStats
+    );
+    return response;
+  },
+
+  /**
+   * Похожие объявления (регион/город, тип, лимит)
+   */
+  async getRelatedProperties(
+    propertyId: string,
+    limit = 6
+  ): Promise<Property[]> {
+    const response = await apiClient.get<PropertyBackend[]>(
+      `${API_ENDPOINTS.properties.getRelated(propertyId)}?limit=${limit}`
+    );
+    return Array.isArray(response) ? response.map(adaptProperty) : [];
+  },
+
+  /**
+   * Лимиты объявлений для текущего пользователя (скользящие 30 дней)
+   */
+  async getPropertyLimits(): Promise<{
+    monthlyLimit: number;
+    createdInMonth: number;
+    remaining: number;
+  }> {
+    return apiClient.get<{
+      monthlyLimit: number;
+      createdInMonth: number;
+      remaining: number;
+    }>(API_ENDPOINTS.properties.getLimits);
   },
 };

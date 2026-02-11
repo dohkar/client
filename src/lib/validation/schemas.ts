@@ -58,54 +58,79 @@ export type RegisterFormData = z.infer<typeof registerSchema>;
 
 /**
  * Схема валидации для создания объявления
+ * title 10–200, description 50–2000; при SALE/RENT_OUT — минимум 1 фото; при BUY цена опциональна.
  */
-export const createPropertySchema = z.object({
-  dealType: z.enum(["sale", "rent"], {
-    required_error: "Выберите тип сделки",
-  }),
-  propertyType: z.enum(["apartment", "house", "land", "commercial"], {
-    required_error: "Выберите тип недвижимости",
-  }),
-  region: z.enum(["Chechnya", "Ingushetia", "Other"], {
-    required_error: "Выберите регион",
-  }),
-  city: z.string().min(1, "Укажите город или населенный пункт"),
-  address: z.string().min(5, "Укажите полный адрес"),
-  price: z
-    .number()
-    .min(1, "Цена должна быть больше 0")
-    .max(1000000000, "Цена слишком большая"),
-  currency: z.enum(["RUB", "USD"]).default("RUB"),
-  area: z
-    .number()
-    .min(1, "Площадь должна быть больше 0")
-    .max(100000, "Площадь слишком большая"),
-  rooms: z
-    .number()
-    .min(0)
-    .max(20)
-    .optional()
-    .nullable(),
-  floor: z.string().optional(),
-  totalFloors: z.number().min(1).max(200).optional().nullable(),
-  description: z
-    .string()
-    .min(20, "Описание должно содержать минимум 20 символов")
-    .max(5000, "Описание слишком длинное"),
-  features: z.array(z.string()).optional(),
-  images: z
-    .array(z.string())
-    .min(1, "Добавьте хотя бы одно изображение")
-    .max(20, "Максимум 20 изображений"),
-  contactName: z.string().min(2, "Укажите ваше имя"),
-  contactPhone: z
-    .string()
-    .regex(
-      /^(\+7|8)?[\s-]?\(?[0-9]{3}\)?[\s-]?[0-9]{3}[\s-]?[0-9]{2}[\s-]?[0-9]{2}$/,
-      "Некорректный номер телефона"
-    ),
-  isPremium: z.boolean().default(false),
-});
+export const createPropertySchema = z
+  .object({
+    title: z
+      .string()
+      .min(10, "Минимум 10 символов")
+      .max(200, "Максимум 200 символов"),
+    dealType: z.enum(["SALE", "BUY", "RENT_OUT", "RENT_IN", "EXCHANGE"], {
+      required_error: "Выберите тип сделки",
+    }),
+    propertyType: z.enum(["apartment", "house", "land", "commercial"], {
+      required_error: "Выберите тип недвижимости",
+    }),
+    region: z.enum(["Chechnya", "Ingushetia", "Other"], {
+      required_error: "Выберите регион",
+    }),
+    city: z.string().min(1, "Укажите город или населенный пункт"),
+    address: z.string().min(5, "Укажите полный адрес"),
+    price: z
+      .number()
+      .min(0, "Цена не может быть отрицательной")
+      .max(1000000000, "Цена слишком большая")
+      .optional()
+      .nullable(),
+    currency: z.enum(["RUB", "USD"]).default("RUB"),
+    area: z
+      .number()
+      .min(1, "Площадь должна быть больше 0")
+      .max(100000, "Площадь слишком большая"),
+    rooms: z.number().min(0).max(20).optional().nullable(),
+    floor: z.number().min(0).optional().nullable(),
+    totalFloors: z.number().min(1).max(200).optional().nullable(),
+    description: z
+      .string()
+      .min(50, "Описание должно содержать минимум 50 символов")
+      .max(2000, "Описание слишком длинное (макс. 2000 символов)"),
+    features: z.array(z.string()).optional(),
+    images: z.array(z.string()).max(20, "Максимум 20 изображений").optional(),
+    contactName: z.string().min(2, "Укажите ваше имя"),
+    contactPhone: z
+      .string()
+      .regex(
+        /^(\+7|8)?[\s-]?\(?[0-9]{3}\)?[\s-]?[0-9]{3}[\s-]?[0-9]{2}[\s-]?[0-9]{2}$/,
+        "Некорректный номер телефона"
+      ),
+    isPremium: z.boolean().default(false),
+  })
+  .refine(
+    (data) => {
+      if (
+        data.dealType === "SALE" ||
+        data.dealType === "RENT_OUT" ||
+        data.dealType === "EXCHANGE"
+      ) {
+        return (data.images?.length ?? 0) >= 1;
+      }
+      return true;
+    },
+    {
+      message: "Для типа «Продаю» / «Сдаю» / «Обмен» нужно хотя бы одно фото",
+      path: ["images"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.dealType !== "BUY" && data.dealType != null) {
+        return data.price != null && data.price > 0;
+      }
+      return true;
+    },
+    { message: "Укажите цену", path: ["price"] }
+  );
 
 export type CreatePropertyFormData = z.infer<typeof createPropertySchema>;
 

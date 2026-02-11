@@ -70,6 +70,30 @@ export const REGION_OPTIONS = [
 ] as const;
 
 /**
+ * Лейблы для типа сделки (поиск)
+ */
+export const DEAL_TYPE_LABELS: Record<string, string> = {
+  all: "Все",
+  SALE: "Продаю",
+  BUY: "Куплю",
+  RENT_OUT: "Сдаю",
+  RENT_IN: "Сниму",
+  EXCHANGE: "Обмен",
+};
+
+/**
+ * Опции типа сделки для селекта поиска
+ */
+export const SEARCH_DEAL_TYPE_OPTIONS = [
+  { value: "all", label: "Все" },
+  { value: "SALE", label: "Продаю" },
+  { value: "BUY", label: "Куплю" },
+  { value: "RENT_OUT", label: "Сдаю" },
+  { value: "RENT_IN", label: "Сниму" },
+  { value: "EXCHANGE", label: "Обмен" },
+] as const;
+
+/**
  * Опции количества комнат для селекта
  */
 export const ROOMS_OPTIONS = [

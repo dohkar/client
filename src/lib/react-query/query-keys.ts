@@ -19,6 +19,9 @@ function normalizeSearchParams(
   if (params.query !== undefined && params.query.trim().length > 0) {
     normalized.query = params.query.trim();
   }
+  if (params.my !== undefined) {
+    normalized.my = params.my;
+  }
   if (params.type !== undefined) {
     normalized.type = params.type;
   }
@@ -81,6 +84,7 @@ export const queryKeys = {
       return ["properties", "search", trimmed] as const;
     },
     categoryStats: ["properties", "categoryStats"] as const,
+    limits: ["properties", "limits"] as const,
   },
 
   // Auth

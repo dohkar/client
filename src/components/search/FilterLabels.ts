@@ -2,6 +2,7 @@ import {
   PROPERTY_TYPE_LABELS,
   REGION_LABELS,
   SORT_LABELS,
+  DEAL_TYPE_LABELS,
 } from "@/lib/search-constants";
 
 /** Минимальный тип для отображения ценового диапазона */
@@ -56,4 +57,35 @@ export function getAreaLabel(areaMin: number | null | undefined): string {
 
 export function getCityLabel(cityName: string | null | undefined): string {
   return cityName?.trim() || "Город";
+}
+
+/** Лейбл для объединённого чипа «Локация» (регион и/или город) */
+export function getLocationChipLabel(
+  region: string,
+  cityName: string | null | undefined
+): string {
+  const regionLabel = getRegionLabel(region);
+  if (region === "all") return regionLabel;
+  const name = cityName?.trim();
+  return name ? `${regionLabel} · ${name}` : regionLabel;
+}
+
+export function getDealTypeLabel(dealType: string | null | undefined): string {
+  if (!dealType || dealType === "all") return "Тип сделки";
+  return DEAL_TYPE_LABELS[dealType] ?? dealType;
+}
+
+/** Лейбл для фильтра по этажу (активные фильтры) */
+export function getFloorLabel(filters: {
+  floorMin?: number | null;
+  floorMax?: number | null;
+  floorNotFirst?: boolean | null;
+}): string {
+  if (filters.floorNotFirst === true) return "Не первый этаж";
+  if (filters.floorMin != null && filters.floorMax != null) {
+    return `Этаж: ${filters.floorMin}–${filters.floorMax}`;
+  }
+  if (filters.floorMin != null) return `Этаж от ${filters.floorMin}`;
+  if (filters.floorMax != null) return `Этаж до ${filters.floorMax}`;
+  return "Этаж";
 }

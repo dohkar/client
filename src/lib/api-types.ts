@@ -155,11 +155,17 @@ export type ApiPropertyCreateResponse = ResponseData<"/api/properties", "post", 
 // Note: OpenAPI spec has content?: never for PropertiesController_findAll, but API returns PaginatedResponse
 export type ApiPropertyListParams = {
   query?: string;
+  my?: boolean;
   type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+  dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
   priceMin?: number;
   priceMax?: number;
   rooms?: number;
   areaMin?: number;
+  floorMin?: number;
+  floorMax?: number;
+  floorNotFirst?: boolean;
+  floorNotLast?: boolean;
   regionId?: string;
   cityId?: string;
   sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance";
@@ -204,13 +210,13 @@ export type AdminPropertiesParams = {
   page?: number;
   limit?: number;
   search?: string;
-  status?: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+  status?: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
   type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
   regionId?: string;
   sortBy?: "date-desc" | "date-asc" | "views-desc";
 };
 export type AdminUpdatePropertyStatusRequest = {
-  status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+  status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
   rejectionReason?: string;
 };
 export type AdminUpdateUserRoleParams = {

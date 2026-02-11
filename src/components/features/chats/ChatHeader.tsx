@@ -245,21 +245,24 @@ export function ChatHeader({
           className='flex items-center gap-2 px-3 sm:px-4 pb-2 sm:pb-3 pt-0.5 group transition hover:bg-muted/40 rounded'
         >
           {/* Картинка объявления (маленькая) */}
-          {chat.property.images?.[0] ? (
+          {(() => {
+            const imgSrc = chat.property.images?.[0] ?? "/placeholder.svg";
+            return imgSrc ? (
             <div className='flex-shrink-0 h-8 w-8 overflow-hidden rounded object-cover border'>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={chat.property.images[0]}
+                src={imgSrc}
                 alt={chat.property.title}
                 className='h-full w-full object-cover'
                 draggable={false}
               />
             </div>
-          ) : (
+            ) : (
             <div className='flex-shrink-0 h-8 w-8 rounded bg-muted flex items-center justify-center text-muted-foreground text-xs'>
               <Archive className='h-4 w-4' />
             </div>
-          )}
+            );
+          })()}
           <span className='truncate text-xs sm:text-sm text-muted-foreground group-hover:underline'>
             {chat.property.title} · {formatPrice(chat.property.price)}
           </span>
