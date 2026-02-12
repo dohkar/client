@@ -126,14 +126,14 @@ export function HeroSearch() {
                 variant='default'
                 size='lg'
                 className={cn(
-                  "h-14 px-8 font-semibold text-base md:text-lg tracking-wide",
+                  "h-14 px-8 font-semibold text-base md:text-lg tracking-wide text-white",
                   "bg-primary hover:bg-primary/90 active:bg-primary/80",
                   "rounded-xl shadow-lg shadow-primary/40",
                   "transition-all duration-200 active:scale-[0.98] hover:shadow-xl hover:shadow-primary/50",
                   "disabled:opacity-60 disabled:cursor-not-allowed"
                 )}
                 disabled={Boolean(errors.query)}
-                aria-label='Начать поиск'
+                aria-label='Найти объявления по запросу'
               >
                 Найти
               </Button>

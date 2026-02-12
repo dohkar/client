@@ -168,11 +168,12 @@ export function HorizontalFilters({
               <Button
                 variant='outline'
                 className='h-10 sm:h-11 px-4 w-full justify-between text-xs sm:text-base'
+                aria-label={`Цена: ${getPriceLabel(filters)}`}
               >
                 <span className='truncate max-w-[70px] sm:max-w-[110px]'>
                   {getPriceLabel(filters)}
                 </span>
-                <ChevronDown className='w-4 h-4 opacity-50 shrink-0' />
+                <ChevronDown className='w-4 h-4 opacity-50 shrink-0' aria-hidden />
               </Button>
             </PopoverTrigger>
             <PopoverContent className='w-72 sm:w-80 p-4' align='start' sideOffset={8}>
@@ -247,10 +248,11 @@ export function HorizontalFilters({
               <Button
                 variant='outline'
                 className='h-10 sm:h-11 px-3 w-full justify-between text-xs sm:text-base gap-1'
+                aria-label={`Регион и город: ${locationLabel}`}
               >
-                <MapPin className='w-3.5 h-3.5 shrink-0 opacity-70' />
+                <MapPin className='w-3.5 h-3.5 shrink-0 opacity-70' aria-hidden />
                 <span className='truncate'>{locationLabel}</span>
-                <ChevronDown className='w-4 h-4 opacity-50 shrink-0' />
+                <ChevronDown className='w-4 h-4 opacity-50 shrink-0' aria-hidden />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -259,9 +261,9 @@ export function HorizontalFilters({
               sideOffset={8}
             >
               <div className='p-2 border-b bg-muted/40'>
-                <p className='text-xs font-medium text-muted-foreground px-2 py-1'>
+                {/* <p className='text-xs font-medium text-muted-foreground px-2 py-1'>
                   Регион
-                </p>
+                </p> */}
                 <div className='flex flex-wrap gap-1'>
                   {REGION_OPTIONS.map((option) => (
                     <button
@@ -283,10 +285,10 @@ export function HorizontalFilters({
                 </div>
               </div>
               {filters.region !== "all" && (
-                <div className='flex flex-col min-h-0 flex-1'>
-                  <p className='text-xs font-medium text-muted-foreground px-3 pt-2 pb-1'>
+                <div className='flex flex-col pt-2 pb-1 min-h-0 flex-1'>
+                  {/* <p className='text-xs font-medium text-muted-foreground px-3 pt-2 pb-1'>
                     Город
-                  </p>
+                  </p> */}
                   <div className='px-2 pb-2 shrink-0'>
                     <div className='relative'>
                       <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none' />
@@ -304,7 +306,7 @@ export function HorizontalFilters({
                   <div className='overflow-y-auto flex-1 min-h-0 pb-2'>
                     <button
                       type='button'
-                      className='w-full text-left text-xs sm:text-sm py-2 px-3 hover:bg-accent rounded-none'
+                      className='w-full cursor-pointer text-muted-foreground text-left text-xs sm:text-sm py-2 px-3 hover:bg-accent rounded-none'
                       onClick={() => {
                         onCityChange(null);
                         setLocationPopoverOpen(false);
@@ -316,7 +318,7 @@ export function HorizontalFilters({
                       <button
                         key={city.id}
                         type='button'
-                        className='w-full text-left text-xs sm:text-sm py-2 px-3 hover:bg-accent truncate'
+                        className='w-full cursor-pointer text-left text-xs sm:text-sm py-2 px-3 hover:bg-accent truncate'
                         onClick={() => {
                           onCityChange(city.id);
                           setLocationPopoverOpen(false);

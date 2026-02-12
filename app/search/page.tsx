@@ -6,7 +6,10 @@ import { useProperties } from "@/hooks/use-properties";
 import { useSearchFilters } from "@/hooks/use-search-filters";
 import { useCities } from "@/hooks/use-cities";
 import { toPropertySearchParams } from "@/lib/search-params";
-import { getRegionIdByName, ensureRegionCacheInitialized } from "@/services/region.service";
+import {
+  getRegionIdByName,
+  ensureRegionCacheInitialized,
+} from "@/services/region.service";
 import { SEARCH_CONSTANTS, PROPERTY_TYPE_LABELS } from "@/lib/search-constants";
 import { Spinner } from "@/components/ui";
 import {
@@ -222,7 +225,7 @@ function SearchPageContent() {
 
         {/* Результаты поиска */}
         <div>
-          <div className='mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
+          <div className='mb-6 ml-1 mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
             <h1 className='text-xl sm:text-2xl font-bold text-foreground'>
               Результаты поиска: {typeof data?.total === "number" ? data.total : 0}{" "}
               объявлений

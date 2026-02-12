@@ -90,6 +90,10 @@ export function buildPageMetadata({
   return meta;
 }
 
+/** Описание главной страницы: уникальное, 150–160 символов для вывода в поиске */
+export const HOME_DESCRIPTION =
+  "Платформа недвижимости Дохкар: объявления о продаже и аренде квартир, домов и участков в Чечне, Ингушетии и на Кавказе. Удобный поиск, безопасные сделки.";
+
 /** Дефолтные метаданные для главной и общие настройки сайта */
 export const DEFAULT_SITE_METADATA: Metadata = {
   metadataBase: new URL(getSiteUrl()),
@@ -97,8 +101,7 @@ export const DEFAULT_SITE_METADATA: Metadata = {
     default: "Недвижимость Кавказа — объявления о продаже и аренде | Дохкар",
     template: "%s | Дохкар",
   },
-  description:
-    "Платформа недвижимости Дохкар: тысячи объявлений о продаже и аренде квартир, домов и участков в Чечне, Ингушетии и на Кавказе. Удобный поиск, безопасные сделки, премиум-размещение.",
+  description: HOME_DESCRIPTION,
   keywords: [
     "недвижимость",
     "объявления недвижимость",
@@ -112,9 +115,12 @@ export const DEFAULT_SITE_METADATA: Metadata = {
     "Дохкар",
   ],
   openGraph: {
+    title: "Недвижимость Кавказа — объявления о продаже и аренде | Дохкар",
+    description: HOME_DESCRIPTION,
     type: "website",
     siteName: SITE_NAME,
     locale: "ru_RU",
+    url: getSiteUrl(),
     images: [
       {
         url: getDefaultOgImage(),
@@ -126,6 +132,8 @@ export const DEFAULT_SITE_METADATA: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    title: "Недвижимость Кавказа — объявления о продаже и аренде | Дохкар",
+    description: HOME_DESCRIPTION,
   },
   robots: {
     index: true,

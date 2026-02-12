@@ -361,12 +361,16 @@ export function Header() {
               </>
             )}
           </div>
-          <Link href={ROUTES.sell} className='shrink-0'>
+          <Link
+            href={ROUTES.sell}
+            className='shrink-0'
+            aria-label='Разместить объявление'
+          >
             <Button
               size='sm'
               className='bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all h-9 md:h-10 px-3 md:px-5 gap-1.5'
             >
-              <PlusCircle className='size-5' />
+              <PlusCircle className='size-5' aria-hidden />
               <span className='hidden sm:inline'>Разместить</span>
             </Button>
           </Link>

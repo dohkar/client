@@ -51,15 +51,17 @@ export async function generateMetadata({
   if (!property) {
     return {
       title: "Объявление не найдено | Дохкар",
-      description: "Объявление не найдено или удалено",
+      description:
+        "Объявление не найдено или было удалено. Перейдите в каталог недвижимости Дохкар, чтобы найти квартиры, дома и участки в Чечне и Ингушетии.",
     };
   }
 
   const title = `${property.title} - ${property.price.toLocaleString("ru-RU")} ₽`;
+  const rawDesc = property.description?.trim() || "";
   const description =
-    property.description.length > 160
-      ? `${property.description.slice(0, 157)}...`
-      : property.description;
+    rawDesc.length > 155
+      ? `${rawDesc.slice(0, 152)}...`
+      : rawDesc || "Объявление о недвижимости на Дохкар — цены, фото, контакты продавца.";
 
   const ogImage = property.images?.[0] || property.image || "/og-default.jpg";
   const fullImageUrl = ogImage.startsWith("http") ? ogImage : toAbsoluteUrl(ogImage);

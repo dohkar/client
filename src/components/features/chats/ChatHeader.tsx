@@ -190,7 +190,7 @@ export function ChatHeader({
                 // Для поддержки: статус всегда "онлайн" и маленький совет под именем только на desktop
                 <>
                   <span className='text-green-500 font-medium'>онлайн</span>
-                  <span className='hidden sm:inline text-[0.98em] ml-1 text-muted-foreground/80'>
+                  <span className='hidden sm:inline text-[0.98em] ml-1 text-muted-foreground'>
                     Обычно отвечаем за 5–15 минут
                   </span>
                 </>
@@ -208,7 +208,7 @@ export function ChatHeader({
               ) : lastSeenText ? (
                 <span className='text-muted-foreground'>{lastSeenText}</span>
               ) : (
-                <span className='text-muted-foreground/70'>оффлайн</span>
+                <span className='text-muted-foreground'>оффлайн</span>
               )}
             </div>
           </div>

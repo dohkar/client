@@ -115,7 +115,7 @@ export function PropertyCard({
               </>
             )}
             <span className='text-border'>•</span>
-            <span className='text-muted-foreground/70'>
+            <span className='text-muted-foreground'>
               {formatDate(property.datePosted, "ru-RU", { relative: true })}
             </span>
           </div>

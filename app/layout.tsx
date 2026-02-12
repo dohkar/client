@@ -33,7 +33,6 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   ...DEFAULT_SITE_METADATA,
-  description: APP_CONFIG.description,
 };
 
 export default async function RootLayout({
