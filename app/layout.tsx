@@ -10,6 +10,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SupportButton } from "@/components/features/chats/SupportButton";
 import { APP_CONFIG } from "@/constants";
 import { THEME_COOKIE_NAME } from "@/constants/theme";
+import { DEFAULT_SITE_METADATA } from "@/lib/seo";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeInitScript } from "@/components/theme-init-script";
@@ -31,7 +32,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: APP_CONFIG.name,
+  ...DEFAULT_SITE_METADATA,
   description: APP_CONFIG.description,
 };
 
@@ -44,9 +45,42 @@ export default async function RootLayout({
   const themeCookie = cookieStore.get(THEME_COOKIE_NAME)?.value;
   const defaultTheme = themeCookie === "dark" ? "dark" : "light";
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dohkar.ru";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${siteUrl}/#website`,
+        url: siteUrl,
+        name: "Дохкар",
+        description: APP_CONFIG.description,
+        inLanguage: "ru-RU",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            url: `${siteUrl}/search?q={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+      {
+        "@type": "Organization",
+        "@id": `${siteUrl}/#organization`,
+        name: "Дохкар",
+        url: siteUrl,
+      },
+    ],
+  };
+
   return (
     <html lang='ru' className={defaultTheme} suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <script
+          type='application/ld+json'
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <ThemeInitScript />
         <ThemeProvider defaultTheme={defaultTheme}>
           <ReactQueryProvider>

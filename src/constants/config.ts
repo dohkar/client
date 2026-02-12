@@ -2,16 +2,16 @@
  * Конфигурация приложения
  */
 export const APP_CONFIG = {
-  name: "Dohkar",
-  description: "Современное приложение на Next.js",
+  name: "Дохкар",
+  description:
+    "Платформа недвижимости: объявления о продаже и аренде квартир, домов и участков на Кавказе. Чечня, Ингушетия, Грозный, Назрань.",
   version: "1.0.0",
 } as const;
 
 /**
  * URL API
  */
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 /**
  * Лимиты пагинации

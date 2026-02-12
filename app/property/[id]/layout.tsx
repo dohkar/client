@@ -1,13 +1,27 @@
 import { Metadata } from "next";
 import { cache } from "react";
 import { logger } from "@/lib/utils/logger";
+import { getSiteUrl, toAbsoluteUrl } from "@/lib/seo";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Из сегмента URL извлекает id объявления: /property/[id] или /property/[id-slug] */
+function extractPropertyIdFromSegment(segment: string): string {
+  const s = segment.trim();
+  if (UUID_REGEX.test(s)) return s;
+  if (s.length > 36 && s[36] === "-" && UUID_REGEX.test(s.slice(0, 36))) {
+    return s.slice(0, 36);
+  }
+  return s;
+}
+
 // Кэшированная функция для получения объявления (используется и в metadata, и в page)
 const getProperty = cache(async (id: string) => {
+  const propertyId = extractPropertyIdFromSegment(id);
   try {
-    const response = await fetch(`${API_URL}/api/properties/${id}`, {
+    const response = await fetch(`${API_URL}/api/properties/${propertyId}`, {
       next: { revalidate: 60 }, // ISR: обновление каждые 60 секунд
     });
 
@@ -36,23 +50,20 @@ export async function generateMetadata({
 
   if (!property) {
     return {
-      title: "Объявление не найдено | Dohkar",
+      title: "Объявление не найдено | Дохкар",
       description: "Объявление не найдено или удалено",
     };
   }
 
-  const title = `${property.title} - ${property.price.toLocaleString("ru-RU")} ₽ | Dohkar`;
+  const title = `${property.title} - ${property.price.toLocaleString("ru-RU")} ₽`;
   const description =
     property.description.length > 160
       ? `${property.description.slice(0, 157)}...`
       : property.description;
 
-  // Первое изображение для og:image
   const ogImage = property.images?.[0] || property.image || "/og-default.jpg";
-
-  // Формируем полный URL для og:image
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dohkar.ru";
-  const fullImageUrl = ogImage.startsWith("http") ? ogImage : `${siteUrl}${ogImage}`;
+  const fullImageUrl = ogImage.startsWith("http") ? ogImage : toAbsoluteUrl(ogImage);
+  const pageUrl = toAbsoluteUrl(`/property/${id}`);
 
   return {
     title,
@@ -61,7 +72,9 @@ export async function generateMetadata({
       title,
       description,
       type: "website",
-      url: `${siteUrl}/property/${id}`,
+      url: pageUrl,
+      siteName: "Дохкар",
+      locale: "ru_RU",
       images: [
         {
           url: fullImageUrl,
@@ -70,8 +83,6 @@ export async function generateMetadata({
           alt: property.title,
         },
       ],
-      siteName: "Dohkar",
-      locale: "ru_RU",
     },
     twitter: {
       card: "summary_large_image",
@@ -80,7 +91,7 @@ export async function generateMetadata({
       images: [fullImageUrl],
     },
     alternates: {
-      canonical: `${siteUrl}/property/${id}`,
+      canonical: pageUrl,
     },
   };
 }
