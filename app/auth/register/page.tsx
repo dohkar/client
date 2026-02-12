@@ -176,13 +176,21 @@ export default function RegisterPage() {
                 inputMode='tel'
                 placeholder='+7 (___) ___-__-__'
                 value={phone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
+                onChange={(e) => {
+                  handlePhoneChange(e.target.value);
+                  setError(null);
+                }}
                 required
                 autoComplete='username'
-                className={cn(INPUT_BASE, "tracking-wider")}
+                className={cn(INPUT_BASE, "tracking-wider", error && "border-destructive")}
                 aria-describedby={error ? "form-error" : undefined}
                 aria-invalid={!!error}
               />
+              {error && (
+                <p id='form-error' className='text-sm text-destructive' role='alert'>
+                  {error}
+                </p>
+              )}
             </div>
             <div className='space-y-1.5 sm:space-y-2'>
               <Label htmlFor='password' className='text-sm font-medium text-foreground'>
@@ -255,16 +263,6 @@ export default function RegisterPage() {
                 </Button>
               </div>
             </div>
-            {error && (
-              <div
-                id='form-error'
-                className='p-3 text-sm text-destructive bg-destructive/10 rounded-xl border border-destructive/20'
-                role='alert'
-                aria-live='polite'
-              >
-                {error}
-              </div>
-            )}
             <Button
               type='submit'
               className='w-full h-11 sm:h-12 rounded-xl text-base font-medium btn-caucasus'

@@ -25,22 +25,24 @@ function LoadingState() {
 function mapUserResponseToUser(userResponse: {
   id: string;
   name: string;
-  email: string;
-  phone?: string;
-  avatar?: string;
+  email?: string | null;
+  phone?: string | null;
+  avatar?: string | null;
   isPremium: boolean;
   role: string;
+  provider?: string;
   createdAt: string;
 }): User {
   return {
     id: userResponse.id,
     name: userResponse.name,
-    email: userResponse.email,
-    phone: userResponse.phone,
-    avatar: userResponse.avatar,
+    email: userResponse.email ?? "",
+    phone: userResponse.phone ?? undefined,
+    avatar: userResponse.avatar ?? undefined,
     isPremium: userResponse.isPremium,
     role: userResponse.role as User["role"],
     createdAt: userResponse.createdAt,
+    ...(userResponse.provider != null && { provider: userResponse.provider as User["provider"] }),
   };
 }
 
@@ -70,8 +72,9 @@ function AuthCallbackHandler() {
         const linked = searchParams.get("linked");
         const errorParam = searchParams.get("error");
 
-        if (linked === "google" || linked === "yandex") {
-          const providerName = linked === "google" ? "Google" : "Яндекс";
+        if (linked === "google" || linked === "yandex" || linked === "vk") {
+          const providerName =
+            linked === "google" ? "Google" : linked === "yandex" ? "Яндекс" : "VK";
           toast.success(`${providerName} привязан к аккаунту`);
           if (typeof window !== "undefined") {
             window.history.replaceState({}, "", "/auth/callback");
@@ -89,7 +92,10 @@ function AuthCallbackHandler() {
               if (isPopup && window.opener) {
                 const u = useAuthStore.getState().user;
                 const providerParam = searchParams.get("linked");
-                if (u && (providerParam === "google" || providerParam === "yandex")) {
+                if (
+                  u &&
+                  (providerParam === "google" || providerParam === "yandex" || providerParam === "vk")
+                ) {
                   window.opener.postMessage(
                     {
                       type: "oauth:linked" as const,

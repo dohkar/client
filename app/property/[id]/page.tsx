@@ -99,8 +99,10 @@ export default function PropertyPage() {
 
   // Всегда вызываем хуки в одном порядке (до любых return)
   const { data: property, isLoading, error } = useProperty(id ?? "");
-  const { data: relatedList = [], isLoading: relatedLoading } =
-    useRelatedProperties(id ?? undefined, 6);
+  const { data: relatedList = [], isLoading: relatedLoading } = useRelatedProperties(
+    id ?? undefined,
+    8
+  );
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
   const createChatMutation = useCreatePropertyChat();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -765,9 +767,9 @@ export default function PropertyPage() {
 
         {/* Похожие объявления */}
         {relatedList.length > 0 && (
-          <section className='container mx-auto px-4 py-8 border-t'>
+          <section className='container mx-auto px-4 py-8'>
             <h2 className='text-xl font-semibold mb-4'>Похожие объявления</h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 sm:gap-4'>
               {relatedList.map((p) => (
                 <PropertyCard key={p.id} property={p} />
               ))}

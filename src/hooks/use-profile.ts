@@ -11,6 +11,8 @@ import { uploadService, validateImageFile, ALLOWED_IMAGE_TYPES } from "@/service
 import { useAuthStore } from "@/stores";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/react-query/query-keys";
+import { formatPhoneInput } from "@/lib/utils/format";
+import { normalizePhone } from "@/lib/contact-utils";
 import type { User } from "@/types";
 
 const profileSchema = z.object({
@@ -26,6 +28,10 @@ const profileSchema = z.object({
       (val) => !val || /^\+?[0-9\s\-()]{10,20}$/.test(val),
       "Введите корректный номер телефона"
     ),
+  email: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), "Введите корректный email"),
 });
 
 export type ProfileFormData = z.infer<typeof profileSchema>;
@@ -79,15 +85,18 @@ export function useProfile() {
     defaultValues: {
       name: "",
       phone: "",
+      email: "",
     },
   });
 
   // Инициализация формы при загрузке данных
   useEffect(() => {
     if (currentUser) {
+      const rawPhone = currentUser.phone || "";
       reset({
         name: currentUser.name || "",
-        phone: currentUser.phone || "",
+        phone: rawPhone ? formatPhoneInput(rawPhone) : "",
+        email: currentUser.email ?? "",
       });
     }
   }, [currentUser, reset]);
@@ -110,11 +119,13 @@ export function useProfile() {
       };
       setUser(userForStore);
       queryClient.setQueryData(queryKeys.auth.user(), updatedUser);
+      const rawPhone = updatedUser.phone || "";
       reset({
         name: updatedUser.name || "",
-        phone: updatedUser.phone || "",
+        phone: rawPhone ? formatPhoneInput(rawPhone) : "",
+        email: updatedUser.email ?? "",
       });
-      toast.success("Профиль успешно обновлен");
+      toast.success("Профиль успешно обновлён");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Ошибка обновления профиля");
@@ -122,7 +133,11 @@ export function useProfile() {
   });
 
   const onSubmit = (data: ProfileFormData) => {
-    updateMutation.mutate(data);
+    const payload = {
+      ...data,
+      phone: data.phone?.trim() ? `+${normalizePhone(data.phone)}` : undefined,
+    };
+    updateMutation.mutate(payload);
   };
 
   // Обработчик выбора файла аватара
@@ -194,9 +209,11 @@ export function useProfile() {
   // Сброс формы
   const handleReset = useCallback(() => {
     if (currentUser) {
+      const rawPhone = currentUser.phone || "";
       reset({
         name: currentUser.name || "",
-        phone: currentUser.phone || "",
+        phone: rawPhone ? formatPhoneInput(rawPhone) : "",
+        email: currentUser.email ?? "",
       });
     }
   }, [currentUser, reset]);

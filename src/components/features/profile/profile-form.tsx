@@ -40,6 +40,10 @@ const profileSchema = z.object({
       (val) => !val || /^\+?[0-9\s\-()]{10,20}$/.test(val),
       "Введите корректный номер телефона"
     ),
+  email: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), "Введите корректный email"),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -222,7 +226,7 @@ export function ProfileForm({
             </div>
           </div>
 
-          {/* Email Field (Read Only) */}
+          {/* Email Field (optional, editable) */}
           <div className='space-y-2'>
             <Label htmlFor='email' className='flex items-center gap-2'>
               <Mail className='w-4 h-4 text-muted-foreground' />
@@ -231,12 +235,18 @@ export function ProfileForm({
             <Input
               id='email'
               type='email'
-              value={user.email || "Не указан"}
-              disabled
-              className='bg-muted/50'
+              placeholder='email@example.com'
+              {...register("email")}
+              className={errors.email ? "border-destructive" : ""}
             />
+            {errors.email && (
+              <p className='text-xs text-destructive flex items-center gap-1'>
+                <AlertCircle className='w-3 h-3' />
+                {errors.email.message}
+              </p>
+            )}
             <p className='text-xs text-muted-foreground'>
-              Email привязан к аккаунту и не может быть изменён
+              Необязательно. Можно оставить пустым или указать для уведомлений.
             </p>
           </div>
 

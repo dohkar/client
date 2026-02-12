@@ -31,6 +31,7 @@ export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
   const isGoogle = user?.provider === "GOOGLE";
   const isYandex = user?.provider === "YANDEX";
+  const isVk = user?.provider === "VK";
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -46,10 +47,10 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>Способы входа</CardTitle>
             <CardDescription>
-              Привяжите Google или Яндекс для входа одним кликом
+              Привяжите Google или Яндекс для входа одним кликом. VK отображается, если вы вошли через него.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col sm:flex-row gap-3">
+          <CardContent className="flex flex-col sm:flex-row flex-wrap gap-3">
             {isGoogle ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <GoogleIcon />
@@ -82,6 +83,12 @@ export default function SettingsPage() {
                 />
               </Button>
             )}
+            {isVk ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Image src="/vk.png" alt="" width={20} height={20} className="shrink-0" />
+                <span>VK привязан</span>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
