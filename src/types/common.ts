@@ -68,8 +68,6 @@ export enum UserRole {
   USER = "USER",
   PREMIUM = "PREMIUM",
   ADMIN = "ADMIN",
-  SUPPORT = "SUPPORT",
-  MODERATOR = "MODERATOR",
 }
 
 /** Провайдер входа (LOCAL, GOOGLE, YANDEX, VK) */

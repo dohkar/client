@@ -203,7 +203,7 @@ export type AdminUsersParams = {
   page?: number;
   limit?: number;
   search?: string;
-  role?: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
+  role?: "USER" | "PREMIUM" | "ADMIN";
   status?: "active" | "banned";
 };
 export type AdminPropertiesParams = {
@@ -223,7 +223,7 @@ export type AdminUpdateUserRoleParams = {
   id: string;
 };
 export type AdminUpdateUserRoleRequest = {
-  role: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
+  role: "USER" | "PREMIUM" | "ADMIN";
 };
 export type AdminUpdatePropertyStatusParams = {
   id: string;

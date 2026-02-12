@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isAuthenticated, isInitialized } = useAuthStore();
 
   // Проверка роли админа
-  const backofficeRoles = ["ADMIN", "SUPPORT", "MODERATOR"];
+  const backofficeRoles = ["ADMIN"];
   const isBackoffice = user?.role && backofficeRoles.includes(user.role.toUpperCase());
 
   useEffect(() => {

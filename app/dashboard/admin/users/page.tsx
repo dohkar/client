@@ -107,7 +107,7 @@ export default function AdminUsersPage() {
         search: debouncedUsersSearch || undefined,
         role:
           usersRole !== "all"
-            ? (usersRole as "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR")
+            ? (usersRole as "USER" | "PREMIUM" | "ADMIN")
             : undefined,
         status: usersStatus !== "all" ? (usersStatus as "active" | "banned") : undefined,
       });
@@ -120,7 +120,7 @@ export default function AdminUsersPage() {
       role,
     }: {
       userId: string;
-      role: "USER" | "PREMIUM" | "ADMIN" | "SUPPORT" | "MODERATOR";
+      role: "USER" | "PREMIUM" | "ADMIN";
     }) => adminService.updateUserRole(userId, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
@@ -202,8 +202,6 @@ export default function AdminUsersPage() {
                   <SelectItem value='USER'>USER</SelectItem>
                   <SelectItem value='PREMIUM'>PREMIUM</SelectItem>
                   <SelectItem value='ADMIN'>ADMIN</SelectItem>
-                  <SelectItem value='SUPPORT'>SUPPORT</SelectItem>
-                  <SelectItem value='MODERATOR'>MODERATOR</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={usersStatus} onValueChange={setUsersStatus}>
