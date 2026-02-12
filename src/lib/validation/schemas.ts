@@ -28,8 +28,9 @@ export const registerSchema = z
       .max(50, "Имя слишком длинное"),
     email: z
       .string()
-      .min(1, "Email обязателен")
-      .email("Некорректный email адрес"),
+      .email("Некорректный email адрес")
+      .optional()
+      .or(z.literal("")),
     phone: z
       .string()
       .regex(

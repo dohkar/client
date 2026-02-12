@@ -882,6 +882,8 @@ export interface components {
             name?: string;
             /** @example +7 (928) 000-00-00 */
             phone?: string;
+            /** @example user@example.com. Optional; empty or null to clear. */
+            email?: string | null;
         };
         CreatePropertyDto: {
             /** @example Квартира в центре Грозного */

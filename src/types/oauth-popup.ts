@@ -16,7 +16,7 @@ export interface OAuthPopupMessageError {
 export interface OAuthPopupMessageLinked {
   type: "oauth:linked";
   user: User;
-  provider: "google" | "yandex";
+  provider: "google" | "yandex" | "vk";
 }
 
 export type OAuthPopupMessage =

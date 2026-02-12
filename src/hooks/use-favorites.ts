@@ -73,7 +73,11 @@ export function useFavorites() {
     },
     
     onError: (error, propertyId, context) => {
-      // Откатываем к предыдущему состоянию
+      const status = (error as { status?: number }).status;
+      if (status === 409) {
+        // Уже в избранном — считаем успехом, onSettled обновит список
+        return;
+      }
       if (context?.previousFavorites) {
         queryClient.setQueryData(queryKeys.favorites.all, context.previousFavorites);
       }

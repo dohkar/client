@@ -38,7 +38,7 @@ export function PropertyCard({
       className='group w-full max-w-full mx-auto'
     >
       <div className='property-card h-full min-h-[410px] flex flex-col'>
-        <div className='relative aspect-[4/3] overflow-hidden bg-muted'>
+        <div className='relative aspect-4/3 overflow-hidden bg-muted'>
           <Image
             src={property.image || "/placeholder.svg"}
             alt={property.title}
@@ -97,12 +97,12 @@ export function PropertyCard({
 
           {/* Address */}
           <div className='flex items-start gap-2 text-xs sm:text-sm text-muted-foreground flex-1'>
-            <MapPin className='w-3.5 h-3.5 sm:w-4 sm:h-4 mt-0.5 flex-shrink-0' />
+            <MapPin className='w-3.5 h-3.5 sm:w-4 sm:h-4 mt-0.5 shrink-0' />
             <span className='line-clamp-1'>{property.location}</span>
           </div>
 
           {/* Features */}
-          <div className='flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground pt-3 border-t border-border mt-auto'>
+          <div className='flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground pt-3 border-t border-border mt-auto'>
             {property.rooms && (
               <span className='font-medium'>{property.rooms} комн.</span>
             )}
