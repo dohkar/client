@@ -91,11 +91,18 @@ export function HorizontalFilters({
     if (!open) setCitySearchQuery("");
   };
 
-  const locationLabel =
+  const locationAriaLabel =
     filters.region === "all"
       ? "Регион"
       : selectedCityName
         ? `${getRegionLabel(filters.region)} · ${selectedCityName}`
+        : getRegionLabel(filters.region);
+
+  const locationLabel =
+    filters.region === "all"
+      ? "Регион"
+      : selectedCityName
+        ? selectedCityName
         : getRegionLabel(filters.region);
 
   const handleRegionSelect = (region: SearchFiltersDisplay["region"]) => {
@@ -248,12 +255,10 @@ export function HorizontalFilters({
               <Button
                 variant='outline'
                 className='h-10 sm:h-11 px-3 w-full justify-between text-xs sm:text-base gap-1'
-                aria-label={`Регион и город: ${locationLabel}`}
+                aria-label={`Регион и город: ${locationAriaLabel}`}
               >
                 {/*<MapPin className='w-3.5 h-3.5 shrink-0 opacity-70' aria-hidden />*/}
-                <span className='truncate'>
-                  {selectedCityName ? selectedCityName : getRegionLabel(filters.region)}
-                </span>
+                <span className='truncate'>{locationLabel}</span>
                 <ChevronDown className='w-4 h-4 opacity-50 shrink-0' aria-hidden />
               </Button>
             </PopoverTrigger>
