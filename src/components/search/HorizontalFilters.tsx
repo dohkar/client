@@ -93,7 +93,7 @@ export function HorizontalFilters({
 
   const locationLabel =
     filters.region === "all"
-      ? "Локация"
+      ? "Регион"
       : selectedCityName
         ? `${getRegionLabel(filters.region)} · ${selectedCityName}`
         : getRegionLabel(filters.region);
