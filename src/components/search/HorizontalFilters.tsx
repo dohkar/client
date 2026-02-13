@@ -239,7 +239,7 @@ export function HorizontalFilters({
         </div>
 
         {/* Локация: регион + город в одном поповере */}
-        <div className='w-[140px] min-w-0 shrink-0 sm:w-[200px]'>
+        <div className='min-w-[120px] shrink-0'>
           <Popover
             open={locationPopoverOpen}
             onOpenChange={handleLocationPopoverOpenChange}
@@ -250,8 +250,10 @@ export function HorizontalFilters({
                 className='h-10 sm:h-11 px-3 w-full justify-between text-xs sm:text-base gap-1'
                 aria-label={`Регион и город: ${locationLabel}`}
               >
-                <MapPin className='w-3.5 h-3.5 shrink-0 opacity-70' aria-hidden />
-                <span className='truncate'>{locationLabel}</span>
+                {/*<MapPin className='w-3.5 h-3.5 shrink-0 opacity-70' aria-hidden />*/}
+                <span className='truncate'>
+                  {selectedCityName ? selectedCityName : getRegionLabel(filters.region)}
+                </span>
                 <ChevronDown className='w-4 h-4 opacity-50 shrink-0' aria-hidden />
               </Button>
             </PopoverTrigger>
