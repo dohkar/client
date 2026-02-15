@@ -2,8 +2,6 @@ import { Container } from "@/components/layout/Container";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { HelpCircle, Search, MessageSquare, Shield, CreditCard } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-
 export default function HelpPage() {
   return (
     <Container size='lg' className='py-6 sm:py-8 md:py-12'>

@@ -211,10 +211,8 @@ function SearchPageContent() {
           selectedCityName={selectedCityName}
           onTypeReset={handleTypeReset}
           onPriceReset={handlePriceReset}
-          onLocationReset={() => {
-            handleRegionReset();
-            handleCityReset();
-          }}
+          onRegionReset={handleRegionReset}
+          onCityReset={handleCityReset}
           onRoomsReset={handleRoomsReset}
           onAreaReset={handleAreaReset}
           onQueryReset={handleQueryReset}

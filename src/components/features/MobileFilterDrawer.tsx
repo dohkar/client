@@ -52,11 +52,15 @@ export function MobileFilterDrawer() {
 
   const activeFiltersCount = [
     filters.query?.trim(),
+    filters.dealType && filters.dealType !== "all",
     filters.type !== "all",
     filters.priceMin != null,
     filters.priceMax != null,
     filters.roomsMin != null,
     filters.areaMin != null,
+    filters.floorMin != null,
+    filters.floorMax != null,
+    filters.floorNotFirst === true,
     filters.region !== "all",
     filters.cityId?.trim(),
   ].filter(Boolean).length;
@@ -73,12 +77,17 @@ export function MobileFilterDrawer() {
         <span>Фильтры</span>
         {(filters.query?.trim() ||
           filters.type !== "all" ||
-          filters.priceMin ||
-          filters.priceMax ||
-          filters.roomsMin ||
-          filters.areaMin ||
-          filters.region !== "all") && (
-          <span className="ml-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
+          filters.dealType !== "all" ||
+          filters.priceMin != null ||
+          filters.priceMax != null ||
+          filters.roomsMin != null ||
+          filters.areaMin != null ||
+          filters.region !== "all" ||
+          (filters.cityId != null && filters.cityId.trim().length > 0) ||
+          filters.floorMin != null ||
+          filters.floorMax != null ||
+          filters.floorNotFirst === true) && (
+          <span className="ml-1 h-2 w-2 rounded-full bg-primary animate-pulse" aria-hidden />
         )}
       </Button>
 

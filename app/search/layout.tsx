@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, getDefaultOgImage, toAbsoluteUrl } from "@/lib/seo";
 
+export const dynamic = "force-dynamic";
+
+/**
+ * Метаданные для страницы поиска недвижимости
+ */
 export const metadata: Metadata = buildPageMetadata({
-  title: "Поиск недвижимости",
+  title: "Поиск недвижимости — квартиры, дома, участки",
   description:
     "Поиск объявлений о продаже и аренде недвижимости на Кавказе. Фильтры по типу, цене, региону, городу, количеству комнат и площади. Квартиры, дома, участки, коммерческая недвижимость.",
   path: "/search",
@@ -15,13 +20,50 @@ export const metadata: Metadata = buildPageMetadata({
     "Чечня",
     "Ингушетия",
     "фильтры недвижимости",
+    "квартиры в ингушетии",
+    "квартиры в чечне",
+    "дома в ингушетии",
+    "дома в чечне",
+    "участки в ингушетии",
+    "участки в чечне",
+    "коммерческая недвижимость в ингушетии",
+    "коммерческая недвижимость в чечне",
+    "аренда недвижимости на Кавказе",
+    "продажа недвижимости на Кавказе",
+    "купить квартиру ингушетия",
+    "снять квартиру чечня",
+    "элитная недвижимость Кавказ",
+    "жилье в Кавказском регионе",
+    "дома в горной местности",
+    "посуточная аренда",
+    "новостройки Кавказ",
   ],
+  openGraph: {
+    title: "Поиск недвижимости на Кавказе",
+    description:
+      "Большая база объявлений недвижимости: квартиры, дома, участки, коммерция. Удобные фильтры, актуальные предложения и безопасные сделки.",
+    url: toAbsoluteUrl("search"),
+    images: [
+      {
+        url: getDefaultOgImage(),
+        width: 1200,
+        height: 630,
+        alt: "Поиск недвижимости на Кавказе — Дохкар",
+      },
+    ],
+  },
+  twitter: {
+    title: "Поиск недвижимости",
+    description:
+      "Поиск недвижимости: квартиры, дома, участки, коммерческая недвижимость на Кавказе. Найдите идеальный вариант легко и быстро!",
+    images: [getDefaultOgImage()],
+    site: "@dohkar",
+  },
+  alternates: {
+    canonical: toAbsoluteUrl("search"),
+  },
 });
 
-export default function SearchLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function SearchLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

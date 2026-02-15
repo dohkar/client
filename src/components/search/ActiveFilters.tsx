@@ -6,7 +6,7 @@ import {
   getPriceLabel,
   getRoomsLabel,
   getAreaLabel,
-  getLocationChipLabel,
+  getRegionLabel,
   getDealTypeLabel,
   getFloorLabel,
 } from "./FilterLabels";
@@ -17,8 +17,8 @@ interface ActiveFiltersProps {
   selectedCityName: string | null;
   onTypeReset: () => void;
   onPriceReset: () => void;
-  /** Сброс локации (регион + город) — один чип вместо двух */
-  onLocationReset: () => void;
+  onRegionReset: () => void;
+  onCityReset: () => void;
   onRoomsReset: () => void;
   onAreaReset: () => void;
   onQueryReset: () => void;
@@ -36,7 +36,8 @@ export function ActiveFilters({
   selectedCityName,
   onTypeReset,
   onPriceReset,
-  onLocationReset,
+  onRegionReset,
+  onCityReset,
   onRoomsReset,
   onAreaReset,
   onQueryReset,
@@ -79,18 +80,34 @@ export function ActiveFilters({
           <X className='w-3 h-3' />
         </Button>
       )}
-      {(filters.region !== "all" || filters.cityId) && (
+      {filters.region !== "all" && (
         <Button
           variant='secondary'
           size='sm'
           className='h-7 gap-1'
-          onClick={onLocationReset}
+          onClick={onRegionReset}
         >
           <span
-            className='truncate max-w-[180px]'
-            title={getLocationChipLabel(filters.region, selectedCityName)}
+            className='truncate max-w-[140px]'
+            title={getRegionLabel(filters.region)}
           >
-            {getLocationChipLabel(filters.region, selectedCityName)}
+            {getRegionLabel(filters.region)}
+          </span>
+          <X className='w-3 h-3 shrink-0' />
+        </Button>
+      )}
+      {filters.cityId && (
+        <Button
+          variant='secondary'
+          size='sm'
+          className='h-7 gap-1'
+          onClick={onCityReset}
+        >
+          <span
+            className='truncate max-w-[140px]'
+            title={selectedCityName ?? filters.cityId ?? ""}
+          >
+            {selectedCityName ?? filters.cityId}
           </span>
           <X className='w-3 h-3 shrink-0' />
         </Button>

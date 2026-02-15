@@ -25,22 +25,33 @@ export interface PageMetaOptions {
   keywords?: string[];
   noIndex?: boolean;
   type?: "website" | "article";
+  /** Переопределение Open Graph (сливается с дефолтами) */
+  openGraph?: Metadata["openGraph"];
+  /** Переопределение Twitter (сливается с дефолтами) */
+  twitter?: Metadata["twitter"];
+  /** Переопределение alternates (например canonical) */
+  alternates?: Metadata["alternates"];
 }
 
 /**
  * Собирает метаданные для страницы: title, description, openGraph, twitter, canonical.
+ * Переданные openGraph/twitter/alternates сливаются с дефолтами.
  */
-export function buildPageMetadata({
-  title,
-  description,
-  path,
-  image,
-  imageAlt,
-  keywords,
-  noIndex = false,
-  type = "website",
-}: PageMetaOptions): Metadata {
-  // const siteUrl = getSiteUrl();
+export function buildPageMetadata(options: PageMetaOptions): Metadata {
+  const {
+    title,
+    description,
+    path,
+    image,
+    imageAlt,
+    keywords,
+    noIndex = false,
+    type = "website",
+    openGraph: openGraphOverride,
+    twitter: twitterOverride,
+    alternates: alternatesOverride,
+  } = options;
+
   const url = toAbsoluteUrl(path);
   const ogImage = image?.startsWith("http")
     ? image
@@ -48,35 +59,41 @@ export function buildPageMetadata({
       ? toAbsoluteUrl(image)
       : getDefaultOgImage();
 
+  const defaultOpenGraph: Metadata["openGraph"] = {
+    title,
+    description,
+    type,
+    url,
+    siteName: SITE_NAME,
+    locale: "ru_RU",
+    images: [
+      {
+        url: ogImage,
+        width: 1200,
+        height: 630,
+        alt: imageAlt ?? title,
+      },
+    ],
+  };
+
+  const defaultTwitter: Metadata["twitter"] = {
+    card: "summary_large_image",
+    title,
+    description,
+    images: [ogImage],
+  };
+
   const meta: Metadata = {
     title,
     description,
     keywords: keywords?.length ? keywords : undefined,
-    openGraph: {
-      title,
-      description,
-      type,
-      url,
-      siteName: SITE_NAME,
-      locale: "ru_RU",
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: imageAlt ?? title,
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [ogImage],
-    },
-    alternates: {
-      canonical: url,
-    },
+    openGraph: openGraphOverride
+      ? { ...defaultOpenGraph, ...openGraphOverride }
+      : defaultOpenGraph,
+    twitter: twitterOverride
+      ? { ...defaultTwitter, ...twitterOverride }
+      : defaultTwitter,
+    alternates: alternatesOverride ?? { canonical: url },
   };
 
   if (noIndex) {

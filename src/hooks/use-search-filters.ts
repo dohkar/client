@@ -67,6 +67,8 @@ interface UseSearchFiltersReturn {
 
   handleCityChange: (cityId: string | null) => void;
   handleCityReset: () => void;
+  /** Сброс региона и города одним обновлением URL (для чипа «Локация») */
+  handleLocationReset: () => void;
   handleTypeReset: () => void;
   handlePriceReset: () => void;
   handleRegionReset: () => void;
@@ -114,6 +116,13 @@ export function useSearchFilters(): UseSearchFiltersReturn {
   const parsed = useMemo(() => parseSearchParams(searchParams), [searchParams]);
   const appliedFilters = parsed.filters;
   const currentPage = appliedFilters.page;
+
+  /** Сброс флага «полный сброс» когда URL стал пустым — эффекты debounce снова могут писать в URL */
+  useEffect(() => {
+    if (searchParams.toString() === "") {
+      isResettingRef.current = false;
+    }
+  }, [searchParams]);
 
   /** Редирект на чистый URL при невалидных параметрах (только на странице поиска) */
   useEffect(() => {
@@ -202,6 +211,8 @@ export function useSearchFilters(): UseSearchFiltersReturn {
   const priceMinDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const priceMaxDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const areaMinDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Флаг полного сброса: эффекты debounce не должны вызывать updateFilters до завершения навигации */
+  const isResettingRef = useRef(false);
 
   const applyDraftQuery = useCallback(
     (query: string) => {
@@ -279,11 +290,12 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     [appliedFilters.areaMin, updateFilters]
   );
 
-  /** Debounce: draft → URL */
+  /** Debounce: draft → URL. При полном сбросе (isResettingRef) не пишем в URL — только resetFilters(). */
   useEffect(() => {
     if (queryDebounceRef.current) clearTimeout(queryDebounceRef.current);
     const trimmed = draftQuery.trim();
     if (trimmed === appliedFilters.query) return;
+    if (trimmed === "" && isResettingRef.current) return;
     queryDebounceRef.current = setTimeout(() => {
       applyDraftQuery(draftQuery);
     }, SEARCH_CONSTANTS.DEBOUNCE_DELAY);
@@ -295,7 +307,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
   useEffect(() => {
     if (priceMinDebounceRef.current) clearTimeout(priceMinDebounceRef.current);
     if (draftPriceMin === "") {
-      if (appliedFilters.priceMin !== null) {
+      if (!isResettingRef.current && appliedFilters.priceMin !== null) {
         updateFilters({ priceMin: null });
       }
       return;
@@ -311,7 +323,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
   useEffect(() => {
     if (priceMaxDebounceRef.current) clearTimeout(priceMaxDebounceRef.current);
     if (draftPriceMax === "") {
-      if (appliedFilters.priceMax !== null) {
+      if (!isResettingRef.current && appliedFilters.priceMax !== null) {
         updateFilters({ priceMax: null });
       }
       return;
@@ -327,7 +339,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
   useEffect(() => {
     if (areaMinDebounceRef.current) clearTimeout(areaMinDebounceRef.current);
     if (draftAreaMin === "") {
-      if (appliedFilters.areaMin !== null) {
+      if (!isResettingRef.current && appliedFilters.areaMin !== null) {
         updateFilters({ areaMin: null }, { resetPage: false });
       }
       return;
@@ -412,11 +424,16 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     setPriceErrors({});
   }, [updateFilters]);
   const handleRegionReset = useCallback(
-    () => updateFilters({ region: "all" }),
+    () => updateFilters({ region: "all", cityId: null }),
     [updateFilters]
   );
   const handleCityReset = useCallback(
     () => updateFilters({ cityId: null }),
+    [updateFilters]
+  );
+  /** Сброс региона и города одним обновлением — избегает гонки двух вызовов updateFilters. */
+  const handleLocationReset = useCallback(
+    () => updateFilters({ region: "all", cityId: null }),
     [updateFilters]
   );
   const handleRoomsReset = useCallback(
@@ -449,12 +466,29 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     });
   }, [updateFilters]);
   const handleResetAll = useCallback(() => {
-    resetFilters();
+    isResettingRef.current = true;
+    if (queryDebounceRef.current) {
+      clearTimeout(queryDebounceRef.current);
+      queryDebounceRef.current = null;
+    }
+    if (priceMinDebounceRef.current) {
+      clearTimeout(priceMinDebounceRef.current);
+      priceMinDebounceRef.current = null;
+    }
+    if (priceMaxDebounceRef.current) {
+      clearTimeout(priceMaxDebounceRef.current);
+      priceMaxDebounceRef.current = null;
+    }
+    if (areaMinDebounceRef.current) {
+      clearTimeout(areaMinDebounceRef.current);
+      areaMinDebounceRef.current = null;
+    }
     setDraftQueryState("");
     setDraftPriceMinState("");
     setDraftPriceMaxState("");
     setDraftAreaMinState("");
     setPriceErrors({});
+    resetFilters();
   }, [resetFilters]);
 
   const setCurrentPage = useCallback(
@@ -489,6 +523,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     handlePriceMaxBlur,
     handleCityChange,
     handleCityReset,
+    handleLocationReset,
     handleTypeReset,
     handlePriceReset,
     handleRegionReset,

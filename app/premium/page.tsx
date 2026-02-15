@@ -3,8 +3,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Star, TrendingUp, Eye, Zap, Shield, CheckCircle2 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-
 const FEATURES = [
   {
     icon: TrendingUp,

@@ -17,8 +17,6 @@ interface FormData {
   message: string;
 }
 
-export const dynamic = "force-dynamic";
-
 export default function ContactPage() {
   const [formData, setFormData] = useState<FormData>({
     name: "",
