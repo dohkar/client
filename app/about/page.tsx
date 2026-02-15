@@ -1,6 +1,8 @@
 import { Container } from "@/components/layout/Container";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
+export const dynamic = "force-dynamic";
+
 export default function AboutPage() {
   return (
     <Container size='lg' className='py-6 sm:py-8 md:py-12'>
