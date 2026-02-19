@@ -15,6 +15,10 @@ interface SearchResultsProps {
   onPageChange: (page: number) => void;
   onResetFilters: () => void;
   onGoHome: () => void;
+  /** Общее количество элементов */
+  totalItems?: number;
+  /** Количество элементов на странице */
+  itemsPerPage?: number;
 }
 
 export function SearchResults({
@@ -26,6 +30,8 @@ export function SearchResults({
   onPageChange,
   onResetFilters,
   onGoHome,
+  totalItems,
+  itemsPerPage = 12,
 }: SearchResultsProps) {
   if (isLoading) {
     // Показываем скелетоны-заглушки, пока подгружаются данные
@@ -81,6 +87,8 @@ export function SearchResults({
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={onPageChange}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
       />
     </>
   );

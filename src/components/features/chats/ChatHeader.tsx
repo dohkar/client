@@ -248,7 +248,7 @@ export function ChatHeader({
           {(() => {
             const imgSrc = chat.property.images?.[0] ?? "/placeholder.svg";
             return imgSrc ? (
-              <div className='flex-shrink-0 h-8 w-8 overflow-hidden rounded object-cover border'>
+              <div className='shrink-0 h-8 w-8 overflow-hidden rounded object-cover border'>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imgSrc}
@@ -258,7 +258,7 @@ export function ChatHeader({
                 />
               </div>
             ) : (
-              <div className='flex-shrink-0 h-8 w-8 rounded bg-muted flex items-center justify-center text-muted-foreground text-xs'>
+              <div className='shrink-0 h-8 w-8 rounded bg-muted flex items-center justify-center text-muted-foreground text-xs'>
                 <Archive className='h-4 w-4' />
               </div>
             );

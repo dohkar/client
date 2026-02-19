@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ArrowUpDown, ChevronDown, MapPin, Search } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,7 +27,6 @@ import {
   getPriceLabel,
   getRoomsLabel,
   getAreaLabel,
-  getCityLabel,
   getDealTypeLabel,
 } from "./FilterLabels";
 import type { CityDto } from "@/types/property";
@@ -131,7 +130,7 @@ export function HorizontalFilters({
             value={filters.dealType === "all" ? "all" : filters.dealType}
             onValueChange={(v) => onDealTypeChange(v as SearchFiltersDisplay["dealType"])}
           >
-            <SelectTrigger className='h-10 sm:h-11 px-3 text-xs sm:text-base w-full min-w-0 flex-shrink-0'>
+            <SelectTrigger className='h-10 sm:h-11 px-3 text-xs sm:text-base w-full min-w-0 shrink-0'>
               <SelectValue>{getDealTypeLabel(filters.dealType)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -151,7 +150,7 @@ export function HorizontalFilters({
         {/* Тип недвижимости */}
         <div className='w-[140px] min-w-0 shrink-0 sm:w-[160px]'>
           <Select value={filters.type} onValueChange={onTypeChange}>
-            <SelectTrigger className='h-10 sm:h-11 px-3 text-xs sm:text-base w-full min-w-0 flex-shrink-0'>
+            <SelectTrigger className='h-10 sm:h-11 px-3 text-xs sm:text-base w-full min-w-0 shrink-0'>
               <SelectValue>{getTypeLabel(filters.type)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -169,7 +168,7 @@ export function HorizontalFilters({
         </div>
 
         {/* Цена - Popover с инпутами */}
-        <div className='min-w-[120px] flex-shrink-0'>
+        <div className='min-w-[120px] shrink-0'>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -183,8 +182,12 @@ export function HorizontalFilters({
                 <ChevronDown className='w-4 h-4 opacity-50 shrink-0' aria-hidden />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className='w-72 sm:w-80 p-4' align='start' sideOffset={8}>
-              <div className='space-y-3'>
+            <PopoverContent
+              className='w-72 sm:w-80 sm:p-2 p-1'
+              align='start'
+              sideOffset={8}
+            >
+              <div className='space-y-2'>
                 <div className='flex gap-3'>
                   <div className='relative w-1/2'>
                     <Input
@@ -377,7 +380,7 @@ export function HorizontalFilters({
         </div>
 
         {/* Площадь - Popover с инпутом */}
-        <div className='min-w-[120px] flex-shrink-0'>
+        <div className='min-w-[120px] shrink-0'>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -390,8 +393,12 @@ export function HorizontalFilters({
                 <ChevronDown className='w-4 h-4 opacity-50 shrink-0' />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className='w-36 sm:w-48 p-4' align='start' sideOffset={8}>
-              <div className='space-y-3'>
+            <PopoverContent
+              className='w-36 sm:w-48 sm:p-2 p-1'
+              align='start'
+              sideOffset={8}
+            >
+              <div className='space-y-2'>
                 <div className='relative'>
                   <Input
                     type='text'
@@ -416,7 +423,7 @@ export function HorizontalFilters({
         </div>
 
         {/* Сортировка */}
-        <div className='min-w-[120px] flex-shrink-0 ml-auto snap-end'>
+        <div className='min-w-[120px] shrink-0 ml-auto snap-end'>
           <Select value={filters.sortBy} onValueChange={onSortChange}>
             <SelectTrigger className='h-8 sm:h-9 px-3 w-full text-xs sm:text-base'>
               <ArrowUpDown className='w-4 h-4 mr-2 opacity-50 hidden sm:block' />

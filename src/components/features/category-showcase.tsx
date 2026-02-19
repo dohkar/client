@@ -61,7 +61,7 @@ function CategoryCard({ category, isMobile = false }: CategoryCardProps) {
   const nameId = `category-name-${category.id}`;
 
   return (
-    <div className={`group ${isMobile ? "flex-shrink-0 w-[240px]" : ""}`}>
+    <div className={`group ${isMobile ? "shrink-0 w-[240px]" : ""}`}>
       <Link
         href={category.href}
         aria-label={`${category.name}, ${formatNumber(category.count)} объявлений`}
@@ -134,7 +134,7 @@ function SkeletonLoader({ isMobile }: { isMobile: boolean }) {
         {Array.from({ length: CATEGORIES.length }).map((_, idx) => (
           <Skeleton
             key={`skeleton-${idx}`}
-            className='w-[240px] h-[120px] rounded-xl flex-shrink-0'
+            className='w-[240px] h-[120px] rounded-xl shrink-0'
           />
         ))}
       </div>

@@ -68,7 +68,7 @@ function BreadcrumbSeparator({
       role='presentation'
       aria-hidden='true'
       className={cn(
-        "[&>svg]:size-3.5 flex items-center text-muted-foreground/70 flex-shrink-0",
+        "[&>svg]:size-3.5 flex items-center text-muted-foreground/70 shrink-0",
         className
       )}
       {...props}

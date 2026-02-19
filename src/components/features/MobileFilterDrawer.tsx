@@ -77,7 +77,7 @@ export function MobileFilterDrawer() {
         <span>Фильтры</span>
         {(filters.query?.trim() ||
           filters.type !== "all" ||
-          filters.dealType !== "all" ||
+          (filters.dealType && filters.dealType !== "all") ||
           filters.priceMin != null ||
           filters.priceMax != null ||
           filters.roomsMin != null ||

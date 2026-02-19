@@ -57,7 +57,7 @@ export function MessageItem({
     >
       {/* Аватар слева для чужих сообщений */}
       {!isOwn && showAvatar && (
-        <div className='flex-shrink-0 pt-1'>
+        <div className='shrink-0 pt-1'>
           <Avatar>
             {avatarUrl ? (
               <AvatarImage src={avatarUrl} alt='Аватар' className='object-cover' />

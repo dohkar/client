@@ -147,7 +147,7 @@ export default function FavoritesPage() {
                   key={i}
                   className='rounded-xl bg-card border border-card/50 shadow-sm overflow-hidden flex flex-col animate-pulse'
                 >
-                  <div className='w-full aspect-[4/3] bg-muted' />
+                  <div className='w-full aspect-4/3 bg-muted' />
                   <div className='p-4 flex-1 flex flex-col gap-2'>
                     <div className='h-6 w-2/3 bg-muted rounded mb-2' />
                     <div className='h-4 w-1/3 bg-muted rounded mb-2' />

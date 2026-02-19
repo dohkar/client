@@ -242,6 +242,8 @@ function SearchPageContent() {
             onPageChange={handlePageChange}
             onResetFilters={handleResetFilters}
             onGoHome={handleGoHome}
+            totalItems={data?.total}
+            itemsPerPage={SEARCH_CONSTANTS.ITEMS_PER_PAGE}
           />
         </div>
       </main>

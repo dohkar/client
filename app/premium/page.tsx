@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Star, TrendingUp, Eye, Zap, Shield, CheckCircle2 } from "lucide-react";
+import { Star, TrendingUp, Eye, Zap, Shield, CheckCircle2, ArrowRight } from "lucide-react";
 
 const FEATURES = [
   {
@@ -44,6 +45,7 @@ const PLANS = [
     ],
     popular: false,
     buttonText: "Начать бесплатно",
+    href: "/auth/register",
   },
   {
     name: "Премиум",
@@ -59,6 +61,7 @@ const PLANS = [
     ],
     popular: true,
     buttonText: "Выбрать премиум",
+    href: "/sell",
   },
 ];
 
@@ -153,9 +156,12 @@ function PlansSection() {
             <Button
               className='w-full min-h-[44px]'
               variant={plan.popular ? "default" : "outline"}
-              asChild={false}
+              asChild
             >
-              {plan.buttonText}
+              <Link href={plan.href}>
+                {plan.buttonText}
+                <ArrowRight className='w-4 h-4 ml-2' />
+              </Link>
             </Button>
           </CardContent>
         </Card>

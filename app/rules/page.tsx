@@ -72,37 +72,37 @@ export default function RulesPage() {
           </CardHeader>
           <CardContent className='space-y-3'>
             <div className='flex gap-3'>
-              <Ban className='w-5 h-5 text-destructive flex-shrink-0 mt-0.5' />
+              <Ban className='w-5 h-5 text-destructive shrink-0 mt-0.5' />
               <p className='text-sm sm:text-base text-foreground'>
                 Размещение объявлений о несуществующей недвижимости
               </p>
             </div>
             <div className='flex gap-3'>
-              <Ban className='w-5 h-5 text-destructive flex-shrink-0 mt-0.5' />
+              <Ban className='w-5 h-5 text-destructive shrink-0 mt-0.5' />
               <p className='text-sm sm:text-base text-foreground'>
                 Использование чужих фотографий или описаний
               </p>
             </div>
             <div className='flex gap-3'>
-              <Ban className='w-5 h-5 text-destructive flex-shrink-0 mt-0.5' />
+              <Ban className='w-5 h-5 text-destructive shrink-0 mt-0.5' />
               <p className='text-sm sm:text-base text-foreground'>
                 Мошенничество или попытки обмана пользователей
               </p>
             </div>
             <div className='flex gap-3'>
-              <Ban className='w-5 h-5 text-destructive flex-shrink-0 mt-0.5' />
+              <Ban className='w-5 h-5 text-destructive shrink-0 mt-0.5' />
               <p className='text-sm sm:text-base text-foreground'>
                 Размещение оскорбительного или нецензурного контента
               </p>
             </div>
             <div className='flex gap-3'>
-              <Ban className='w-5 h-5 text-destructive flex-shrink-0 mt-0.5' />
+              <Ban className='w-5 h-5 text-destructive shrink-0 mt-0.5' />
               <p className='text-sm sm:text-base text-foreground'>
                 Спам, массовая рассылка или навязчивая реклама
               </p>
             </div>
             <div className='flex gap-3'>
-              <Ban className='w-5 h-5 text-destructive flex-shrink-0 mt-0.5' />
+              <Ban className='w-5 h-5 text-destructive shrink-0 mt-0.5' />
               <p className='text-sm sm:text-base text-foreground'>
                 Нарушение авторских прав или интеллектуальной собственности
               </p>
