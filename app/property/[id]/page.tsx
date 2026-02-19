@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -53,11 +53,13 @@ import {
 } from "lucide-react";
 import { useProperty, useRelatedProperties } from "@/hooks/use-properties";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useTrackEvent } from "@/hooks/use-track-event";
 import { useCreatePropertyChat } from "@/hooks/use-chats";
 import { useAuthStore } from "@/stores";
 import { ROUTES } from "@/constants";
 import { formatDate, formatPhone, getPhoneHref } from "@/lib/utils/format";
 import { logger } from "@/lib/utils/logger";
+import { RecommendationsBlock } from "@/components/recommendations/RecommendationsBlock";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -103,6 +105,7 @@ export default function PropertyPage() {
     id ?? undefined,
     8
   );
+  const { track } = useTrackEvent();
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
   const createChatMutation = useCreatePropertyChat();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -138,6 +141,9 @@ export default function PropertyPage() {
   const handleShowPhone = () => setShowPhone(true);
 
   const handleContactSeller = () => {
+    if (property?.id) {
+      track("CONTACT", property.id);
+    }
     if (typeof window !== "undefined" && property?.contact?.phone) {
       window.location.href = getPhoneHref(property.contact.phone);
     }
@@ -162,6 +168,7 @@ export default function PropertyPage() {
       return;
     }
     if (!property || user?.id === property.userId) return;
+    track("CONTACT", property.id);
     try {
       const chat = await createChatMutation.mutateAsync(property.id);
       if (chat?.id) {
@@ -215,6 +222,11 @@ export default function PropertyPage() {
       setComplaintSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!property?.id) return;
+    track("DETAIL_VIEW", property.id);
+  }, [property?.id, track]);
 
   // ==================================
   // РЕНДЕРИНГ ПРОСТЫХ СОСТОЯНИЙ
@@ -786,6 +798,12 @@ export default function PropertyPage() {
             </div>
           </section>
         )}
+
+        <RecommendationsBlock
+          title='Вам может подойти'
+          excludeIds={[property.id]}
+          limit={8}
+        />
       </main>
     </div>
   );

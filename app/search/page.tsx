@@ -21,6 +21,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { HorizontalFilters, ActiveFilters, SearchResults } from "@/components/search";
+import { RecommendationsBlock } from "@/components/recommendations/RecommendationsBlock";
 import { ROUTES } from "@/constants";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -244,6 +245,12 @@ function SearchPageContent() {
             onGoHome={handleGoHome}
             totalItems={data?.total}
             itemsPerPage={SEARCH_CONSTANTS.ITEMS_PER_PAGE}
+          />
+
+          <RecommendationsBlock
+            title='Возможно, вас заинтересует'
+            excludeIds={properties.map((p) => p.id)}
+            limit={6}
           />
         </div>
       </main>

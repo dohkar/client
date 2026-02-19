@@ -14,6 +14,7 @@ import {
 import { Heart, Trash2, Search, SlidersHorizontal, X } from "lucide-react";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useRemoveFavoriteWithUndo } from "@/hooks/use-undo-delete";
+import { RecommendationsBlock } from "@/components/recommendations/RecommendationsBlock";
 import { useAuthStore } from "@/stores";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
@@ -422,6 +423,12 @@ export default function FavoritesPage() {
             })}
           </div>
         </div>
+
+        <RecommendationsBlock
+          title='Похожие объявления'
+          excludeIds={data?.map((f) => f.id) ?? []}
+          limit={6}
+        />
       </div>
     </div>
   );

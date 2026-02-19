@@ -5,6 +5,7 @@ import { CategoryShowcase } from "@/components/features/category-showcase";
 import { PropertyGrid } from "@/components/features/property-grid";
 import { PropertyGridSkeleton } from "@/components/features/property-grid-skeleton";
 import { CTASection } from "@/components/features/cta-section";
+import { RecommendationsBlock } from "@/components/recommendations/RecommendationsBlock";
 import { useProperties } from "@/hooks/use-properties";
 
 export default function HomePage() {
@@ -28,6 +29,8 @@ export default function HomePage() {
             <PropertyGrid properties={data?.data || []} limit={12} />
           )}
         </section>
+
+        <RecommendationsBlock title='Рекомендуем для вас' limit={8} />
 
         <CTASection />
       </main>

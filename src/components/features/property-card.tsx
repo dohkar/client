@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Heart, MapPin } from "lucide-react";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useTrackEvent } from "@/hooks/use-track-event";
 import type { Property } from "@/types/property";
 import { formatPrice, formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
@@ -14,13 +15,18 @@ import { ROUTES } from "@/constants";
 interface PropertyCardProps {
   property: Property;
   hideFavoriteButton?: boolean;
+  recommendationReason?: string;
+  recommendationSource?: "search" | "related" | "home";
 }
 
 export function PropertyCard({
   property,
   hideFavoriteButton = false,
+  recommendationReason,
+  recommendationSource = "search",
 }: PropertyCardProps) {
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
+  const { track } = useTrackEvent();
 
   const favorite = isFavorite(property.id);
   const isPending = isMutating(property.id);
@@ -36,6 +42,7 @@ export function PropertyCard({
     <Link
       href={ROUTES.property(property.id, property.slug)}
       className='group w-full max-w-full mx-auto'
+      onClick={() => track("VIEW", property.id, { source: recommendationSource })}
     >
       <div className='property-card h-full min-h-[410px] flex flex-col'>
         <div className='relative aspect-4/3 overflow-hidden bg-muted'>
@@ -48,7 +55,7 @@ export function PropertyCard({
           />
 
           {/* Gradient Overlay */}
-          <div className='absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+          <div className='absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
 
           {/* Badges */}
           <div className='absolute top-3 left-3 flex gap-2 flex-wrap'>
@@ -94,6 +101,11 @@ export function PropertyCard({
           <h3 className='font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-snug text-sm sm:text-base'>
             {property.title}
           </h3>
+          {recommendationReason && (
+            <Badge variant='secondary' className='text-xs w-fit'>
+              {recommendationReason}
+            </Badge>
+          )}
 
           {/* Address */}
           <div className='flex items-start gap-2 text-xs sm:text-sm text-muted-foreground flex-1'>

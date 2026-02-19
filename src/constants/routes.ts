@@ -86,6 +86,10 @@ export const API_ENDPOINTS = {
     add: (propertyId: string) => `/api/favorites/${propertyId}`,
     remove: (propertyId: string) => `/api/favorites/${propertyId}`,
   },
+  recommendations: {
+    list: "/api/recommendations",
+    track: "/api/recommendations/track",
+  },
   // Admin
   admin: {
     statistics: "/api/admin/statistics",
