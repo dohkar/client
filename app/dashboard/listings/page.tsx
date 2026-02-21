@@ -14,15 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit, Trash2, Eye, Plus, Search, SlidersHorizontal, X } from "lucide-react";
+import { Edit, Trash2, Eye, Plus, Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils/format";
 import { formatDate } from "@/lib/utils/format";
-import { ROUTES } from "@/constants";
+import { ROUTES, PAGINATION } from "@/constants";
 import { useDeleteWithUndo } from "@/hooks/use-undo-delete";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { Property } from "@/types/property";
 import type { PropertyType } from "@/types/property";
 
@@ -75,59 +75,57 @@ export default function ListingsPage() {
   const [typeFilter, setTypeFilter] = useState<PropertyType | "all">("all");
   const [sortBy, setSortBy] = useState<SortOption>("date");
   const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(1);
 
   const { deleteWithUndo, isDeleting } = useDeleteWithUndo();
 
-  const { data, isLoading } = useQuery({
-    queryKey: queryKeys.properties.list({ my: true }),
+  /** sortBy для API: date-desc | price-asc | price-desc (area-* обрабатываем на клиенте) */
+  const sortByApi = useMemo(() => {
+    if (sortBy === "price-asc" || sortBy === "price-desc") return sortBy;
+    return "date-desc";
+  }, [sortBy]);
+
+  const { data: response, isLoading } = useQuery({
+    queryKey: queryKeys.properties.list({
+      my: true,
+      page,
+      limit: PAGINATION.propertiesMaxLimit,
+      sortBy: sortByApi,
+      type: typeFilter === "all" ? undefined : (typeFilter.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"),
+      query: searchQuery.trim() || undefined,
+    }),
     queryFn: async () => {
-      const response = await propertyService.getProperties({
+      return propertyService.getProperties({
         my: true,
-        limit: 100,
+        limit: PAGINATION.propertiesMaxLimit,
+        page,
+        sortBy: sortByApi,
+        type: typeFilter === "all" ? undefined : (typeFilter.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"),
+        query: searchQuery.trim() || undefined,
       });
-      return response.data ?? [];
     },
     enabled: !!user,
   });
 
+  const data = response?.data ?? [];
+  const total = response?.total ?? 0;
+  const totalPages = response?.totalPages ?? 1;
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, typeFilter, sortBy]);
+
+  /** Только клиентская сортировка по площади (API не поддерживает area-*); остальное уже с сервера */
   const filteredData = useMemo(() => {
-    if (!data) return [];
-    let result = [...data];
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (p) =>
-          p.title?.toLowerCase().includes(query) ||
-          p.location?.toLowerCase().includes(query)
-      );
+    if (!data.length) return [];
+    if (sortBy === "area-asc") {
+      return [...data].sort((a, b) => (a.area || 0) - (b.area || 0));
     }
-    if (typeFilter !== "all") {
-      result = result.filter((p) => p.type === typeFilter);
+    if (sortBy === "area-desc") {
+      return [...data].sort((a, b) => (b.area || 0) - (a.area || 0));
     }
-    switch (sortBy) {
-      case "price-asc":
-        result.sort((a, b) => (a.price || 0) - (b.price || 0));
-        break;
-      case "price-desc":
-        result.sort((a, b) => (b.price || 0) - (a.price || 0));
-        break;
-      case "area-asc":
-        result.sort((a, b) => (a.area || 0) - (b.area || 0));
-        break;
-      case "area-desc":
-        result.sort((a, b) => (b.area || 0) - (a.area || 0));
-        break;
-      case "date":
-      default:
-        result.sort((a, b) => {
-          const dateA = a.datePosted ? new Date(a.datePosted).getTime() : 0;
-          const dateB = b.datePosted ? new Date(b.datePosted).getTime() : 0;
-          return dateB - dateA;
-        });
-        break;
-    }
-    return result;
-  }, [data, searchQuery, typeFilter, sortBy]);
+    return data;
+  }, [data, sortBy]);
 
   const hasActiveFilters = searchQuery.trim() || typeFilter !== "all";
 
@@ -193,8 +191,8 @@ export default function ListingsPage() {
           <div>
             <h1 className='text-2xl sm:text-3xl font-bold mb-2'>Мои объявления</h1>
             <p className='text-sm sm:text-base text-muted-foreground'>
-              {data?.length ?? 0}{" "}
-              {declOfNum(data?.length ?? 0, ["объявление", "объявления", "объявлений"])}
+              {total}{" "}
+              {declOfNum(total, ["объявление", "объявления", "объявлений"])}
             </p>
           </div>
           <Link href={ROUTES.sell}>
@@ -335,8 +333,8 @@ export default function ListingsPage() {
             )}
             {hasActiveFilters && (
               <p className='text-sm text-muted-foreground mt-3'>
-                Найдено: {filteredData.length}{" "}
-                {declOfNum(filteredData.length, [
+                Найдено: {total}{" "}
+                {declOfNum(total, [
                   "объявление",
                   "объявления",
                   "объявлений",
@@ -346,7 +344,7 @@ export default function ListingsPage() {
           </div>
         )}
 
-        {filteredData.length === 0 && data && data.length > 0 && (
+        {total === 0 && hasActiveFilters && (
           <div className='mx-auto max-w-xl text-center py-12'>
             <Search className='w-12 h-12 text-muted-foreground mx-auto mb-4' />
             <h3 className='text-lg font-semibold mb-2'>Ничего не найдено</h3>
@@ -359,7 +357,7 @@ export default function ListingsPage() {
           </div>
         )}
 
-        {!data || data.length === 0 ? (
+        {total === 0 && !hasActiveFilters ? (
           <Card className='w-full max-w-2xl min-h-[280px] mx-auto border-primary/20 shadow-sm bg-card flex items-center justify-center'>
             <CardContent className='w-full flex flex-col items-center justify-center gap-6 py-16 sm:py-20 text-center'>
               <p className='text-lg sm:text-xl text-muted-foreground'>
@@ -461,6 +459,36 @@ export default function ListingsPage() {
             })}
           </div>
         ) : null}
+
+        {totalPages > 1 && filteredData.length > 0 && (
+          <div className='mt-8 flex flex-col sm:flex-row items-center justify-center gap-4'>
+            <p className='text-sm text-muted-foreground'>
+              Страница {page} из {totalPages}
+            </p>
+            <div className='flex gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className='min-h-[40px]'
+              >
+                <ChevronLeft className='w-4 h-4 mr-1' />
+                Назад
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className='min-h-[40px]'
+              >
+                Вперёд
+                <ChevronRight className='w-4 h-4 ml-1' />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
