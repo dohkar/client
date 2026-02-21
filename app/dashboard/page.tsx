@@ -24,14 +24,20 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, isInitialized]);
 
-  const { data: properties } = useQuery({
-    queryKey: queryKeys.properties.list({}),
+  const { data: propertiesMeta } = useQuery({
+    queryKey: queryKeys.properties.list({ my: true }),
     queryFn: async () => {
-      const response = await propertyService.getProperties({ limit: 100 });
-      return response.data?.filter((p: any) => p.userId === user?.id) || [];
+      const response = await propertyService.getProperties({
+        my: true,
+        limit: 1,
+        page: 1,
+      });
+      return { total: response.total ?? 0 };
     },
     enabled: !!user && isAuthenticated && isInitialized,
   });
+
+  const propertiesCount = propertiesMeta?.total ?? 0;
 
   const { data: favorites } = useQuery({
     queryKey: queryKeys.favorites.all,
@@ -62,7 +68,7 @@ export default function DashboardPage() {
   const stats = [
     {
       title: "Мои объявления",
-      value: properties?.length || 0,
+      value: propertiesCount,
       icon: Home,
       href: "/dashboard/listings",
       color: "text-primary",
