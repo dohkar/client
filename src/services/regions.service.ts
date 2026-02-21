@@ -17,6 +17,7 @@ export const regionsService = {
     const url = regionId
       ? `${API_ENDPOINTS.cities.list}?regionId=${encodeURIComponent(regionId)}`
       : API_ENDPOINTS.cities.list;
+      console.log(url, '<<<<2')
     return apiClient.get<CityDto[]>(url);
   },
 
