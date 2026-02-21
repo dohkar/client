@@ -91,7 +91,7 @@ function UserMenuLinks({ isAdmin }: { isAdmin: boolean; }) {
           </div>
         </Link>
       )}
-      {isAdmin && (
+      {!isAdmin && (
         <Link href={`${ROUTES.dashboard}/support`}>
           <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-green-600'>
             <UserIcon className='h-4 w-4 shrink-0' />
