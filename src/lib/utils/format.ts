@@ -1,5 +1,38 @@
 import { formatPhoneInput as formatPhoneInputFromContact } from "../contact-utils";
 
+function toValidDate(value: unknown): Date | null {
+  if (!value) return null;
+
+  // 🔹 ДОБАВЛЕНО: если уже Date — просто проверяем валидность
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  // 🔹 ДОБАВЛЕНО: если строка или число — создаём Date
+  if (typeof value === "string" || typeof value === "number") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  // 🔹 ДОБАВЛЕНО: поддержка dayjs/moment (если используется)
+  if (typeof value === "object" && value !== null) {
+    const anyVal = value as any;
+
+    if (typeof anyVal.toDate === "function") {
+      const d = anyVal.toDate();
+      return d instanceof Date && !Number.isNaN(d.getTime()) ? d : null;
+    }
+
+    // 🔹 ДОБАВЛЕНО: поддержка timestamp-объектов (если вдруг такие есть)
+    if (typeof anyVal.seconds === "number") {
+      const d = new Date(anyVal.seconds * 1000);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+  }
+
+  return null;
+}
+
 /**
  * Форматирует дату в читаемый формат
  * @param date - дата для форматирования
@@ -8,7 +41,7 @@ import { formatPhoneInput as formatPhoneInputFromContact } from "../contact-util
  * @returns отформатированная строка даты
  */
 export function formatDate(
-  date: Date | string | null | undefined,
+  date: unknown,
   locale = "ru-RU",
   options?: {
     relative?: boolean; // Показывать относительное время (сегодня, вчера, X дней назад)
@@ -18,10 +51,9 @@ export function formatDate(
 ): string {
   if (!date) return "Не указано";
 
-  const dateObj = typeof date === "string" ? new Date(date) : date;
+ const dateObj = toValidDate(date);
 
-  // Проверка на валидность даты
-  if (isNaN(dateObj.getTime())) return "Неверная дата";
+  if (!dateObj) return "Неверная дата";
 
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
