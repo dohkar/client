@@ -63,6 +63,14 @@ import { RecommendationsBlock } from "@/components/recommendations/Recommendatio
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const DEAL_TYPE_MAP = {
+  SALE: "Продажа",
+  BUY: "Покупка",
+  RENT_OUT: "Аренда",
+  RENT_IN: "Аренда",
+  EXCHANGE: "Обмен",
+};
+
 /** Из сегмента URL извлекает id: поддержка /property/[id] и /property/[id-slug] */
 function extractPropertyIdFromSegment(segment: string | undefined): string | undefined {
   if (!segment || !segment.trim()) return undefined;
@@ -460,6 +468,9 @@ export default function PropertyPage() {
                   )}
                   {property.floor != null && (
                     <InfoRow label='Этаж' value={property.floor} />
+                  )}
+                  {property.dealType != null && (
+                    <InfoRow label='Тип сделки' value={property.dealType} />
                   )}
                   <InfoRow label='Регион' value={property.region} />
                 </div>

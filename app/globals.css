@@ -7,102 +7,113 @@
 /* Вдохновлено природой Кавказа: горы, зелень, камень, золотые акценты */
 :root {
   /* Основные цвета - теплые природные тона */
-  --background: oklch(0.98 0.005 85); /* Светлый песчаник */
-  --foreground: oklch(0.25 0.01 60); /* Глубокий серый */
+  --background: oklch(0.97 0.01 87.41); /* Светлый песчаник */
+  --foreground: oklch(0.31 0.02 148.2); /* Глубокий серый */
 
   /* Карточки - светлый камень */
-  --card: oklch(1 0 0); /* Чистый белый */
-  --card-foreground: oklch(0.25 0.01 60);
+  --card: oklch(0.97 0.01 87.41); /* Чистый белый */
+  --card-foreground: oklch(0.3 0.04 29.2);
 
   /* Поповеры */
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.01 60);
+  --popover: oklch(0.97 0.01 87.41);
+  --popover-foreground: oklch(0.3 0.04 29.2);
 
   /* Основной цвет - глубокий изумрудный зеленый (горные леса Кавказа) */
-  --primary: oklch(0.45 0.4 180); /* Насыщенный зеленый */
-  --primary-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.52 0.13 144.33); /* Насыщенный зеленый */
+  --primary-foreground: oklch(1 0 0);
 
   /* Вторичный - теплый серый камень */
-  --secondary: oklch(0.94 0.008 75);
-  --secondary-foreground: oklch(0.25 0.01 60);
+  --secondary: oklch(0.96 0.02 147.54);
+  --secondary-foreground: oklch(0.43 0.12 144.33);
 
   /* Приглушенный */
-  --muted: oklch(0.96 0.005 75);
-  --muted-foreground: oklch(0.52 0.015 60);
+  --muted: oklch(0.94 0.01 72.65);
+  --muted-foreground: oklch(0.5 0.01 156.76);
 
   /* Акцент - золотой/медный (традиционные кавказские украшения) */
-  --accent: oklch(0.75 0.15 65);
-  --accent-foreground: oklch(0.15 0.01 60);
+  --accent: oklch(0.9 0.05 146.01);
+  --accent-foreground: oklch(0.43 0.12 144.33);
 
   /* Деструктивный */
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.54 0.19 26.9);
   --destructive-foreground: oklch(0.99 0 0);
 
   /* Границы и инпуты */
-  --border: oklch(0.9 0.005 75);
-  --input: oklch(0.92 0.005 75);
-  --ring: oklch(0.45 0.15 160);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.88 0.02 77.29);
+  --ring: oklch(0.52 0.13 144.33);
 
   /* Графики */
-  --chart-1: oklch(0.45 0.15 180); /* Зеленый */
-  --chart-2: oklch(0.75 0.15 65); /* Золотой */
-  --chart-3: oklch(0.55 0.1 180); /* Голубой */
-  --chart-4: oklch(0.65 0.12 45); /* Оранжевый */
-  --chart-5: oklch(0.5 0.08 120); /* Темно-зеленый */
+  --chart-1: oklch(0.67 0.16 144.06); /* Зеленый */
+  --chart-2: oklch(0.58 0.14 144.14); /* Золотой */
+  --chart-3: oklch(0.52 0.13 144.33); /* Голубой */
+  --chart-4: oklch(0.43 0.12 144.33); /* Оранжевый */
+  --chart-5: oklch(0.22 0.05 145.34); /* Темно-зеленый */
 
   --radius: 0.5rem;
 
   /* Сайдбар */
-  --sidebar: oklch(0.99 0 0);
-  --sidebar-foreground: oklch(0.25 0.01 60);
-  --sidebar-primary: oklch(0.45 0.15 160);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.96 0.005 75);
-  --sidebar-accent-foreground: oklch(0.25 0.01 60);
-  --sidebar-border: oklch(0.9 0.005 75);
-  --sidebar-ring: oklch(0.45 0.15 160);
+  --sidebar: oklch(0.94 0.01 72.65);
+  --sidebar-foreground: oklch(0.3 0.04 29.2);
+  --sidebar-primary: oklch(0.52 0.13 144.33);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.9 0.05 146.01);
+  --sidebar-accent-foreground: oklch(0.43 0.12 144.33);
+  --sidebar-border: oklch(0.88 0.02 77.29);
+  --sidebar-ring: oklch(0.52 0.13 144.33);
+  --shadow-2xs: 0 1px 3px 0px oklch(0 0 0 / 0.05);
+  --shadow-xs: 0 1px 3px 0px oklch(0 0 0 / 0.05);
+  --shadow-2xl: 0 1px 3px 0px oklch(0 0 0 / 0.25);
+  --shadow-sm: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 1px 2px -1px oklch(0 0 0 / 0.1);
+  --shadow: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 1px 2px -1px oklch(0 0 0 / 0.1);
+  --shadow-md: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 2px 4px -1px oklch(0 0 0 / 0.1);
+  --shadow-lg: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 4px 6px -1px oklch(0 0 0 / 0.1);
+  --shadow-xl: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 8px 10px -1px oklch(0 0 0 / 0.1);
+  --font-sans: Montserrat, sans-serif;
+  --font-serif: Merriweather, serif;
+  --font-mono: Source Code Pro, monospace;
 }
 
 .dark {
   /* Темная тема - ночные горы */
-  --background: oklch(0.18 0.01 60); /* Глубокий серо-синий */
-  --foreground: oklch(0.96 0.005 75); /* Светлый камень */
-  --card: oklch(0.22 0.01 60);
-  --card-foreground: oklch(0.96 0.005 75);
-  --popover: oklch(0.22 0.01 60);
-  --popover-foreground: oklch(0.96 0.005 75);
-  --primary: oklch(0.58 0.16 160); /* Яркий зеленый для темной темы */
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.28 0.01 60);
-  --secondary-foreground: oklch(0.96 0.005 75);
-  --muted: oklch(0.28 0.01 60);
-  --muted-foreground: oklch(0.65 0.015 75);
-  --accent: oklch(0.72 0.16 65); /* Яркий золотой */
-  --accent-foreground: oklch(0.99 0 0);
+  --background: oklch(0.31 0.03 149.96); /* Глубокий серо-синий */
+  --foreground: oklch(0.84 0.01 145.3); /* Светлый камень */
+  --card: oklch(0.35 0.03 148.55);
+  --card-foreground: oklch(0.84 0.01 145.3);
+  --popover: oklch(0.33 0.03 146.53);
+  --popover-foreground: oklch(0.94 0.01 72.65);
+  --primary: oklch(0.67 0.16 144.06); /* Яркий зеленый для темной темы */
+  --primary-foreground: oklch(0.99 0.02 145.33);
+  --secondary: oklch(0.39 0.03 143.09);
+  --secondary-foreground: oklch(0.9 0.02 142.94);
+  --muted: oklch(0.29 0.03 148.25);
+  --muted-foreground: oklch(0.69 0.02 150.35);
+  --accent: oklch(0.58 0.14 144.14); /* Яркий золотой */
+  --accent-foreground: oklch(0.94 0.01 72.65);
   --destructive: oklch(0.5 0.2 27);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.32 0.01 60);
-  --input: oklch(0.3 0.01 60);
-  --ring: oklch(0.58 0.16 160);
-  --chart-1: oklch(0.58 0.16 160);
-  --chart-2: oklch(0.72 0.16 65);
-  --chart-3: oklch(0.6 0.12 180);
-  --chart-4: oklch(0.68 0.13 45);
-  --chart-5: oklch(0.58 0.1 120);
-  --sidebar: oklch(0.2 0.01 60);
-  --sidebar-foreground: oklch(0.96 0.005 75);
-  --sidebar-primary: oklch(0.58 0.16 160);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.28 0.01 60);
-  --sidebar-accent-foreground: oklch(0.96 0.005 75);
-  --sidebar-border: oklch(0.32 0.01 60);
-  --sidebar-ring: oklch(0.58 0.16 160);
+  --border: oklch(0.39 0.03 143.09);
+  --input: oklch(0.39 0.03 143.09);
+  --ring: oklch(0.67 0.16 144.06);
+  --chart-1: oklch(0.77 0.12 145.23);
+  --chart-2: oklch(0.72 0.14 144.92);
+  --chart-3: oklch(0.67 0.16 144.06);
+  --chart-4: oklch(0.63 0.15 144.32);
+  --chart-5: oklch(0.58 0.14 144.14);
+  --sidebar: oklch(0.27 0.03 150.18);
+  --sidebar-foreground: oklch(0.94 0.01 72.65);
+  --sidebar-primary: oklch(0.67 0.16 144.06);
+  --sidebar-primary-foreground: oklch(0.22 0.05 145.34);
+  --sidebar-accent: oklch(0.58 0.14 144.14);
+  --sidebar-accent-foreground: oklch(0.94 0.01 72.65);
+  --sidebar-border: oklch(0.39 0.03 143.09);
+  --sidebar-ring: oklch(0.67 0.16 144.06);
 }
 
 @theme inline {
   /* Используем Inter для читабельности и современности */
-  --font-sans: "Inter", "Geist", system-ui, -apple-system, sans-serif;
-  --font-mono: "Geist Mono", "SF Mono", monospace;
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -139,6 +150,19 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --font-serif: var(--font-serif);
+  --radius: var(--radius);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-md: var(--shadow-md);
+  --shadow: var(--shadow);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-2xl: var(--shadow-2xl);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-2xs: var(--shadow-2xs);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
 }
 
 @layer base {
@@ -151,6 +175,12 @@
       "rlig" 1,
       "calt" 1,
       "kern" 1;
+    letter-spacing: var(--tracking-normal);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 
   /* Safe area insets для iOS */
@@ -268,8 +298,7 @@
 @layer components {
   /* Кастомные стили для карточек недвижимости */
   .property-card {
-    @apply bg-card border border-border rounded-lg overflow-hidden transition-all duration-300;
-    @apply hover:shadow-lg hover:border-primary/30 hover:-translate-y-1;
+    @apply bg-card rounded-lg overflow-hidden hover:shadow-inner;
   }
 
   /* Премиум badge с золотым акцентом */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -53,8 +53,27 @@ import { useAmenities } from "@/hooks/use-amenities";
 import { geocodeAddress, reverseGeocode } from "@/lib/yandex-geocoder";
 import { YandexMap } from "@/components/features/yandex-map";
 import { REGION_LABELS } from "@/lib/search-constants";
+import Image from "next/image"; // используем next/image
 
-// Интерфейс для превью изображений
+// --- CONSTANTS ---
+
+const REGIONS_ENUM = ["Chechnya", "Ingushetia", "Other"] as const;
+const PROPERTY_TYPE_ENUM = ["apartment", "house", "land", "commercial"] as const;
+const DEAL_TYPE_ENUM = ["SALE", "BUY", "RENT_OUT", "RENT_IN", "EXCHANGE"] as const;
+
+const TOAST_DURATION = {
+  success: 1500,
+  warning: 2100,
+  error: 2200,
+  loader: 1500,
+  geocode: 1200,
+  geocodeFail: 2500,
+  missing: 1800,
+};
+
+const GEOCODE_DEBOUNCE = 950;
+const DESCRIPTION_MAX = 2000;
+
 interface ImagePreview {
   id: string;
   file: File;
@@ -75,25 +94,25 @@ function buildLocationFromComponents(c: {
   return [c.region, c.city, c.street, c.house].filter(Boolean).join(", ");
 }
 
-// Схема валидации (title 10–200, description 50–2000; цена опциональна при BUY)
+// Схема валидации
 const propertySchema = z
   .object({
     title: z.string().min(10, "Минимум 10 символов").max(200, "Максимум 200 символов"),
-    dealType: z.enum(["SALE", "BUY", "RENT_OUT", "RENT_IN", "EXCHANGE"]).default("SALE"),
+    dealType: z.enum(DEAL_TYPE_ENUM).default("SALE"),
     price: z.number().min(0).optional().nullable(),
     location: z.string().min(5, "Адрес должен быть не менее 5 символов"),
-    region: z.enum(["Chechnya", "Ingushetia", "Other"]),
-    cityId: z.string().uuid().optional().or(z.literal("")),
+    region: z.enum(REGIONS_ENUM),
+    cityId: z.union([z.string().uuid(), z.literal("")]).optional(),
     street: z.string().optional(),
     house: z.string().optional(),
-    type: z.enum(["apartment", "house", "land", "commercial"]),
+    type: z.enum(PROPERTY_TYPE_ENUM),
     rooms: z.number().optional(),
     floor: z.number().min(0).optional().nullable(),
     area: z.number().min(1, "Площадь должна быть больше 0"),
     description: z
       .string()
       .min(50, "Минимум 50 символов")
-      .max(2000, "Максимум 2000 символов"),
+      .max(DESCRIPTION_MAX, `Максимум ${DESCRIPTION_MAX} символов`),
     features: z.array(z.string()).optional(),
     latitude: z.number().optional(),
     longitude: z.number().optional(),
@@ -115,7 +134,7 @@ interface PropertyFormProps {
 }
 
 // Генерация уникального ID
-const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const generateId = () => `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
 // Утилиты для форматирования чисел
 const formatNumberWithSpaces = (value: number | string): string => {
@@ -147,12 +166,12 @@ export function PropertyForm({
   const [isGeocoding, setIsGeocoding] = useState(false);
   const geocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Удобства (скоро вернутся)
+  // Удобства, запоминаем выбранные фичи при старте
   const amenities = useAmenities({
     initialFeatures: initialData?.features || [],
   });
 
-  // При редактировании инициализируем превью из существующих URL
+  // При редактировании инициализируем превью для уже существующих изображений
   useEffect(() => {
     if (initialData?.images && initialData.images.length > 0) {
       const existingPreviews: ImagePreview[] = initialData.images.map((url, index) => ({
@@ -166,11 +185,27 @@ export function PropertyForm({
     }
   }, [initialData?.images]);
 
-  // Инициализируем кэш регионов при загрузке компонента
+  // Инициализация кэша регионов
   useEffect(() => {
     ensureRegionCacheInitialized().catch((error) => {
-      console.error("Ошибка при инициализации кэша регионов:", error);
+      // Безопасно выводим ошибку и не ломаем пользователя
+      if (process.env.NODE_ENV === "development") {
+        console.error("Ошибка при инициализации кэша регионов:", error);
+      }
     });
+  }, []);
+
+  // Очищаем URL.createObjectURL при демоунте/изменении imagePreviews
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach((preview) => {
+        if (preview.previewUrl && preview.file.size > 0) {
+          URL.revokeObjectURL(preview.previewUrl);
+        }
+      });
+    };
+    // deps не нужны, cleanup только на demount
+    // eslint-disable-next-line
   }, []);
 
   const {
@@ -183,7 +218,7 @@ export function PropertyForm({
     resolver: zodResolver(propertySchema),
     defaultValues: {
       title: initialData?.title || "",
-      dealType: (initialData?.dealType as "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE") || "SALE",
+      dealType: (initialData?.dealType as (typeof DEAL_TYPE_ENUM)[number]) || "SALE",
       price: initialData?.price ?? 0,
       location: initialData?.location || "",
       region: initialData?.region || "Other",
@@ -201,27 +236,40 @@ export function PropertyForm({
     },
   });
 
-  const selectedRegion = watch("region");
+  // WATCH values, используем только нужные!
+  const titleValue = watch("title");
+  const descriptionValue = watch("description");
+  const dealTypeValue = watch("dealType");
+  const locationValue = watch("location");
+  const regionValue = watch("region");
+  const cityIdValue = watch("cityId");
+  const streetValue = watch("street");
+  const houseValue = watch("house");
+  const typeValue = watch("type");
+  const latitudeValue = watch("latitude");
+  const longitudeValue = watch("longitude");
 
-  // Получение регионов и городов
+  // Получение регионов/городов
   const { data: regions = [] } = useQuery({
     queryKey: ["regions"],
-    queryFn: () => regionsService.getRegions(),
+    queryFn: regionsService.getRegions,
     staleTime: 10 * 60 * 1000,
   });
+
   const regionIdForCities = regions.find(
     (r) =>
       REGION_BACKEND_TO_NAME[r.name as keyof typeof REGION_BACKEND_TO_NAME] ===
-      selectedRegion
+      regionValue
   )?.id;
+
   const { data: cities = [] } = useQuery({
     queryKey: ["cities", regionIdForCities],
-    queryFn: () => regionsService.getCities(regionIdForCities!),
+    queryFn: () => (regionIdForCities ? regionsService.getCities(regionIdForCities) : []),
     enabled: !!regionIdForCities,
     staleTime: 10 * 60 * 1000,
   });
 
-  // Инициализация отформатированных значений
+  // При первом показе страницы заполняем красивые значения для числа/площади
   useEffect(() => {
     if (initialData?.price && initialData.price > 0) {
       setPriceDisplay(formatNumberWithSpaces(initialData.price));
@@ -231,22 +279,18 @@ export function PropertyForm({
     }
   }, [initialData?.price, initialData?.area]);
 
-  const cityId = watch("cityId");
-  const street = watch("street");
-  const house = watch("house");
-
-  // UX: Геокодирование по адресу с задержкой для авто-сохранения локации
+  // Геокодинг адреса (debounced)
   useEffect(() => {
     if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
 
     const regionRu =
-      REGION_LABELS[selectedRegion] ?? (selectedRegion === "Other" ? "Россия" : "");
-    const cityName = cities.find((c) => c.id === cityId)?.name ?? "";
+      REGION_LABELS[regionValue] ?? (regionValue === "Other" ? "Россия" : "");
+    const cityName = cities.find((c) => c.id === cityIdValue)?.name ?? "";
     const query = buildLocationFromComponents({
       region: regionRu,
       city: cityName,
-      street: street?.trim(),
-      house: house?.trim(),
+      street: streetValue?.trim(),
+      house: houseValue?.trim(),
     });
 
     if (!query || query.length < 5) {
@@ -256,18 +300,31 @@ export function PropertyForm({
     }
 
     setIsGeocoding(true);
+    let isMounted = true;
+
     geocodeTimeoutRef.current = setTimeout(async () => {
       try {
         const API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || "";
+        if (!API_KEY) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[GEOCODING ERROR] YANDEX_MAPS_API_KEY is not set");
+          }
+          setValue("latitude", undefined);
+          setValue("longitude", undefined);
+          setIsGeocoding(false);
+          return;
+        }
         const result = await geocodeAddress(
           {
             region: regionRu,
             city: cityName,
-            street: street?.trim(),
-            house: house?.trim(),
+            street: streetValue?.trim(),
+            house: houseValue?.trim(),
           },
           API_KEY
         );
+
+        if (!isMounted) return;
 
         if (result) {
           setValue("latitude", result.latitude);
@@ -275,48 +332,67 @@ export function PropertyForm({
           setValue("location", result.formattedAddress);
           if (result.components.street) setValue("street", result.components.street);
           if (result.components.house) setValue("house", result.components.house);
-          toast.success("Координаты определены", { duration: 1200 });
+          toast.success("Координаты определены", {
+            duration: TOAST_DURATION.geocode,
+          });
         } else {
           setValue("latitude", undefined);
           setValue("longitude", undefined);
           toast.warning("Не удалось определить координаты. Проверьте адрес.", {
-            duration: 2500,
+            duration: TOAST_DURATION.geocodeFail,
           });
         }
       } catch {
+        if (!isMounted) return;
         setValue("latitude", undefined);
         setValue("longitude", undefined);
       } finally {
-        setIsGeocoding(false);
+        if (isMounted) setIsGeocoding(false);
       }
-    }, 950); // Быстрее реакции UX
+    }, GEOCODE_DEBOUNCE);
 
     return () => {
+      isMounted = false;
       if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
     };
-  }, [selectedRegion, cityId, street, house, cities, setValue]);
+  }, [regionValue, cityIdValue, streetValue, houseValue, cities, setValue]);
 
-  // Держим location актуальным из компонентов, если геокодер ещё не сработал
-  const locationValue = watch("location");
+  // Автоматически строим location если геокодер не сработал
   useEffect(() => {
     if (locationValue && locationValue.length >= 5) return;
     const regionRu =
-      REGION_LABELS[selectedRegion] ?? (selectedRegion === "Other" ? "Россия" : "");
-    const cityName = cities.find((c) => c.id === cityId)?.name ?? "";
+      REGION_LABELS[regionValue] ?? (regionValue === "Other" ? "Россия" : "");
+    const cityName = cities.find((c) => c.id === cityIdValue)?.name ?? "";
     const built = buildLocationFromComponents({
       region: regionRu,
       city: cityName,
-      street: street?.trim(),
-      house: house?.trim(),
+      street: streetValue?.trim(),
+      house: houseValue?.trim(),
     });
     if (built && built.length >= 5) setValue("location", built);
-  }, [selectedRegion, cityId, street, house, cities, locationValue, setValue]);
+  }, [
+    regionValue,
+    cityIdValue,
+    streetValue,
+    houseValue,
+    cities,
+    locationValue,
+    setValue,
+  ]);
 
-  // Координаты с карты
+  // Обработка изменения координат по карте
   const handleMapCoordinatesChange = useCallback(
     async (lat: number, lon: number) => {
       try {
         const API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || "";
+        if (!API_KEY) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[REVERSE GEOCODE ERROR] YANDEX_MAPS_API_KEY is not set");
+          }
+          setValue("latitude", lat);
+          setValue("longitude", lon);
+          return;
+        }
         const result = await reverseGeocode(lat, lon, API_KEY);
         if (result) {
           setValue("latitude", lat);
@@ -324,7 +400,9 @@ export function PropertyForm({
           setValue("location", result.formattedAddress);
           if (result.components.street) setValue("street", result.components.street);
           if (result.components.house) setValue("house", result.components.house);
-          toast.success("Адрес обновлён по картe", { duration: 1200 });
+          toast.success("Адрес обновлён по картe", {
+            duration: TOAST_DURATION.geocode,
+          });
         }
       } catch {
         setValue("latitude", lat);
@@ -334,23 +412,25 @@ export function PropertyForm({
     [setValue]
   );
 
-  const propertyType = watch("type");
+  const propertyType = typeValue;
   const showRooms = propertyType === "apartment" || propertyType === "house";
 
-  // Файлы: обработчик выбора и UX/визуал
+  // Обработка добавления файлов
   const handleFilesSelect = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
-      if (files.length === 0) return;
+      if (!files.length) return;
 
       if (imagePreviews.length + files.length > MAX_IMAGES_PER_PROPERTY) {
-        toast.error(`Максимум ${MAX_IMAGES_PER_PROPERTY} изображений`);
+        toast.error(`Максимум ${MAX_IMAGES_PER_PROPERTY} изображений`, {
+          duration: TOAST_DURATION.error,
+        });
         return;
       }
 
       const validationError = validateImageFiles(files);
       if (validationError) {
-        toast.error(validationError);
+        toast.error(validationError, { duration: TOAST_DURATION.error });
         return;
       }
 
@@ -383,7 +463,9 @@ export function PropertyForm({
           })
         );
 
-        toast.success(`Загружено ${files.length} изображ.`, { duration: 1400 });
+        toast.success(`Загружено ${files.length} изображ.`, {
+          duration: TOAST_DURATION.loader,
+        });
       } catch (error) {
         setImagePreviews((prev) =>
           prev.map((p) => {
@@ -400,19 +482,19 @@ export function PropertyForm({
           })
         );
         toast.error(error instanceof Error ? error.message : "Ошибка загрузки", {
-          duration: 2200,
+          duration: TOAST_DURATION.error,
         });
       } finally {
         setIsUploading(false);
         if (fileInputRef.current) {
-          fileInputRef.current.value = "";
+          fileInputRef.current.value = ""; // Очищаем файловый input
         }
       }
     },
     [imagePreviews.length]
   );
 
-  // Кнопка удаления картинки
+  // Обработка удаления изображения
   const removeImage = useCallback((id: string) => {
     setImagePreviews((prev) => {
       const toRemove = prev.find((p) => p.id === id);
@@ -427,16 +509,17 @@ export function PropertyForm({
     fileInputRef.current?.click();
   }, []);
 
-  // Отправка формы
+  // Обработка отправки формы
   const onSubmit = async (data: PropertyFormData) => {
     const uploadedImages = imagePreviews.filter((p) => p.uploadedUrl && !p.error);
     if (uploadedImages.length === 0) {
       setImagesError("Добавьте хотя бы одно изображение");
       return;
     }
-
     if (imagePreviews.some((p) => p.isUploading)) {
-      toast.error("Дождитесь загрузки изображений");
+      toast.error("Дождитесь загрузки изображений", {
+        duration: TOAST_DURATION.error,
+      });
       return;
     }
 
@@ -444,23 +527,11 @@ export function PropertyForm({
     try {
       await ensureRegionCacheInitialized();
 
-      let regionId = getRegionIdByName(data.region);
-
-      if (!regionId && isEdit && initialData) {
-        const propertyId = initialData.id;
-        if (propertyId) {
-          try {
-            await propertyService.getPropertyById(propertyId);
-            regionId = getRegionIdByName(data.region);
-          } catch (error) {
-            console.error("Ошибка при загрузке недвижимости:", error);
-          }
-        }
-      }
+      const regionId = getRegionIdByName(data.region);
 
       if (!regionId) {
         toast.error("Регион не найден. Попробуйте обновить страницу", {
-          duration: 2000,
+          duration: TOAST_DURATION.error,
         });
         setIsLoading(false);
         return;
@@ -481,7 +552,7 @@ export function PropertyForm({
         imageUrls.length === 0
       ) {
         toast.error("Для типа «Продаю» / «Сдаю» / «Обмен» нужно хотя бы одно фото", {
-          duration: 2000,
+          duration: TOAST_DURATION.error,
         });
         setIsLoading(false);
         return;
@@ -501,7 +572,9 @@ export function PropertyForm({
         });
       }
       if (!locationForApi || locationForApi.length < 5) {
-        toast.error("Укажите город, улицу и дом", { duration: 1800 });
+        toast.error("Укажите город, улицу и дом", {
+          duration: TOAST_DURATION.missing,
+        });
         setIsLoading(false);
         return;
       }
@@ -513,7 +586,7 @@ export function PropertyForm({
         currency: "RUB" as const,
         location: locationForApi,
         regionId,
-        cityId: data.cityId && data.cityId.trim() ? data.cityId : undefined,
+        cityId: data.cityId && String(data.cityId).trim() ? data.cityId : undefined,
         type: typeMap[data.type] || "APARTMENT",
         rooms: data.rooms,
         floor: data.floor ?? undefined,
@@ -527,26 +600,30 @@ export function PropertyForm({
         longitude: data.longitude,
       };
 
-      let response;
+      let response: Property;
       if (isEdit && initialData?.id) {
         response = await propertyService.updateProperty(initialData.id, apiData);
-        toast.success("Изменения сохранены!", { duration: 1800 });
+        toast.success("Изменения сохранены!", {
+          duration: TOAST_DURATION.success,
+        });
         onSuccess?.(response);
       } else {
         response = await propertyService.createProperty(apiData);
-        toast.success("Объявление создано!", { duration: 1800 });
+        toast.success("Объявление создано!", {
+          duration: TOAST_DURATION.success,
+        });
         onSuccess?.(response);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Ошибка", {
-        duration: 2200,
+        duration: TOAST_DURATION.error,
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Визуальное состояние кнопки
+  // Кнопка disable при загрузке/запрете
   const hasUploadingImages = imagePreviews.some((p) => p.isUploading);
   const isSubmitDisabled = isLoading || hasUploadingImages;
 
@@ -554,7 +631,7 @@ export function PropertyForm({
     <form onSubmit={handleSubmit(onSubmit)} className='space-y-8 max-w-3xl mx-auto pb-6'>
       {/* Основная информация */}
       <Card className='border-none shadow-md transition-all hover:shadow-2xl bg-white/60 dark:bg-card/80'>
-        <CardHeader className='bg-gradient-to-r from-primary/5 to-primary/10 border-b rounded-t-md py-4 px-6'>
+        <CardHeader className='bg-linear-to-r from-primary/5 to-primary/10 border-b rounded-t-md py-4 px-6'>
           <CardTitle className='flex items-center gap-2 text-2xl font-bold tracking-tight'>
             <Home className='w-6 h-6 text-primary' />
             Основная информация
@@ -589,14 +666,15 @@ export function PropertyForm({
               )}
               <span
                 className={`font-medium ${
-                  (watch("title")?.length || 0) >= 180 ? "text-destructive" : "text-muted-foreground"
+                  (titleValue?.length || 0) >= 180
+                    ? "text-destructive"
+                    : "text-muted-foreground"
                 }`}
               >
-                {watch("title")?.length || 0} / 200
+                {titleValue?.length || 0} / 200
               </span>
             </div>
           </div>
-
           {/* Тип сделки */}
           <div className='space-y-2'>
             <Label className='text-base font-semibold flex items-center gap-2'>
@@ -604,9 +682,9 @@ export function PropertyForm({
               Тип сделки <span className='text-destructive'>*</span>
             </Label>
             <Select
-              value={watch("dealType")}
+              value={dealTypeValue}
               onValueChange={(v) =>
-                setValue("dealType", v as "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE")
+                setValue("dealType", v as (typeof DEAL_TYPE_ENUM)[number])
               }
             >
               <SelectTrigger className='h-11 text-base border-muted-foreground/20 bg-muted/30 hover:bg-muted/50 transition'>
@@ -621,15 +699,15 @@ export function PropertyForm({
               </SelectContent>
             </Select>
           </div>
-
-          {/* Цена (опционально при «Куплю») */}
+          {/* Цена */}
           <div className='space-y-2'>
             <Label
               htmlFor='price'
               className='text-base font-semibold flex items-center gap-2'
             >
               <DollarSign className='w-4 h-4 text-muted-foreground' />
-              Цена {watch("dealType") !== "BUY" && <span className='text-destructive'>*</span>}
+              Цена{" "}
+              {dealTypeValue !== "BUY" && <span className='text-destructive'>*</span>}
             </Label>
             <div className='relative'>
               <Input
@@ -650,7 +728,7 @@ export function PropertyForm({
                   if (num > 0) setPriceDisplay(formatNumberWithSpaces(num));
                   else setPriceDisplay("");
                 }}
-                placeholder={watch("dealType") === "BUY" ? "По договорённости" : "5 000 000"}
+                placeholder={dealTypeValue === "BUY" ? "По договорённости" : "5 000 000"}
                 className='h-12 text-base pl-12 font-semibold border-muted-foreground/20 bg-muted/30 hover:bg-muted/50 focus:border-primary/60 transition ring-0'
                 aria-label='Цена недвижимости в рублях'
                 autoComplete='off'
@@ -666,7 +744,6 @@ export function PropertyForm({
               </p>
             )}
           </div>
-
           {/* Адрес */}
           <div className='space-y-2'>
             <Label className='text-base font-semibold flex items-center gap-2'>
@@ -675,14 +752,13 @@ export function PropertyForm({
               {isGeocoding && <Spinner className='w-4 h-4 ml-2' />}
             </Label>
             <input type='hidden' {...register("location")} />
-            {watch("location") && (
+            {locationValue && (
               <div className='px-3 py-[7px] rounded border bg-muted/50 text-muted-foreground text-[13px] font-medium truncate'>
                 <MapPin className='w-3 h-3 mr-1 inline' />
-                <span>{watch("location")}</span>
+                <span>{locationValue}</span>
               </div>
             )}
           </div>
-
           {/* Регион, город, улица, дом */}
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
             <div className='space-y-2'>
@@ -694,9 +770,9 @@ export function PropertyForm({
                 Регион <span className='text-destructive'>*</span>
               </Label>
               <Select
-                value={watch("region")}
+                value={regionValue}
                 onValueChange={(value) => {
-                  setValue("region", value as "Chechnya" | "Ingushetia" | "Other");
+                  setValue("region", value as (typeof REGIONS_ENUM)[number]);
                   setValue("cityId", "");
                 }}
               >
@@ -710,9 +786,8 @@ export function PropertyForm({
                 </SelectContent>
               </Select>
             </div>
-
             <CitySearchSelect
-              value={watch("cityId") || ""}
+              value={cityIdValue || ""}
               onValueChange={(value) => setValue("cityId", value)}
               cities={cities}
               disabled={!regionIdForCities}
@@ -721,7 +796,6 @@ export function PropertyForm({
               }
               className='border-muted-foreground/20 bg-muted/30 hover:bg-muted/50 transition'
             />
-
             <div className='space-y-2'>
               <Label htmlFor='street' className='text-base font-semibold'>
                 Улица
@@ -733,7 +807,6 @@ export function PropertyForm({
                 className='h-11 text-base border-muted-foreground/20 bg-muted/30 hover:bg-muted/50 transition'
               />
             </div>
-
             <div className='space-y-2'>
               <Label htmlFor='house' className='text-base font-semibold'>
                 Дом
@@ -746,7 +819,6 @@ export function PropertyForm({
               />
             </div>
           </div>
-
           {/* Тип недвижимости */}
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div className='space-y-2'>
@@ -758,9 +830,9 @@ export function PropertyForm({
                 Тип недвижимости <span className='text-destructive'>*</span>
               </Label>
               <Select
-                value={watch("type")}
+                value={typeValue}
                 onValueChange={(value) =>
-                  setValue("type", value as "apartment" | "house" | "land" | "commercial")
+                  setValue("type", value as (typeof PROPERTY_TYPE_ENUM)[number])
                 }
               >
                 <SelectTrigger className='h-11 text-base border-muted-foreground/20 bg-muted/30 hover:bg-muted/50 transition'>
@@ -775,12 +847,11 @@ export function PropertyForm({
               </Select>
             </div>
           </div>
-
           {/* Карта */}
-          {watch("latitude") != null &&
-            watch("longitude") != null &&
-            typeof watch("latitude") === "number" &&
-            typeof watch("longitude") === "number" && (
+          {latitudeValue != null &&
+            longitudeValue != null &&
+            typeof latitudeValue === "number" &&
+            typeof longitudeValue === "number" && (
               <div className='space-y-2'>
                 <Label className='text-base font-semibold mb-1 flex gap-2 items-center'>
                   <MapPin className='w-4 h-4 text-muted-foreground' /> На карте
@@ -790,8 +861,8 @@ export function PropertyForm({
                 </p>
                 <div className='rounded-lg overflow-hidden border shadow-sm'>
                   <YandexMap
-                    latitude={watch("latitude")!}
-                    longitude={watch("longitude")!}
+                    latitude={latitudeValue}
+                    longitude={longitudeValue}
                     zoom={16}
                     height={260}
                     onChangeCoordinates={handleMapCoordinatesChange}
@@ -799,7 +870,6 @@ export function PropertyForm({
                 </div>
               </div>
             )}
-
           {/* Количество комнат и площадь */}
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             {showRooms && (
@@ -814,7 +884,10 @@ export function PropertyForm({
                 <Input
                   id='rooms'
                   type='number'
-                  {...register("rooms", { valueAsNumber: true })}
+                  {...register("rooms", {
+                    valueAsNumber: true,
+                    setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                  })}
                   placeholder='3'
                   className='h-11 text-base border-muted-foreground/20 bg-muted/30 hover:bg-muted/50 transition'
                   min={1}
@@ -822,7 +895,6 @@ export function PropertyForm({
                 />
               </div>
             )}
-
             {showRooms && (
               <div className='space-y-2 animate-in fade-in slide-in-from-left-2 duration-300'>
                 <Label
@@ -834,7 +906,10 @@ export function PropertyForm({
                 <Input
                   id='floor'
                   type='number'
-                  {...register("floor", { valueAsNumber: true, setValueAs: (v) => (v === "" || Number.isNaN(v) ? undefined : v) })}
+                  {...register("floor", {
+                    valueAsNumber: true,
+                    setValueAs: (v) => (v === "" || Number.isNaN(v) ? undefined : v),
+                  })}
                   placeholder='Не указан'
                   className='h-11 text-base border-muted-foreground/20 bg-muted/30 hover:bg-muted/50 transition'
                   min={0}
@@ -843,7 +918,6 @@ export function PropertyForm({
                 />
               </div>
             )}
-
             <div className={`space-y-2 ${showRooms ? "" : "md:col-span-2"}`}>
               <Label
                 htmlFor='area'
@@ -873,6 +947,7 @@ export function PropertyForm({
                   onBlur={(e) => {
                     const num = parseFloat(e.target.value) || 0;
                     if (num > 0) setAreaDisplay(String(num));
+                    else setAreaDisplay("");
                   }}
                   placeholder='75.5'
                   className='h-11 text-base pr-12 font-semibold border-muted-foreground/20 bg-muted/30 hover:bg-muted/50 transition'
@@ -892,10 +967,9 @@ export function PropertyForm({
           </div>
         </CardContent>
       </Card>
-
       {/* Описание */}
       <Card className='border-none shadow-md transition-all hover:shadow-2xl bg-white/60 dark:bg-card/80'>
-        <CardHeader className='bg-gradient-to-r from-primary/5 to-primary/10 border-b rounded-t-md py-4 px-6'>
+        <CardHeader className='bg-linear-to-r from-primary/5 to-primary/10 border-b rounded-t-md py-4 px-6'>
           <CardTitle className='flex items-center gap-2 text-2xl font-bold tracking-tight'>
             <FileText className='w-5 h-5 text-primary' />
             Описание
@@ -912,12 +986,12 @@ export function PropertyForm({
               placeholder='Опишите подробно: расположение, состояние, инфраструктуру рядом...'
               rows={8}
               className='text-base resize-y border-muted-foreground/20 bg-muted/30 hover:bg-muted/40 transition'
-              maxLength={2000}
+              maxLength={DESCRIPTION_MAX}
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
-                if (target.value.length >= 2000) {
-                  toast.warning("Достигнут лимит в 2000 символов", {
-                    duration: 2100,
+                if (target.value.length >= DESCRIPTION_MAX) {
+                  toast.warning(`Достигнут лимит в ${DESCRIPTION_MAX} символов`, {
+                    duration: TOAST_DURATION.warning,
                   });
                 }
               }}
@@ -935,29 +1009,29 @@ export function PropertyForm({
               </span>
               <span
                 className={`font-semibold transition-colors ${
-                  (watch("description")?.length || 0) >= 7600
+                  (descriptionValue?.length || 0) >= DESCRIPTION_MAX
                     ? "text-destructive"
-                    : (watch("description")?.length || 0) >= 7000
+                    : (descriptionValue?.length || 0) >= DESCRIPTION_MAX * 0.9
                       ? "text-amber-600 dark:text-amber-400"
                       : "text-muted-foreground"
                 }`}
               >
-                {watch("description")?.length || 0} / 2000
+                {descriptionValue?.length || 0} / {DESCRIPTION_MAX}
               </span>
             </div>
-            {watch("description") && watch("description").length >= 6000 && (
+            {descriptionValue && descriptionValue.length >= DESCRIPTION_MAX * 0.6 && (
               <div className='w-full h-1 rounded-full bg-muted/50 overflow-hidden'>
                 <div
                   className='h-1 rounded-full transition-all'
                   style={{
                     width: `${Math.min(
-                      ((watch("description")?.length || 0) / 2000) * 100,
+                      ((descriptionValue?.length || 0) / DESCRIPTION_MAX) * 100,
                       100
                     )}%`,
                     background:
-                      (watch("description")?.length || 0) >= 7600
+                      (descriptionValue?.length || 0) >= DESCRIPTION_MAX
                         ? "rgba(239,68,68,0.8)" // Красный
-                        : (watch("description")?.length || 0) >= 7000
+                        : (descriptionValue?.length || 0) >= DESCRIPTION_MAX * 0.9
                           ? "rgba(251,191,36,0.9)" // Желтый
                           : "rgba(59,130,246,0.8)", // Голубой
                   }}
@@ -967,10 +1041,9 @@ export function PropertyForm({
           </div>
         </CardContent>
       </Card>
-
       {/* Изображения */}
       <Card className='border-none shadow-md transition-all hover:shadow-2xl bg-white/60 dark:bg-card/80'>
-        <CardHeader className='bg-gradient-to-r from-primary/5 to-primary/10 border-b rounded-t-md py-4 px-6'>
+        <CardHeader className='bg-linear-to-r from-primary/5 to-primary/10 border-b rounded-t-md py-4 px-6'>
           <CardTitle className='flex items-center justify-between text-2xl font-bold tracking-tight w-full'>
             <div className='flex items-center gap-2'>
               <ImageIcon className='w-5 h-5 text-primary' />
@@ -1017,7 +1090,6 @@ export function PropertyForm({
                 </>
               )}
             </div>
-            {/* Hidden File Input */}
             <input
               ref={fileInputRef}
               type='file'
@@ -1029,7 +1101,6 @@ export function PropertyForm({
               aria-label='Загрузить изображения'
             />
           </div>
-
           {/* Error Message */}
           {imagesError && (
             <div className='p-3 rounded-lg bg-destructive/10 border border-destructive/30 flex items-center gap-2'>
@@ -1037,33 +1108,37 @@ export function PropertyForm({
               <p className='text-sm text-destructive'>{imagesError}</p>
             </div>
           )}
-
           {/* Image Grid */}
           {imagePreviews.length > 0 && (
             <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4'>
               {imagePreviews.map((preview) => (
                 <div
                   key={preview.id}
-                  className='relative group aspect-[4/3] rounded-xl overflow-hidden border-2 border-border hover:border-primary/70 transition-all duration-200 shadow-sm bg-muted/20'
+                  className='relative group aspect-4/3 rounded-xl overflow-hidden border-2 border-border hover:border-primary/70 transition-all duration-200 shadow-sm bg-muted/20'
                 >
-                  {/* Image */}
-                  <img
+                  <Image
                     src={preview.previewUrl}
                     alt='Превью'
-                    className={`
-                      w-full h-full object-cover transition
-                      ${preview.error ? "opacity-40 grayscale" : ""}
-                      ${preview.isUploading ? "blur-sm" : ""}
-                    `}
+                    fill
+                    style={{
+                      objectFit: "cover",
+                      transition: "opacity .2s, filter .2s",
+                      filter: `${preview.error ? "grayscale(1)" : ""}
+                              ${preview.isUploading ? "blur(6px)" : ""}`
+                        .replace(/\s+/g, " ")
+                        .trim(),
+                      opacity: preview.error ? 0.4 : undefined,
+                    }}
+                    sizes='(max-width: 768px) 100vw, 300px'
+                    quality={40}
+                    className=''
                   />
-
                   {/* Loading Overlay */}
                   {preview.isUploading && (
                     <div className='absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center backdrop-blur-md'>
                       <Spinner className='w-10 h-10 text-white' />
                     </div>
                   )}
-
                   {/* Error Overlay */}
                   {preview.error && (
                     <div className='absolute inset-0 bg-destructive/30 rounded-xl flex items-center justify-center backdrop-blur-sm'>
@@ -1075,7 +1150,6 @@ export function PropertyForm({
                       </div>
                     </div>
                   )}
-
                   {/* Success Indicator */}
                   {preview.uploadedUrl && !preview.error && !preview.isUploading && (
                     <div className='absolute top-2 left-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg animate-in fade-in duration-300'>
@@ -1094,7 +1168,6 @@ export function PropertyForm({
                       </svg>
                     </div>
                   )}
-
                   {/* Remove Button */}
                   <Button
                     type='button'
@@ -1111,7 +1184,6 @@ export function PropertyForm({
               ))}
             </div>
           )}
-
           {/* Empty State */}
           {imagePreviews.length === 0 && !isUploading && (
             <div className='flex flex-col items-center py-6 text-muted-foreground opacity-80'>
@@ -1124,13 +1196,16 @@ export function PropertyForm({
           )}
         </CardContent>
       </Card>
-
       {/* Кнопка отправки */}
       <div className='flex justify-end gap-4 pt-4 border-t border-muted/30 mt-4 px-2'>
         <Button
           type='submit'
           className={`min-w-[210px] h-12 text-base font-bold rounded-lg shadow-xl hover:shadow-2xl transition-all btn-caucasus flex items-center justify-center gap-2
-            ${isEdit ? "bg-gradient-to-r from-primary to-secondary shadow-cyan-300/30" : "bg-gradient-to-r from-primary to-[#eab308] shadow-yellow-300/30"}
+            ${
+              isEdit
+                ? "bg-linear-to-r from-primary to-secondary shadow-cyan-300/30"
+                : "bg-linear-to-r from-primary to-[#eab308] shadow-yellow-300/30"
+            }
           `}
           disabled={isSubmitDisabled}
         >

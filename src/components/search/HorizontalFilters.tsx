@@ -125,7 +125,7 @@ export function HorizontalFilters({
         '
       >
         {/* Тип сделки */}
-        <div className='w-[110px] min-w-0 shrink-0 sm:w-[130px]'>
+        <div className='w-[120px] min-w-0 shrink-0 sm:w-[135px]'>
           <Select
             value={filters.dealType === "all" ? "all" : filters.dealType}
             onValueChange={(v) => onDealTypeChange(v as SearchFiltersDisplay["dealType"])}
@@ -148,7 +148,7 @@ export function HorizontalFilters({
         </div>
 
         {/* Тип недвижимости */}
-        <div className='w-[140px] min-w-0 shrink-0 sm:w-[160px]'>
+        <div className='w-[120px] min-w-0 shrink-0 sm:w-[140px]'>
           <Select value={filters.type} onValueChange={onTypeChange}>
             <SelectTrigger className='h-10 sm:h-11 px-3 text-xs sm:text-base w-full min-w-0 shrink-0'>
               <SelectValue>{getTypeLabel(filters.type)}</SelectValue>
@@ -168,7 +168,7 @@ export function HorizontalFilters({
         </div>
 
         {/* Цена - Popover с инпутами */}
-        <div className='min-w-[120px] shrink-0'>
+        <div className='shrink-0'>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -183,7 +183,7 @@ export function HorizontalFilters({
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className='w-72 sm:w-80 sm:p-2 p-1'
+              className='w-72 sm:w-80 sm:p-1.5 p-1'
               align='start'
               sideOffset={8}
             >
@@ -249,7 +249,7 @@ export function HorizontalFilters({
         </div>
 
         {/* Локация: регион + город в одном поповере */}
-        <div className='min-w-[120px] shrink-0'>
+        <div className='shrink-0'>
           <Popover
             open={locationPopoverOpen}
             onOpenChange={handleLocationPopoverOpenChange}
@@ -266,19 +266,19 @@ export function HorizontalFilters({
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className='w-64 sm:w-72 p-0 overflow-hidden flex flex-col max-h-[min(70vh,400px)]'
+              className='w-64 sm:w-70 p-0 overflow-hidden flex flex-col max-h-[min(70vh,400px)]'
               align='start'
               sideOffset={8}
             >
-              <div className='p-2 border-b bg-muted/40'>
+              <div className='p-1.5 border-b bg-muted/40'>
                 {/* <p className='text-xs font-medium text-muted-foreground px-2 py-1'>
                   Регион
                 </p> */}
                 <div className='flex flex-wrap gap-1'>
                   {REGION_OPTIONS.map((option) => (
-                    <button
+                    <Button
                       key={option.value}
-                      type='button'
+                      size={"sm"}
                       onClick={() =>
                         handleRegionSelect(option.value as SearchFiltersDisplay["region"])
                       }
@@ -290,7 +290,7 @@ export function HorizontalFilters({
                       )}
                     >
                       {option.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -380,7 +380,7 @@ export function HorizontalFilters({
         </div>
 
         {/* Площадь - Popover с инпутом */}
-        <div className='min-w-[120px] shrink-0'>
+        <div className='shrink-0'>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -394,7 +394,7 @@ export function HorizontalFilters({
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className='w-36 sm:w-48 sm:p-2 p-1'
+              className='w-36 sm:w-48 sm:p-1.5 p-1'
               align='start'
               sideOffset={8}
             >
@@ -423,10 +423,10 @@ export function HorizontalFilters({
         </div>
 
         {/* Сортировка */}
-        <div className='min-w-[120px] shrink-0 ml-auto snap-end'>
+        <div className='min-w-[190px] shrink-0 sm:min-w-[210px] ml-auto snap-end'>
           <Select value={filters.sortBy} onValueChange={onSortChange}>
             <SelectTrigger className='h-8 sm:h-9 px-3 w-full text-xs sm:text-base'>
-              <ArrowUpDown className='w-4 h-4 mr-2 opacity-50 hidden sm:block' />
+              <ArrowUpDown className='w-4 h-4 mr-2 opacity-50' />
               <SelectValue>
                 {SORT_OPTIONS.find((opt) => opt.value === filters.sortBy)?.label ||
                   "По популярности"}

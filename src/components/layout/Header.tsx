@@ -80,12 +80,12 @@ function CategoryLinks({
   );
 }
 
-function UserMenuLinks({ isAdmin }: { isAdmin: boolean; }) {
+function UserMenuLinks({ isAdmin }: { isAdmin: boolean }) {
   return (
     <>
       {isAdmin && (
         <Link href={`${ROUTES.dashboard}/admin`}>
-          <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-red-600'>
+          <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-full hover:bg-accent/70 cursor-pointer text-red-600'>
             <Shield className='h-4 w-4 shrink-0' />
             Админ-панель
           </div>
@@ -101,7 +101,7 @@ function UserMenuLinks({ isAdmin }: { isAdmin: boolean; }) {
       )}
       {USER_MENU_ITEMS.map(({ href, icon: Icon, label }) => (
         <Link href={href} key={href}>
-          <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
+          <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-full hover:bg-accent/70 cursor-pointer'>
             <Icon className='h-4 w-4 shrink-0' />
             {label}
           </div>
@@ -322,7 +322,7 @@ export function Header() {
                   <HoverCardContent
                     align='end'
                     sideOffset={8}
-                    className='w-56 p-1.5 shadow-xl rounded-xl'
+                    className='w-56 p-1.5 shadow-xl rounded-4xl'
                   >
                     <div className='space-y-0.5'>
                       <UserMenuLinks isAdmin={isAdmin} />
@@ -335,7 +335,7 @@ export function Header() {
                       <button
                         type='button'
                         onClick={handleLogout}
-                        className='flex w-full items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-destructive/10 cursor-pointer text-destructive'
+                        className='flex w-full items-center gap-2.5 px-2.5 py-2 text-sm rounded-full hover:bg-destructive/20 cursor-pointer text-destructive'
                         disabled={isLoggingOut}
                       >
                         <LogOut className='h-4 w-4 shrink-0' />
@@ -470,7 +470,7 @@ export function Header() {
                     )}
                     {USER_MENU_ITEMS.map(({ href, icon: Icon, label }) => (
                       <Link href={href} onClick={closeMobileMenu} key={href}>
-                        <div className='flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-accent/70 transition-colors min-h-[48px]'>
+                        <div className='flex items-center gap-3 px-4 py-3.5 rounded-full hover:bg-accent/70 transition-colors min-h-[48px]'>
                           <Icon className='h-5 w-5' />
                           {label}
                         </div>

@@ -17,7 +17,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-11 cursor-pointer select-none items-center justify-between rounded-lg border border-input bg-background px-4 py-2.5 text-sm shadow-sm transition-all duration-200",
+      "flex h-11 cursor-pointer select-none items-center justify-between rounded-full border border-input bg-background px-4 py-2.5 text-sm shadow-sm transition-all duration-200",
       "hover:border-ring/70 focus:border-ring focus:outline-none",
       "disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]",
       className
@@ -74,7 +74,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-2xl",
+        "relative z-50 max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-4xl border bg-popover text-popover-foreground shadow-2xl",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
@@ -85,7 +85,7 @@ const SelectContent = React.forwardRef<
       {...props}
     >
       <SelectScrollUpButton />
-      <SelectPrimitive.Viewport className='p-1.5'>{children}</SelectPrimitive.Viewport>
+      <SelectPrimitive.Viewport className='p-1'>{children}</SelectPrimitive.Viewport>
       <SelectScrollDownButton />
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
@@ -114,7 +114,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 px-3 text-sm outline-none transition-colors",
+      "relative flex w-full cursor-pointer select-none items-center rounded-full py-2.5 px-3 text-sm outline-none transition-colors",
       "hover:bg-accent focus:bg-accent focus:text-accent-foreground",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className

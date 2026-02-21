@@ -24,6 +24,8 @@ import type { Message, MessagesResponse } from "@/types/chat";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useChatTypingAndPresence } from "@/hooks/use-socket";
 import { useSocket } from "@/hooks/use-socket";
+import { Button } from "@/components/ui";
+import { MoveLeft } from "lucide-react";
 
 function MessagesPageContent() {
   const router = useRouter();
@@ -243,9 +245,9 @@ function MessagesPageContent() {
   return (
     <div className='bg-background'>
       <div className='container mx-auto px-1 py-1 lg:px-2 lg:py-4'>
-        <h1 className='text-2xl font-bold mb-6 hidden lg:block'>Сообщения</h1>
+        {/*<h1 className='text-2xl font-bold mb-6 hidden lg:block'>Сообщения</h1>*/}
 
-        <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-154px)]'>
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-114px)]'>
           {/* Список чатов */}
           <Card
             className={cn(

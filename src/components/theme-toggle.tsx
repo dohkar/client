@@ -51,7 +51,7 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
         type='button'
         onClick={toggleTheme}
         className={cn(
-          "flex w-full items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors cursor-pointer",
+          "flex w-full items-center gap-2.5 px-2.5 py-2 text-sm rounded-full transition-colors cursor-pointer",
           "hover:bg-accent/70",
           className
         )}

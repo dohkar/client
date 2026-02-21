@@ -50,7 +50,7 @@ export function PropertyCard({
             src={property.image || "/placeholder.svg"}
             alt={property.title}
             fill
-            className='object-cover group-hover:scale-105 transition-transform duration-300'
+            className='object-cover transition-transform duration-300'
             sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
           />
 
@@ -69,7 +69,7 @@ export function PropertyCard({
             <Button
               size='icon'
               variant='secondary'
-              className={`absolute top-3 right-3 rounded-full backdrop-blur transition-all shadow-md min-h-[44px] min-w-[44px] ${
+              className={`absolute top-3 right-3 rounded-full backdrop-blur transition-all shadow-md min-h-11 min-w-11 ${
                 favorite
                   ? "bg-destructive text-white hover:bg-destructive/90"
                   : "bg-background/90 hover:bg-background"
