@@ -85,13 +85,18 @@ export default function ListingsPage() {
     return "date-desc";
   }, [sortBy]);
 
+  const apiType =
+    typeFilter === "all"
+      ? undefined
+      : (typeFilter.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL");
+
   const { data: response, isLoading } = useQuery({
     queryKey: queryKeys.properties.list({
       my: true,
       page,
       limit: PAGINATION.propertiesMaxLimit,
       sortBy: sortByApi,
-      type: typeFilter === "all" ? undefined : (typeFilter.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"),
+      type: typeFilter === "all" ? undefined : typeFilter,
       query: searchQuery.trim() || undefined,
     }),
     queryFn: async () => {
@@ -100,7 +105,7 @@ export default function ListingsPage() {
         limit: PAGINATION.propertiesMaxLimit,
         page,
         sortBy: sortByApi,
-        type: typeFilter === "all" ? undefined : (typeFilter.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"),
+        type: apiType,
         query: searchQuery.trim() || undefined,
       });
     },
