@@ -90,9 +90,7 @@ export function buildPageMetadata(options: PageMetaOptions): Metadata {
     openGraph: openGraphOverride
       ? { ...defaultOpenGraph, ...openGraphOverride }
       : defaultOpenGraph,
-    twitter: twitterOverride
-      ? { ...defaultTwitter, ...twitterOverride }
-      : defaultTwitter,
+    twitter: twitterOverride ? { ...defaultTwitter, ...twitterOverride } : defaultTwitter,
     alternates: alternatesOverride ?? { canonical: url },
   };
 
@@ -115,7 +113,7 @@ export const HOME_DESCRIPTION =
 export const DEFAULT_SITE_METADATA: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "Недвижимость Кавказа — объявления о продаже и аренде | Дохкар",
+    default: "Недвижимость Кавказа — объявления о продаже и аренде",
     template: "%s | Дохкар",
   },
   description: HOME_DESCRIPTION,
@@ -132,7 +130,7 @@ export const DEFAULT_SITE_METADATA: Metadata = {
     "Дохкар",
   ],
   openGraph: {
-    title: "Недвижимость Кавказа — объявления о продаже и аренде | Дохкар",
+    title: "Недвижимость Кавказа — объявления о продаже и аренде",
     description: HOME_DESCRIPTION,
     type: "website",
     siteName: SITE_NAME,
@@ -149,7 +147,7 @@ export const DEFAULT_SITE_METADATA: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Недвижимость Кавказа — объявления о продаже и аренде | Дохкар",
+    title: "Недвижимость Кавказа — объявления о продаже и аренде",
     description: HOME_DESCRIPTION,
   },
   robots: {
