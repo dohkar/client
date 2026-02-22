@@ -31,7 +31,10 @@ export interface PropertyBackend {
   type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
   dealType?: PropertyDealType;
   cityId?: string | null;
-  city?: { id: string; name: string; slug?: string | null } | Record<string, never> | null;
+  city?:
+    | { id: string; name: string; slug?: string | null }
+    | Record<string, never>
+    | null;
   rooms?: number;
   area: number;
   description: string;
@@ -124,7 +127,13 @@ export interface PropertySearchParams {
   region?: "Chechnya" | "Ingushetia" | "Other";
   regionId?: string;
   cityId?: string;
-  sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance";
+  sortBy?:
+    | "price-asc"
+    | "price-desc"
+    | "date-desc"
+    | "relevance"
+    | "area-asc"
+    | "area-desc";
   page?: number;
   limit?: number;
 }

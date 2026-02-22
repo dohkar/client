@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks";
 import { adminService } from "@/services/admin.service";
@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 function BanUserDialog({
@@ -95,20 +95,24 @@ export default function AdminUsersPage() {
   const [usersRole, setUsersRole] = useState<string>("all");
   const [usersStatus, setUsersStatus] = useState<string>("all");
   const [banUserId, setBanUserId] = useState<string | null>(null);
+  const [usersPage, setUsersPage] = useState(1);
 
   const debouncedUsersSearch = useDebounce(usersSearch, 400);
 
+  useEffect(() => {
+    setUsersPage(1);
+  }, [debouncedUsersSearch, usersRole, usersStatus]);
+
+  const ADMIN_PAGE_LIMIT = 100;
   const { data: usersData, isLoading: usersLoading } = useQuery({
-    queryKey: ["admin", "users", debouncedUsersSearch, usersRole, usersStatus],
+    queryKey: ["admin", "users", usersPage, debouncedUsersSearch, usersRole, usersStatus],
     queryFn: async () => {
       return adminService.getUsers({
-        page: 1,
-        limit: 1000,
+        page: usersPage,
+        limit: ADMIN_PAGE_LIMIT,
         search: debouncedUsersSearch || undefined,
         role:
-          usersRole !== "all"
-            ? (usersRole as "USER" | "PREMIUM" | "ADMIN")
-            : undefined,
+          usersRole !== "all" ? (usersRole as "USER" | "PREMIUM" | "ADMIN") : undefined,
         status: usersStatus !== "all" ? (usersStatus as "active" | "banned") : undefined,
       });
     },
@@ -231,6 +235,36 @@ export default function AdminUsersPage() {
             searchValue={debouncedUsersSearch}
             onSearchChange={setUsersSearch}
           />
+          {(usersData?.totalPages ?? 1) > 1 && (
+            <div className='mt-4 flex flex-col sm:flex-row items-center justify-between gap-2'>
+              <p className='text-sm text-muted-foreground'>
+                Страница {usersPage} из {usersData?.totalPages ?? 1}
+                {usersData?.total != null && ` · Всего: ${usersData.total}`}
+              </p>
+              <div className='flex gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={usersPage <= 1}
+                  onClick={() => setUsersPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className='w-4 h-4 mr-1' />
+                  Назад
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={usersPage >= (usersData?.totalPages ?? 1)}
+                  onClick={() =>
+                    setUsersPage((p) => Math.min(usersData?.totalPages ?? 1, p + 1))
+                  }
+                >
+                  Вперёд
+                  <ChevronRight className='w-4 h-4 ml-1' />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
       {banUserId && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { propertyService } from "@/services/property.service";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { useAuthStore } from "@/stores";
@@ -14,7 +14,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit, Trash2, Eye, Plus, Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  Eye,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -47,8 +57,10 @@ function StatusBadge({
   const isRejected = status === "rejected";
   return (
     <Badge
-      variant={status === "active" ? "default" : status === "pending" ? "secondary" : "outline"}
-      className="text-xs"
+      variant={
+        status === "active" ? "default" : status === "pending" ? "secondary" : "outline"
+      }
+      className='text-xs'
       title={isRejected && rejectionReason ? rejectionReason : undefined}
     >
       {label}
@@ -79,10 +91,10 @@ export default function ListingsPage() {
 
   const { deleteWithUndo, isDeleting } = useDeleteWithUndo();
 
-  /** sortBy для API: date-desc | price-asc | price-desc (area-* обрабатываем на клиенте) */
+  /** sortBy для API (включая area-asc | area-desc — поддерживается сервером) */
   const sortByApi = useMemo(() => {
-    if (sortBy === "price-asc" || sortBy === "price-desc") return sortBy;
-    return "date-desc";
+    if (sortBy === "date") return "date-desc";
+    return sortBy;
   }, [sortBy]);
 
   const apiType =
@@ -90,7 +102,13 @@ export default function ListingsPage() {
       ? undefined
       : (typeFilter.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL");
 
-  const { data: response, isLoading } = useQuery({
+  const {
+    data: response,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: queryKeys.properties.list({
       my: true,
       page,
@@ -110,27 +128,19 @@ export default function ListingsPage() {
       });
     },
     enabled: !!user,
+    placeholderData: keepPreviousData,
   });
 
   const data = response?.data ?? [];
   const total = response?.total ?? 0;
   const totalPages = response?.totalPages ?? 1;
+  const filteredData = data;
 
   useEffect(() => {
-    setPage(1);
+    if (searchQuery.trim() || typeFilter !== "all" || sortBy !== "date") {
+      setPage(1);
+    }
   }, [searchQuery, typeFilter, sortBy]);
-
-  /** Только клиентская сортировка по площади (API не поддерживает area-*); остальное уже с сервера */
-  const filteredData = useMemo(() => {
-    if (!data.length) return [];
-    if (sortBy === "area-asc") {
-      return [...data].sort((a, b) => (a.area || 0) - (b.area || 0));
-    }
-    if (sortBy === "area-desc") {
-      return [...data].sort((a, b) => (b.area || 0) - (a.area || 0));
-    }
-    return data;
-  }, [data, sortBy]);
 
   const hasActiveFilters = searchQuery.trim() || typeFilter !== "all";
 
@@ -139,6 +149,24 @@ export default function ListingsPage() {
     setTypeFilter("all");
     setSortBy("date");
   };
+
+  if (isError) {
+    return (
+      <div className='min-h-[70vh] py-8 sm:py-14'>
+        <div className='container mx-auto px-2 md:px-4'>
+          <div className='max-w-md mx-auto text-center py-12'>
+            <h2 className='text-xl font-semibold mb-2'>Не удалось загрузить список</h2>
+            <p className='text-muted-foreground text-sm mb-4'>
+              {error instanceof Error ? error.message : "Произошла ошибка"}
+            </p>
+            <Button onClick={() => refetch()} variant='outline'>
+              Повторить
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -196,8 +224,7 @@ export default function ListingsPage() {
           <div>
             <h1 className='text-2xl sm:text-3xl font-bold mb-2'>Мои объявления</h1>
             <p className='text-sm sm:text-base text-muted-foreground'>
-              {total}{" "}
-              {declOfNum(total, ["объявление", "объявления", "объявлений"])}
+              {total} {declOfNum(total, ["объявление", "объявления", "объявлений"])}
             </p>
           </div>
           <Link href={ROUTES.sell}>
@@ -339,11 +366,7 @@ export default function ListingsPage() {
             {hasActiveFilters && (
               <p className='text-sm text-muted-foreground mt-3'>
                 Найдено: {total}{" "}
-                {declOfNum(total, [
-                  "объявление",
-                  "объявления",
-                  "объявлений",
-                ])}
+                {declOfNum(total, ["объявление", "объявления", "объявлений"])}
               </p>
             )}
           </div>
@@ -437,7 +460,10 @@ export default function ListingsPage() {
                     </div>
                     <div className='p-4 sm:p-5'>
                       <div className='flex items-center gap-2 mb-2 flex-wrap'>
-                        <StatusBadge status={property.status} rejectionReason={property.rejectionReason} />
+                        <StatusBadge
+                          status={property.status}
+                          rejectionReason={property.rejectionReason}
+                        />
                       </div>
                       <h3 className='font-semibold mb-2 line-clamp-2 text-sm sm:text-base'>
                         {property.title}

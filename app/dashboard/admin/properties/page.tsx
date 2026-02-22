@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks";
 import { adminService } from "@/services/admin.service";
@@ -26,7 +26,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 function PropertyStatusDialog({
@@ -98,13 +98,26 @@ export default function AdminPropertiesPage() {
     propertyId: string;
     status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
   } | null>(null);
+  const [propertiesPage, setPropertiesPage] = useState(1);
 
   const debouncedPropertiesSearch = useDebounce(propertiesSearch, 500);
 
+  useEffect(() => {
+    setPropertiesPage(1);
+  }, [
+    debouncedPropertiesSearch,
+    propertiesStatus,
+    propertiesType,
+    propertiesRegionId,
+    propertiesSortBy,
+  ]);
+
+  const ADMIN_PAGE_LIMIT = 100;
   const { data: propertiesData, isLoading: propertiesLoading } = useQuery({
     queryKey: [
       "admin",
       "properties",
+      propertiesPage,
       debouncedPropertiesSearch,
       propertiesStatus,
       propertiesType,
@@ -113,12 +126,17 @@ export default function AdminPropertiesPage() {
     ],
     queryFn: async () => {
       return adminService.getProperties({
-        page: 1,
-        limit: 1000,
+        page: propertiesPage,
+        limit: ADMIN_PAGE_LIMIT,
         search: debouncedPropertiesSearch || undefined,
         status:
           propertiesStatus !== "all"
-            ? (propertiesStatus as "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED")
+            ? (propertiesStatus as
+                | "ACTIVE"
+                | "PENDING"
+                | "REJECTED"
+                | "SOLD"
+                | "ARCHIVED")
             : undefined,
         type:
           propertiesType !== "all"
@@ -246,6 +264,38 @@ export default function AdminPropertiesPage() {
             searchValue={debouncedPropertiesSearch}
             onSearchChange={setPropertiesSearch}
           />
+          {(propertiesData?.totalPages ?? 1) > 1 && (
+            <div className='mt-4 flex flex-col sm:flex-row items-center justify-between gap-2'>
+              <p className='text-sm text-muted-foreground'>
+                Страница {propertiesPage} из {propertiesData?.totalPages ?? 1}
+                {propertiesData?.total != null && ` · Всего: ${propertiesData.total}`}
+              </p>
+              <div className='flex gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={propertiesPage <= 1}
+                  onClick={() => setPropertiesPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className='w-4 h-4 mr-1' />
+                  Назад
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={propertiesPage >= (propertiesData?.totalPages ?? 1)}
+                  onClick={() =>
+                    setPropertiesPage((p) =>
+                      Math.min(propertiesData?.totalPages ?? 1, p + 1)
+                    )
+                  }
+                >
+                  Вперёд
+                  <ChevronRight className='w-4 h-4 ml-1' />
+                </Button>
+              </div>
+            </div>
+          )}
           {propertyStatusDialog && (
             <PropertyStatusDialog
               propertyId={propertyStatusDialog.propertyId}

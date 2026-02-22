@@ -31,14 +31,20 @@ export const propertyService = {
     if (params?.my !== undefined) queryParams.append("my", String(params.my));
     if (params?.type) queryParams.append("type", params.type);
     if (params?.dealType) queryParams.append("dealType", params.dealType);
-    if (params?.priceMin != null) queryParams.append("priceMin", params.priceMin.toString());
-    if (params?.priceMax != null) queryParams.append("priceMax", params.priceMax.toString());
+    if (params?.priceMin != null)
+      queryParams.append("priceMin", params.priceMin.toString());
+    if (params?.priceMax != null)
+      queryParams.append("priceMax", params.priceMax.toString());
     if (params?.rooms != null) queryParams.append("rooms", params.rooms.toString());
     if (params?.areaMin != null) queryParams.append("areaMin", params.areaMin.toString());
-    if (params?.floorMin != null) queryParams.append("floorMin", params.floorMin.toString());
-    if (params?.floorMax != null) queryParams.append("floorMax", params.floorMax.toString());
-    if (params?.floorNotFirst !== undefined) queryParams.append("floorNotFirst", String(params.floorNotFirst));
-    if (params?.floorNotLast !== undefined) queryParams.append("floorNotLast", String(params.floorNotLast));
+    if (params?.floorMin != null)
+      queryParams.append("floorMin", params.floorMin.toString());
+    if (params?.floorMax != null)
+      queryParams.append("floorMax", params.floorMax.toString());
+    if (params?.floorNotFirst !== undefined)
+      queryParams.append("floorNotFirst", String(params.floorNotFirst));
+    if (params?.floorNotLast !== undefined)
+      queryParams.append("floorNotLast", String(params.floorNotLast));
     if (params?.regionId) queryParams.append("regionId", params.regionId);
     if (params?.cityId) queryParams.append("cityId", params.cityId);
     if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
@@ -51,13 +57,15 @@ export const propertyService = {
       : API_ENDPOINTS.properties.list;
 
     // OpenAPI spec has content?: never, but API returns PaginatedResponse
-    const response = await apiClient.get<any>(endpoint) as PaginatedResponse<PropertyBackend>;
-    
+    const response = (await apiClient.get<any>(
+      endpoint
+    )) as PaginatedResponse<PropertyBackend>;
+
     // Инициализируем кэш регионов на основе полученных данных
     if (response.data && response.data.length > 0) {
       initializeRegionCache(response.data);
     }
-    
+
     return {
       ...response,
       data: response.data.map(adaptProperty),
@@ -71,12 +79,12 @@ export const propertyService = {
     const response = await apiClient.get<ApiPropertyGetByIdResponse>(
       API_ENDPOINTS.properties.getById(id)
     );
-    
+
     // Инициализируем кэш регионов на основе полученных данных
     if (response.region && "id" in response.region && "name" in response.region) {
       initializeRegionCache([response as PropertyBackend]);
     }
-    
+
     return adaptProperty(response); // Directly adapt the response
   },
 
@@ -87,19 +95,17 @@ export const propertyService = {
     const response = await apiClient.get<ApiPropertySearchResponse>(
       `${API_ENDPOINTS.properties.search}?q=${encodeURIComponent(query)}`
     );
-    
+
     // Инициализируем кэш регионов на основе полученных данных
     initializeRegionCache(response);
-    
+
     return response.map(adaptProperty); // Directly map the response
   },
 
   /**
    * Создать объявление
    */
-  async createProperty(
-    data: ApiPropertyCreateRequest
-  ): Promise<Property> {
+  async createProperty(data: ApiPropertyCreateRequest): Promise<Property> {
     const response = await apiClient.post<ApiPropertyCreateResponse>(
       API_ENDPOINTS.properties.create,
       data
@@ -110,10 +116,7 @@ export const propertyService = {
   /**
    * Обновить объявление
    */
-  async updateProperty(
-    id: string,
-    data: ApiPropertyUpdateRequest
-  ): Promise<Property> {
+  async updateProperty(id: string, data: ApiPropertyUpdateRequest): Promise<Property> {
     const response = await apiClient.patch<ApiPropertyUpdateResponse>(
       API_ENDPOINTS.properties.update(id),
       data
@@ -143,10 +146,7 @@ export const propertyService = {
   /**
    * Похожие объявления (регион/город, тип, лимит)
    */
-  async getRelatedProperties(
-    propertyId: string,
-    limit = 6
-  ): Promise<Property[]> {
+  async getRelatedProperties(propertyId: string, limit = 6): Promise<Property[]> {
     const response = await apiClient.get<PropertyBackend[]>(
       `${API_ENDPOINTS.properties.getRelated(propertyId)}?limit=${limit}`
     );
@@ -160,11 +160,13 @@ export const propertyService = {
     monthlyLimit: number;
     createdInMonth: number;
     remaining: number;
+    myPropertiesCount: number;
   }> {
     return apiClient.get<{
       monthlyLimit: number;
       createdInMonth: number;
       remaining: number;
+      myPropertiesCount: number;
     }>(API_ENDPOINTS.properties.getLimits);
   },
 };

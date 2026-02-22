@@ -168,7 +168,13 @@ export type ApiPropertyListParams = {
   floorNotLast?: boolean;
   regionId?: string;
   cityId?: string;
-  sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance";
+  sortBy?:
+    | "price-asc"
+    | "price-desc"
+    | "date-desc"
+    | "relevance"
+    | "area-asc"
+    | "area-desc";
   page?: number;
   limit?: number;
 };

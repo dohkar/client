@@ -9,8 +9,8 @@ import { Home, Heart, MessageSquare, Settings, Shield, HelpCircle } from "lucide
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
-import { propertyService } from "@/services/property.service";
 import { favoritesService } from "@/services/favorites.service";
+import { usePropertyLimits } from "@/hooks/use-properties";
 import { useChatsList } from "@/hooks/use-chats";
 import { ROUTES } from "@/constants";
 
@@ -24,20 +24,12 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, isInitialized]);
 
-  const { data: propertiesMeta } = useQuery({
-    queryKey: queryKeys.properties.list({ my: true }),
-    queryFn: async () => {
-      const response = await propertyService.getProperties({
-        my: true,
-        limit: 1,
-        page: 1,
-      });
-      return { total: response.total ?? 0 };
-    },
-    enabled: !!user && isAuthenticated && isInitialized,
-  });
-
-  const propertiesCount = propertiesMeta?.total ?? 0;
+  const {
+    data: limits,
+    isError: limitsError,
+    refetch: refetchLimits,
+  } = usePropertyLimits(!!user && isAuthenticated && isInitialized);
+  const propertiesCount = limits?.myPropertiesCount ?? 0;
 
   const { data: favorites } = useQuery({
     queryKey: queryKeys.favorites.all,
@@ -118,8 +110,29 @@ export default function DashboardPage() {
           </div>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8'>
-            {stats.map((stat) => {
+            {stats.map((stat, index) => {
               const Icon = stat.icon;
+              const isFirstStatAndError = index === 0 && limitsError;
+              if (isFirstStatAndError) {
+                return (
+                  <Card key={stat.title} className='border-destructive/30'>
+                    <CardContent className='p-4 sm:p-6'>
+                      <div className='flex items-center justify-between mb-3 sm:mb-4'>
+                        <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${stat.color}`} />
+                        <span className='text-lg font-semibold text-destructive'>
+                          Ошибка
+                        </span>
+                      </div>
+                      <p className='text-sm sm:text-base text-muted-foreground mb-3'>
+                        {stat.title}
+                      </p>
+                      <Button variant='outline' size='sm' onClick={() => refetchLimits()}>
+                        Повторить
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              }
               return (
                 <Link key={stat.title} href={stat.href}>
                   <Card className='hover:shadow-lg transition-shadow cursor-pointer border-primary/20'>
