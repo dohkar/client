@@ -39,6 +39,7 @@ export interface PropertyBackend {
   area: number;
   description: string;
   images: string[];
+  videos?: string[];
   features: string[];
   status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
   views: number;
@@ -78,6 +79,7 @@ export interface Property {
   area: number;
   image: string;
   images: string[];
+  videos?: string[];
   isPremium: boolean;
   datePosted: string;
   description: string;

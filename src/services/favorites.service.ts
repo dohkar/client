@@ -1,7 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/constants/routes";
 import { adaptProperty } from "@/lib/property-adapter";
-import { initializeRegionCache } from "@/services/region.service";
 import type { Property } from "@/types/property";
 import type { FavoritesListResponse, OperationResponse } from "@/lib/api-types";
 import type { PropertyBackend } from "@/types/property";
@@ -43,9 +42,6 @@ export const favoritesService = {
       const propertiesBackend = response
         .map((fav) => fav?.property)
         .filter(Boolean) as PropertyBackend[];
-      if (propertiesBackend.length) {
-        initializeRegionCache(propertiesBackend);
-      }
       return propertiesBackend.map(adaptProperty);
     } catch (error) {
       console.error("Ошибка получения избранных объявлений:", error);

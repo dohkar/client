@@ -107,6 +107,14 @@ export const API_ENDPOINTS = {
   upload: {
     avatar: "/api/upload/avatar",
     images: "/api/upload/images",
+    videos: "/api/upload/videos",
+  },
+
+  // Subscriptions
+  subscriptions: {
+    plans: "/api/subscriptions/plans",
+    createPayment: "/api/subscriptions/create-payment",
+    paymentStatus: (paymentId: string) => `/api/subscriptions/payments/${paymentId}/status`,
   },
 
   // Chats

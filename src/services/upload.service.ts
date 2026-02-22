@@ -19,6 +19,13 @@ export interface ImagesUploadResult {
   }>;
 }
 
+export interface VideosUploadResult {
+  videos: Array<{
+    url: string;
+    publicId: string;
+  }>;
+}
+
 /**
  * Ошибка загрузки
  */
@@ -31,16 +38,19 @@ export interface UploadError {
  * Допустимые MIME типы для загрузки
  */
 export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+export const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
 
 /**
  * Максимальный размер файла (5MB)
  */
 export const MAX_FILE_SIZE = 5 * 1024 * 1024;
+export const MAX_VIDEO_FILE_SIZE = 50 * 1024 * 1024;
 
 /**
  * Максимальное количество изображений для объявления
  */
 export const MAX_IMAGES_PER_PROPERTY = 10;
+export const MAX_VIDEOS_PER_PROPERTY = 3;
 
 /**
  * Валидация файла перед загрузкой
@@ -71,6 +81,35 @@ export function validateImageFiles(files: File[]): string | null {
 
   for (const file of files) {
     const error = validateImageFile(file);
+    if (error) return error;
+  }
+
+  return null;
+}
+
+export function validateVideoFile(file: File): string | null {
+  if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
+    return "Недопустимый формат видео. Разрешены: MP4, WebM";
+  }
+
+  if (file.size > MAX_VIDEO_FILE_SIZE) {
+    return `Размер видео превышает ${MAX_VIDEO_FILE_SIZE / 1024 / 1024}MB`;
+  }
+
+  return null;
+}
+
+export function validateVideoFiles(files: File[]): string | null {
+  if (files.length === 0) {
+    return "Видео не выбраны";
+  }
+
+  if (files.length > MAX_VIDEOS_PER_PROPERTY) {
+    return `Максимальное количество видео: ${MAX_VIDEOS_PER_PROPERTY}`;
+  }
+
+  for (const file of files) {
+    const error = validateVideoFile(file);
     if (error) return error;
   }
 
@@ -152,5 +191,43 @@ export const uploadService = {
     const json = await response.json();
     // API возвращает { status, data } - извлекаем data
     return json.data !== undefined ? json.data : json;
+  },
+
+  async uploadPropertyVideos(files: File[]): Promise<VideosUploadResult> {
+    const validationError = validateVideoFiles(files);
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const accessToken = accessTokenStorage.getAccessToken();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90_000);
+
+    try {
+      const response = await fetch(`${API_URL}${API_ENDPOINTS.upload.videos}`, {
+        method: "POST",
+        headers: {
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+        body: formData,
+        credentials: "include",
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Ошибка загрузки: ${response.status}`);
+      }
+
+      const json = await response.json();
+      return json.data !== undefined ? json.data : json;
+    } finally {
+      clearTimeout(timeout);
+    }
   },
 };

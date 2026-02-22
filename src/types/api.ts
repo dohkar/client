@@ -302,7 +302,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Лимиты объявлений для текущего пользователя (скользящие 30 дней) */
+        /** Лимиты объявлений для текущего пользователя (скользящие 30 дней) + счётчик моих объявлений */
         get: operations["PropertiesController_getMyLimits"];
         put?: never;
         post?: never;
@@ -622,6 +622,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/upload/videos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Загрузить видео для объявления */
+        post: operations["UploadController_uploadVideos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -633,6 +650,71 @@ export interface paths {
         get: operations["HealthController_check"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/health/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subscription sync status (cron health) */
+        get: operations["HealthController_getSyncStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subscriptions/create-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SubscriptionsController_createPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subscriptions/payments/{paymentId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SubscriptionsController_getPaymentStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subscriptions/webhooks/yookassa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SubscriptionsController_handleYooKassaWebhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -862,22 +944,6 @@ export interface paths {
         patch: operations["InboxController_updateStatus"];
         trace?: never;
     };
-    "/api/subscriptions/send-code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["SubscriptionsController_sendCode"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -996,6 +1062,12 @@ export interface components {
              *     ]
              */
             features?: string[];
+            /**
+             * @example [
+             *       "https://example.com/video1.mp4"
+             *     ]
+             */
+            videos?: string[];
             /** @example ул. Ленина */
             street?: string;
             /** @example 10 */
@@ -1036,6 +1108,7 @@ export interface components {
             area: number;
             description: string;
             images: string[];
+            videos?: string[];
             features: string[];
             /** @enum {string} */
             status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
@@ -1096,6 +1169,12 @@ export interface components {
              *     ]
              */
             features?: string[];
+            /**
+             * @example [
+             *       "https://example.com/video1.mp4"
+             *     ]
+             */
+            videos?: string[];
             /** @example ул. Ленина */
             street?: string;
             /** @example 10 */
@@ -1128,6 +1207,13 @@ export interface components {
             status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
             /** @description Причина отклонения (при смене на PENDING или отклонении) */
             rejectionReason?: string;
+        };
+        CreateSubscriptionPaymentDto: {
+            /**
+             * @description Код подписки (тариф)
+             * @example premium_month
+             */
+            code: string;
         };
         CreatePropertyChatDto: {
             /**
@@ -1259,13 +1345,6 @@ export interface components {
             status: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
             /** @description Комментарий администратора */
             adminComment?: string;
-        };
-        subscriptionsDto: {
-            /**
-             * @description код подписки - (Тариф)
-             * @example premium_month
-             */
-            code: string;
         };
     };
     responses: never;
@@ -1640,8 +1719,9 @@ export interface operations {
                 floorNotLast?: boolean;
                 regionId?: string;
                 cityId?: string;
-                sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance";
+                sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance" | "area-asc" | "area-desc";
                 page?: number;
+                /** @description Фактически сервер ограничивает максимумом 50 (см. MAX_PAGE_LIMIT). */
                 limit?: number;
             };
             header?: never;
@@ -1733,7 +1813,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description monthlyLimit, createdInMonth, remaining */
+            /** @description monthlyLimit, createdInMonth, remaining, myPropertiesCount */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2386,6 +2466,30 @@ export interface operations {
             };
         };
     };
+    UploadController_uploadVideos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** @description Видео (mp4, webm), max 3 файлов, каждый max 50MB */
+                    files: string[];
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     HealthController_check: {
         parameters: {
             query?: never;
@@ -2396,6 +2500,84 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Service is healthy */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HealthController_getSyncStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sync status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SubscriptionsController_createPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSubscriptionPaymentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SubscriptionsController_getPaymentStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SubscriptionsController_handleYooKassaWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                "x-yookassa-signature": string;
+                "idempotence-key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2835,27 +3017,6 @@ export interface operations {
         };
         responses: {
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SubscriptionsController_sendCode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["subscriptionsDto"];
-            };
-        };
-        responses: {
-            201: {
                 headers: {
                     [name: string]: unknown;
                 };

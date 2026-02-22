@@ -29,9 +29,13 @@ import { REGION_BACKEND_TO_NAME } from "@/lib/regions";
 import {
   uploadService,
   validateImageFiles,
+  validateVideoFiles,
   ALLOWED_IMAGE_TYPES,
   MAX_FILE_SIZE,
   MAX_IMAGES_PER_PROPERTY,
+  ALLOWED_VIDEO_TYPES,
+  MAX_VIDEO_FILE_SIZE,
+  MAX_VIDEOS_PER_PROPERTY,
 } from "@/services/upload.service";
 import { toast } from "sonner";
 import type { Property } from "@/types/property";
@@ -53,6 +57,7 @@ import { useAmenities } from "@/hooks/use-amenities";
 import { geocodeAddress, reverseGeocode } from "@/lib/yandex-geocoder";
 import { YandexMap } from "@/components/features/yandex-map";
 import { REGION_LABELS } from "@/lib/search-constants";
+import { logger } from "@/lib/utils/logger";
 
 // Интерфейс для превью изображений
 interface ImagePreview {
@@ -63,6 +68,16 @@ interface ImagePreview {
   uploadedPublicId?: string;
   isUploading: boolean;
   error?: string;
+}
+
+interface VideoPreview {
+  id: string;
+  file: File;
+  uploadedUrl?: string;
+  uploadedPublicId?: string;
+  isUploading: boolean;
+  error?: string;
+  name: string;
 }
 
 /** Собирает строку адреса из компонентов */
@@ -142,10 +157,15 @@ export function PropertyForm({
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
   const [imagesError, setImagesError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [videoPreviews, setVideoPreviews] = useState<VideoPreview[]>([]);
+  const [videosError, setVideosError] = useState<string | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [priceDisplay, setPriceDisplay] = useState<string>("");
   const [areaDisplay, setAreaDisplay] = useState<string>("");
   const [isGeocoding, setIsGeocoding] = useState(false);
   const geocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reverseGeocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const coordsSourceRef = useRef<"geocode" | "map" | null>(null);
 
   // Удобства (скоро вернутся)
   const amenities = useAmenities({
@@ -164,14 +184,33 @@ export function PropertyForm({
       }));
       setImagePreviews(existingPreviews);
     }
-  }, [initialData?.images]);
+    if (initialData?.videos && initialData.videos.length > 0) {
+      const existingVideos: VideoPreview[] = initialData.videos.map((url, index) => ({
+        id: `existing-video-${index}`,
+        file: new File([], "existing-video"),
+        uploadedUrl: url,
+        isUploading: false,
+        name: `Видео ${index + 1}`,
+      }));
+      setVideoPreviews(existingVideos);
+    }
+  }, [initialData?.images, initialData?.videos]);
 
   // Инициализируем кэш регионов при загрузке компонента
   useEffect(() => {
     ensureRegionCacheInitialized().catch((error) => {
-      console.error("Ошибка при инициализации кэша регионов:", error);
+      logger.error("Ошибка при инициализации кэша регионов", error);
     });
   }, []);
+
+  useEffect(
+    () => () => {
+      if (reverseGeocodeTimeoutRef.current) {
+        clearTimeout(reverseGeocodeTimeoutRef.current);
+      }
+    },
+    []
+  );
 
   const {
     register,
@@ -234,14 +273,16 @@ export function PropertyForm({
   const cityId = watch("cityId");
   const street = watch("street");
   const house = watch("house");
+  const cityName = cities.find((c) => c.id === cityId)?.name ?? "";
 
-  // UX: Геокодирование по адресу с задержкой для авто-сохранения локации
+  // UX: Геокодирование по адресу с задержкой и защитой от map->geocode петли.
+  // Зависимость от cityName (строка), а не от cities (массив), чтобы избежать бесконечного цикла
+  // при default [] из useQuery (новая ссылка на массив каждый рендер).
   useEffect(() => {
     if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
 
     const regionRu =
       REGION_LABELS[selectedRegion] ?? (selectedRegion === "Other" ? "Россия" : "");
-    const cityName = cities.find((c) => c.id === cityId)?.name ?? "";
     const query = buildLocationFromComponents({
       region: regionRu,
       city: cityName,
@@ -249,12 +290,18 @@ export function PropertyForm({
       house: house?.trim(),
     });
 
-    if (!query || query.length < 5) {
+    const hasAddressSignal = Boolean(cityName || street?.trim());
+    if (!hasAddressSignal || !query || query.length < 5) {
       setValue("latitude", undefined);
       setValue("longitude", undefined);
       return;
     }
 
+    if (coordsSourceRef.current === "map") {
+      return;
+    }
+
+    coordsSourceRef.current = "geocode";
     setIsGeocoding(true);
     geocodeTimeoutRef.current = setTimeout(async () => {
       try {
@@ -270,6 +317,9 @@ export function PropertyForm({
         );
 
         if (result) {
+          if (coordsSourceRef.current === "map") {
+            return;
+          }
           setValue("latitude", result.latitude);
           setValue("longitude", result.longitude);
           setValue("location", result.formattedAddress);
@@ -289,47 +339,55 @@ export function PropertyForm({
       } finally {
         setIsGeocoding(false);
       }
-    }, 950); // Быстрее реакции UX
+    }, 400);
 
     return () => {
       if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
     };
-  }, [selectedRegion, cityId, street, house, cities, setValue]);
+  }, [selectedRegion, cityId, cityName, street, house, setValue]);
 
-  // Держим location актуальным из компонентов, если геокодер ещё не сработал
+  // Держим location актуальным из компонентов, если геокодер ещё не сработал.
   const locationValue = watch("location");
   useEffect(() => {
     if (locationValue && locationValue.length >= 5) return;
     const regionRu =
       REGION_LABELS[selectedRegion] ?? (selectedRegion === "Other" ? "Россия" : "");
-    const cityName = cities.find((c) => c.id === cityId)?.name ?? "";
     const built = buildLocationFromComponents({
       region: regionRu,
       city: cityName,
       street: street?.trim(),
       house: house?.trim(),
     });
-    if (built && built.length >= 5) setValue("location", built);
-  }, [selectedRegion, cityId, street, house, cities, locationValue, setValue]);
+    if (built && built.length >= 5 && built !== locationValue) {
+      setValue("location", built);
+    }
+  }, [selectedRegion, cityId, cityName, street, house, locationValue, setValue]);
 
   // Координаты с карты
   const handleMapCoordinatesChange = useCallback(
     async (lat: number, lon: number) => {
-      try {
-        const API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || "";
-        const result = await reverseGeocode(lat, lon, API_KEY);
-        if (result) {
-          setValue("latitude", lat);
-          setValue("longitude", lon);
-          setValue("location", result.formattedAddress);
-          if (result.components.street) setValue("street", result.components.street);
-          if (result.components.house) setValue("house", result.components.house);
-          toast.success("Адрес обновлён по картe", { duration: 1200 });
-        }
-      } catch {
-        setValue("latitude", lat);
-        setValue("longitude", lon);
+      coordsSourceRef.current = "map";
+      setValue("latitude", lat);
+      setValue("longitude", lon);
+
+      if (reverseGeocodeTimeoutRef.current) {
+        clearTimeout(reverseGeocodeTimeoutRef.current);
       }
+
+      reverseGeocodeTimeoutRef.current = setTimeout(async () => {
+        try {
+          const API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || "";
+          const result = await reverseGeocode(lat, lon, API_KEY);
+          if (result) {
+            setValue("location", result.formattedAddress);
+            if (result.components.street) setValue("street", result.components.street);
+            if (result.components.house) setValue("house", result.components.house);
+            toast.success("Адрес обновлён по картe", { duration: 1200 });
+          }
+        } catch {
+          // Координаты уже установлены выше.
+        }
+      }, 400);
     },
     [setValue]
   );
@@ -427,6 +485,81 @@ export function PropertyForm({
     fileInputRef.current?.click();
   }, []);
 
+  const handleVideoSelectClick = useCallback(() => {
+    videoInputRef.current?.click();
+  }, []);
+
+  const handleVideoFilesSelect = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+
+      if (videoPreviews.length + files.length > MAX_VIDEOS_PER_PROPERTY) {
+        toast.error(`Максимум ${MAX_VIDEOS_PER_PROPERTY} видео`);
+        return;
+      }
+
+      const validationError = validateVideoFiles(files);
+      if (validationError) {
+        toast.error(validationError);
+        return;
+      }
+
+      const newPreviews: VideoPreview[] = files.map((file) => ({
+        id: generateId(),
+        file,
+        isUploading: true,
+        name: file.name,
+      }));
+
+      setVideoPreviews((prev) => [...prev, ...newPreviews]);
+      setVideosError(null);
+      setIsUploading(true);
+
+      try {
+        const result = await uploadService.uploadPropertyVideos(files);
+        setVideoPreviews((prev) =>
+          prev.map((p) => {
+            const fileIndex = newPreviews.findIndex((np) => np.id === p.id);
+            if (fileIndex !== -1 && result.videos[fileIndex]) {
+              return {
+                ...p,
+                uploadedUrl: result.videos[fileIndex].url,
+                uploadedPublicId: result.videos[fileIndex].publicId,
+                isUploading: false,
+              };
+            }
+            return p;
+          })
+        );
+        toast.success(`Загружено ${files.length} видео`, { duration: 1400 });
+      } catch (error) {
+        setVideoPreviews((prev) =>
+          prev.map((p) => {
+            const isNew = newPreviews.find((np) => np.id === p.id);
+            if (!isNew) return p;
+            return {
+              ...p,
+              isUploading: false,
+              error: error instanceof Error ? error.message : "Ошибка загрузки видео",
+            };
+          })
+        );
+        toast.error(error instanceof Error ? error.message : "Ошибка загрузки видео");
+      } finally {
+        setIsUploading(false);
+        if (videoInputRef.current) {
+          videoInputRef.current.value = "";
+        }
+      }
+    },
+    [videoPreviews.length]
+  );
+
+  const removeVideo = useCallback((id: string) => {
+    setVideoPreviews((prev) => prev.filter((v) => v.id !== id));
+  }, []);
+
   // Отправка формы
   const onSubmit = async (data: PropertyFormData) => {
     const uploadedImages = imagePreviews.filter((p) => p.uploadedUrl && !p.error);
@@ -437,6 +570,10 @@ export function PropertyForm({
 
     if (imagePreviews.some((p) => p.isUploading)) {
       toast.error("Дождитесь загрузки изображений");
+      return;
+    }
+    if (videoPreviews.some((v) => v.isUploading)) {
+      toast.error("Дождитесь загрузки видео");
       return;
     }
 
@@ -453,7 +590,7 @@ export function PropertyForm({
             await propertyService.getPropertyById(propertyId);
             regionId = getRegionIdByName(data.region);
           } catch (error) {
-            console.error("Ошибка при загрузке недвижимости:", error);
+            logger.error("Ошибка при загрузке недвижимости", error);
           }
         }
       }
@@ -474,6 +611,8 @@ export function PropertyForm({
       };
 
       const imageUrls = uploadedImages.map((p) => p.uploadedUrl!);
+      const uploadedVideos = videoPreviews.filter((v) => v.uploadedUrl && !v.error);
+      const videoUrls = uploadedVideos.map((v) => v.uploadedUrl!);
       if (
         (data.dealType === "SALE" ||
           data.dealType === "RENT_OUT" ||
@@ -520,6 +659,7 @@ export function PropertyForm({
         area: data.area,
         description: data.description.trim(),
         images: imageUrls,
+        videos: videoUrls,
         features: featuresLabels,
         street: data.street?.trim(),
         house: data.house?.trim(),
@@ -548,7 +688,8 @@ export function PropertyForm({
 
   // Визуальное состояние кнопки
   const hasUploadingImages = imagePreviews.some((p) => p.isUploading);
-  const isSubmitDisabled = isLoading || hasUploadingImages;
+  const hasUploadingVideos = videoPreviews.some((v) => v.isUploading);
+  const isSubmitDisabled = isLoading || hasUploadingImages || hasUploadingVideos;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className='space-y-8 max-w-3xl mx-auto pb-6'>
@@ -696,6 +837,7 @@ export function PropertyForm({
               <Select
                 value={watch("region")}
                 onValueChange={(value) => {
+                  coordsSourceRef.current = "geocode";
                   setValue("region", value as "Chechnya" | "Ingushetia" | "Other");
                   setValue("cityId", "");
                 }}
@@ -713,7 +855,10 @@ export function PropertyForm({
 
             <CitySearchSelect
               value={watch("cityId") || ""}
-              onValueChange={(value) => setValue("cityId", value)}
+              onValueChange={(value) => {
+                coordsSourceRef.current = "geocode";
+                setValue("cityId", value);
+              }}
               cities={cities}
               disabled={!regionIdForCities}
               placeholder={
@@ -728,7 +873,11 @@ export function PropertyForm({
               </Label>
               <Input
                 id='street'
-                {...register("street")}
+                {...register("street", {
+                  onChange: () => {
+                    coordsSourceRef.current = "geocode";
+                  },
+                })}
                 placeholder='ул. Ленина'
                 className='h-11 text-base border-muted-foreground/20 bg-muted/30 hover:bg-muted/50 transition'
               />
@@ -740,7 +889,11 @@ export function PropertyForm({
               </Label>
               <Input
                 id='house'
-                {...register("house")}
+                {...register("house", {
+                  onChange: () => {
+                    coordsSourceRef.current = "geocode";
+                  },
+                })}
                 placeholder='10'
                 className='h-11 text-base border-muted-foreground/20 bg-muted/30 hover:bg-muted/50 transition'
               />
@@ -1125,6 +1278,78 @@ export function PropertyForm({
         </CardContent>
       </Card>
 
+      <Card className='border-none shadow-md transition-all hover:shadow-2xl bg-white/60 dark:bg-card/80'>
+        <CardHeader className='bg-gradient-to-r from-primary/5 to-primary/10 border-b rounded-t-md py-4 px-6'>
+          <CardTitle className='flex items-center justify-between text-2xl font-bold tracking-tight w-full'>
+            <div className='flex items-center gap-2'>Видео</div>
+            <span className='text-xs font-semibold text-muted-foreground bg-background px-4 py-1 rounded-full border-[1.5px] border-muted-foreground/20 shadow-sm'>
+              {videoPreviews.length} / {MAX_VIDEOS_PER_PROPERTY}
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className='pt-8 px-6 pb-6 space-y-4'>
+          <div
+            onClick={handleVideoSelectClick}
+            className={`
+              border-2 border-dashed rounded-xl p-6 text-center cursor-pointer
+              transition-all duration-200 hover:border-primary/60 hover:bg-muted/50
+              ${videoPreviews.length >= MAX_VIDEOS_PER_PROPERTY ? "opacity-40 pointer-events-none" : ""}
+              ${videosError ? "border-destructive bg-destructive/10" : "border-muted-foreground/20"}
+            `}
+          >
+            <p className='text-base font-semibold'>Добавьте видео (необязательно)</p>
+            <p className='text-xs text-muted-foreground mt-1'>
+              MP4, WebM • до {MAX_VIDEO_FILE_SIZE / 1024 / 1024}MB • до {MAX_VIDEOS_PER_PROPERTY} видео
+            </p>
+            <input
+              ref={videoInputRef}
+              type='file'
+              accept={ALLOWED_VIDEO_TYPES.join(",")}
+              multiple
+              onChange={handleVideoFilesSelect}
+              className='hidden'
+              disabled={videoPreviews.length >= MAX_VIDEOS_PER_PROPERTY}
+              aria-label='Загрузить видео'
+            />
+          </div>
+
+          {videosError && (
+            <div className='p-3 rounded-lg bg-destructive/10 border border-destructive/30'>
+              <p className='text-sm text-destructive'>{videosError}</p>
+            </div>
+          )}
+
+          {videoPreviews.length > 0 && (
+            <div className='space-y-2'>
+              {videoPreviews.map((video) => (
+                <div
+                  key={video.id}
+                  className='flex items-center justify-between rounded-lg border px-3 py-2 bg-muted/30'
+                >
+                  <div className='text-sm truncate'>
+                    {video.uploadedUrl ? video.uploadedUrl.split("/").pop() : video.name}
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    {video.isUploading && <Spinner className='w-4 h-4' />}
+                    {video.error && <span className='text-xs text-destructive'>{video.error}</span>}
+                    <Button
+                      type='button'
+                      variant='destructive'
+                      size='icon'
+                      className='w-7 h-7'
+                      onClick={() => removeVideo(video.id)}
+                      disabled={video.isUploading}
+                    >
+                      <X className='w-4 h-4' />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Кнопка отправки */}
       <div className='flex justify-end gap-4 pt-4 border-t border-muted/30 mt-4 px-2'>
         <Button
@@ -1139,10 +1364,10 @@ export function PropertyForm({
               <Spinner className='w-5 h-5 mr-2' />
               {isEdit ? "Сохраняем..." : "Создаём..."}
             </>
-          ) : hasUploadingImages ? (
+          ) : hasUploadingImages || hasUploadingVideos ? (
             <>
               <Spinner className='w-5 h-5 mr-2' />
-              Загрузка фото...
+              Загрузка медиа...
             </>
           ) : (
             <>

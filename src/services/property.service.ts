@@ -1,7 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/constants/routes";
 import { adaptProperty } from "@/lib/property-adapter";
-import { initializeRegionCache } from "@/services/region.service";
 import type { PaginatedResponse } from "@/types";
 import type { Property, PropertyBackend } from "@/types/property";
 import type {
@@ -61,11 +60,6 @@ export const propertyService = {
       endpoint
     )) as PaginatedResponse<PropertyBackend>;
 
-    // Инициализируем кэш регионов на основе полученных данных
-    if (response.data && response.data.length > 0) {
-      initializeRegionCache(response.data);
-    }
-
     return {
       ...response,
       data: response.data.map(adaptProperty),
@@ -80,11 +74,6 @@ export const propertyService = {
       API_ENDPOINTS.properties.getById(id)
     );
 
-    // Инициализируем кэш регионов на основе полученных данных
-    if (response.region && "id" in response.region && "name" in response.region) {
-      initializeRegionCache([response as PropertyBackend]);
-    }
-
     return adaptProperty(response); // Directly adapt the response
   },
 
@@ -96,16 +85,15 @@ export const propertyService = {
       `${API_ENDPOINTS.properties.search}?q=${encodeURIComponent(query)}`
     );
 
-    // Инициализируем кэш регионов на основе полученных данных
-    initializeRegionCache(response);
-
     return response.map(adaptProperty); // Directly map the response
   },
 
   /**
    * Создать объявление
    */
-  async createProperty(data: ApiPropertyCreateRequest): Promise<Property> {
+  async createProperty(
+    data: ApiPropertyCreateRequest & { videos?: string[] }
+  ): Promise<Property> {
     const response = await apiClient.post<ApiPropertyCreateResponse>(
       API_ENDPOINTS.properties.create,
       data
@@ -116,7 +104,10 @@ export const propertyService = {
   /**
    * Обновить объявление
    */
-  async updateProperty(id: string, data: ApiPropertyUpdateRequest): Promise<Property> {
+  async updateProperty(
+    id: string,
+    data: ApiPropertyUpdateRequest & { videos?: string[] }
+  ): Promise<Property> {
     const response = await apiClient.patch<ApiPropertyUpdateResponse>(
       API_ENDPOINTS.properties.update(id),
       data

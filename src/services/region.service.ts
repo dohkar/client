@@ -1,95 +1,80 @@
-/**
- * Сервис для работы с регионами
- *
- * Временное решение: используем кэш для маппинга regionId -> название
- * В будущем должен быть endpoint /api/regions для получения списка регионов
- */
-
-import { apiClient } from "@/lib/api-client";
-import { API_ENDPOINTS } from "@/constants/routes";
+import { regionsService } from "@/services/regions.service";
 import {
   registerRegionMapping,
-  getRegionNameById,
-  REGION_NAME_TO_BACKEND,
   REGION_BACKEND_TO_NAME,
-  type RegionName
+  type RegionName,
 } from "@/lib/regions";
-import type { PropertyBackend } from "@/types/property";
-import type { PaginatedResponse } from "@/types";
+import { logger } from "@/lib/utils/logger";
 
-/**
- * Кэш для маппинга названия региона -> regionId
- * Заполняется при первом запросе списка недвижимости
- */
+type RegionApiItem = { id: string; name: string };
+
+const REGION_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const FALLBACK_BACKEND_REGIONS = ["CHECHNYA", "INGUSHETIA", "OTHER"] as const;
+
 const regionNameToIdCache = new Map<RegionName, string>();
+let cacheInitializedAt: number | null = null;
+let pendingInitialization: Promise<void> | null = null;
 
-/**
- * Флаг для отслеживания процесса инициализации
- */
-let isInitializing = false;
+function isCacheFresh(): boolean {
+  return (
+    cacheInitializedAt !== null && Date.now() - cacheInitializedAt < REGION_CACHE_TTL_MS
+  );
+}
 
-/**
- * Инициализирует кэш регионов на основе данных недвижимости
- * Вызывается при первом запросе списка недвижимости
- */
-export function initializeRegionCache(properties: PropertyBackend[]): void {
-  for (const property of properties) {
-    // Type guard: проверяем, что region имеет правильную структуру (не Record<string, never>)
-    if (property.region && "name" in property.region && "id" in property.region && 
-        typeof property.region.name === "string" && typeof property.region.id === "string") {
-      // Конвертируем backend название (CHECHNYA) в frontend название (Chechnya)
-      const region = property.region as { id: string; name: string };
-      const backendName = region.name as "CHECHNYA" | "INGUSHETIA" | "OTHER";
-      const regionName = REGION_BACKEND_TO_NAME[backendName] || "Other";
-
-      // Кэшируем оба направления
-      regionNameToIdCache.set(regionName, region.id);
-      registerRegionMapping(region.id, regionName);
-    }
+function applyRegionsToCache(regions: RegionApiItem[]): void {
+  for (const region of regions) {
+    const backendName = region.name as keyof typeof REGION_BACKEND_TO_NAME;
+    const regionName = REGION_BACKEND_TO_NAME[backendName];
+    if (!regionName) continue;
+    regionNameToIdCache.set(regionName, region.id);
+    registerRegionMapping(region.id, regionName);
   }
 }
 
-/**
- * Предварительно инициализирует кэш регионов, запрашивая список недвижимости
- * Используется для заполнения кэша перед созданием объявления
- */
+export function initializeRegionCache(regions: RegionApiItem[]): void {
+  if (!regions.length) return;
+  applyRegionsToCache(regions);
+  cacheInitializedAt = Date.now();
+}
+
 export async function ensureRegionCacheInitialized(): Promise<void> {
-  // Если кэш уже заполнен, ничего не делаем
-  if (regionNameToIdCache.size > 0) {
+  if (regionNameToIdCache.size > 0 && isCacheFresh()) {
     return;
   }
 
-  // Если уже идет инициализация, ждем её завершения
-  if (isInitializing) {
-    // Ждем до 5 секунд, пока кэш не заполнится
-    let attempts = 0;
-    while (isInitializing && attempts < 50) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-      if (regionNameToIdCache.size > 0) {
+  if (pendingInitialization) {
+    await pendingInitialization;
+    return;
+  }
+
+  pendingInitialization = (async () => {
+    try {
+      const regions = await regionsService.getRegions();
+      if (regions.length > 0) {
+        applyRegionsToCache(regions);
+        cacheInitializedAt = Date.now();
         return;
       }
+
+      logger.warn("Regions API returned empty list, preserving previous cache");
+    } catch (error) {
+      logger.error("Failed to initialize regions cache from API", error);
     }
-    return;
-  }
+
+    // Fallback: не затираем рабочий кэш пустыми значениями и просто
+    // фиксируем стандартные имена регионов для UX-подсказок.
+    for (const backendName of FALLBACK_BACKEND_REGIONS) {
+      const regionName = REGION_BACKEND_TO_NAME[backendName];
+      if (!regionNameToIdCache.has(regionName)) {
+        logger.warn(`No cached id for fallback region ${backendName}`);
+      }
+    }
+  })();
 
   try {
-    isInitializing = true;
-    
-    // Запрашиваем список недвижимости с минимальными параметрами для получения регионов
-    const response = await apiClient.get<PaginatedResponse<PropertyBackend>>(
-      `${API_ENDPOINTS.properties.list}?limit=10`
-    );
-    
-    // Инициализируем кэш на основе полученных данных
-    if (response.data && response.data.length > 0) {
-      initializeRegionCache(response.data);
-    }
-  } catch (error) {
-    console.error("Ошибка при инициализации кэша регионов:", error);
-    // Не пробрасываем ошибку, чтобы не блокировать работу формы
+    await pendingInitialization;
   } finally {
-    isInitializing = false;
+    pendingInitialization = null;
   }
 }
 
@@ -113,6 +98,7 @@ export function getAllRegionMappings(): Map<RegionName, string> {
  */
 export function clearRegionCache(): void {
   regionNameToIdCache.clear();
+  cacheInitializedAt = null;
 }
 
 /**

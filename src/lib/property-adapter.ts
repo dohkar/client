@@ -38,6 +38,7 @@ export function adaptProperty(backend: PropertyBackend): Property {
   }
 
   const images = backend.images?.length ? backend.images : [];
+  const videos = backend.videos?.length ? backend.videos : [];
   const placeholder = "/placeholder.svg";
 
   return {
@@ -54,6 +55,7 @@ export function adaptProperty(backend: PropertyBackend): Property {
     area: backend.area,
     image: images[0] || placeholder,
     images,
+    videos,
     isPremium: backend.user?.isPremium ?? false,
     datePosted: backend.createdAt,
     description: backend.description,
