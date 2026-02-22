@@ -140,6 +140,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/finalize-oauth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Финализация OAuth: установка refresh в HttpOnly cookie, возврат accessToken для памяти */
+        post: operations["AuthController_finalizeOAuth"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/refresh": {
         parameters: {
             query?: never;
@@ -270,6 +287,23 @@ export interface paths {
         };
         /** Получить статистику по категориям недвижимости */
         get: operations["PropertiesController_getCategoryStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/properties/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Лимиты объявлений для текущего пользователя (скользящие 30 дней) */
+        get: operations["PropertiesController_getMyLimits"];
         put?: never;
         post?: never;
         delete?: never;
@@ -828,6 +862,22 @@ export interface paths {
         patch: operations["InboxController_updateStatus"];
         trace?: never;
     };
+    "/api/subscriptions/send-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SubscriptionsController_sendCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -863,8 +913,15 @@ export interface components {
              */
             password: string;
         };
-        RefreshTokenDto: {
+        FinalizeOAuthDto: {
+            /** @description Refresh token из URL (одноразовый обмен) */
             refreshToken: string;
+            /** @description Access token из URL (для совместимости) */
+            accessToken?: string;
+        };
+        RefreshTokenDto: {
+            /** @description Передавать только если refresh не в cookie */
+            refreshToken?: string;
         };
         UserResponseDto: {
             id: string;
@@ -882,19 +939,27 @@ export interface components {
             name?: string;
             /** @example +7 (928) 000-00-00 */
             phone?: string;
-            /** @example user@example.com. Optional; empty or null to clear. */
+            /** @example user@example.com */
             email?: string | null;
         };
         CreatePropertyDto: {
             /** @example Квартира в центре Грозного */
             title: string;
-            /** @example 5000000 */
-            price: number;
+            /**
+             * @description Тип сделки
+             * @enum {string}
+             */
+            dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+            /**
+             * @description Цена в рублях; при BUY опционально
+             * @example 5000000
+             */
+            price?: number;
             /**
              * @default RUB
              * @enum {string}
              */
-            currency: "RUB" | "USD";
+            currency: "RUB";
             /** @example г. Грозный, ул. Ленина, д. 10 */
             location: string;
             /** @example 550e8400-e29b-41d4-a716-446655440000 */
@@ -910,6 +975,11 @@ export interface components {
             rooms?: number;
             /** @example 75.5 */
             area: number;
+            /**
+             * @description Этаж
+             * @example 2
+             */
+            floor?: number;
             /** @example Отличная квартира в центре города */
             description: string;
             /**
@@ -917,7 +987,7 @@ export interface components {
              *       "https://example.com/image1.jpg"
              *     ]
              */
-            images: string[];
+            images?: string[];
             /**
              * @example [
              *       "Балкон",
@@ -926,6 +996,10 @@ export interface components {
              *     ]
              */
             features?: string[];
+            /** @example ул. Ленина */
+            street?: string;
+            /** @example 10 */
+            house?: string;
             /**
              * @description Широта
              * @example 43.3156
@@ -939,10 +1013,15 @@ export interface components {
         };
         PropertyResponseDto: {
             id: string;
+            /** @description SEO slug (не меняется при редактировании) */
+            slug: string;
             title: string;
+            /** @description Цена в рублях */
             price: number;
             /** @enum {string} */
-            currency: "RUB" | "USD";
+            dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+            /** @enum {string} */
+            currency: "RUB";
             location: string;
             regionId: string;
             /** @description Region relation (optional, may be included in response) */
@@ -959,9 +1038,14 @@ export interface components {
             images: string[];
             features: string[];
             /** @enum {string} */
-            status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+            status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
             views: number;
+            favoritesCount: number;
             userId: string;
+            /** Format: date-time */
+            archivedAt?: string;
+            /** @description Причина отклонения (при status REJECTED) */
+            rejectionReason?: string;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -974,18 +1058,20 @@ export interface components {
         UpdatePropertyDto: {
             /** @example Квартира в центре Грозного */
             title?: string;
-            /** @example 5000000 */
+            /** @enum {string} */
+            dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+            /**
+             * @description Цена в рублях
+             * @example 5000000
+             */
             price?: number;
             /** @enum {string} */
-            currency?: "RUB" | "USD";
+            currency?: "RUB";
             /** @example г. Грозный, ул. Ленина, д. 10 */
             location?: string;
             /** @example 550e8400-e29b-41d4-a716-446655440000 */
             regionId?: string;
-            /**
-             * @description ID города (опционально)
-             * @example 660e8400-e29b-41d4-a716-446655440001
-             */
+            /** @example 660e8400-e29b-41d4-a716-446655440001 */
             cityId?: string;
             /** @enum {string} */
             type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
@@ -993,7 +1079,9 @@ export interface components {
             rooms?: number;
             /** @example 75.5 */
             area?: number;
-            /** @example Отличная квартира в центре города */
+            /** @example 2 */
+            floor?: number;
+            /** @example Отличная квартира */
             description?: string;
             /**
              * @example [
@@ -1008,17 +1096,13 @@ export interface components {
              *     ]
              */
             features?: string[];
-            /** @enum {string} */
-            status?: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
-            /**
-             * @description Широта
-             * @example 43.3156
-             */
+            /** @example ул. Ленина */
+            street?: string;
+            /** @example 10 */
+            house?: string;
+            /** @example 43.3156 */
             latitude?: number;
-            /**
-             * @description Долгота
-             * @example 45.6949
-             */
+            /** @example 45.6949 */
             longitude?: number;
         };
         FavoriteResponseDto: {
@@ -1041,7 +1125,7 @@ export interface components {
         };
         UpdatePropertyStatusDto: {
             /** @enum {string} */
-            status: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+            status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
             /** @description Причина отклонения (при смене на PENDING или отклонении) */
             rejectionReason?: string;
         };
@@ -1175,6 +1259,13 @@ export interface components {
             status: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
             /** @description Комментарий администратора */
             adminComment?: string;
+        };
+        subscriptionsDto: {
+            /**
+             * @description код подписки - (Тариф)
+             * @example premium_month
+             */
+            code: string;
         };
     };
     responses: never;
@@ -1358,6 +1449,35 @@ export interface operations {
             };
         };
     };
+    AuthController_finalizeOAuth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinalizeOAuthDto"];
+            };
+        };
+        responses: {
+            /** @description accessToken для хранения в памяти */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refresh token недействителен */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AuthController_refresh: {
         parameters: {
             query?: never;
@@ -1500,13 +1620,25 @@ export interface operations {
         parameters: {
             query?: {
                 query?: string;
+                /** @description Только мои объявления (все статусы) */
+                my?: boolean;
                 type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+                dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+                /** @description Цена мин. (рубли) */
                 priceMin?: number;
+                /** @description Цена макс. (рубли) */
                 priceMax?: number;
                 rooms?: number;
                 areaMin?: number;
+                /** @description Этаж мин. */
+                floorMin?: number;
+                /** @description Этаж макс. */
+                floorMax?: number;
+                /** @description Исключить первый этаж */
+                floorNotFirst?: boolean;
+                /** @description Исключить последний этаж (при наличии totalFloors) */
+                floorNotLast?: boolean;
                 regionId?: string;
-                /** @description Фильтр по городу */
                 cityId?: string;
                 sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance";
                 page?: number;
@@ -1584,6 +1716,24 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Статистика по категориям */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PropertiesController_getMyLimits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description monthlyLimit, createdInMonth, remaining */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1984,7 +2134,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 search?: string;
-                status?: "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED";
+                status?: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
                 type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
                 regionId?: string;
                 sortBy?: "date-desc" | "date-asc" | "views-desc";
@@ -2191,7 +2341,7 @@ export interface operations {
         requestBody: {
             content: {
                 "multipart/form-data": {
-                    /** @description Изображения (jpg, png, webp), max 10 файлов, каждый max 5MB */
+                    /** @description Изображения (jpg, png, webp), max 20 файлов, каждый max 5MB */
                     files: string[];
                 };
             };
@@ -2685,6 +2835,27 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SubscriptionsController_sendCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["subscriptionsDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

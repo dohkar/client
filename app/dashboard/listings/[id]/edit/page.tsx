@@ -22,9 +22,9 @@ export default function EditPropertyPage({
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex justify-center">
-          <Spinner className="w-8 h-8" />
+      <div className='container mx-auto px-4 py-12'>
+        <div className='flex justify-center'>
+          <Spinner className='w-8 h-8' />
         </div>
       </div>
     );
@@ -32,9 +32,9 @@ export default function EditPropertyPage({
 
   if (error || !data) {
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold mb-4">Объявление не найдено</h1>
-        <p className="text-muted-foreground">
+      <div className='container mx-auto px-4 py-12 text-center'>
+        <h1 className='text-2xl font-bold mb-4'>Объявление не найдено</h1>
+        <p className='text-muted-foreground'>
           {error?.message || "Объявление с таким ID не существует"}
         </p>
       </div>
@@ -68,7 +68,7 @@ export default function EditPropertyPage({
       const updateData = {
         title: updatedProperty.title,
         price: updatedProperty.price,
-        currency: updatedProperty.currency?.toUpperCase() as "RUB" | "USD",
+        currency: "RUB" as const,
         location: updatedProperty.location,
         region: regionMap[updatedProperty.region] || "OTHER",
         type: typeMap[updatedProperty.type] || "APARTMENT",
@@ -77,7 +77,11 @@ export default function EditPropertyPage({
         description: updatedProperty.description,
         images: updatedProperty.images,
         features: updatedProperty.features,
-        status: updatedProperty.status?.toUpperCase() as "ACTIVE" | "PENDING" | "SOLD" | "ARCHIVED",
+        status: updatedProperty.status?.toUpperCase() as
+          | "ACTIVE"
+          | "PENDING"
+          | "SOLD"
+          | "ARCHIVED",
       };
 
       await propertyService.updateProperty(id, updateData);
@@ -89,19 +93,13 @@ export default function EditPropertyPage({
   };
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Редактировать объявление</h1>
-          <p className="text-muted-foreground">
-            Обновите информацию об объявлении
-          </p>
+    <div className='container mx-auto px-4 py-12'>
+      <div className='max-w-4xl mx-auto'>
+        <div className='mb-8'>
+          <h1 className='text-3xl font-bold mb-2'>Редактировать объявление</h1>
+          <p className='text-muted-foreground'>Обновите информацию об объявлении</p>
         </div>
-        <PropertyForm
-          initialData={property}
-          onSuccess={handleUpdate}
-          isEdit={true}
-        />
+        <PropertyForm initialData={property} onSuccess={handleUpdate} isEdit={true} />
       </div>
     </div>
   );
