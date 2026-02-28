@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -52,10 +52,11 @@ import {
 } from "lucide-react";
 import { useProperty, useRelatedProperties } from "@/hooks/use-properties";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useViewHistory } from "@/hooks/use-view-history";
 import { useCreatePropertyChat } from "@/hooks/use-chats";
 import { useAuthStore } from "@/stores";
 import { ROUTES } from "@/constants";
-import { formatDate, formatPhone, getPhoneHref } from "@/lib/utils/format";
+import { formatDate, formatPhone, formatPrice, getPhoneHref } from "@/lib/utils/format";
 import { logger } from "@/lib/utils/logger";
 import { PropertySpecs } from "@/components/features/property-detail/property-specs";
 import { PropertyMapSection } from "@/components/features/property-detail/property-map-section";
@@ -106,6 +107,23 @@ export default function PropertyPage() {
     8
   );
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
+  const { push: pushViewHistory } = useViewHistory();
+
+  useEffect(() => {
+    if (!property?.id) return;
+    const priceFormatted =
+      property.price != null && property.currency
+        ? formatPrice(property.price, property.currency)
+        : "—";
+    pushViewHistory({
+      id: property.id,
+      title: property.title,
+      price: priceFormatted,
+      address: property.location ?? "",
+      imageUrl: property.images?.[0] ?? property.image ?? "",
+      href: ROUTES.property(property.id, property.slug),
+    });
+  }, [property?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const createChatMutation = useCreatePropertyChat();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);

@@ -20,6 +20,9 @@ import { buildSearchParams } from "@/lib/search-params";
 import { ROUTES } from "@/constants";
 import type { SearchFiltersDisplay } from "@/lib/search-params";
 import { Categories } from "./categories";
+import { SearchHistorySection } from "@/components/features/search-history/search-history-section";
+import { ViewHistorySection } from "@/components/features/view-history/view-history-section";
+import { useSearchHistory } from "@/hooks/use-search-history";
 
 // ─── DEAL TYPE MAP ────────────────────────────────────────────
 const DEAL_TYPE_MAP: Record<DealType, { url: string; api: "buy" | "rent_in" | "daily" }> =
@@ -207,6 +210,7 @@ function useHeroSearchFilters() {
 // ─── COMPONENT ───────────────────────────────────────────────
 export function HeroSearch() {
   const router = useRouter();
+  const { push: pushSearch } = useSearchHistory();
   const {
     query,
     dealType,
@@ -233,6 +237,15 @@ export function HeroSearch() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (query.trim() || type !== "all") {
+      pushSearch({
+        label:
+          query.trim() ||
+          (PROPERTY_TYPE_OPTIONS.find((o) => o.value === type)?.label ?? "Поиск"),
+        region: "Ингушетия",
+        href: searchUrl,
+      });
+    }
     router.push(searchUrl);
   };
 
@@ -416,6 +429,8 @@ export function HeroSearch() {
           </form>
 
           <Categories />
+          <SearchHistorySection />
+          <ViewHistorySection />
         </div>
       </div>
     </section>
