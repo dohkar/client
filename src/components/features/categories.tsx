@@ -38,7 +38,7 @@ export function Categories() {
             className='
               flex flex-col items-center shrink-0
               w-[120px] sm:w-[136px]
-              rounded-xl border border-muted bg-card
+              rounded-xl border border-muted
               shadow-sm hover:shadow-md hover:bg-muted
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
               transition-shadow duration-150
@@ -56,7 +56,7 @@ export function Categories() {
                 priority={false}
               />
             </div>
-            <p className='w-full px-2 py-2 text-[13px] sm:text-sm leading-tight text-center line-clamp-2'>
+            <p className='w-full px-2 py-2 text-base sm:text-sm text-center line-clamp-2'>
               {label}
             </p>
           </Link>

@@ -18,6 +18,9 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { ReactQueryProvider } from "@/lib/react-query/provider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+import { ConsentProvider } from "@/components/cookie-consent/consent-provider";
+import { CookieBanner } from "@/components/cookie-consent/cookie-banner";
+import { CookieConsentAnalytics } from "@/components/cookie-consent/analytics";
 
 const fontSans = Figtree({ subsets: ["latin"], variable: "--font-sans" });
 const fontMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
@@ -73,27 +76,31 @@ export default async function RootLayout({
         />
         <ThemeInitScript />
         <ThemeProvider defaultTheme={defaultTheme}>
-          <ReactQueryProvider>
-            <ErrorBoundary>
-              <div className='flex min-h-screen flex-col'>
-                <Suspense
-                  fallback={
-                    <header className='sticky top-0 z-50 w-full border-b bg-background/95 h-16' />
-                  }
-                >
-                  <Header />
-                </Suspense>
-                <main className='flex-1 pb-20 md:pb-0 bg-muted/20'>{children}</main>
-                <ConditionalFooter />
-                <MobileBottomNav />
-                {/* <AuthModal /> */}
-                <SupportButton />
-                <SpeedInsights />
-                <Analytics />
-              </div>
-              <Toaster />
-            </ErrorBoundary>
-          </ReactQueryProvider>
+          <ConsentProvider>
+            <ReactQueryProvider>
+              <ErrorBoundary>
+                <div className='flex min-h-screen flex-col'>
+                  <Suspense
+                    fallback={
+                      <header className='sticky top-0 z-50 w-full border-b bg-background/95 h-16' />
+                    }
+                  >
+                    <Header />
+                  </Suspense>
+                  <main className='flex-1 pb-20 md:pb-0 bg-muted/20'>{children}</main>
+                  <ConditionalFooter />
+                  <MobileBottomNav />
+                  {/* <AuthModal /> */}
+                  <SupportButton />
+                  <CookieBanner />
+                  <CookieConsentAnalytics />
+                  <SpeedInsights />
+                  <Analytics />
+                </div>
+                <Toaster />
+              </ErrorBoundary>
+            </ReactQueryProvider>
+          </ConsentProvider>
         </ThemeProvider>
       </body>
     </html>

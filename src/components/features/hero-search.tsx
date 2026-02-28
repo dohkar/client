@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useState, useMemo, useRef, type FormEvent } from "react";
 import { ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -91,9 +90,9 @@ function formatCompact(n: number): string {
  * Полный формат для тегов-фильтров под строкой поиска:
  * 232323 → "232 323 ₽"
  */
-function formatFull(n: number): string {
-  return n.toLocaleString("ru-RU") + "\u00a0₽";
-}
+// function formatFull(n: number): string {
+//   return n.toLocaleString("ru-RU") + "\u00a0₽";
+// }
 
 /**
  * Лейбл кнопки "Цена" — компактный, как в Авито.
@@ -221,13 +220,13 @@ export function HeroSearch() {
     setRoomsMin,
     setPriceMin,
     setPriceMax,
-    priceMinNum,
-    priceMaxNum,
+    // priceMinNum,
+    // priceMaxNum,
     priceError,
     priceLabel,
-    isDirty,
+    // isDirty,
     searchUrl,
-    handleReset,
+    // handleReset,
   } = useHeroSearchFilters();
 
   const queryInputRef = useRef<HTMLInputElement>(null);
@@ -297,7 +296,7 @@ export function HeroSearch() {
             {/* Тип недвижимости */}
             <Select value={type} onValueChange={(v) => setType(v as PropertyTypeFilter)}>
               <SelectTrigger
-                className='h-9 sm:h-10 min-w-0 w-full min-[400px]:w-auto min-[400px]:min-w-[120px] sm:min-w-[120px] md:min-w-[140px] bg-card border-0 rounded-xl text-foreground font-medium text-sm sm:text-base shadow-sm hover:bg-muted flex-1'
+                className='h-9 sm:h-10 min-w-0 w-full min-[350px]:w-auto min-[350px]:min-w-[100px] sm:min-w-[120px] md:min-w-[140px] bg-card border-0 rounded-xl text-foreground font-medium text-sm sm:text-base shadow-sm hover:bg-muted sm:w-[200px] flex-1 max-w-full'
                 aria-label='Тип недвижимости'
               >
                 <SelectValue placeholder='Тип недвижимости' />
@@ -349,7 +348,7 @@ export function HeroSearch() {
                 <Button
                   type='button'
                   variant='ghost'
-                  className='h-9 sm:h-10 min-w-52 max-w-64 justify-between px-3 sm:px-4 rounded-xl font-medium text-sm sm:text-md bg-card hover:bg-muted overflow-hidden'
+                  className='h-9 sm:h-10 min-w-0 w-full sm:min-w-52 sm:max-w-64 justify-between px-3 sm:px-4 rounded-xl font-medium text-sm sm:text-md bg-card hover:bg-muted overflow-hidden'
                   aria-label={priceLabel}
                 >
                   <span className='truncate'>{priceLabel}</span>
@@ -405,14 +404,6 @@ export function HeroSearch() {
                 )}
               </PopoverContent>
             </Popover>
-
-            {/* Все фильтры */}
-            {/* <Link
-              href={searchUrl}
-              className='text-foreground font-medium text-sm sm:text-base hover:underline underline-offset-2 min-h-[44px] sm:min-h-0 inline-flex items-center py-2 sm:py-0'
-            >
-              Все фильтры
-            </Link> */}
 
             {/* Показать объявления */}
             <Button

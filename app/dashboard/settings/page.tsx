@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores";
 import { OAuthPopupButton } from "@/components/features";
 import { ROUTES } from "@/constants";
+import { useConsent } from "@/components/cookie-consent/consent-provider";
 
 const oauthBtnClass =
   "w-full sm:w-auto h-10 rounded-xl flex items-center justify-center gap-2 border border-input bg-background hover:bg-muted/60 transition-colors";
@@ -29,6 +30,7 @@ function GoogleIcon() {
 
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
+  const { consent, reset } = useConsent();
   const isGoogle = user?.provider === "GOOGLE";
   const isYandex = user?.provider === "YANDEX";
   const isVk = user?.provider === "VK";
@@ -92,7 +94,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20">
+        <Card className="border-primary/20 mb-6">
           <CardHeader>
             <CardTitle>Уведомления</CardTitle>
             <CardDescription>Настройте уведомления</CardDescription>
@@ -101,6 +103,20 @@ export default function SettingsPage() {
             <p className="text-sm text-muted-foreground">
               Настройки уведомлений будут доступны в будущих обновлениях
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-primary/20">
+          <CardHeader>
+            <CardTitle>Согласие на cookie</CardTitle>
+            <CardDescription>
+              Текущий статус: {consent === "accepted" ? "Принято" : consent === "declined" ? "Отклонено" : "Не выбрано"}. Сброс покажет баннер снова.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" size="sm" onClick={reset}>
+              Сбросить согласие на cookie
+            </Button>
           </CardContent>
         </Card>
       </div>
