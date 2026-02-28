@@ -1,10 +1,12 @@
 /**
- * Утилита для геокодирования адресов через Yandex Maps API
- * Структурированный ввод (регион, город, улица, дом) и разбор компонентов из ответа
+ * Клиентская утилита для работы с геокодированием через backend API proxy.
+ * Важно: НЕ ходит напрямую к Yandex — только к своему серверу через /api/geocode
+ * Структурированный ввод и разбор компонентов из ответа (логика осталась прежней).
  */
 
-/** Структурированный адрес для геокодирования — собираем строку запроса сами */
+/** Структурированный адрес для геокодирования — теперь с country */
 export interface StructuredAddressInput {
+  country?: string; // << Новое поле
   region?: string;
   city?: string;
   street?: string;
@@ -53,10 +55,13 @@ interface GeocoderResponse {
 
 /**
  * Собирает строку запроса из структурированных полей
- * Формат: "город, улица дом" (регион добавляется при необходимости)
+ * Для Яндекса лучше начинать с "Россия"
+ * Пример: "Россия, Московская область, Москва, Тверская улица 10"
  */
 function buildGeocodeQuery(input: StructuredAddressInput): string {
   const parts: string[] = [];
+  const country = input.country?.trim() || "Россия";
+  parts.push(country);
   if (input.region?.trim()) parts.push(input.region.trim());
   if (input.city?.trim()) parts.push(input.city.trim());
   const streetHouse = [input.street?.trim(), input.house?.trim()]
@@ -68,6 +73,7 @@ function buildGeocodeQuery(input: StructuredAddressInput): string {
 
 /**
  * Извлекает компоненты адреса из ответа геокодера по kind
+ * Более надёжно определяет region
  */
 function parseAddressComponents(
   components: Array<{ kind?: string; name?: string }> | undefined
@@ -77,11 +83,17 @@ function parseAddressComponents(
 
   const byKind = (k: string) => components.find((c) => c.kind === k)?.name;
 
-  const province = byKind("province") ?? byKind("area");
-  if (province) result.region = province;
+  // region: сначала самые точные, потом fallback
+  const region =
+    byKind("province") ||
+    byKind("area") ||
+    byKind("administrative_area") ||
+    byKind("country");
+  if (region) result.region = region;
 
-  const locality = byKind("locality") ?? byKind("district");
-  if (locality) result.city = locality;
+  // Город: локалити или район
+  const city = byKind("locality") || byKind("district");
+  if (city) result.city = city;
 
   const street = byKind("street");
   if (street) result.street = street;
@@ -92,41 +104,55 @@ function parseAddressComponents(
   return result;
 }
 
+/** Результат геокодирования: успех с данными или ошибка с причиной */
+export type GeocodeAddressResult =
+  | { ok: true; data: GeocodeResult }
+  | { ok: false; reason: "key" | "error" | "not_found"; message?: string };
+
 /**
- * Геокодирование структурированного адреса
- * @param input - регион, город, улица, дом — строка запроса собирается внутри
- * @param apiKey - опциональный API ключ Yandex Maps
+ * Геокодирование структурированного адреса через backend proxy
+ * (Только через серверный route, например /api/geocode)
  */
 export async function geocodeAddress(
-  input: StructuredAddressInput,
-  apiKey?: string
-): Promise<GeocodeResult | null> {
+  input: StructuredAddressInput
+): Promise<GeocodeAddressResult> {
   const query = buildGeocodeQuery(input);
   if (!query || query.length < 3) {
-    return null;
+    return { ok: false, reason: "not_found" };
   }
 
   try {
-    const apiKeyParam = apiKey ? `&apikey=${apiKey}` : "";
-    const url = `https://geocode-maps.yandex.ru/1.x/?format=json&geocode=${encodeURIComponent(query)}${apiKeyParam}&lang=ru_RU&results=1`;
+    const response = await fetch("/api/geocode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
 
-    const response = await fetch(url);
+    const data = await response.json();
 
     if (!response.ok) {
-      if (response.status === 403 && apiKey) {
-        const urlWithoutKey = `https://geocode-maps.yandex.ru/1.x/?format=json&geocode=${encodeURIComponent(query)}&lang=ru_RU&results=1`;
-        const retryResponse = await fetch(urlWithoutKey);
-        if (!retryResponse.ok) return null;
-        const retryData = (await retryResponse.json()) as GeocoderResponse;
-        return parseGeocodeResponse(retryData, query);
+      const body = data as { code?: string; error?: string };
+      if (body.code === "GEOCODER_FORBIDDEN" || response.status === 503) {
+        return {
+          ok: false,
+          reason: "key",
+          message: body.error ?? "Ключ геокодера не настроен или неверен.",
+        };
       }
-      return null;
+      return {
+        ok: false,
+        reason: "error",
+        message: (body as { error?: string }).error,
+      };
     }
 
-    const data = (await response.json()) as GeocoderResponse;
-    return parseGeocodeResponse(data, query);
+    const parsed = parseGeocodeResponse(data as GeocoderResponse, query);
+    if (!parsed) {
+      return { ok: false, reason: "not_found" };
+    }
+    return { ok: true, data: parsed };
   } catch {
-    return null;
+    return { ok: false, reason: "error" };
   }
 }
 
@@ -140,10 +166,12 @@ function parseGeocodeResponse(
   const geoObject = members[0].GeoObject;
   if (!geoObject?.Point?.pos) return null;
 
-  const pos = geoObject.Point.pos.split(" ");
+  // 1.x API: Point.pos is "longitude latitude" (space-separated)
+  const pos = geoObject.Point.pos.trim().split(/\s+/);
+  if (pos.length < 2) return null;
   const longitude = parseFloat(pos[0]);
   const latitude = parseFloat(pos[1]);
-  if (isNaN(latitude) || isNaN(longitude)) return null;
+  if (Number.isNaN(latitude) || Number.isNaN(longitude)) return null;
 
   const meta = geoObject.metaDataProperty?.GeocoderMetaData;
   const formattedAddress = meta?.text ?? fallbackAddress;
@@ -160,17 +188,22 @@ function parseGeocodeResponse(
 
 /**
  * Обратное геокодирование — координаты в структурированный адрес
+ * ВНИМАНИЕ: обязательно делать debounce/throttle вызова reverseGeocode на уровне компонента!
+ * (сюда не добавлен debounce — это делает UI-код, пример для React: lodash.debounce/recoil selector и т.д.)
+ * Это критично для лимита Яндекса.
  */
 export async function reverseGeocode(
   latitude: number,
-  longitude: number,
-  apiKey?: string
+  longitude: number
 ): Promise<ReverseGeocodeResult | null> {
   try {
-    const apiKeyParam = apiKey ? `&apikey=${apiKey}` : "";
-    const url = `https://geocode-maps.yandex.ru/1.x/?format=json&geocode=${longitude},${latitude}${apiKeyParam}&lang=ru_RU`;
+    // Клиент ходит только на свой API
+    const response = await fetch("/api/reverse-geocode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ latitude, longitude }),
+    });
 
-    const response = await fetch(url);
     if (!response.ok) return null;
 
     const data = (await response.json()) as GeocoderResponse;

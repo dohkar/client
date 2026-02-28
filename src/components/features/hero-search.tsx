@@ -1,180 +1,432 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { Search, MapPin } from "lucide-react";
+import Link from "next/link";
+import { useState, useMemo, useRef, type FormEvent } from "react";
+import { ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { DealType } from "@/types/common";
-import { POPULAR_CITIES, DEAL_TYPES } from "@/constants/search";
-import { cn } from "@/lib/utils";
+import { DEAL_TYPES } from "@/constants/search";
+import { PROPERTY_TYPE_OPTIONS, ROOMS_OPTIONS } from "@/lib/search-constants";
+import { buildSearchParams } from "@/lib/search-params";
+import { ROUTES } from "@/constants";
+import type { SearchFiltersDisplay } from "@/lib/search-params";
+import { Categories } from "./categories";
 
-interface SearchForm {
-  query: string;
-  dealType: DealType;
-}
-
-const DEFAULT_DEAL_TYPE = DEAL_TYPES[0]?.value || "buy";
-
-export function HeroSearch() {
-  const router = useRouter();
-
-  // Вынесем errors на будущее, но не форсим ошибку на UI
-  const {
-    register,
-    setValue,
-    watch,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<SearchForm>({
-    defaultValues: {
-      query: "",
-      dealType: DEFAULT_DEAL_TYPE,
-    },
-  });
-
-  const dealType = watch("dealType");
-
-  // useMemo убираем — это вычисление простое и предсказуемое
-  const validDealType = DEAL_TYPES.some((t) => t.value === dealType)
-    ? dealType
-    : DEFAULT_DEAL_TYPE;
-
-  // Теперь performSearch принимает SearchForm (расширяемость)
-  const performSearch = (params: SearchForm) => {
-    const trimmedQuery = params.query.trim();
-    if (!trimmedQuery) return;
-
-    router.push(
-      `/search?query=${encodeURIComponent(trimmedQuery)}&dealType=${params.dealType}`
-    );
+// ─── DEAL TYPE MAP ────────────────────────────────────────────
+const DEAL_TYPE_MAP: Record<DealType, { url: string; api: "buy" | "rent_in" | "daily" }> =
+  {
+    buy: { url: "buy", api: "buy" },
+    rent: { url: "rent_in", api: "rent_in" },
+    daily: { url: "daily", api: "daily" },
   };
 
-  const onSubmit = handleSubmit((data) => {
-    performSearch(data);
-  });
+type PropertyTypeFilter = "all" | "apartment" | "house" | "land" | "commercial";
+
+const INITIAL_STATE = {
+  query: "",
+  dealType: DEAL_TYPES[0]?.value ?? "buy",
+  type: "all" as PropertyTypeFilter,
+  roomsMin: null as number | null,
+  priceMin: "",
+  priceMax: "",
+};
+
+// ─── PRICE UTILS ─────────────────────────────────────────────
+
+/**
+ * Парсит строку → число или null.
+ * Принимает как "1 234 567", так и "1234567".
+ */
+function parsePrice(val: string): number | null {
+  const digits = val.replace(/\s/g, "").replace(/\D/g, "");
+  if (!digits) return null;
+  const n = Number(digits);
+  return isNaN(n) || n < 0 ? null : n;
+}
+
+/**
+ * Форматирует число для отображения в <input>:
+ * 1234567 → "1 234 567"
+ * Пробел — неразрывный пробел (\u00a0) чтобы браузер не переносил.
+ */
+function formatForInput(val: string): string {
+  const n = parsePrice(val);
+  if (n == null) return "";
+  return n.toLocaleString("ru-RU"); // "1 234 567" с неразрывными пробелами
+}
+
+/**
+ * Компактный формат для кнопки/лейбла фильтра (как в Авито):
+ * 232323   → "232,3 тыс."
+ * 2321323  → "2,3 млн"
+ * 1500000000 → "1,5 млрд"
+ * Меньше 10 000 → просто число
+ */
+function formatCompact(n: number): string {
+  if (n >= 1_000_000_000) {
+    return (
+      (n / 1_000_000_000).toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + " млрд"
+    );
+  }
+  if (n >= 1_000_000) {
+    return (n / 1_000_000).toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + " млн";
+  }
+  if (n >= 1_000) {
+    return (n / 1_000).toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + " тыс.";
+  }
+  return n.toLocaleString("ru-RU");
+}
+
+/**
+ * Полный формат для тегов-фильтров под строкой поиска:
+ * 232323 → "232 323 ₽"
+ */
+function formatFull(n: number): string {
+  return n.toLocaleString("ru-RU") + "\u00a0₽";
+}
+
+/**
+ * Лейбл кнопки "Цена" — компактный, как в Авито.
+ * "От 232,3 тыс. до 2,3 млн"  |  "От 100 тыс."  |  "до 5 млн"  |  "Цена"
+ */
+function buildPriceLabel(
+  min: number | null,
+  max: number | null,
+  hasError: boolean
+): string {
+  if (hasError) return "Цена";
+  if (min != null && max != null)
+    return `От ${formatCompact(min)} до ${formatCompact(max)}`;
+  if (min != null) return `От ${formatCompact(min)}`;
+  if (max != null) return `до ${formatCompact(max)}`;
+  return "Цена";
+}
+
+// ─── HOOK ────────────────────────────────────────────────────
+function useHeroSearchFilters() {
+  const [query, setQuery] = useState(INITIAL_STATE.query);
+  const [dealType, setDealType] = useState<DealType>(INITIAL_STATE.dealType);
+  const [type, setType] = useState<PropertyTypeFilter>(INITIAL_STATE.type);
+  const [roomsMin, setRoomsMin] = useState<number | null>(INITIAL_STATE.roomsMin);
+  // Храним сырые строки (только цифры, без пробелов)
+  const [priceMin, setPriceMinRaw] = useState(INITIAL_STATE.priceMin);
+  const [priceMax, setPriceMaxRaw] = useState(INITIAL_STATE.priceMax);
+
+  const priceMinNum = parsePrice(priceMin);
+  const priceMaxNum = parsePrice(priceMax);
+
+  const hasValidMin = priceMinNum != null;
+  const hasValidMax = priceMaxNum != null;
+  const priceError = hasValidMin && hasValidMax && priceMinNum! > priceMaxNum!;
+
+  const dealTypeForUrl = DEAL_TYPE_MAP[dealType].url;
+  const dealTypeForSearchParam = DEAL_TYPE_MAP[dealType].api;
+
+  const { searchParamsObj, searchUrl } = useMemo(() => {
+    const isPriceValid = !(hasValidMin && hasValidMax && priceMinNum! > priceMaxNum!);
+
+    const obj: Partial<SearchFiltersDisplay> = {
+      query: query.trim() || undefined,
+      dealType: dealTypeForSearchParam.toUpperCase() as SearchFiltersDisplay["dealType"],
+      type: type !== "all" ? type : undefined,
+      roomsMin: roomsMin ?? undefined,
+      priceMin: hasValidMin && isPriceValid ? priceMinNum! : undefined,
+      priceMax: hasValidMax && isPriceValid ? priceMaxNum! : undefined,
+    };
+
+    const params = buildSearchParams(obj);
+    const qs = params.toString();
+    return {
+      searchParamsObj: obj,
+      searchUrl: qs ? `${ROUTES.search}?${qs}` : ROUTES.search,
+    };
+  }, [
+    query,
+    dealTypeForSearchParam,
+    type,
+    roomsMin,
+    hasValidMin,
+    hasValidMax,
+    priceMinNum,
+    priceMaxNum,
+  ]);
+
+  const priceLabel = buildPriceLabel(priceMinNum, priceMaxNum, priceError);
+
+  const isDirty =
+    !!query.trim() ||
+    type !== INITIAL_STATE.type ||
+    roomsMin !== INITIAL_STATE.roomsMin ||
+    priceMin !== INITIAL_STATE.priceMin ||
+    priceMax !== INITIAL_STATE.priceMax ||
+    dealType !== INITIAL_STATE.dealType;
+
+  const handleReset = () => {
+    setQuery(INITIAL_STATE.query);
+    setDealType(INITIAL_STATE.dealType);
+    setType(INITIAL_STATE.type);
+    setRoomsMin(INITIAL_STATE.roomsMin);
+    setPriceMinRaw(INITIAL_STATE.priceMin);
+    setPriceMaxRaw(INITIAL_STATE.priceMax);
+  };
+
+  return {
+    query,
+    dealType,
+    type,
+    roomsMin,
+    priceMin,
+    priceMax,
+    setQuery,
+    setDealType,
+    setType,
+    setRoomsMin,
+    setPriceMin: setPriceMinRaw,
+    setPriceMax: setPriceMaxRaw,
+    priceMinNum,
+    priceMaxNum,
+    priceError,
+    priceLabel,
+    isDirty,
+    searchUrl,
+    dealTypeForUrl,
+    handleReset,
+    searchParamsObj,
+  };
+}
+
+// ─── COMPONENT ───────────────────────────────────────────────
+export function HeroSearch() {
+  const router = useRouter();
+  const {
+    query,
+    dealType,
+    type,
+    roomsMin,
+    priceMin,
+    priceMax,
+    setQuery,
+    setDealType,
+    setType,
+    setRoomsMin,
+    setPriceMin,
+    setPriceMax,
+    priceMinNum,
+    priceMaxNum,
+    priceError,
+    priceLabel,
+    isDirty,
+    searchUrl,
+    handleReset,
+  } = useHeroSearchFilters();
+
+  const queryInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    router.push(searchUrl);
+  };
+
+  const renderDivider = () => (
+    <div className='hidden sm:block w-px h-7 sm:h-8 bg-border shrink-0' aria-hidden />
+  );
 
   return (
-    <div className='relative background-mountains py-16 md:py-24'>
-      <div className='container mx-auto px-2 relative z-10 lg:px-4'>
-        <div className='max-w-4xl mx-auto text-center space-y-8'>
-          <h1 className='text-4xl md:text-5xl font-bold text-white tracking-tight'>
-            Найдите свой идеальный дом на Кавказе
+    <section
+      className='relative py-10 sm:py-14 md:py-20 bg-muted/70'
+      aria-label='Поиск недвижимости'
+    >
+      <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
+        <div className='max-w-5xl mx-auto flex flex-col items-center gap-5 sm:gap-6 md:gap-8'>
+          {/* Заголовок */}
+          <h1 className='text-xl min-[480px]:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center tracking-tight text-foreground leading-tight'>
+            Покупайте и продавайте недвижимость
           </h1>
 
-          {/* Search box */}
+          {/* Табы */}
+          <div className='flex flex-wrap justify-center gap-2 sm:gap-2.5'>
+            {DEAL_TYPES.map(({ value, label }) => {
+              const isActive = dealType === value;
+              return (
+                <Button
+                  key={value}
+                  type='button'
+                  variant={isActive ? "default" : "secondary"}
+                  onClick={() => setDealType(value)}
+                  className='min-h-12 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-[14px] text-sm sm:text-base md:text-lg font-medium active:scale-100'
+                  aria-pressed={isActive}
+                >
+                  {label}
+                </Button>
+              );
+            })}
+          </div>
+
+          {/* Фильтр-бар */}
           <form
-            onSubmit={onSubmit}
-            className='bg-white/5 backdrop-blur-2xl border border-white/15 shadow-2xl rounded-2xl p-3 sm:p-6 lg:p-6 max-w-4xl mx-auto w-full'
+            className='flex flex-wrap items-center gap-1 sm:gap-2 w-full rounded-2xl p-2 sm:p-3 bg-secondary border border-border/60'
+            role='search'
+            onSubmit={handleSubmit}
+            autoComplete='off'
           >
-            <div className='flex flex-col md:flex-row gap-4 lg:gap-5 items-stretch md:items-center'>
-              {/* Поиск */}
-              <div className='relative flex-1 min-w-0'>
-                <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-300' />
-                <Input
-                  {...register("query", { required: true })}
-                  placeholder='Город, район или улица'
-                  className={cn(
-                    "pl-12 h-14 text-base bg-white/10 border-white/25 text-white placeholder:text-gray-300 font-medium",
-                    "focus:bg-white/15 focus:border-white/40 focus:ring-2 focus:ring-primary/50 focus:shadow-lg",
-                    "rounded-xl transition-all duration-200 shadow-inner"
-                  )}
-                  autoComplete='off'
-                  aria-label='Поисковый запрос'
-                />
-              </div>
+            {/* Город */}
+            <Input
+              ref={queryInputRef}
+              type='search'
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder='Город, район или улица'
+              className='h-9 sm:h-10 min-w-0 w-full sm:w-46 md:w-60 bg-card border-0 rounded-xl text-foreground text-sm sm:text-base font-medium shadow-sm hover:bg-muted'
+              aria-label='Поиск'
+              spellCheck={false}
+              autoComplete='off'
+            />
 
-              {/* Тип сделки */}
-              <Select
-                value={validDealType}
-                onValueChange={(v: DealType) =>
-                  setValue("dealType", v, { shouldDirty: true })
-                }
+            {renderDivider()}
+
+            {/* Тип недвижимости */}
+            <Select value={type} onValueChange={(v) => setType(v as PropertyTypeFilter)}>
+              <SelectTrigger
+                className='h-9 sm:h-10 min-w-0 w-full min-[400px]:w-auto min-[400px]:min-w-[120px] sm:min-w-[120px] md:min-w-[140px] bg-card border-0 rounded-xl text-foreground font-medium text-sm sm:text-base shadow-sm hover:bg-muted flex-1'
+                aria-label='Тип недвижимости'
               >
-                <SelectTrigger className='h-14 w-full md:w-40 bg-white/10 border-white/25 text-white font-medium rounded-xl focus:ring-primary/50 transition-all duration-200 shadow-inner'>
-                  <div className='flex items-center gap-2 flex-1'>
-                    <SelectValue placeholder='Тип сделки' />
+                <SelectValue placeholder='Тип недвижимости' />
+              </SelectTrigger>
+              <SelectContent>
+                {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className='text-sm sm:text-base'
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {renderDivider()}
+
+            {/* Комнаты */}
+            <Select
+              value={roomsMin === null ? "all" : String(roomsMin)}
+              onValueChange={(v) => setRoomsMin(v === "all" ? null : Number(v))}
+            >
+              <SelectTrigger
+                className='h-9 sm:h-10 min-w-0 w-full min-[400px]:w-auto min-[400px]:min-w-[80px] sm:min-w-[100px] md:min-w-[120px] bg-card border-0 rounded-xl font-medium text-sm sm:text-base shadow-sm hover:bg-muted flex-1'
+                aria-label='Количество комнат'
+              >
+                <SelectValue placeholder='Количество комнат' />
+              </SelectTrigger>
+              <SelectContent>
+                {ROOMS_OPTIONS.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className='text-sm sm:text-base'
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {renderDivider()}
+
+            {/* Цена */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  className='h-9 sm:h-10 min-w-52 max-w-64 justify-between px-3 sm:px-4 rounded-xl font-medium text-sm sm:text-md bg-card hover:bg-muted overflow-hidden'
+                  aria-label={priceLabel}
+                >
+                  <span className='truncate'>{priceLabel}</span>
+                  <ChevronDown className='ml-1 h-4 w-4 opacity-60 shrink-0' aria-hidden />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className='w-80 sm:w-90 sm:p-2 p-1'
+                align='start'
+                sideOffset={8}
+              >
+                <div className='flex gap-2'>
+                  <div className='flex-1 relative'>
+                    <Input
+                      value={priceMin ? `От ${formatForInput(priceMin)} ₽` : ""}
+                      onChange={(e) => {
+                        // Убираем "От", "₽" и пробелы при вводе
+                        const raw = e.target.value.replace(/[^\d]/g, "");
+                        setPriceMin(raw);
+                      }}
+                      placeholder='От 100 000 ₽'
+                      className='h-10 text-sm pl-2 pr-4'
+                      inputMode='numeric'
+                      autoComplete='off'
+                      maxLength={20}
+                      id='priceMin'
+                      aria-label='Минимальная цена'
+                    />
                   </div>
-                </SelectTrigger>
-                <SelectContent className='bg-gray-900/95 backdrop-blur-lg border-white/15 text-white'>
-                  {DEAL_TYPES.map(({ value, label, icon: Icon }) => (
-                    <SelectItem
-                      key={value}
-                      value={value}
-                      className='focus:bg-primary/30 focus:text-white'
-                    >
-                      <div className='flex items-center gap-2'>
-                        <Icon className='h-4 w-4 text-primary' />
-                        {label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <div className='flex-1 relative'>
+                    <Input
+                      value={priceMax ? `До ${formatForInput(priceMax)} ₽` : ""}
+                      onChange={(e) => {
+                        // Убираем "До", "₽" и пробелы при вводе
+                        const raw = e.target.value.replace(/[^\d]/g, "");
+                        setPriceMax(raw);
+                      }}
+                      placeholder='До 10 000 000 ₽'
+                      className='h-10 text-sm pl-2 pr-4'
+                      inputMode='numeric'
+                      autoComplete='off'
+                      maxLength={20}
+                      id='priceMax'
+                      aria-label='Максимальная цена'
+                    />
+                  </div>
+                </div>
 
-              {/* Кнопка */}
-              <Button
-                type='submit'
-                variant='default'
-                size='lg'
-                className={cn(
-                  "h-14 px-8 font-semibold text-base md:text-lg tracking-wide text-white",
-                  "bg-primary hover:bg-primary/90 active:bg-primary/80",
-                  "rounded-xl shadow-lg shadow-primary/40",
-                  "transition-all duration-200 active:scale-[0.98] hover:shadow-xl hover:shadow-primary/50",
-                  "disabled:opacity-60 disabled:cursor-not-allowed"
+                {priceError && (
+                  <p className='text-xs text-destructive mt-2'>
+                    Минимальная цена не может быть больше максимальной
+                  </p>
                 )}
-                disabled={Boolean(errors.query)}
-                aria-label='Найти объявления по запросу'
-              >
-                Найти
-              </Button>
-            </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Все фильтры */}
+            {/* <Link
+              href={searchUrl}
+              className='text-foreground font-medium text-sm sm:text-base hover:underline underline-offset-2 min-h-[44px] sm:min-h-0 inline-flex items-center py-2 sm:py-0'
+            >
+              Все фильтры
+            </Link> */}
+
+            {/* Показать объявления */}
+            <Button
+              type='submit'
+              className='w-full flex-1 min-[400px]:w-auto ml-0 min-[400px]:ml-auto min-h-[44px] sm:min-h-10 h-9 sm:h-10 px-4 sm:px-5 rounded-xl text-sm sm:text-base font-semibold'
+              disabled={priceError}
+            >
+              Показать объявления
+            </Button>
           </form>
 
-          {/* Popular cities */}
-          <div className='flex justify-center'>
-            <div
-              className={cn(
-                "flex gap-3 bg-black/30 backdrop-blur-lg rounded-2xl px-3 py-2 shadow-lg border border-white/10",
-                "overflow-x-auto scroll-smooth snap-x snap-mandatory", // скролл + snap
-                "scrollbar-hide", // скрыть скроллбар (добавь в tailwind config или css)
-                "max-w-full" // не вылезает за экран
-              )}
-            >
-              {POPULAR_CITIES.map((city) => (
-                <button
-                  key={city}
-                  onClick={() => performSearch({ query: city, dealType: validDealType })}
-                  className={cn(
-                    "flex shrink-0 cursor-pointer items-center gap-2 px-5 py-2",
-                    "bg-transparent border border-primary/40 rounded-2xl",
-                    "hover:border-primary/80 hover:bg-primary/10",
-                    "transition-all duration-200",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
-                    "text-gold font-medium text-sm md:text-base",
-                    "snap-start" // snap к началу кнопки
-                  )}
-                  style={{
-                    boxShadow: "0 1.5px 0 0 oklch(0.75 0.15 65 / 0.3)",
-                  }}
-                >
-                  <MapPin className='h-4 w-4 text-gold' />
-                  {city}
-                </button>
-              ))}
-            </div>
-          </div>
+          <Categories />
         </div>
       </div>
-    </div>
+    </section>
   );
 }

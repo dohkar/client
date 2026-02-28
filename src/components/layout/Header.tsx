@@ -18,6 +18,8 @@ import {
   Shield,
   MessageSquare,
   UserIcon,
+  ArrowsUpFromLine,
+  ChevronsUpDown,
 } from "lucide-react";
 import {
   HoverCard,
@@ -80,7 +82,7 @@ function CategoryLinks({
   );
 }
 
-function UserMenuLinks({ isAdmin }: { isAdmin: boolean; }) {
+function UserMenuLinks({ isAdmin }: { isAdmin: boolean }) {
   return (
     <>
       {isAdmin && (
@@ -272,7 +274,7 @@ export function Header() {
       <span role='status' aria-live='polite' className='sr-only'>
         {isMobileMenuOpen ? "Меню открыто" : "Меню закрыто"}
       </span>
-      <div className='container mx-auto px-4 h-16 flex items-center justify-between gap-4'>
+      <div className='container mx-auto px-4 h-14 flex items-center justify-between gap-4'>
         {/* Branding */}
         <Link
           href={ROUTES.home}
@@ -317,6 +319,7 @@ export function Header() {
                       <span className='hidden lg:inline font-medium text-sm text-foreground/90 truncate max-w-[120px]'>
                         {userName}
                       </span>
+                      <ChevronsUpDown className='shrink-0 size-4' />
                     </Link>
                   </HoverCardTrigger>
                   <HoverCardContent
@@ -350,7 +353,7 @@ export function Header() {
                 {/* Компактная иконка темы в хедере для неавторизованных пользователей */}
                 <ThemeToggle variant='icon' />
                 <Button
-                  variant='outline'
+                  variant='ghost'
                   size='sm'
                   className='gap-1.5 shrink-0'
                   onClick={() => router.push(ROUTES.login)}

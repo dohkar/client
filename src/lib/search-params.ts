@@ -10,9 +10,9 @@ const SearchParamsSchema = z
   .object({
     query: z.string().max(200).optional(),
     dealType: z
-      .enum(["sale", "buy", "rent_out", "rent_in", "exchange"])
+      .enum(["sale", "buy", "rent_out", "rent_in", "exchange", "daily"])
       .optional()
-      .transform((v) => (v ? (v.toUpperCase().replace(" ", "_") as PropertyDealType) : undefined)),
+      .transform((v) => (v ? (v.toUpperCase().replace(" ", "_") as PropertyDealType | "DAILY") : undefined)),
     type: z
       .enum(["apartment", "house", "land", "commercial"])
       .optional()
@@ -105,10 +105,10 @@ const SearchParamsSchema = z
 
 export type SearchParams = z.infer<typeof SearchParamsSchema>;
 
-/** Дефолтные значения для отображения в UI (полный объект) */
+/** Дефолтные значения для отображения в UI (полный объект). DAILY пока не поддерживается API — в запросе не передаётся. */
 export interface SearchFiltersDisplay {
   query: string;
-  dealType: PropertyDealType | "all";
+  dealType: PropertyDealType | "DAILY" | "all";
   type: PropertyType | "all";
   priceMin: number | null;
   priceMax: number | null;
@@ -304,8 +304,8 @@ export function toPropertySearchParams(
   if (filters.query && filters.query.trim().length > 0) {
     params.query = filters.query.trim();
   }
-  if (filters.dealType && filters.dealType !== "all") {
-    params.dealType = filters.dealType;
+  if (filters.dealType && filters.dealType !== "all" && filters.dealType !== "DAILY") {
+    params.dealType = filters.dealType as PropertyDealType;
   }
   if (filters.type !== "all") {
     params.type = filters.type as PropertyType;

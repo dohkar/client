@@ -14,7 +14,7 @@ export default function HomePage() {
     <div className='min-h-screen flex flex-col'>
       <main className='flex-1'>
         <HeroSearch />
-        <CategoryShowcase />
+        {/*<CategoryShowcase />*/}
 
         <section className='container mx-auto px-1 py-8 sm:py-12 md:py-16'>
           <div className='text-center mb-8 sm:mb-12'>

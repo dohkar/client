@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
-import { Check, ChevronDown, MapPin } from "lucide-react";
+import { useState, useMemo, useRef, useCallback } from "react";
+import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
 import { normalizeCitySearch } from "@/data/cities-chechnya-ingushetia";
 import type { CityDto } from "@/types/property";
 
@@ -20,11 +19,14 @@ interface CitySearchSelectProps {
   className?: string;
 }
 
-function filterCities(cities: CityDto[], query: string): CityDto[] {
-  if (!query.trim()) return cities;
-  const q = normalizeCitySearch(query);
-  return cities.filter((c) => normalizeCitySearch(c.name).includes(q));
-}
+const filterCities = (cities: CityDto[], query: string): CityDto[] => {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) return cities;
+  const normalizedQuery = normalizeCitySearch(trimmedQuery);
+  return cities.filter((city) =>
+    normalizeCitySearch(city.name).includes(normalizedQuery)
+  );
+};
 
 export function CitySearchSelect({
   value,
@@ -39,24 +41,37 @@ export function CitySearchSelect({
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = useMemo(() => filterCities(cities, query), [cities, query]);
-  const selectedCity = useMemo(() => cities.find((c) => c.id === value), [cities, value]);
+  const filteredCities = useMemo(() => filterCities(cities, query), [cities, query]);
+  const selectedCity = useMemo(
+    () => cities.find((city) => city.id === value),
+    [cities, value]
+  );
 
-  // Reset query only when the Popover opens, not in useEffect
-  const handleOpenChange = (nextOpen: boolean) => {
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
     setOpen(nextOpen);
     if (nextOpen) {
       setQuery("");
-      setTimeout(() => inputRef.current?.focus(), 0);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
-  };
+  }, []);
+
+  const handleSelectCity = useCallback(
+    (cityId: string) => {
+      onValueChange(cityId);
+      setOpen(false);
+    },
+    [onValueChange]
+  );
+
+  const handleClearSelection = useCallback(() => {
+    onValueChange("");
+    setOpen(false);
+  }, [onValueChange]);
 
   return (
     <div className={cn("space-y-2", className)}>
-      <Label className='text-base font-semibold flex items-center gap-2 mb-1'>
-        <MapPin className='w-4 h-4 text-primary/80' />
-        <span>{label}</span>
-      </Label>
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
@@ -67,7 +82,7 @@ export function CitySearchSelect({
             className={cn(
               "h-12 w-full flex items-center justify-between rounded-lg text-base font-normal px-4 transition-all border-2 focus:ring-2 focus:ring-primary focus:outline-none",
               open ? "border-primary" : "border-input",
-              disabled ? "opacity-70 cursor-not-allowed" : ""
+              disabled && "opacity-70 cursor-not-allowed"
             )}
           >
             <span
@@ -109,10 +124,7 @@ export function CitySearchSelect({
                   ? "bg-accent text-accent-foreground font-semibold"
                   : "hover:bg-accent hover:text-accent-foreground text-muted-foreground/80"
               )}
-              onClick={() => {
-                onValueChange("");
-                setOpen(false);
-              }}
+              onClick={handleClearSelection}
             >
               <Check
                 className={cn(
@@ -122,7 +134,7 @@ export function CitySearchSelect({
               />
               <span className='flex-1'>Не выбран</span>
             </button>
-            {filtered.map((city) => {
+            {filteredCities.map((city) => {
               const isSelected = value === city.id;
               return (
                 <button
@@ -142,10 +154,7 @@ export function CitySearchSelect({
                         }
                       : undefined
                   }
-                  onClick={() => {
-                    onValueChange(city.id);
-                    setOpen(false);
-                  }}
+                  onClick={() => handleSelectCity(city.id)}
                 >
                   <Check
                     className={cn(
@@ -157,7 +166,7 @@ export function CitySearchSelect({
                 </button>
               );
             })}
-            {filtered.length === 0 && query.trim() && (
+            {filteredCities.length === 0 && query.trim() && (
               <div className='py-8 text-center text-[15px] text-muted-foreground select-none'>
                 🫥 <br />
                 <span className='mt-2 block opacity-80'>Ничего не найдено</span>
@@ -168,17 +177,17 @@ export function CitySearchSelect({
       </Popover>
       <style>
         {`
-        .custom-scroll::-webkit-scrollbar {
-          width: 7px;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-          background: rgba(160,164,180,0.12);
-          border-radius: 6px;
-        }
-        .custom-scroll {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(160,164,180,0.12) transparent;
-        }
+          .custom-scroll::-webkit-scrollbar {
+            width: 7px;
+          }
+          .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(160,164,180,0.12);
+            border-radius: 6px;
+          }
+          .custom-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(160,164,180,0.12) transparent;
+          }
         `}
       </style>
     </div>

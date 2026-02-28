@@ -18,11 +18,24 @@ const TYPE_LABELS: Record<string, string> = {
   commercial: "Коммерческая",
 };
 
+// Добавляем карту регионов с переводами на кириллицу
+const REGION_LABELS: Record<string, string> = {
+  Ingushetia: "Ингушетия",
+  Dagestan: "Дагестан",
+  Chechnya: "Чечня",
+  KabardinoBalkaria: "Кабардино-Балкария",
+  NorthOssetia: "Северная Осетия",
+  // Добавить и другие регионы по необходимости
+};
+
 export function PropertySpecs({
   property,
   isDescriptionExpanded,
   onToggleDescription,
 }: PropertySpecsProps) {
+  // Получаем значение региона на кириллице, если доступно, иначе отображаем исходное значение
+  const regionCyrillic = REGION_LABELS[property.region] || property.region;
+
   return (
     <>
       <div className='bg-card rounded-xl border border-border p-4 sm:p-6'>
@@ -32,7 +45,7 @@ export function PropertySpecs({
           <InfoRow label='Площадь' value={`${property.area} м²`} />
           {property.rooms != null && <InfoRow label='Комнат' value={property.rooms} />}
           {property.floor != null && <InfoRow label='Этаж' value={property.floor} />}
-          <InfoRow label='Регион' value={property.region} />
+          <InfoRow label='Регион' value={regionCyrillic} />
         </div>
       </div>
 

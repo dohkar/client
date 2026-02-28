@@ -114,7 +114,7 @@ export const DEFAULT_SITE_METADATA: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
     default: "Недвижимость Кавказа — объявления о продаже и аренде",
-    template: "%s | Дохкар",
+    template: "%s · Дохкар",
   },
   description: HOME_DESCRIPTION,
   keywords: [
