@@ -1,11 +1,12 @@
 import { CATEGORIES_AVITO as CATEGORIES } from "@/constants/categories";
 import Link from "next/link";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 export function Categories() {
   return (
-    <section className='mb-4 w-full'>
-      <h2 className='text-base font-semibold mb-3'>Категории</h2>
+    <section className='mb-2 ml-4 sm:ml-2 w-full'>
+      <h2 className='text-muted-foreground font-semibold mb-1'>Категории</h2>
 
       {/*
         Нативный горизонтальный скролл:
@@ -19,14 +20,14 @@ export function Categories() {
       <div
         role='list'
         aria-label='Категории недвижимости'
-        className='
-          flex gap-3 sm:gap-4
-          overflow-x-auto
-          -mx-4 px-4
-          pb-2
-          snap-x snap-mandatory
-          [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
-        '
+        className={cn(
+          "flex gap-3 sm:gap-4",
+          "overflow-x-auto",
+          "-mx-4 px-4",
+          "snap-x snap-mandatory",
+          "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          "scrollbar-hide scroll-smooth touch-pan-x"
+        )}
         style={{ touchAction: "pan-x" }}
       >
         {CATEGORIES.map(({ label, href, src }) => (
@@ -35,17 +36,17 @@ export function Categories() {
             href={href}
             role='listitem'
             aria-label={label}
-            className='
-              flex flex-col items-center shrink-0
-              w-[120px] sm:w-[136px]
-              rounded-xl border border-muted
-              shadow-sm hover:shadow-md hover:bg-muted
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
-              transition-shadow duration-150
-              snap-start
-            '
+            className={cn(
+              "flex flex-col items-center shrink-0",
+              "w-[100px] sm:w-[120px]",
+              "snap-start"
+            )}
           >
-            <div className='w-full h-14 sm:h-16 overflow-hidden rounded-t-xl relative'>
+            <div
+              className={cn(
+                "w-full bg-secondary h-14 sm:h-16 overflow-hidden rounded-xl relative"
+              )}
+            >
               <Image
                 src={src}
                 alt={label}
@@ -56,9 +57,18 @@ export function Categories() {
                 priority={false}
               />
             </div>
-            <p className='w-full px-2 py-2 text-base sm:text-sm text-center line-clamp-2'>
-              {label}
-            </p>
+            <article>
+              <p
+                className={cn(
+                  "line-clamp-3",
+                  "text-sm text-center",
+                  "wrap-break-word",
+                  "text-foreground font-medium"
+                )}
+              >
+                {label}
+              </p>
+            </article>
           </Link>
         ))}
       </div>

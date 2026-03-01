@@ -20,8 +20,6 @@ import { buildSearchParams } from "@/lib/search-params";
 import { ROUTES } from "@/constants";
 import type { SearchFiltersDisplay } from "@/lib/search-params";
 import { Categories } from "./categories";
-import { SearchHistorySection } from "@/components/features/search-history/search-history-section";
-import { ViewHistorySection } from "@/components/features/view-history/view-history-section";
 import { useSearchHistory } from "@/hooks/use-search-history";
 
 // ─── DEAL TYPE MAP ────────────────────────────────────────────
@@ -254,12 +252,9 @@ export function HeroSearch() {
   );
 
   return (
-    <section
-      className='relative py-10 sm:py-14 md:py-20 bg-muted/70'
-      aria-label='Поиск недвижимости'
-    >
-      <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
-        <div className='max-w-5xl mx-auto flex flex-col items-center gap-5 sm:gap-6 md:gap-8'>
+    <section className='relative pt-10 sm:pt-14 md:pt-20' aria-label='Поиск недвижимости'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+        <div className='mx-auto flex flex-col items-center gap-3 sm:gap-4 md:gap-6'>
           {/* Заголовок */}
           <h1 className='text-xl min-[480px]:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center tracking-tight text-foreground leading-tight'>
             Покупайте и продавайте недвижимость
@@ -298,7 +293,7 @@ export function HeroSearch() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder='Город, район или улица'
-              className='h-9 sm:h-10 min-w-0 w-full sm:w-46 md:w-60 bg-card border-0 rounded-xl text-foreground text-sm sm:text-base font-medium shadow-sm hover:bg-muted'
+              className='h-9 sm:h-10 min-w-0 w-full sm:w-60 md:w-72 bg-card border-0 rounded-xl text-foreground text-sm sm:text-base font-medium shadow-sm hover:bg-muted'
               aria-label='Поиск'
               spellCheck={false}
               autoComplete='off'
@@ -429,8 +424,6 @@ export function HeroSearch() {
           </form>
 
           <Categories />
-          <SearchHistorySection />
-          <ViewHistorySection />
         </div>
       </div>
     </section>

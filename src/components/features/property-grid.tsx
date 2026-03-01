@@ -31,16 +31,16 @@ export function PropertyGrid({
   }
 
   return (
-    <div className='space-y-4 sm:space-y-6'>
-      {/* {showHeader && (
-        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4'>
+    <div className='w-full space-y-5 sm:space-y-6'>
+      {showHeader && (
+        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2'>
           <h2 className='text-xl sm:text-2xl font-bold text-foreground'>
             Свежие объявления
           </h2>
         </div>
-      )} */}
+      )}
 
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 sm:gap-4'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5'>
         {displayedProperties.map((property) => (
           <PropertyCard key={property.id} property={property} />
         ))}
