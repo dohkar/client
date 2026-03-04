@@ -13,11 +13,11 @@ export const SEARCH_CONSTANTS = {
  * Лейблы для типов недвижимости
  */
 export const PROPERTY_TYPE_LABELS: Record<string, string> = {
-  all: "Все типы",
+  all: "Любая недвижимость",
   apartment: "Квартиры",
-  house: "Дома",
-  land: "Участки",
-  commercial: "Коммерция",
+  house: "Дома и дачи",
+  land: "Земельные участки",
+  commercial: "Коммерческая",
 };
 
 /**
@@ -33,31 +33,31 @@ export const REGION_LABELS: Record<string, string> = {
  * Лейблы для сортировки
  */
 export const SORT_LABELS: Record<string, string> = {
-  relevance: "По популярности",
-  "price-asc": "По цене: ↑",
-  "price-desc": "По цене: ↓",
-  "date-desc": "По дате",
+  relevance: "Сначала лучшие",
+  "price-asc": "Сначала дешевле",
+  "price-desc": "Сначала дороже",
+  "date-desc": "Новые объявления",
 };
 
 /**
  * Опции сортировки для селекта
  */
 export const SORT_OPTIONS = [
-  { value: "relevance", label: "По популярности" },
-  { value: "price-asc", label: "По цене: возрастание" },
-  { value: "price-desc", label: "По цене: убывание" },
-  { value: "date-desc", label: "По дате добавления" },
+  { value: "relevance", label: "Сначала лучшие" },
+  { value: "price-asc", label: "Сначала дешевле" },
+  { value: "price-desc", label: "Сначала дороже" },
+  { value: "date-desc", label: "Новые объявления" },
 ] as const;
 
 /**
  * Опции типов недвижимости для селекта
  */
 export const PROPERTY_TYPE_OPTIONS = [
-  { value: "all", label: "Все типы" },
+  { value: "all", label: "Любая недвижимость" },
   { value: "apartment", label: "Квартиры" },
-  { value: "house", label: "Дома" },
-  { value: "land", label: "Участки" },
-  { value: "commercial", label: "Коммерция" },
+  { value: "house", label: "Дома и дачи" },
+  { value: "land", label: "Земельные участки" },
+  { value: "commercial", label: "Коммерческая" },
 ] as const;
 
 /**
@@ -73,11 +73,11 @@ export const REGION_OPTIONS = [
  * Лейблы для типа сделки (поиск)
  */
 export const DEAL_TYPE_LABELS: Record<string, string> = {
-  all: "Все",
-  SALE: "Продаю",
+  all: "Любая сделка",
+  SALE: "Продам",
   BUY: "Куплю",
-  RENT_OUT: "Сдаю",
-  RENT_IN: "Сниму",
+  RENT_OUT: "Сдам в аренду",
+  RENT_IN: "Сниму жильё",
   EXCHANGE: "Обмен",
 };
 
@@ -85,11 +85,11 @@ export const DEAL_TYPE_LABELS: Record<string, string> = {
  * Опции типа сделки для селекта поиска
  */
 export const SEARCH_DEAL_TYPE_OPTIONS = [
-  { value: "all", label: "Все" },
-  { value: "SALE", label: "Продаю" },
+  { value: "all", label: "Любая сделка" },
+  { value: "SALE", label: "Продам" },
   { value: "BUY", label: "Куплю" },
-  { value: "RENT_OUT", label: "Сдаю" },
-  { value: "RENT_IN", label: "Сниму" },
+  { value: "RENT_OUT", label: "Сдам в аренду" },
+  { value: "RENT_IN", label: "Сниму жильё" },
   { value: "EXCHANGE", label: "Обмен" },
 ] as const;
 
@@ -99,10 +99,10 @@ export const SEARCH_DEAL_TYPE_OPTIONS = [
 export const ROOMS_OPTIONS = [
   { value: "all", label: "Комнаты" },
   { value: "0", label: "Студия" },
-  { value: "1", label: "1 комн." },
-  { value: "2", label: "2 комн." },
-  { value: "3", label: "3 комн." },
-  { value: "4", label: "4+ комн." },
+  { value: "1", label: "1 комната" },
+  { value: "2", label: "2 комнаты" },
+  { value: "3", label: "3 комнаты" },
+  { value: "4", label: "4 и более" },
 ] as const;
 
 /**
@@ -125,14 +125,14 @@ export const QUICK_PRESETS: QuickPreset[] = [
     label: "Квартиры до 5 млн ₽",
     filters: {
       type: "apartment",
-      priceMax: 5000000,
-      roomsMin: null,
+      priceMax: 5_000_000,
       priceMin: null,
+      roomsMin: null,
       region: "all",
     },
   },
   {
-    label: "Дома 4+ комнат",
+    label: "Просторные дома",
     filters: {
       type: "house",
       roomsMin: 4,
@@ -142,7 +142,7 @@ export const QUICK_PRESETS: QuickPreset[] = [
     },
   },
   {
-    label: "Земельные участки",
+    label: "Земля под застройку",
     filters: {
       type: "land",
       region: "all",

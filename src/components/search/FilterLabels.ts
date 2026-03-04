@@ -15,7 +15,7 @@ interface PriceFilters {
  * Утилиты для получения лейблов фильтров
  */
 export function getTypeLabel(type: string): string {
-  return PROPERTY_TYPE_LABELS[type] || "Все типы";
+  return PROPERTY_TYPE_LABELS[type] || "Любая недвижимость";
 }
 
 export function getRegionLabel(region: string): string {
@@ -40,19 +40,23 @@ export function getPriceLabel(filters: PriceFilters): string {
 }
 
 export function getRoomsLabel(roomsMin: number | null | undefined): string {
-  if (roomsMin === null || roomsMin === undefined) {
-    return "Комнаты";
-  }
+  if (roomsMin === null || roomsMin === undefined) return "Комнаты";
   if (roomsMin === 0) return "Студия";
-  if (roomsMin >= 4) return "4+ комнат";
+  if (roomsMin === 1) return "1 комната";
+  if (roomsMin === 2) return "2 комнаты";
+  if (roomsMin === 3) return "3 комнаты";
+  if (roomsMin >= 4) return "4 и более комнат";
   return `${roomsMin} комн.`;
 }
 
 export function getAreaLabel(areaMin: number | null | undefined): string {
-  if (areaMin) {
-    return `от ${areaMin} м²`;
-  }
+  if (areaMin) return `от ${areaMin} м²`; // ² вместо 2
   return "Площадь";
+}
+
+export function getDealTypeLabel(dealType: string | null | undefined): string {
+  if (!dealType || dealType === "all") return "Тип сделки";
+  return DEAL_TYPE_LABELS[dealType] ?? dealType;
 }
 
 export function getCityLabel(cityName: string | null | undefined): string {
@@ -68,11 +72,6 @@ export function getLocationChipLabel(
   if (region === "all") return regionLabel;
   const name = cityName?.trim();
   return name ? `${regionLabel} · ${name}` : regionLabel;
-}
-
-export function getDealTypeLabel(dealType: string | null | undefined): string {
-  if (!dealType || dealType === "all") return "Тип сделки";
-  return DEAL_TYPE_LABELS[dealType] ?? dealType;
 }
 
 /** Лейбл для фильтра по этажу (активные фильтры) */

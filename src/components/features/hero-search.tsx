@@ -16,19 +16,21 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { DealType } from "@/types/common";
 import { DEAL_TYPES } from "@/constants/search";
 import { PROPERTY_TYPE_OPTIONS, ROOMS_OPTIONS } from "@/lib/search-constants";
-import { buildSearchParams } from "@/lib/search-params";
-import { ROUTES } from "@/constants";
-import type { SearchFiltersDisplay } from "@/lib/search-params";
+import {
+  buildSearchUrl,
+  categorySlugFromType,
+  dealTypeSlugFromApi,
+} from "@/lib/url/segments";
+import { useUserRegion } from "@/hooks/use-user-region";
 import { Categories } from "./categories";
 import { useSearchHistory } from "@/hooks/use-search-history";
 
 // ─── DEAL TYPE MAP ────────────────────────────────────────────
-const DEAL_TYPE_MAP: Record<DealType, { url: string; api: "buy" | "rent_in" | "daily" }> =
-  {
-    buy: { url: "buy", api: "buy" },
-    rent: { url: "rent_in", api: "rent_in" },
-    daily: { url: "daily", api: "daily" },
-  };
+const DEAL_TYPE_MAP: Record<DealType, { api: "buy" | "rent_in" | "daily" }> = {
+  buy: { api: "buy" },
+  rent: { api: "rent_in" },
+  daily: { api: "daily" },
+};
 
 type PropertyTypeFilter = "all" | "apartment" | "house" | "land" | "commercial";
 
@@ -113,7 +115,7 @@ function buildPriceLabel(
 }
 
 // ─── HOOK ────────────────────────────────────────────────────
-function useHeroSearchFilters() {
+function useHeroSearchFilters(userRegionSlug: string) {
   const [query, setQuery] = useState(INITIAL_STATE.query);
   const [dealType, setDealType] = useState<DealType>(INITIAL_STATE.dealType);
   const [type, setType] = useState<PropertyTypeFilter>(INITIAL_STATE.type);
@@ -129,28 +131,25 @@ function useHeroSearchFilters() {
   const hasValidMax = priceMaxNum != null;
   const priceError = hasValidMin && hasValidMax && priceMinNum! > priceMaxNum!;
 
-  const dealTypeForUrl = DEAL_TYPE_MAP[dealType].url;
   const dealTypeForSearchParam = DEAL_TYPE_MAP[dealType].api;
 
-  const { searchParamsObj, searchUrl } = useMemo(() => {
+  const { searchUrl } = useMemo(() => {
     const isPriceValid = !(hasValidMin && hasValidMax && priceMinNum! > priceMaxNum!);
-
-    const obj: Partial<SearchFiltersDisplay> = {
-      query: query.trim() || undefined,
-      dealType: dealTypeForSearchParam.toUpperCase() as SearchFiltersDisplay["dealType"],
-      type: type !== "all" ? type : undefined,
-      roomsMin: roomsMin ?? undefined,
-      priceMin: hasValidMin && isPriceValid ? priceMinNum! : undefined,
-      priceMax: hasValidMax && isPriceValid ? priceMaxNum! : undefined,
-    };
-
-    const params = buildSearchParams(obj);
-    const qs = params.toString();
     return {
-      searchParamsObj: obj,
-      searchUrl: qs ? `${ROUTES.search}?${qs}` : ROUTES.search,
+      searchUrl: buildSearchUrl({
+        region: userRegionSlug,
+        category: type !== "all" ? categorySlugFromType(type) : "nedvizhimost",
+        dealType: dealTypeSlugFromApi(dealTypeForSearchParam) || undefined,
+        params: {
+          query: query.trim() || undefined,
+          rooms: roomsMin ?? undefined,
+          price_min: hasValidMin && isPriceValid ? priceMinNum! : undefined,
+          price_max: hasValidMax && isPriceValid ? priceMaxNum! : undefined,
+        },
+      }),
     };
   }, [
+    userRegionSlug,
     query,
     dealTypeForSearchParam,
     type,
@@ -199,15 +198,14 @@ function useHeroSearchFilters() {
     priceLabel,
     isDirty,
     searchUrl,
-    dealTypeForUrl,
     handleReset,
-    searchParamsObj,
   };
 }
 
 // ─── COMPONENT ───────────────────────────────────────────────
 export function HeroSearch() {
   const router = useRouter();
+  const userRegion = useUserRegion();
   const { push: pushSearch } = useSearchHistory();
   const {
     query,
@@ -229,7 +227,7 @@ export function HeroSearch() {
     // isDirty,
     searchUrl,
     // handleReset,
-  } = useHeroSearchFilters();
+  } = useHeroSearchFilters(userRegion);
 
   const queryInputRef = useRef<HTMLInputElement>(null);
 

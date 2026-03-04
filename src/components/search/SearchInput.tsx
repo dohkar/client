@@ -1,17 +1,21 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { MobileFilterDrawer } from "@/components/features/MobileFilterDrawer";
+import type { MobileFilterDrawerProps } from "@/components/features/MobileFilterDrawer";
 
 interface SearchInputProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  /** Если передан — на мобильных отображается кнопка «Фильтры» и drawer (на сегментных страницах). На /search не используется. */
+  filterProps?: MobileFilterDrawerProps;
 }
 
 export function SearchInput({
   value,
   onChange,
   placeholder = "Поиск по городу, улице или названию",
+  filterProps,
 }: SearchInputProps) {
   return (
     <div className='flex flex-col gap-3 mb-4'>
@@ -26,9 +30,11 @@ export function SearchInput({
             autoComplete='off'
           />
         </div>
-        <div className='flex sm:hidden justify-end'>
-          <MobileFilterDrawer />
-        </div>
+        {filterProps && (
+          <div className='flex sm:hidden justify-end'>
+            <MobileFilterDrawer {...filterProps} />
+          </div>
+        )}
       </div>
     </div>
   );

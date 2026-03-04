@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CATEGORIES_AVITO as CATEGORIES } from "@/constants/categories";
+import { AvitoCategory, CATEGORIES_AVITO as CATEGORIES } from "@/constants/categories";
 import Link from "next/link";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -39,9 +39,9 @@ export function Categories() {
           style={{ touchAction: "pan-x" }}
           aria-hidden
         >
-          {CATEGORIES.map(({ label, href, src }) => (
-            <div key={href} className='shrink-0 w-[120px]'>
-              <CategoryCard label={label} href={href} src={src} />
+          {CATEGORIES.map((category) => (
+            <div key={category.id} className='shrink-0 w-[120px]'>
+              <CategoryCard category={category} />
             </div>
           ))}
         </div>
@@ -58,9 +58,9 @@ export function Categories() {
             slidesOffsetAfter={16}
             className='!overflow-visible'
           >
-            {CATEGORIES.map(({ label, href, src }) => (
-              <SwiperSlide key={href} className='!h-auto !w-[120px]'>
-                <CategoryCard label={label} href={href} src={src} />
+            {CATEGORIES.map((category) => (
+              <SwiperSlide key={category.id} className='!h-auto !w-[120px]'>
+                <CategoryCard category={category} />
               </SwiperSlide>
             ))}
           </Swiper>
@@ -71,20 +71,18 @@ export function Categories() {
 }
 
 // Вынесено чтобы не дублировать JSX карточки
-function CategoryCard({
-  label,
-  href,
-  src,
-}: {
-  label: string;
-  href: string;
-  src: string;
-}) {
+// Вынесено чтобы не дублировать JSX карточки
+function CategoryCard({ category }: { category: AvitoCategory }) {
+  const { id, label, description, href, icon, meta } = category;
+
   return (
     <Link
       href={href}
       draggable={false}
-      aria-label={label}
+      aria-label={description || label}
+      title={description}
+      data-analytics-id={meta.analyticsId}
+      data-category-id={id}
       className='
         flex flex-col items-center gap-1.5
         select-none group
@@ -94,25 +92,37 @@ function CategoryCard({
     >
       <div
         className='
-        w-full h-[64px] sm:h-[72px]
-        relative overflow-hidden rounded-xl bg-secondary
-        group-hover:brightness-95 transition-all duration-150
-      '
+          w-full h-[64px] sm:h-[72px]
+          relative overflow-hidden rounded-xl bg-secondary
+          group-hover:brightness-95 transition-all duration-150
+          group-focus-visible:ring-2 group-focus-visible:ring-ring
+        '
       >
         <Image
-          src={src}
-          alt={label}
+          src={icon.src.trim()}
+          alt={icon.alt || label}
+          sizes={icon.sizes || "(max-width: 768px) 108px, 216px"}
           fill
           draggable={false}
-          sizes='100px'
           className='object-cover'
           priority={false}
+          loading='lazy'
+          // Next.js автоматически сгенерирует srcSet на основе sizes
         />
+
+        {/* Бейдж для новых/популярных категорий */}
+        {meta.tags?.includes("new") && (
+          <span className='absolute top-1 right-1 px-1.5 py-0.5 text-[10px] font-medium bg-primary text-primary-foreground rounded-md'>
+            New
+          </span>
+        )}
       </div>
+
       <p
         className={cn(
-          "line-clamp-3 text-sm text-center",
-          "text-foreground font-medium leading-tight"
+          "line-clamp-2 text-sm text-center",
+          "text-foreground font-medium leading-tight",
+          "group-hover:text-primary transition-colors"
         )}
       >
         {label}

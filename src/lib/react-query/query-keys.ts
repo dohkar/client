@@ -22,6 +22,9 @@ function normalizeSearchParams(
   if (params.my !== undefined) {
     normalized.my = params.my;
   }
+  if (params.dealType !== undefined) {
+    normalized.dealType = params.dealType;
+  }
   if (params.type !== undefined) {
     normalized.type = params.type;
   }
@@ -36,6 +39,15 @@ function normalizeSearchParams(
   }
   if (params.areaMin !== undefined && params.areaMin !== null) {
     normalized.areaMin = params.areaMin;
+  }
+  if (params.floorMin !== undefined && params.floorMin !== null) {
+    normalized.floorMin = params.floorMin;
+  }
+  if (params.floorMax !== undefined && params.floorMax !== null) {
+    normalized.floorMax = params.floorMax;
+  }
+  if (params.floorNotFirst !== undefined && params.floorNotFirst !== null) {
+    normalized.floorNotFirst = params.floorNotFirst;
   }
   if (params.region !== undefined) {
     normalized.region = params.region;

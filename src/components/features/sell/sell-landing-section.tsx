@@ -70,14 +70,9 @@ export function SellLandingSection() {
         </Card>
 
         {/* Call to Action Gradient Card */}
-        <Card
-          className='relative overflow-hidden border-0 shadow-2xl rounded-2xl'
-          style={{
-            animation: "fadeIn 0.8s cubic-bezier(.19,1,.22,1) 0.4s both",
-          }}
-        >
-          <div className='absolute inset-0 z-0 bg-gradient-to-tr from-primary via-accent to-secondary opacity-95' />
-          <div className='absolute inset-0 z-0 bg-black/20 backdrop-blur-md' />
+        <Card className='relative overflow-hidden border-0 shadow-2xl rounded-2xl'>
+          <div className='absolute inset-0 z-0 bg-primary opacity-95' />
+          <div className='absolute inset-0 z-0 bg-black/20' />
           <CardContent className='relative z-10 p-8 sm:p-10 flex flex-col items-center gap-6 text-center'>
             <h2 className='text-2xl sm:text-3xl md:text-4xl font-bold text-white drop-shadow-lg'>
               Готовы начать?
@@ -89,19 +84,22 @@ export function SellLandingSection() {
               <Button
                 asChild
                 size='lg'
-                className='bg-white/90 text-primary hover:bg-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-h-[48px] w-full sm:w-auto px-8'
+                className='bg-white/90 group text-primary hover:bg-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 min-h-[48px] w-full sm:w-auto px-8'
                 aria-label='Перейти к регистрации для размещения объявления'
               >
                 <Link href={ROUTES.register}>
                   Разместить объявление
-                  <ArrowRight className='w-4 h-4 ml-2' aria-hidden='true' />
+                  <ArrowRight
+                    className='w-4 h-4 group-hover:translate-x-1 transition-all duration-100'
+                    aria-hidden='true'
+                  />
                 </Link>
               </Button>
               <Button
                 asChild
                 size='lg'
                 variant='outline'
-                className='border-2 border-white/80 bg-white/10 text-white hover:bg-white/20 hover:text-primary transition-all min-h-[48px] font-semibold w-full sm:w-auto px-8'
+                className='border-2 border-white text-primary hover:bg-white/20 hover:text-white backdrop-blur-sm min-h-[48px] w-full sm:w-auto'
                 aria-label='Войти в существующий аккаунт'
               >
                 <Link href={ROUTES.login}>Уже есть аккаунт</Link>

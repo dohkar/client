@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ROUTES } from "@/constants";
+import { buildSearchUrl } from "@/lib/url/segments";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -23,7 +24,11 @@ export function Footer() {
             <ul className='space-y-2 text-sm text-muted-foreground'>
               <li>
                 <Link
-                  href={`${ROUTES.search}?type=apartment`}
+                  href={buildSearchUrl({
+                    region: "ingushetiya",
+                    category: "kvartiry",
+                    dealType: "prodam",
+                  })}
                   className='hover:text-primary transition-colors'
                 >
                   Квартиры
@@ -31,7 +36,11 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href={`${ROUTES.search}?type=house`}
+                  href={buildSearchUrl({
+                    region: "ingushetiya",
+                    category: "doma",
+                    dealType: "prodam",
+                  })}
                   className='hover:text-primary transition-colors'
                 >
                   Дома
@@ -39,7 +48,11 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href={`${ROUTES.search}?type=land`}
+                  href={buildSearchUrl({
+                    region: "ingushetiya",
+                    category: "uchastki",
+                    dealType: "prodam",
+                  })}
                   className='hover:text-primary transition-colors'
                 >
                   Земельные участки
@@ -47,7 +60,11 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href={`${ROUTES.search}?type=commercial`}
+                  href={buildSearchUrl({
+                    region: "ingushetiya",
+                    category: "kommercheskaya_nedvizhimost",
+                    dealType: "prodam",
+                  })}
                   className='hover:text-primary transition-colors'
                 >
                   Коммерческая

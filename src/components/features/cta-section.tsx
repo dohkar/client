@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { buildSearchUrl } from "@/lib/url/segments";
 
 export function CTASection() {
   return (
@@ -25,7 +26,13 @@ export function CTASection() {
                 <ArrowRight className='w-4 h-4' />
               </Button>
             </Link>
-            <Link href='/search'>
+            <Link
+              href={buildSearchUrl({
+                region: "ingushetiya",
+                category: "nedvizhimost",
+                dealType: "prodam",
+              })}
+            >
               <Button
                 size='lg'
                 variant='outline'

@@ -6,6 +6,13 @@ import { Home, Search, Heart, LayoutDashboard, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
 import { ROUTES } from "@/constants";
+import { buildSearchUrl, isSearchPathname } from "@/lib/url/segments";
+
+const DEFAULT_SEARCH_URL = buildSearchUrl({
+  region: "ingushetiya",
+  category: "nedvizhimost",
+  dealType: "prodam",
+});
 
 const navItems = [
   {
@@ -15,7 +22,7 @@ const navItems = [
   },
   {
     label: "Поиск",
-    href: ROUTES.search,
+    href: DEFAULT_SEARCH_URL,
     icon: Search,
   },
   {
@@ -55,8 +62,10 @@ export function MobileBottomNav() {
           {visibleItems.map((item) => {
             const Icon = item.icon;
             const isActive =
-              pathname === item.href ||
-              (item.href !== ROUTES.home && pathname?.startsWith(item.href));
+              item.label === "Поиск"
+                ? isSearchPathname(pathname)
+                : pathname === item.href ||
+                  (item.href !== ROUTES.home && pathname?.startsWith(item.href));
 
             return (
               <Link

@@ -19,7 +19,7 @@ export interface CityDto {
   region?: { id: string; name: string };
 }
 
-// Backend property format (matches API response; price in rubles)
+// Формат объекта недвижимости с бэкенда (API response)
 export interface PropertyBackend {
   id: string;
   slug?: string;
@@ -64,7 +64,7 @@ export interface PropertyBackend {
   house?: string | null;
 }
 
-// Frontend property format (for compatibility)
+// Формат объекта недвижимости для фронтенда
 export interface Property {
   id: string;
   slug: string;
@@ -103,6 +103,7 @@ export interface Property {
   longitude?: number;
 }
 
+// Фильтры для поиска недвижимости
 export interface PropertyFilters {
   type: PropertyType | "all";
   priceMin: number | null;
@@ -114,6 +115,7 @@ export interface PropertyFilters {
   sortBy: "price-asc" | "price-desc" | "date-desc" | "relevance";
 }
 
+// Параметры поиска недвижимости (query string для API)
 export interface PropertySearchParams {
   query?: string;
   my?: boolean;

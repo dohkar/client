@@ -32,9 +32,13 @@ import {
 import type { CityDto } from "@/types/property";
 import type { PriceValidationErrors } from "@/hooks/use-search-filters";
 
+export type RegionOption = { value: string; label: string };
+
 interface HorizontalFiltersProps {
   filters: SearchFiltersDisplay;
   cities: CityDto[];
+  /** Сортировка: «Все регионы», затем регион пользователя, остальные. Если не передано — REGION_OPTIONS как есть */
+  regionOptions?: RegionOption[];
   localPriceMin: string;
   localPriceMax: string;
   localAreaMin?: string;
@@ -72,7 +76,9 @@ export function HorizontalFilters({
   onAreaMinChange,
   onAreaMinBlur,
   onDealTypeChange,
+  regionOptions: regionOptionsProp,
 }: HorizontalFiltersProps) {
+  const regionOptions = regionOptionsProp ?? REGION_OPTIONS;
   const selectedCityName = filters.cityId
     ? (cities.find((c) => c.id === filters.cityId)?.name ?? null)
     : null;
@@ -275,7 +281,7 @@ export function HorizontalFilters({
                   Регион
                 </p> */}
                 <div className='flex flex-wrap gap-1'>
-                  {REGION_OPTIONS.map((option) => (
+                  {regionOptions.map((option) => (
                     <button
                       key={option.value}
                       type='button'

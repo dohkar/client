@@ -58,6 +58,7 @@ import { useAuthStore } from "@/stores";
 import { ROUTES } from "@/constants";
 import { formatDate, formatPhone, formatPrice, getPhoneHref } from "@/lib/utils/format";
 import { logger } from "@/lib/utils/logger";
+import { buildSearchUrl } from "@/lib/url/segments";
 import { PropertySpecs } from "@/components/features/property-detail/property-specs";
 import { PropertyMapSection } from "@/components/features/property-detail/property-map-section";
 import { PropertyMediaAndContacts } from "@/components/features/property-detail/property-media-and-contacts";
@@ -382,7 +383,15 @@ export default function PropertyPage() {
                 <BreadcrumbSeparator className='shrink-0' />
                 <BreadcrumbItem className='shrink-0'>
                   <BreadcrumbLink asChild>
-                    <Link href={ROUTES.search}>Недвижимость</Link>
+                    <Link
+                      href={buildSearchUrl({
+                        region: "ingushetiya",
+                        category: "nedvizhimost",
+                        dealType: "prodam",
+                      })}
+                    >
+                      Недвижимость
+                    </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className='shrink-0' />

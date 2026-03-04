@@ -30,22 +30,47 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // import { useAuthModal } from "@/components/features/auth-modal"; // временно: редирект на /auth/login
 import { useAuthStore, useUIStore } from "@/stores";
 import { ROUTES } from "@/constants";
-import { useParsedSearchFilters } from "@/hooks/use-search-filters";
 import { formatUserName } from "@/lib/utils/format-name";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/types";
 import type { PropertyType } from "@/types/property";
 import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  buildSearchUrl,
+  categorySlugFromType,
+  isSearchPathname,
+  parseSearchPathname,
+} from "@/lib/url/segments";
 
 const CATEGORIES: Array<{
   name: string;
   href: string;
   type: PropertyType;
 }> = [
-  { name: "Квартиры", href: `${ROUTES.search}?type=apartment`, type: "apartment" },
-  { name: "Дома", href: `${ROUTES.search}?type=house`, type: "house" },
-  { name: "Участки", href: `${ROUTES.search}?type=land`, type: "land" },
-  { name: "Коммерция", href: `${ROUTES.search}?type=commercial`, type: "commercial" },
+  {
+    name: "Квартиры",
+    href: buildSearchUrl({ region: "ingushetiya", category: "kvartiry", dealType: "prodam" }),
+    type: "apartment",
+  },
+  {
+    name: "Дома",
+    href: buildSearchUrl({ region: "ingushetiya", category: "doma", dealType: "prodam" }),
+    type: "house",
+  },
+  {
+    name: "Участки",
+    href: buildSearchUrl({ region: "ingushetiya", category: "uchastki", dealType: "prodam" }),
+    type: "land",
+  },
+  {
+    name: "Коммерция",
+    href: buildSearchUrl({
+      region: "ingushetiya",
+      category: "kommercheskaya_nedvizhimost",
+      dealType: "prodam",
+    }),
+    type: "commercial",
+  },
 ];
 
 const USER_MENU_ITEMS = [
@@ -116,7 +141,6 @@ function UserMenuLinks({ isAdmin }: { isAdmin: boolean }) {
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const filters = useParsedSearchFilters();
 
   const { isAuthenticated, user, logout } = useAuthStore();
   const { isMobileMenuOpen, toggleMobileMenu, setMobileMenuOpen } = useUIStore();
@@ -135,14 +159,18 @@ export function Header() {
   const userName = formatUserName(user?.name);
   const userInitial = userName.charAt(0).toUpperCase();
 
-  // Категории с подсветкой активного типа из URL (распарсенного через useParsedSearchFilters)
+  const parsedSearchPath = useMemo(() => parseSearchPathname(pathname), [pathname]);
+  const isSearchRoute = useMemo(() => isSearchPathname(pathname), [pathname]);
+
+  // Категории с подсветкой активного типа из сегментного URL
   const categories = useMemo(
     () =>
       CATEGORIES.map((cat) => ({
         ...cat,
-        isActive: pathname === ROUTES.search && filters.type === cat.type,
+        isActive:
+          isSearchRoute && parsedSearchPath?.category === categorySlugFromType(cat.type),
       })),
-    [pathname, filters.type]
+    [isSearchRoute, parsedSearchPath?.category]
   );
 
   // Управление анимацией мобильного меню

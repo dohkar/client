@@ -4,45 +4,32 @@ import Link from "next/link";
 import { MapPin, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { POPULAR_CITIES } from "@/constants/search";
+import { buildSearchUrl } from "@/lib/url/segments";
 
-const locations = [
-  {
-    id: 1,
-    name: "Грозный",
-    description: "Столица Чечни",
-    properties: "850+",
-    trend: "+15%",
-    href: "/search?city=Грозный",
-    image: "gradient-mountains",
-  },
-  {
-    id: 2,
-    name: "Назрань",
-    description: "Крупнейший город Ингушетии",
-    properties: "420+",
-    trend: "+22%",
-    href: "/search?city=Назрань",
-    image: "gradient-mountains",
-  },
-  {
-    id: 3,
-    name: "Магас",
-    description: "Столица Ингушетии",
-    properties: "280+",
-    trend: "+18%",
-    href: "/search?city=Магас",
-    image: "gradient-mountains",
-  },
-  {
-    id: 4,
-    name: "Гудермес",
-    description: "Второй по величине город",
-    properties: "320+",
-    trend: "+12%",
-    href: "/search?city=Гудермес",
-    image: "gradient-mountains",
-  },
-];
+const LOCATION_META: Record<string, { description: string; properties: string; trend: string }> = {
+  groznyy: { description: "Столица Чечни", properties: "850+", trend: "+15%" },
+  nazran: { description: "Крупнейший город Ингушетии", properties: "420+", trend: "+22%" },
+  magas: { description: "Столица Ингушетии", properties: "280+", trend: "+18%" },
+  gudermes: { description: "Второй по величине город", properties: "320+", trend: "+12%" },
+};
+
+const locations = POPULAR_CITIES.map((city, index) => ({
+  id: index + 1,
+  name: city.label,
+  description: LOCATION_META[city.slug]?.description ?? "Популярная локация",
+  properties: LOCATION_META[city.slug]?.properties ?? "100+",
+  trend: LOCATION_META[city.slug]?.trend ?? "+10%",
+  href: buildSearchUrl({
+    region: city.region,
+    category: "nedvizhimost",
+    dealType: "prodam",
+    params: {
+      query: city.label,
+    },
+  }),
+  image: "gradient-mountains",
+}));
 
 export function PopularLocationsSection() {
   return (

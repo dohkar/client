@@ -1,269 +1,59 @@
-"use client";
-
-import { useMemo, Suspense, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useProperties } from "@/hooks/use-properties";
-import { useSearchFilters } from "@/hooks/use-search-filters";
-import { useCities } from "@/hooks/use-cities";
-import { toPropertySearchParams } from "@/lib/search-params";
+import { permanentRedirect } from "next/navigation";
 import {
-  getRegionIdByName,
-  ensureRegionCacheInitialized,
-} from "@/services/region.service";
-import { SEARCH_CONSTANTS, PROPERTY_TYPE_LABELS } from "@/lib/search-constants";
-import { Spinner } from "@/components/ui";
-import {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { HorizontalFilters, ActiveFilters, SearchResults } from "@/components/search";
-import { ROUTES } from "@/constants";
-import Link from "next/link";
-import { Input } from "@/components/ui/input";
-import { Search, XIcon } from "lucide-react";
+  API_DEAL_TO_SLUG,
+  API_TYPE_TO_SLUG,
+  buildSearchUrl,
+  regionSlugFromApi,
+} from "@/lib/url/segments";
 
-// Основной компонент страницы поиска
-function SearchPageContent() {
-  const router = useRouter();
-
-  // URL — единственный источник истины для фильтров
-  const {
-    appliedFilters,
-    draftQuery,
-    setDraftQuery,
-    draftPriceMin,
-    draftPriceMax,
-    draftAreaMin,
-    setDraftPriceMin,
-    setDraftPriceMax,
-    setDraftAreaMin,
-    handleTypeChange,
-    handleRegionChange,
-    handleRoomsChange,
-    handleSortChange,
-    handleAreaMinBlur,
-    handlePriceMinBlur,
-    handlePriceMaxBlur,
-    handleCityChange,
-    handleCityReset,
-    handleTypeReset,
-    handlePriceReset,
-    handleRegionReset,
-    handleRoomsReset,
-    handleAreaReset,
-    handleQueryReset,
-    handleDealTypeChange,
-    handleDealTypeReset,
-    handleFloorReset,
-    handleResetAll,
-    priceErrors,
-    currentPage,
-    setCurrentPage,
-    isPending,
-  } = useSearchFilters();
-
-  useEffect(() => {
-    ensureRegionCacheInitialized().catch(() => {});
-  }, []);
-
-  const regionId =
-    appliedFilters.region !== "all"
-      ? getRegionIdByName(appliedFilters.region)
-      : undefined;
-  const { data: cities = [] } = useCities(regionId ?? undefined);
-  const selectedCityName =
-    appliedFilters.cityId != null
-      ? (cities.find((c) => c.id === appliedFilters.cityId)?.name ?? null)
-      : null;
-
-  // Параметры для API из URL (appliedFilters уже содержат page/limit)
-  const apiParams = useMemo(
-    () => toPropertySearchParams(appliedFilters, SEARCH_CONSTANTS.ITEMS_PER_PAGE),
-    [appliedFilters]
-  );
-
-  // Хук получения данных: обрабатывает undefined/null данных и ошибки
-  const { data, isLoading, error } = useProperties(apiParams);
-  const properties = Array.isArray(data?.data) ? data.data : [];
-  const totalPages = typeof data?.totalPages === "number" ? data.totalPages : 0;
-
-  // Вычисляет число активных фильтров — сверяет на null/undefined для числовых и "all" для строковых
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (appliedFilters.query && appliedFilters.query.trim().length > 0) count++;
-    if (appliedFilters.dealType && appliedFilters.dealType !== "all") count++;
-    if (appliedFilters.type && appliedFilters.type !== "all") count++;
-    if (appliedFilters.priceMin != null) count++;
-    if (appliedFilters.priceMax != null) count++;
-    if (appliedFilters.roomsMin != null) count++;
-    if (appliedFilters.areaMin != null) count++;
-    if (
-      appliedFilters.floorMin != null ||
-      appliedFilters.floorMax != null ||
-      appliedFilters.floorNotFirst === true
-    )
-      count++;
-    if (appliedFilters.region && appliedFilters.region !== "all") count++;
-    if (appliedFilters.cityId && appliedFilters.cityId.trim().length > 0) count++;
-    return count;
-  }, [appliedFilters]);
-
-  // Страницы
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  // Reset поиска
-  const handleClearQuery = () => {
-    setDraftQuery("");
-    handleQueryReset();
-  };
-
-  // Reset кнопки в результатах
-  const handleResetFilters = () => handleResetAll();
-
-  // Навигация: если ROUTES.home не определён, будет баг (но обычно определён)
-  const handleGoHome = () => {
-    if (ROUTES.home) router.push(ROUTES.home);
-  };
-
-  return (
-    <div className='min-h-screen flex flex-col'>
-      <main className='flex-1 px-4 py-8 max-w-7xl mx-auto w-full'>
-        {/* Breadcrumbs */}
-        <Breadcrumb className='mb-4'>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href={ROUTES.home}>Главная</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Поиск</BreadcrumbPage>
-            </BreadcrumbItem>
-            {appliedFilters.type !== "all" && (
-              <>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>
-                    {PROPERTY_TYPE_LABELS[appliedFilters.type] || "Тип недвижимости"}
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </>
-            )}
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        {/* Поле поиска по запросу */}
-        <div className='mb-4'>
-          <div className='relative max-w-xl'>
-            <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none' />
-            <Input
-              placeholder='Город, район, ключевые слова...'
-              value={draftQuery}
-              onChange={(e) => setDraftQuery(e.target.value)}
-              className='pl-9 h-12 text-base'
-              aria-label='Поиск по объявлениям'
-              autoComplete='off'
-            />
-            {draftQuery && (
-              <button
-                onClick={handleClearQuery}
-                className='absolute right-4 top-1/2 -translate-y-1/2 size-5 cursor-pointer text-muted-foreground'
-              >
-                <XIcon className='size-5' />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Горизонтальные фильтры */}
-        <HorizontalFilters
-          filters={appliedFilters}
-          cities={cities}
-          localPriceMin={draftPriceMin}
-          localPriceMax={draftPriceMax}
-          localAreaMin={draftAreaMin}
-          priceErrors={priceErrors}
-          onTypeChange={handleTypeChange}
-          onRegionChange={handleRegionChange}
-          onCityChange={handleCityChange}
-          onRoomsChange={handleRoomsChange}
-          onSortChange={handleSortChange}
-          onPriceMinChange={setDraftPriceMin}
-          onPriceMaxChange={setDraftPriceMax}
-          onPriceMinBlur={handlePriceMinBlur}
-          onPriceMaxBlur={handlePriceMaxBlur}
-          onAreaMinChange={setDraftAreaMin}
-          onAreaMinBlur={handleAreaMinBlur}
-          onDealTypeChange={handleDealTypeChange}
-        />
-
-        {/* Активные фильтры */}
-        <ActiveFilters
-          filters={appliedFilters}
-          activeFiltersCount={activeFiltersCount}
-          selectedCityName={selectedCityName}
-          onTypeReset={handleTypeReset}
-          onPriceReset={handlePriceReset}
-          onRegionReset={handleRegionReset}
-          onCityReset={handleCityReset}
-          onRoomsReset={handleRoomsReset}
-          onAreaReset={handleAreaReset}
-          onQueryReset={handleQueryReset}
-          onDealTypeReset={handleDealTypeReset}
-          onFloorReset={handleFloorReset}
-          onResetAll={handleResetAll}
-        />
-
-        {/* Результаты поиска */}
-        <div>
-          <div className='mb-6 ml-1 mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-            <h1 className='text-xl sm:text-2xl font-bold text-foreground'>
-              Результаты поиска: {typeof data?.total === "number" ? data.total : 0}{" "}
-              объявлений
-            </h1>
-          </div>
-
-          {/* Быстрые пресеты */}
-          {/* <QuickPresets onPresetSelect={handlePresetSelect} /> */}
-
-          <SearchResults
-            properties={properties}
-            isLoading={isLoading || isPending}
-            error={error}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            onResetFilters={handleResetFilters}
-            onGoHome={handleGoHome}
-            totalItems={data?.total}
-            itemsPerPage={SEARCH_CONSTANTS.ITEMS_PER_PAGE}
-          />
-        </div>
-      </main>
-    </div>
-  );
+interface SearchPageProps {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
-// Suspense-обёртка, подстраховано наличие Spinner на загрузку
-export default function SearchPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className='min-h-screen flex justify-center items-center'>
-          <div className='animate-pulse text-muted-foreground text-lg'>
-            <Spinner />
-          </div>
-        </div>
-      }
-    >
-      <SearchPageContent />
-    </Suspense>
-  );
+function pickParam(
+  value: string | string[] | undefined
+): string | undefined {
+  if (Array.isArray(value)) {
+    const [first] = value;
+    return first;
+  }
+  return value;
+}
+
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const params = (await searchParams) ?? {};
+
+  const rawType = pickParam(params.type);
+  const rawDealType = pickParam(params.dealType) ?? pickParam(params.deal);
+  const rawRegion = pickParam(params.region);
+  const isAllRegions = rawRegion === "all";
+
+  const category =
+    rawType && API_TYPE_TO_SLUG[rawType.toLowerCase() as keyof typeof API_TYPE_TO_SLUG]
+      ? API_TYPE_TO_SLUG[rawType.toLowerCase() as keyof typeof API_TYPE_TO_SLUG]
+      : "nedvizhimost";
+  const dealType =
+    rawDealType &&
+    API_DEAL_TO_SLUG[rawDealType.toLowerCase() as keyof typeof API_DEAL_TO_SLUG]
+      ? API_DEAL_TO_SLUG[rawDealType.toLowerCase() as keyof typeof API_DEAL_TO_SLUG]
+      : undefined;
+  const region = isAllRegions ? "all" : rawRegion ? regionSlugFromApi(rawRegion) : "ingushetiya";
+
+  const newUrl = buildSearchUrl({
+    region,
+    category,
+    dealType,
+    params: {
+      query: pickParam(params.query),
+      cityId: pickParam(params.cityId),
+      price_min: pickParam(params.price_min) ?? pickParam(params.priceMin),
+      price_max: pickParam(params.price_max) ?? pickParam(params.priceMax),
+      rooms: pickParam(params.rooms) ?? pickParam(params.roomsMin),
+      area_min: pickParam(params.area_min) ?? pickParam(params.areaMin),
+      sort: pickParam(params.sort) ?? pickParam(params.sortBy),
+      page: pickParam(params.page),
+    },
+  });
+
+  permanentRedirect(newUrl);
 }

@@ -10,28 +10,34 @@ import { toast } from "sonner";
  * Хук для получения списка недвижимости
  */
 export function useProperties(params?: PropertySearchParams) {
-  // Convert PropertySearchParams to ApiPropertyListParams
-  const apiParams: ApiPropertyListParams | undefined = params ? {
-    query: params.query,
-    dealType: params.dealType,
-    type: params.type ? (params.type.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL") : undefined,
-    priceMin: params.priceMin,
-    priceMax: params.priceMax,
-    rooms: params.rooms,
-    areaMin: params.areaMin,
-    floorMin: params.floorMin,
-    floorMax: params.floorMax,
-    floorNotFirst: params.floorNotFirst,
-    regionId: params.region ? getRegionIdByName(params.region) : undefined,
-    cityId: params.cityId,
-    sortBy: params.sortBy,
-    page: params.page,
-    limit: params.limit,
-  } : undefined;
+  const regionId = params?.region ? getRegionIdByName(params.region) : undefined;
+
+  const apiParams: ApiPropertyListParams | undefined = params
+    ? {
+        query: params.query,
+        dealType: params.dealType,
+        type: params.type
+          ? (params.type.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL")
+          : undefined,
+        priceMin: params.priceMin,
+        priceMax: params.priceMax,
+        rooms: params.rooms,
+        areaMin: params.areaMin,
+        floorMin: params.floorMin,
+        floorMax: params.floorMax,
+        floorNotFirst: params.floorNotFirst,
+        regionId,
+        cityId: params.cityId,
+        sortBy: params.sortBy,
+        page: params.page,
+        limit: params.limit,
+      }
+    : undefined;
 
   return useQuery({
     queryKey: queryKeys.properties.list(params || {}),
     queryFn: () => propertyService.getProperties(apiParams),
+    enabled: !params?.region || regionId !== undefined,
     staleTime: 60 * 1000, // 1 minute
     retry: 2,
     // Не используем placeholderData: keepPreviousData — при смене фильтров показываем

@@ -1,61 +1,62 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
-import {
-  parseSearchParams,
-  mergeSearchParams,
-  type SearchFiltersDisplay,
-} from "@/lib/search-params";
-import { SEARCH_CONSTANTS } from "@/lib/search-constants";
-import { ROUTES } from "@/constants";
+"use client";
 
-/**
- * Лёгкий хук: только парсит URL и возвращает фильтры (без draft/update).
- * Для использования в Header и других местах, где нужны только распарсенные фильтры.
- */
-export function useParsedSearchFilters(): SearchFiltersDisplay {
-  const searchParams = useSearchParams();
-  return useMemo(() => parseSearchParams(searchParams).filters, [searchParams]);
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+} from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useTransition } from "react";
+import type { SearchFiltersDisplay } from "@/lib/search-params";
+import { SEARCH_CONSTANTS } from "@/lib/search-constants";
+import {
+  API_REGION_TO_SLUG,
+  buildSearchUrl,
+  categorySlugFromType,
+  dealTypeSlugFromApi,
+  parseSegments,
+} from "@/lib/url/segments";
+import { useUserRegion } from "@/hooks/use-user-region";
+
+const emptyFn = () => () => {};
+const returnTrue = () => true;
+const returnFalse = () => false;
+
+function useIsHydrated(): boolean {
+  return useSyncExternalStore(emptyFn, returnTrue, returnFalse);
 }
 
-/**
- * Ошибки валидации цен
- */
 export interface PriceValidationErrors {
   priceMin?: string;
   priceMax?: string;
 }
 
-type FilterKey = keyof SearchFiltersDisplay;
+interface SegmentParamsInput {
+  region: string;
+  category: string;
+  dealType?: string;
+}
 
-interface UseSearchFiltersReturn {
-  /** Применённые фильтры (из URL — единственный источник истины) */
+interface SegmentSearchFiltersReturn {
   appliedFilters: SearchFiltersDisplay;
-
-  /** Draft-состояния для полей с debounce */
+  /** Чип региона показывать только когда пользователь явно выбрал не дефолтный регион (path !== userRegionSlug). */
+  showRegionChip: boolean;
   draftQuery: string;
   draftPriceMin: string;
   draftPriceMax: string;
   draftAreaMin: string;
-
   setDraftQuery: (query: string) => void;
   setDraftPriceMin: (value: string) => void;
   setDraftPriceMax: (value: string) => void;
   setDraftAreaMin: (value: string) => void;
-
-  /** Обновить фильтры (пишет в URL). replace: не создавать запись в history. resetPage: сбросить page в 1 при изменении фильтров. */
   updateFilters: (
     updates: Partial<SearchFiltersDisplay>,
     options?: { replace?: boolean; resetPage?: boolean }
   ) => void;
-
-  /** Сбросить все фильтры (переход на pathname без query) */
   resetFilters: () => void;
-
-  /** Удалить один фильтр по ключу */
-  removeFilter: (key: FilterKey) => void;
-
-  /** Обработчики для фильтров (сразу пишут в URL) */
   handleTypeChange: (type: SearchFiltersDisplay["type"]) => void;
   handleRegionChange: (region: SearchFiltersDisplay["region"]) => void;
   handleRoomsChange: (rooms: number | null) => void;
@@ -64,11 +65,8 @@ interface UseSearchFiltersReturn {
   handleAreaMinBlur: () => void;
   handlePriceMinBlur: () => void;
   handlePriceMaxBlur: () => void;
-
   handleCityChange: (cityId: string | null) => void;
   handleCityReset: () => void;
-  /** Сброс региона и города одним обновлением URL (для чипа «Локация») */
-  handleLocationReset: () => void;
   handleTypeReset: () => void;
   handlePriceReset: () => void;
   handleRegionReset: () => void;
@@ -79,13 +77,64 @@ interface UseSearchFiltersReturn {
   handleDealTypeReset: () => void;
   handleFloorReset: () => void;
   handleResetAll: () => void;
-
   priceErrors: PriceValidationErrors;
   currentPage: number;
   setCurrentPage: (page: number) => void;
-
-  /** true во время перехода после updateFilters/resetFilters (для loading UI) */
   isPending: boolean;
+  searchUrl: string;
+}
+
+function parseNumber(value: string | null): number | null {
+  if (!value) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return parsed;
+}
+
+function parseSort(
+  value: string | null
+): "price-asc" | "price-desc" | "date-desc" | "relevance" {
+  if (
+    value === "price-asc" ||
+    value === "price-desc" ||
+    value === "date-desc" ||
+    value === "relevance"
+  ) {
+    return value;
+  }
+  return "relevance";
+}
+
+function dealApiToDisplay(apiDeal?: string): SearchFiltersDisplay["dealType"] {
+  if (!apiDeal) return "all";
+  switch (apiDeal) {
+    case "buy":
+      return "BUY";
+    case "rent_in":
+      return "RENT_IN";
+    case "daily":
+      return "DAILY";
+    default:
+      return "all";
+  }
+}
+
+function dealDisplayToApi(
+  dealType: SearchFiltersDisplay["dealType"]
+): string | undefined {
+  if (dealType === "all") return undefined;
+  if (dealType === "BUY" || dealType === "SALE") return "buy";
+  if (dealType === "RENT_IN" || dealType === "RENT_OUT") return "rent_in";
+  if (dealType === "DAILY") return "daily";
+  return undefined;
+}
+
+function regionDisplayToSlug(
+  region: SearchFiltersDisplay["region"],
+  fallbackRegionSlug: string
+): string {
+  if (region === "all") return fallbackRegionSlug;
+  return API_REGION_TO_SLUG[region] ?? fallbackRegionSlug;
 }
 
 function validatePrices(min: string, max: string): PriceValidationErrors {
@@ -106,31 +155,78 @@ function validatePrices(min: string, max: string): PriceValidationErrors {
   return errors;
 }
 
-/**
- * Хук для страницы /search (query-based). Сейчас /search — редирект на сегментный URL.
- * Используйте useSegmentSearchFilters на сегментных страницах поиска.
- * @deprecated Удалить после стабилизации; источник истины — сегментные маршруты и useSegmentSearchFilters.
- */
-export function useSearchFilters(): UseSearchFiltersReturn {
+export function useSegmentSearchFilters(
+  params: SegmentParamsInput,
+  searchParamsInput?: Record<string, string | string[] | undefined> | URLSearchParams
+): SegmentSearchFiltersReturn {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const liveSearchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const userRegionSlug = useUserRegion();
+  const isHydrated = useIsHydrated();
 
-  /** Фильтры из URL — единственный источник истины */
-  const parsed = useMemo(() => parseSearchParams(searchParams), [searchParams]);
-  const appliedFilters = parsed.filters;
-  const currentPage = appliedFilters.page;
+  const parsedSegments = useMemo(
+    () => parseSegments(params.region, params.category, params.dealType),
+    [params.category, params.dealType, params.region]
+  );
 
-  /** Редирект на чистый URL при невалидных параметрах (только на странице поиска) */
-  useEffect(() => {
-    if (!parsed.invalid || !searchParams.toString() || pathname !== ROUTES.search) return;
-    if (typeof window !== "undefined") {
-      router.replace(pathname, { scroll: false });
-    }
-  }, [parsed.invalid, searchParams, pathname, router]);
+  const fallbackSearchParams = useMemo(() => {
+    if (searchParamsInput instanceof URLSearchParams) return searchParamsInput;
+    const next = new URLSearchParams();
+    if (!searchParamsInput) return next;
+    Object.entries(searchParamsInput).forEach(([key, value]) => {
+      if (value == null) return;
+      if (Array.isArray(value)) {
+        const [first] = value;
+        if (first) next.set(key, first);
+        return;
+      }
+      next.set(key, value);
+    });
+    return next;
+  }, [searchParamsInput]);
 
-  /** Draft-состояния для полей с debounce */
+  // До гидрации — fallback из серверных пропсов (избегаем mismatch). После гидрации — всегда liveSearchParams.
+  const activeSearchParams = isHydrated ? liveSearchParams : fallbackSearchParams;
+
+  const appliedFilters = useMemo<SearchFiltersDisplay>(() => {
+    const dealType = dealApiToDisplay(parsedSegments?.apiDeal);
+    const regionFromQuery = activeSearchParams.get("region");
+    const region: SearchFiltersDisplay["region"] =
+      regionFromQuery === "all" || parsedSegments?.apiRegion === undefined
+        ? "all"
+        : parsedSegments.apiRegion;
+
+    return {
+      query: activeSearchParams.get("query")?.trim() ?? "",
+      dealType,
+      type: parsedSegments?.apiType ?? "all",
+      priceMin: parseNumber(activeSearchParams.get("price_min")),
+      priceMax: parseNumber(activeSearchParams.get("price_max")),
+      roomsMin: parseNumber(activeSearchParams.get("rooms")),
+      areaMin: parseNumber(activeSearchParams.get("area_min")),
+      floorMin: parseNumber(activeSearchParams.get("floor_min")),
+      floorMax: parseNumber(activeSearchParams.get("floor_max")),
+      floorNotFirst:
+        activeSearchParams.get("floor_not_first") === "1" ||
+        activeSearchParams.get("floor_not_first") === "true"
+          ? true
+          : null,
+      region,
+      cityId: activeSearchParams.get("cityId")?.trim() || null,
+      sortBy: parseSort(activeSearchParams.get("sort")),
+      page: Math.max(parseNumber(activeSearchParams.get("page")) ?? 1, 1),
+      limit: 12,
+    };
+  }, [
+    activeSearchParams,
+    parsedSegments?.apiDeal,
+    parsedSegments?.apiRegion,
+    parsedSegments?.apiType,
+  ]);
+
+  const showRegionChip = params.region !== userRegionSlug;
+
   const [draftQuery, setDraftQueryState] = useState(appliedFilters.query);
   const [draftPriceMin, setDraftPriceMinState] = useState(
     appliedFilters.priceMin != null ? String(appliedFilters.priceMin) : ""
@@ -165,16 +261,62 @@ export function useSearchFilters(): UseSearchFiltersReturn {
   }, [appliedFilters.areaMin]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  /** Обновить URL */
+  const buildUrlFromFilters = useCallback(
+    (filters: SearchFiltersDisplay): string => {
+      const currentRegionSlug = params.region || "ingushetiya";
+      const nextRegionSlug =
+        filters.region === "all"
+          ? "all"
+          : regionDisplayToSlug(filters.region, currentRegionSlug);
+      const nextCategorySlug =
+        filters.type === "all" ? "nedvizhimost" : categorySlugFromType(filters.type);
+      const nextDealTypeSlug = dealTypeSlugFromApi(
+        dealDisplayToApi(filters.dealType) ?? ""
+      );
+
+      const queryParams: Record<string, string | number | undefined> = {
+        query: filters.query.trim() || undefined,
+        cityId: filters.cityId?.trim() || undefined,
+        price_min: filters.priceMin ?? undefined,
+        price_max: filters.priceMax ?? undefined,
+        rooms: filters.roomsMin ?? undefined,
+        area_min: filters.areaMin ?? undefined,
+        floor_min: filters.floorMin ?? undefined,
+        floor_max: filters.floorMax ?? undefined,
+        floor_not_first: filters.floorNotFirst ? "1" : undefined,
+        sort: filters.sortBy !== "relevance" ? filters.sortBy : undefined,
+        page: filters.page > 1 ? filters.page : undefined,
+      };
+      return buildSearchUrl({
+        region: nextRegionSlug,
+        category: nextCategorySlug,
+        dealType: nextDealTypeSlug || undefined,
+        params: queryParams,
+      });
+    },
+    [params.region]
+  );
+
   const updateFilters = useCallback(
     (
       updates: Partial<SearchFiltersDisplay>,
       options?: { replace?: boolean; resetPage?: boolean }
     ) => {
       const { replace = true, resetPage = true } = options ?? {};
-      const newParams = mergeSearchParams(searchParams, updates, resetPage);
-      const url = `${pathname}?${newParams.toString()}`;
+      const merged: SearchFiltersDisplay = {
+        ...appliedFilters,
+        ...updates,
+      };
 
+      const shouldResetPage =
+        resetPage &&
+        Object.keys(updates).some((key) => key !== "page" && key !== "sortBy") &&
+        updates.page === undefined;
+      if (shouldResetPage) {
+        merged.page = 1;
+      }
+
+      const url = buildUrlFromFilters(merged);
       startTransition(() => {
         if (replace) {
           router.replace(url, { scroll: false });
@@ -183,28 +325,21 @@ export function useSearchFilters(): UseSearchFiltersReturn {
         }
       });
     },
-    [pathname, router, searchParams]
+    [appliedFilters, buildUrlFromFilters, router]
   );
 
   const resetFilters = useCallback(() => {
-    startTransition(() => {
-      router.push(pathname, { scroll: false });
+    // Сброс на базовый поиск: регион пользователя + «Недвижимость» (все типы), без типа сделки.
+    // Иначе при текущем path /ingushetiya/kvartiry/prodam мы бы строили тот же URL и чипсы не исчезали.
+    const cleanUrl = buildSearchUrl({
+      region: userRegionSlug,
+      category: "nedvizhimost",
     });
-  }, [pathname, router]);
+    startTransition(() => {
+      router.push(cleanUrl, { scroll: false });
+    });
+  }, [userRegionSlug, router]);
 
-  const removeFilter = useCallback(
-    (key: FilterKey) => {
-      const next = new URLSearchParams(searchParams);
-      next.delete(key);
-      const url = next.toString() ? `${pathname}?${next.toString()}` : pathname;
-      startTransition(() => {
-        router.replace(url, { scroll: false });
-      });
-    },
-    [pathname, router, searchParams]
-  );
-
-  /** Debounce refs — мутируются только внутри useEffect (cleanup) или в clearAllDebounces (onClick). */
   const queryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const priceMinDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const priceMaxDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -259,7 +394,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
         updateFilters({ priceMin: num });
       }
     },
-    [appliedFilters.priceMin, appliedFilters.priceMax, draftPriceMax, updateFilters]
+    [appliedFilters.priceMax, appliedFilters.priceMin, draftPriceMax, updateFilters]
   );
 
   const applyDraftPriceMax = useCallback(
@@ -286,7 +421,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
         updateFilters({ priceMax: num });
       }
     },
-    [appliedFilters.priceMin, appliedFilters.priceMax, draftPriceMin, updateFilters]
+    [appliedFilters.priceMax, appliedFilters.priceMin, draftPriceMin, updateFilters]
   );
 
   const applyDraftAreaMin = useCallback(
@@ -301,7 +436,6 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     [appliedFilters.areaMin, updateFilters]
   );
 
-  /** Debounce: draft → URL. Выход по равенству draft === applied (в т.ч. после reset — оба ""). */
   useEffect(() => {
     if (queryDebounceRef.current) clearTimeout(queryDebounceRef.current);
     const trimmed = draftQuery.trim();
@@ -362,50 +496,13 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     };
   }, [draftAreaMin, appliedFilters.areaMin, applyDraftAreaMin, updateFilters]);
 
-  const handleTypeChange = useCallback(
-    (type: SearchFiltersDisplay["type"]) => {
-      updateFilters({ type });
-    },
-    [updateFilters]
-  );
-  const handleRegionChange = useCallback(
-    (region: SearchFiltersDisplay["region"]) => {
-      updateFilters({ region, cityId: null });
-    },
-    [updateFilters]
-  );
-  const handleCityChange = useCallback(
-    (cityId: string | null) => {
-      updateFilters({ cityId: cityId || null });
-    },
-    [updateFilters]
-  );
-  const handleRoomsChange = useCallback(
-    (rooms: number | null) => {
-      updateFilters({ roomsMin: rooms });
-    },
-    [updateFilters]
-  );
-  const handleSortChange = useCallback(
-    (sortBy: SearchFiltersDisplay["sortBy"]) => {
-      updateFilters({ sortBy }, { resetPage: false });
-    },
-    [updateFilters]
-  );
-  const handleAreaMinChange = useCallback(
-    (areaMin: number | null) => {
-      updateFilters({ areaMin }, { resetPage: false });
-    },
-    [updateFilters]
-  );
-
   const handleAreaMinBlur = useCallback(() => {
     if (areaMinDebounceRef.current) {
       clearTimeout(areaMinDebounceRef.current);
       areaMinDebounceRef.current = null;
     }
     applyDraftAreaMin(draftAreaMin);
-  }, [draftAreaMin, applyDraftAreaMin]);
+  }, [applyDraftAreaMin, draftAreaMin]);
 
   const handlePriceMinBlur = useCallback(() => {
     if (priceMinDebounceRef.current) {
@@ -413,7 +510,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
       priceMinDebounceRef.current = null;
     }
     applyDraftPriceMin(draftPriceMin);
-  }, [draftPriceMin, applyDraftPriceMin]);
+  }, [applyDraftPriceMin, draftPriceMin]);
 
   const handlePriceMaxBlur = useCallback(() => {
     if (priceMaxDebounceRef.current) {
@@ -421,60 +518,7 @@ export function useSearchFilters(): UseSearchFiltersReturn {
       priceMaxDebounceRef.current = null;
     }
     applyDraftPriceMax(draftPriceMax);
-  }, [draftPriceMax, applyDraftPriceMax]);
-
-  const handleTypeReset = useCallback(
-    () => updateFilters({ type: "all" }),
-    [updateFilters]
-  );
-  const handlePriceReset = useCallback(() => {
-    updateFilters({ priceMin: null, priceMax: null });
-    setDraftPriceMinState("");
-    setDraftPriceMaxState("");
-    setPriceErrors({});
-  }, [updateFilters]);
-  const handleRegionReset = useCallback(
-    () => updateFilters({ region: "all", cityId: null }),
-    [updateFilters]
-  );
-  const handleCityReset = useCallback(
-    () => updateFilters({ cityId: null }),
-    [updateFilters]
-  );
-  /** Сброс региона и города одним обновлением — избегает гонки двух вызовов updateFilters. */
-  const handleLocationReset = useCallback(
-    () => updateFilters({ region: "all", cityId: null }),
-    [updateFilters]
-  );
-  const handleRoomsReset = useCallback(
-    () => updateFilters({ roomsMin: null }),
-    [updateFilters]
-  );
-  const handleAreaReset = useCallback(() => {
-    updateFilters({ areaMin: null }, { resetPage: false });
-    setDraftAreaMinState("");
-  }, [updateFilters]);
-  const handleQueryReset = useCallback(() => {
-    updateFilters({ query: "" });
-    setDraftQueryState("");
-  }, [updateFilters]);
-  const handleDealTypeChange = useCallback(
-    (dealType: SearchFiltersDisplay["dealType"]) => {
-      updateFilters({ dealType });
-    },
-    [updateFilters]
-  );
-  const handleDealTypeReset = useCallback(
-    () => updateFilters({ dealType: "all" }),
-    [updateFilters]
-  );
-  const handleFloorReset = useCallback(() => {
-    updateFilters({
-      floorMin: null,
-      floorMax: null,
-      floorNotFirst: null,
-    });
-  }, [updateFilters]);
+  }, [applyDraftPriceMax, draftPriceMax]);
 
   const handleResetAll = useCallback(() => {
     clearAllDebounces();
@@ -486,17 +530,11 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     resetFilters();
   }, [clearAllDebounces, resetFilters]);
 
-  const setCurrentPage = useCallback(
-    (page: number) => {
-      if (typeof page === "number" && page > 0 && page !== currentPage) {
-        updateFilters({ page }, { resetPage: false });
-      }
-    },
-    [currentPage, updateFilters]
-  );
+  const currentPage = appliedFilters.page;
 
   return {
     appliedFilters,
+    showRegionChip,
     draftQuery,
     draftPriceMin,
     draftPriceMax,
@@ -507,31 +545,50 @@ export function useSearchFilters(): UseSearchFiltersReturn {
     setDraftAreaMin: setDraftAreaMinState,
     updateFilters,
     resetFilters,
-    removeFilter,
-    handleTypeChange,
-    handleRegionChange,
-    handleRoomsChange,
-    handleSortChange,
-    handleAreaMinChange,
+    handleTypeChange: (type) => updateFilters({ type }),
+    handleRegionChange: (region) => updateFilters({ region, cityId: null }),
+    handleRoomsChange: (rooms) => updateFilters({ roomsMin: rooms }),
+    handleSortChange: (sortBy) => updateFilters({ sortBy }, { resetPage: false }),
+    handleAreaMinChange: (areaMin) => updateFilters({ areaMin }, { resetPage: false }),
     handleAreaMinBlur,
     handlePriceMinBlur,
     handlePriceMaxBlur,
-    handleCityChange,
-    handleCityReset,
-    handleLocationReset,
-    handleTypeReset,
-    handlePriceReset,
-    handleRegionReset,
-    handleRoomsReset,
-    handleAreaReset,
-    handleQueryReset,
-    handleDealTypeChange,
-    handleDealTypeReset,
-    handleFloorReset,
+    handleCityChange: (cityId) => updateFilters({ cityId: cityId || null }),
+    handleCityReset: () => updateFilters({ cityId: null }),
+    handleTypeReset: () => updateFilters({ type: "all" }),
+    handlePriceReset: () => {
+      updateFilters({ priceMin: null, priceMax: null });
+      setDraftPriceMinState("");
+      setDraftPriceMaxState("");
+      setPriceErrors({});
+    },
+    handleRegionReset: () => updateFilters({ region: "all", cityId: null }),
+    handleRoomsReset: () => updateFilters({ roomsMin: null }),
+    handleAreaReset: () => {
+      updateFilters({ areaMin: null }, { resetPage: false });
+      setDraftAreaMinState("");
+    },
+    handleQueryReset: () => {
+      updateFilters({ query: "" });
+      setDraftQueryState("");
+    },
+    handleDealTypeChange: (dealType) => updateFilters({ dealType }),
+    handleDealTypeReset: () => updateFilters({ dealType: "all" }),
+    handleFloorReset: () =>
+      updateFilters({
+        floorMin: null,
+        floorMax: null,
+        floorNotFirst: null,
+      }),
     handleResetAll,
     priceErrors,
     currentPage,
-    setCurrentPage,
+    setCurrentPage: (page) => {
+      if (page > 0 && page !== currentPage) {
+        updateFilters({ page }, { resetPage: false });
+      }
+    },
     isPending,
+    searchUrl: buildUrlFromFilters(appliedFilters),
   };
 }

@@ -14,6 +14,8 @@ import {
 interface ActiveFiltersProps {
   filters: SearchFiltersDisplay;
   activeFiltersCount: number;
+  /** Показывать чип региона только при явном выборе не дефолтного региона (path !== userRegion). */
+  showRegionChip?: boolean;
   selectedCityName: string | null;
   onTypeReset: () => void;
   onPriceReset: () => void;
@@ -33,6 +35,7 @@ const hasFloorFilter = (f: SearchFiltersDisplay) =>
 export function ActiveFilters({
   filters,
   activeFiltersCount,
+  showRegionChip = true,
   selectedCityName,
   onTypeReset,
   onPriceReset,
@@ -80,7 +83,7 @@ export function ActiveFilters({
           <X className='w-3 h-3' />
         </Button>
       )}
-      {filters.region !== "all" && (
+      {showRegionChip && filters.region !== "all" && (
         <Button
           variant='secondary'
           size='sm'

@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { ROUTES } from "@/constants";
 import type { PropertyType } from "@/types/property";
+import { buildSearchUrl } from "@/lib/url/segments";
 
 type SortOption = "date" | "price-asc" | "price-desc" | "area-asc" | "area-desc";
 
@@ -177,7 +178,15 @@ export default function FavoritesPage() {
                 позже.
               </p>
               <Button
-                onClick={() => router.push(ROUTES.search)}
+                onClick={() =>
+                  router.push(
+                    buildSearchUrl({
+                      region: "ingushetiya",
+                      category: "nedvizhimost",
+                      dealType: "prodam",
+                    })
+                  )
+                }
                 className='btn-caucasus min-h-[48px] font-semibold w-full max-w-xs'
                 size='lg'
               >

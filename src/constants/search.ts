@@ -1,7 +1,18 @@
 import { DealType } from "@/types/common";
 import { Home, Key, Calendar } from "lucide-react";
 
-export const POPULAR_CITIES = ["Грозный", "Назрань", "Магас", "Гудермес"];
+export interface PopularCity {
+  label: string;
+  slug: string;
+  region: "ingushetiya" | "chechnya";
+}
+
+export const POPULAR_CITIES: PopularCity[] = [
+  { label: "Грозный", slug: "groznyy", region: "chechnya" },
+  { label: "Назрань", slug: "nazran", region: "ingushetiya" },
+  { label: "Магас", slug: "magas", region: "ingushetiya" },
+  { label: "Гудермес", slug: "gudermes", region: "chechnya" },
+];
 
 export const DEAL_TYPES: IDealType[] = [
   { value: "buy", label: "Купить", icon: Home },

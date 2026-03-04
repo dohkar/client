@@ -18,52 +18,70 @@ import {
 import { Input } from "@/components/ui/input";
 import { Filter, Building2, DollarSign, Ruler, MapPin } from "lucide-react";
 import { useUIStore } from "@/stores";
-import { useSearchFilters } from "@/hooks/use-search-filters";
-import { useCities } from "@/hooks/use-cities";
-import { getRegionIdByName } from "@/services/region.service";
 import { PROPERTY_TYPE_OPTIONS, REGION_OPTIONS } from "@/lib/search-constants";
 import { CitySearchSelect } from "@/components/features/CitySearchSelect";
+import type { SearchFiltersDisplay } from "@/lib/search-params";
+import type { CityDto } from "@/types/property";
+import type { PriceValidationErrors } from "@/hooks/use-segment-search-filters";
 
-export function MobileFilterDrawer() {
+export type RegionOption = { value: string; label: string };
+
+export interface MobileFilterDrawerProps {
+  appliedFilters: SearchFiltersDisplay;
+  cities: CityDto[];
+  /** Сортировка: «Все регионы», затем регион пользователя. Если не передано — REGION_OPTIONS */
+  regionOptions?: RegionOption[];
+  draftPriceMin: string;
+  draftPriceMax: string;
+  setDraftPriceMin: (value: string) => void;
+  setDraftPriceMax: (value: string) => void;
+  onTypeChange: (type: SearchFiltersDisplay["type"]) => void;
+  onRegionChange: (region: SearchFiltersDisplay["region"]) => void;
+  onCityChange: (cityId: string | null) => void;
+  onRoomsChange: (rooms: number | null) => void;
+  onAreaMinChange: (areaMin: number | null) => void;
+  onPriceMinBlur: () => void;
+  onPriceMaxBlur: () => void;
+  onResetAll: () => void;
+  priceErrors: PriceValidationErrors;
+  isPending: boolean;
+}
+
+export function MobileFilterDrawer({
+  appliedFilters: filters,
+  cities,
+  regionOptions: regionOptionsProp,
+  draftPriceMin: localPriceMin,
+  draftPriceMax: localPriceMax,
+  setDraftPriceMin: setLocalPriceMin,
+  setDraftPriceMax: setLocalPriceMax,
+  onTypeChange: handleTypeChange,
+  onRegionChange: handleRegionChange,
+  onCityChange: handleCityChange,
+  onRoomsChange: handleRoomsChange,
+  onAreaMinChange: handleAreaMinChange,
+  onPriceMinBlur: handlePriceMinBlur,
+  onPriceMaxBlur: handlePriceMaxBlur,
+  onResetAll: handleResetAll,
+  priceErrors,
+  isPending,
+}: MobileFilterDrawerProps) {
   const { isFilterModalOpen, openFilterModal, closeFilterModal } = useUIStore();
+  const regionOptions = regionOptionsProp ?? REGION_OPTIONS;
 
-  // Используем единый hook для управления фильтрами (updateFilters с replace: true)
-  const {
-    appliedFilters: filters,
-    draftPriceMin: localPriceMin,
-    draftPriceMax: localPriceMax,
-    setDraftPriceMin: setLocalPriceMin,
-    setDraftPriceMax: setLocalPriceMax,
-    handleTypeChange,
-    handleRegionChange,
-    handleCityChange,
-    handleRoomsChange,
-    handleAreaMinChange,
-    handlePriceMinBlur,
-    handlePriceMaxBlur,
-    handleResetAll,
-    priceErrors,
-    isPending,
-  } = useSearchFilters();
-
-  const regionId =
-    filters.region !== "all" ? getRegionIdByName(filters.region) : undefined;
-  const { data: cities = [] } = useCities(regionId ?? undefined);
-
-  const activeFiltersCount = [
-    filters.query?.trim(),
-    filters.dealType && filters.dealType !== "all",
-    filters.type !== "all",
-    filters.priceMin != null,
-    filters.priceMax != null,
-    filters.roomsMin != null,
-    filters.areaMin != null,
-    filters.floorMin != null,
-    filters.floorMax != null,
-    filters.floorNotFirst === true,
-    filters.region !== "all",
-    filters.cityId?.trim(),
-  ].filter(Boolean).length;
+  const hasActiveFilters =
+    Boolean(filters.query?.trim()) ||
+    filters.type !== "all" ||
+    (filters.dealType && filters.dealType !== "all") ||
+    filters.priceMin != null ||
+    filters.priceMax != null ||
+    filters.roomsMin != null ||
+    filters.areaMin != null ||
+    filters.region !== "all" ||
+    (filters.cityId != null && filters.cityId.trim().length > 0) ||
+    filters.floorMin != null ||
+    filters.floorMax != null ||
+    filters.floorNotFirst === true;
 
   return (
     <>
@@ -75,19 +93,11 @@ export function MobileFilterDrawer() {
       >
         <Filter className="h-4 w-4" />
         <span>Фильтры</span>
-        {(filters.query?.trim() ||
-          filters.type !== "all" ||
-          (filters.dealType && filters.dealType !== "all") ||
-          filters.priceMin != null ||
-          filters.priceMax != null ||
-          filters.roomsMin != null ||
-          filters.areaMin != null ||
-          filters.region !== "all" ||
-          (filters.cityId != null && filters.cityId.trim().length > 0) ||
-          filters.floorMin != null ||
-          filters.floorMax != null ||
-          filters.floorNotFirst === true) && (
-          <span className="ml-1 h-2 w-2 rounded-full bg-primary animate-pulse" aria-hidden />
+        {hasActiveFilters && (
+          <span
+            className="ml-1 h-2 w-2 rounded-full bg-primary animate-pulse"
+            aria-hidden
+          />
         )}
       </Button>
 
@@ -143,10 +153,10 @@ export function MobileFilterDrawer() {
                   <Input
                     type="number"
                     placeholder="От"
-                    min="0"
+                    min={0}
                     value={localPriceMin}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[^\d]/g, "");
+                      const val = e.target.value.replace(/\D/g, "");
                       setLocalPriceMin(val);
                     }}
                     onBlur={handlePriceMinBlur}
@@ -162,10 +172,10 @@ export function MobileFilterDrawer() {
                   <Input
                     type="number"
                     placeholder="До"
-                    min="0"
+                    min={0}
                     value={localPriceMax}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[^\d]/g, "");
+                      const val = e.target.value.replace(/\D/g, "");
                       setLocalPriceMax(val);
                     }}
                     onBlur={handlePriceMaxBlur}
@@ -223,11 +233,11 @@ export function MobileFilterDrawer() {
                 <Input
                   type="number"
                   placeholder="От"
-                  min="0"
+                  min={0}
                   value={filters.areaMin ?? ""}
                   onChange={(e) =>
                     handleAreaMinChange(
-                      e.target.value !== "" && !isNaN(Number(e.target.value))
+                      e.target.value !== "" && !Number.isNaN(Number(e.target.value))
                         ? Number(e.target.value)
                         : null
                     )
@@ -252,7 +262,7 @@ export function MobileFilterDrawer() {
                   <SelectValue placeholder="Выберите регион" />
                 </SelectTrigger>
                 <SelectContent>
-                  {REGION_OPTIONS.map((option) => (
+                  {regionOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -268,7 +278,9 @@ export function MobileFilterDrawer() {
                 value={filters.cityId ?? ""}
                 onValueChange={(value) => handleCityChange(value || null)}
                 cities={cities}
-                placeholder={cities.length === 0 ? "Загрузка городов…" : "Все города"}
+                placeholder={
+                  cities.length === 0 ? "Загрузка городов…" : "Все города"
+                }
               />
             </div>
           </div>

@@ -49,6 +49,7 @@ export default async function RootLayout({
         name: "Дохкар",
         description: APP_CONFIG.description,
         inLanguage: "ru-RU",
+        // TODO(OpenSearch): перед релизом обновить URL на сегментный поиск и <link rel="search"> если добавится
         potentialAction: {
           "@type": "SearchAction",
           target: {

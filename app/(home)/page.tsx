@@ -16,7 +16,7 @@ export default function HomePage() {
       <main className='flex-1'>
         <HeroSearch />
 
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between flex-col gap-1 sm:gap-2'>
+        <div className='max-w-7xl mx-auto mt-2 px-4 sm:px-6 lg:px-8 flex justify-between flex-col gap-1 sm:gap-2'>
           <SearchHistorySection />
           <ViewHistorySection />
         </div>
