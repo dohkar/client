@@ -6,11 +6,15 @@ import {
   regionSlugFromApi,
 } from "@/lib/url/segments";
 
-/** Старые query-значения (?dealType=buy / rent_in / daily) → слаг path. */
+/** Старые query-значения (?dealType=…) → слаг path. rent_in = «Сниму» (snimu), не sdam. */
 const LEGACY_DEAL_TO_SLUG: Record<string, string> = {
   buy: "prodam",
-  rent_in: "sdam",
+  sell: "prodam",
+  rent_in: "snimu",
+  rent_out: "sdam",
+  rent: "sdam",
   daily: "posutochno",
+  exchange: "obmen",
 };
 
 interface SearchPageProps {
@@ -40,7 +44,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       ? API_TYPE_TO_SLUG[rawType.toLowerCase() as keyof typeof API_TYPE_TO_SLUG]
       : "nedvizhimost";
   const dealSlug = rawDealType
-    ? LEGACY_DEAL_TO_SLUG[rawDealType.toLowerCase()] ??
+    ? LEGACY_DEAL_TO_SLUG[rawDealType.toLowerCase().trim()] ??
       API_DEAL_TO_SLUG[rawDealType.toUpperCase().replace("-", "_")]
     : undefined;
   const region = isAllRegions ? "all" : rawRegion ? regionSlugFromApi(rawRegion) : "ingushetiya";

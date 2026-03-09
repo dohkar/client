@@ -7,6 +7,7 @@ import {
   API_REGION_TO_SLUG,
   REGION_MAP,
   REGION_NAME_TO_SLUG,
+  dealTypeSlugFromApi,
 } from "@/lib/url/segments";
 
 describe("segments map symmetry", () => {
@@ -34,6 +35,15 @@ describe("segments map symmetry", () => {
     }
     for (const [slug, apiDeal] of Object.entries(DEAL_TYPE_MAP)) {
       expect(API_DEAL_TO_SLUG[apiDeal]).toBe(slug);
+    }
+  });
+
+  it("round-trip: все API-значения → слаг → обратно", () => {
+    const apiValues = ["SALE", "BUY", "RENT_OUT", "RENT_IN", "DAILY", "EXCHANGE"];
+    for (const api of apiValues) {
+      const slug = dealTypeSlugFromApi(api);
+      expect(slug).toBeTruthy();
+      expect(DEAL_TYPE_MAP[slug]).toBe(api);
     }
   });
 

@@ -11,6 +11,7 @@ import { SupportButton } from "@/components/features/chats/SupportButton";
 import { APP_CONFIG } from "@/constants";
 import { THEME_COOKIE_NAME } from "@/constants/theme";
 import { DEFAULT_SITE_METADATA } from "@/lib/seo";
+import { buildSearchUrl } from "@/lib/url/segments";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeInitScript } from "@/components/theme-init-script";
@@ -49,12 +50,14 @@ export default async function RootLayout({
         name: "Дохкар",
         description: APP_CONFIG.description,
         inLanguage: "ru-RU",
-        // TODO(OpenSearch): перед релизом обновить URL на сегментный поиск и <link rel="search"> если добавится
         potentialAction: {
           "@type": "SearchAction",
           target: {
             "@type": "EntryPoint",
-            url: `${siteUrl}/search?q={search_term_string}`,
+            url: `${siteUrl}${buildSearchUrl({
+              region: "ingushetiya",
+              category: "nedvizhimost",
+            })}?query={search_term_string}`,
           },
           "query-input": "required name=search_term_string",
         },

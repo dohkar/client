@@ -73,9 +73,9 @@ export const API_DEAL_TO_SLUG: Record<string, string> = {
   EXCHANGE: "obmen",
 };
 
-/** Слаг → лейбл для метаданных (title). */
+/** Слаг → лейбл для метаданных (title). prodam = «На продажу» для UX (пользователь нажал «Купить»). */
 export const DEAL_SLUG_LABELS: Record<string, string> = {
-  prodam: "Продам",
+  prodam: "На продажу",
   kuplyu: "Куплю",
   sdam: "Сдам в аренду",
   snimu: "Сниму жильё",
