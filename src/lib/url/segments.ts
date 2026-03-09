@@ -1,7 +1,14 @@
 import type { PropertyType } from "@/types/property";
 
 type RegionApiValue = "Chechnya" | "Ingushetia" | "Other";
-type DealApiValue = "buy" | "rent_in" | "daily";
+/** Тип сделки в URL/API: роль объявления (один к одному с API). */
+type DealApiValue =
+  | "SALE"
+  | "BUY"
+  | "RENT_OUT"
+  | "RENT_IN"
+  | "DAILY"
+  | "EXCHANGE";
 type SearchParamValue = string | number | boolean | null | undefined;
 
 export const REGION_MAP = {
@@ -39,11 +46,15 @@ export const CATEGORY_MAP = {
   novostroyki: { label: "Новостройки", apiType: undefined },
 } as const satisfies Record<string, { label: string; apiType: PropertyType | undefined }>;
 
-export const DEAL_TYPE_MAP = {
-  prodam: { label: "Продам", apiDeal: "buy" },
-  sdam: { label: "Сдам", apiDeal: "rent_in" },
-  posutochno: { label: "Посуточно", apiDeal: "daily" },
-} as const satisfies Record<string, { label: string; apiDeal: DealApiValue }>;
+/** Слаг (path) → значение API. Каждый слаг = роль объявления (один к одному с API). */
+export const DEAL_TYPE_MAP: Record<string, string> = {
+  prodam: "SALE",
+  kuplyu: "BUY",
+  sdam: "RENT_OUT",
+  snimu: "RENT_IN",
+  posutochno: "DAILY",
+  obmen: "EXCHANGE",
+};
 
 export const API_TYPE_TO_SLUG: Record<PropertyType, string> = {
   apartment: "kvartiry",
@@ -52,10 +63,24 @@ export const API_TYPE_TO_SLUG: Record<PropertyType, string> = {
   commercial: "kommercheskaya_nedvizhimost",
 };
 
-export const API_DEAL_TO_SLUG: Record<DealApiValue, string> = {
-  buy: "prodam",
-  rent_in: "sdam",
-  daily: "posutochno",
+/** Обратный маппинг: API значение → слаг. */
+export const API_DEAL_TO_SLUG: Record<string, string> = {
+  SALE: "prodam",
+  BUY: "kuplyu",
+  RENT_OUT: "sdam",
+  RENT_IN: "snimu",
+  DAILY: "posutochno",
+  EXCHANGE: "obmen",
+};
+
+/** Слаг → лейбл для метаданных (title). */
+export const DEAL_SLUG_LABELS: Record<string, string> = {
+  prodam: "Продам",
+  kuplyu: "Куплю",
+  sdam: "Сдам в аренду",
+  snimu: "Сниму жильё",
+  posutochno: "Посуточно",
+  obmen: "Обмен",
 };
 
 export const API_REGION_TO_SLUG: Record<RegionApiValue, string> = {
@@ -112,28 +137,15 @@ function normalizeTypeApiValue(value: string): string {
   }
 }
 
-function normalizeDealApiValue(value: string): string {
-  const normalized = value.trim().toLowerCase();
-  switch (normalized) {
-    case "buy":
-      return "buy";
-    case "rent_in":
-      return "rent_in";
-    case "daily":
-      return "daily";
-    default:
-      return normalized;
-  }
-}
-
 export function categorySlugFromType(apiType: string): string {
   const normalized = normalizeTypeApiValue(apiType);
   return API_TYPE_TO_SLUG[normalized as PropertyType] ?? "nedvizhimost";
 }
 
-export function dealTypeSlugFromApi(apiDeal: string): string {
-  const normalized = normalizeDealApiValue(apiDeal);
-  return API_DEAL_TO_SLUG[normalized as DealApiValue] ?? "";
+/** API-значение типа сделки (SALE, RENT_OUT, …) → слаг для path. */
+export function dealTypeSlugFromApi(apiDeal?: string): string {
+  if (!apiDeal) return "";
+  return API_DEAL_TO_SLUG[apiDeal] ?? "";
 }
 
 export function regionSlugFromApi(apiRegion: string): string {
@@ -154,6 +166,7 @@ export interface ParsedSearchSegments {
   /** undefined для path "all" — не передавать region в API (все регионы) */
   apiRegion: RegionApiValue | undefined;
   apiType: PropertyType | undefined;
+  /** SALE | BUY | RENT_OUT | RENT_IN | DAILY | EXCHANGE */
   apiDeal: DealApiValue | undefined;
 }
 
@@ -169,22 +182,15 @@ export function parseSegments(
     return null;
   }
 
-  if (dealType) {
-    const dealEntry = DEAL_TYPE_MAP[dealType as keyof typeof DEAL_TYPE_MAP];
-    if (!dealEntry) {
-      return null;
-    }
-    return {
-      apiRegion: regionEntry.apiValue ?? undefined,
-      apiType: categoryEntry.apiType,
-      apiDeal: dealEntry.apiDeal,
-    };
+  const apiDeal = dealType ? DEAL_TYPE_MAP[dealType] : undefined;
+  if (dealType && !apiDeal) {
+    return null;
   }
 
   return {
     apiRegion: regionEntry.apiValue ?? undefined,
     apiType: categoryEntry.apiType,
-    apiDeal: undefined,
+    apiDeal: apiDeal as DealApiValue | undefined,
   };
 }
 
@@ -210,7 +216,7 @@ export function parseSearchPathname(pathname: string): ParsedSearchPathname | nu
   if (!CATEGORY_MAP[category as keyof typeof CATEGORY_MAP]) {
     return null;
   }
-  if (dealType && !DEAL_TYPE_MAP[dealType as keyof typeof DEAL_TYPE_MAP]) {
+  if (dealType && !DEAL_TYPE_MAP[dealType]) {
     return null;
   }
 

@@ -4,6 +4,7 @@ import { SearchPageClient } from "@/components/features/search-page-client";
 import { SearchParamsDebug } from "@/components/features/SearchParamsDebug";
 import {
   CATEGORY_MAP,
+  DEAL_SLUG_LABELS,
   DEAL_TYPE_MAP,
   parseSegments,
   REGION_MAP,
@@ -28,16 +29,17 @@ export async function generateMetadata({
   const regionEntry = REGION_MAP[resolvedParams.region as keyof typeof REGION_MAP];
   const categoryEntry =
     CATEGORY_MAP[resolvedParams.category as keyof typeof CATEGORY_MAP];
-  const dealEntry = DEAL_TYPE_MAP[resolvedParams.dealType as keyof typeof DEAL_TYPE_MAP];
+  const apiDeal = DEAL_TYPE_MAP[resolvedParams.dealType];
+  const dealLabel = DEAL_SLUG_LABELS[resolvedParams.dealType];
 
-  if (!regionEntry || !categoryEntry || !dealEntry) {
+  if (!regionEntry || !categoryEntry || !apiDeal || !dealLabel) {
     return {};
   }
 
   const isAllRegions = resolvedParams.region === "all";
   const title = isAllRegions
-    ? `Вся недвижимость — ${regionEntry.label} — ${dealEntry.label}`
-    : `${categoryEntry.label} в ${regionEntry.label} — ${dealEntry.label}`;
+    ? `Вся недвижимость — ${regionEntry.label} — ${dealLabel}`
+    : `${categoryEntry.label} в ${regionEntry.label} — ${dealLabel}`;
 
   return { title };
 }

@@ -15,7 +15,7 @@ interface PriceFilters {
  * Утилиты для получения лейблов фильтров
  */
 export function getTypeLabel(type: string): string {
-  return PROPERTY_TYPE_LABELS[type] || "Любая недвижимость";
+  return PROPERTY_TYPE_LABELS[type] || "Недвижимость";
 }
 
 export function getRegionLabel(region: string): string {

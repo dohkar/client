@@ -6,6 +6,13 @@ import {
   regionSlugFromApi,
 } from "@/lib/url/segments";
 
+/** Старые query-значения (?dealType=buy / rent_in / daily) → слаг path. */
+const LEGACY_DEAL_TO_SLUG: Record<string, string> = {
+  buy: "prodam",
+  rent_in: "sdam",
+  daily: "posutochno",
+};
+
 interface SearchPageProps {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
@@ -32,17 +39,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     rawType && API_TYPE_TO_SLUG[rawType.toLowerCase() as keyof typeof API_TYPE_TO_SLUG]
       ? API_TYPE_TO_SLUG[rawType.toLowerCase() as keyof typeof API_TYPE_TO_SLUG]
       : "nedvizhimost";
-  const dealType =
-    rawDealType &&
-    API_DEAL_TO_SLUG[rawDealType.toLowerCase() as keyof typeof API_DEAL_TO_SLUG]
-      ? API_DEAL_TO_SLUG[rawDealType.toLowerCase() as keyof typeof API_DEAL_TO_SLUG]
-      : undefined;
+  const dealSlug = rawDealType
+    ? LEGACY_DEAL_TO_SLUG[rawDealType.toLowerCase()] ??
+      API_DEAL_TO_SLUG[rawDealType.toUpperCase().replace("-", "_")]
+    : undefined;
   const region = isAllRegions ? "all" : rawRegion ? regionSlugFromApi(rawRegion) : "ingushetiya";
 
   const newUrl = buildSearchUrl({
     region,
     category,
-    dealType,
+    dealType: dealSlug,
     params: {
       query: pickParam(params.query),
       cityId: pickParam(params.cityId),

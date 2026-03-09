@@ -4,7 +4,7 @@ import { SearchPageClient } from "@/components/features/search-page-client";
 import { SearchParamsDebug } from "@/components/features/SearchParamsDebug";
 import {
   CATEGORY_MAP,
-  DEAL_TYPE_MAP,
+  DEAL_SLUG_LABELS,
   parseSegments,
   REGION_MAP,
 } from "@/lib/url/segments";
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: SegmentPageProps): Promise<Me
   const regionEntry = REGION_MAP[resolvedParams.region as keyof typeof REGION_MAP];
   const categoryEntry =
     CATEGORY_MAP[resolvedParams.category as keyof typeof CATEGORY_MAP];
-  const defaultDealEntry = DEAL_TYPE_MAP.prodam;
+  const defaultDealLabel = DEAL_SLUG_LABELS.prodam ?? "Продам";
 
   if (!regionEntry || !categoryEntry) {
     return {};
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: SegmentPageProps): Promise<Me
   const isAllRegions = resolvedParams.region === "all";
   const title = isAllRegions
     ? `Вся недвижимость — ${regionEntry.label}`
-    : `${categoryEntry.label} в ${regionEntry.label} — ${defaultDealEntry.label}`;
+    : `${categoryEntry.label} в ${regionEntry.label} — ${defaultDealLabel}`;
 
   return { title };
 }

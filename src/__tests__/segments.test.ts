@@ -26,18 +26,14 @@ describe("segments map symmetry", () => {
     }
   });
 
-  it("API_DEAL_TO_SLUG and DEAL_TYPE_MAP.apiDeal are in sync", () => {
+  it("API_DEAL_TO_SLUG and DEAL_TYPE_MAP (slug → apiDeal) are in sync", () => {
     for (const [apiDeal, slug] of Object.entries(API_DEAL_TO_SLUG)) {
-      const entry = DEAL_TYPE_MAP[slug as keyof typeof DEAL_TYPE_MAP];
-      expect(entry).toBeDefined();
-      expect(entry?.apiDeal).toBe(apiDeal);
+      const mappedApiDeal = DEAL_TYPE_MAP[slug];
+      expect(mappedApiDeal).toBeDefined();
+      expect(mappedApiDeal).toBe(apiDeal);
     }
-    // Check reverse mapping as well
-    const dealSlugsWithType = Object.entries(DEAL_TYPE_MAP)
-      .filter(([, v]) => v.apiDeal != null)
-      .map(([slug, v]) => [v.apiDeal, slug] as const);
-    for (const [apiDeal, slug] of dealSlugsWithType) {
-      expect(API_DEAL_TO_SLUG[apiDeal!]).toBe(slug);
+    for (const [slug, apiDeal] of Object.entries(DEAL_TYPE_MAP)) {
+      expect(API_DEAL_TO_SLUG[apiDeal]).toBe(slug);
     }
   });
 

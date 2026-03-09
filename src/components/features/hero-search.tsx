@@ -20,16 +20,17 @@ import {
   buildSearchUrl,
   categorySlugFromType,
   dealTypeSlugFromApi,
+  REGION_MAP,
 } from "@/lib/url/segments";
 import { useUserRegion } from "@/hooks/use-user-region";
 import { Categories } from "./categories";
 import { useSearchHistory } from "@/hooks/use-search-history";
 
-// ─── DEAL TYPE MAP ────────────────────────────────────────────
-const DEAL_TYPE_MAP: Record<DealType, { api: "buy" | "rent_in" | "daily" }> = {
-  buy: { api: "buy" },
-  rent: { api: "rent_in" },
-  daily: { api: "daily" },
+/** Герой: таб (buy/rent/daily) → API-значение для объявлений (Продам / Сдам / Посуточно). */
+const HERO_DEAL_TO_API: Record<DealType, string> = {
+  buy: "SALE",
+  rent: "RENT_OUT",
+  daily: "DAILY",
 };
 
 type PropertyTypeFilter = "all" | "apartment" | "house" | "land" | "commercial";
@@ -131,7 +132,8 @@ function useHeroSearchFilters(userRegionSlug: string) {
   const hasValidMax = priceMaxNum != null;
   const priceError = hasValidMin && hasValidMax && priceMinNum! > priceMaxNum!;
 
-  const dealTypeForSearchParam = DEAL_TYPE_MAP[dealType].api;
+  const apiDeal = HERO_DEAL_TO_API[dealType] ?? "SALE";
+  const dealSlug = dealTypeSlugFromApi(apiDeal);
 
   const { searchUrl } = useMemo(() => {
     const isPriceValid = !(hasValidMin && hasValidMax && priceMinNum! > priceMaxNum!);
@@ -139,7 +141,7 @@ function useHeroSearchFilters(userRegionSlug: string) {
       searchUrl: buildSearchUrl({
         region: userRegionSlug,
         category: type !== "all" ? categorySlugFromType(type) : "nedvizhimost",
-        dealType: dealTypeSlugFromApi(dealTypeForSearchParam) || undefined,
+        dealType: dealSlug || undefined,
         params: {
           query: query.trim() || undefined,
           rooms: roomsMin ?? undefined,
@@ -151,7 +153,7 @@ function useHeroSearchFilters(userRegionSlug: string) {
   }, [
     userRegionSlug,
     query,
-    dealTypeForSearchParam,
+    dealSlug,
     type,
     roomsMin,
     hasValidMin,
@@ -234,11 +236,15 @@ export function HeroSearch() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (query.trim() || type !== "all") {
+      const regionEntry =
+        typeof userRegion === "string"
+          ? REGION_MAP[userRegion as keyof typeof REGION_MAP]
+          : undefined;
       pushSearch({
         label:
           query.trim() ||
           (PROPERTY_TYPE_OPTIONS.find((o) => o.value === type)?.label ?? "Поиск"),
-        region: "Ингушетия",
+        region: regionEntry?.label ?? "Ингушетия",
         href: searchUrl,
       });
     }

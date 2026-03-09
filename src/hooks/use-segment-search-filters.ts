@@ -105,30 +105,6 @@ function parseSort(
   return "relevance";
 }
 
-function dealApiToDisplay(apiDeal?: string): SearchFiltersDisplay["dealType"] {
-  if (!apiDeal) return "all";
-  switch (apiDeal) {
-    case "buy":
-      return "BUY";
-    case "rent_in":
-      return "RENT_IN";
-    case "daily":
-      return "DAILY";
-    default:
-      return "all";
-  }
-}
-
-function dealDisplayToApi(
-  dealType: SearchFiltersDisplay["dealType"]
-): string | undefined {
-  if (dealType === "all") return undefined;
-  if (dealType === "BUY" || dealType === "SALE") return "buy";
-  if (dealType === "RENT_IN" || dealType === "RENT_OUT") return "rent_in";
-  if (dealType === "DAILY") return "daily";
-  return undefined;
-}
-
 function regionDisplayToSlug(
   region: SearchFiltersDisplay["region"],
   fallbackRegionSlug: string
@@ -190,7 +166,8 @@ export function useSegmentSearchFilters(
   const activeSearchParams = isHydrated ? liveSearchParams : fallbackSearchParams;
 
   const appliedFilters = useMemo<SearchFiltersDisplay>(() => {
-    const dealType = dealApiToDisplay(parsedSegments?.apiDeal);
+    const dealType: SearchFiltersDisplay["dealType"] =
+      (parsedSegments?.apiDeal as SearchFiltersDisplay["dealType"] | undefined) ?? "all";
     const regionFromQuery = activeSearchParams.get("region");
     const region: SearchFiltersDisplay["region"] =
       regionFromQuery === "all" || parsedSegments?.apiRegion === undefined
@@ -270,9 +247,10 @@ export function useSegmentSearchFilters(
           : regionDisplayToSlug(filters.region, currentRegionSlug);
       const nextCategorySlug =
         filters.type === "all" ? "nedvizhimost" : categorySlugFromType(filters.type);
-      const nextDealTypeSlug = dealTypeSlugFromApi(
-        dealDisplayToApi(filters.dealType) ?? ""
-      );
+      const nextDealTypeSlug =
+        filters.dealType && filters.dealType !== "all"
+          ? dealTypeSlugFromApi(filters.dealType)
+          : undefined;
 
       const queryParams: Record<string, string | number | undefined> = {
         query: filters.query.trim() || undefined,
@@ -290,7 +268,7 @@ export function useSegmentSearchFilters(
       return buildSearchUrl({
         region: nextRegionSlug,
         category: nextCategorySlug,
-        dealType: nextDealTypeSlug || undefined,
+        dealType: nextDealTypeSlug,
         params: queryParams,
       });
     },

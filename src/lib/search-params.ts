@@ -105,7 +105,7 @@ const SearchParamsSchema = z
 
 export type SearchParams = z.infer<typeof SearchParamsSchema>;
 
-/** Дефолтные значения для отображения в UI (полный объект). DAILY пока не поддерживается API — в запросе не передаётся. */
+/** Дефолтные значения для отображения в UI (полный объект). DAILY в API передаётся как RENT_OUT. */
 export interface SearchFiltersDisplay {
   query: string;
   dealType: PropertyDealType | "DAILY" | "all";
@@ -304,8 +304,12 @@ export function toPropertySearchParams(
   if (filters.query && filters.query.trim().length > 0) {
     params.query = filters.query.trim();
   }
-  if (filters.dealType && filters.dealType !== "all" && filters.dealType !== "DAILY") {
-    params.dealType = filters.dealType as PropertyDealType;
+  if (filters.dealType && filters.dealType !== "all") {
+    // Бэкенд не имеет типа DAILY; посуточная аренда отображается как RENT_OUT
+    params.dealType =
+      filters.dealType === "DAILY"
+        ? "RENT_OUT"
+        : (filters.dealType as PropertyDealType);
   }
   if (filters.type !== "all") {
     params.type = filters.type as PropertyType;

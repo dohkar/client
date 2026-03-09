@@ -13,7 +13,7 @@ export const SEARCH_CONSTANTS = {
  * Лейблы для типов недвижимости
  */
 export const PROPERTY_TYPE_LABELS: Record<string, string> = {
-  all: "Любая недвижимость",
+  all: "Недвижимость",
   apartment: "Квартиры",
   house: "Дома и дачи",
   land: "Земельные участки",
@@ -27,6 +27,7 @@ export const REGION_LABELS: Record<string, string> = {
   all: "Все регионы",
   Chechnya: "Чечня",
   Ingushetia: "Ингушетия",
+  Other: "Другие регионы",
 };
 
 /**
@@ -53,7 +54,7 @@ export const SORT_OPTIONS = [
  * Опции типов недвижимости для селекта
  */
 export const PROPERTY_TYPE_OPTIONS = [
-  { value: "all", label: "Любая недвижимость" },
+  { value: "all", label: "Недвижимость" },
   { value: "apartment", label: "Квартиры" },
   { value: "house", label: "Дома и дачи" },
   { value: "land", label: "Земельные участки" },
@@ -67,6 +68,7 @@ export const REGION_OPTIONS = [
   { value: "all", label: "Все регионы" },
   { value: "Chechnya", label: "Чечня" },
   { value: "Ingushetia", label: "Ингушетия" },
+  { value: "Other", label: "Другие регионы" },
 ] as const;
 
 /**
@@ -78,6 +80,7 @@ export const DEAL_TYPE_LABELS: Record<string, string> = {
   BUY: "Куплю",
   RENT_OUT: "Сдам в аренду",
   RENT_IN: "Сниму жильё",
+  DAILY: "Посуточно",
   EXCHANGE: "Обмен",
 };
 
@@ -90,6 +93,7 @@ export const SEARCH_DEAL_TYPE_OPTIONS = [
   { value: "BUY", label: "Куплю" },
   { value: "RENT_OUT", label: "Сдам в аренду" },
   { value: "RENT_IN", label: "Сниму жильё" },
+  { value: "DAILY", label: "Посуточно" },
   { value: "EXCHANGE", label: "Обмен" },
 ] as const;
 
