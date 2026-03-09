@@ -5,6 +5,7 @@ import { MapPin, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { POPULAR_CITIES } from "@/constants/search";
+import { DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import { buildSearchUrl } from "@/lib/url/segments";
 
 const LOCATION_META: Record<string, { description: string; properties: string; trend: string }> = {
@@ -22,7 +23,7 @@ const locations = POPULAR_CITIES.map((city, index) => ({
   trend: LOCATION_META[city.slug]?.trend ?? "+10%",
   href: buildSearchUrl({
     region: city.region,
-    category: "nedvizhimost",
+    category: DEFAULT_SEARCH_CATEGORY,
     dealType: "prodam",
     params: {
       query: city.label,

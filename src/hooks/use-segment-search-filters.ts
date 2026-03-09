@@ -13,6 +13,10 @@ import { useTransition } from "react";
 import type { SearchFiltersDisplay } from "@/lib/search-params";
 import { SEARCH_CONSTANTS } from "@/lib/search-constants";
 import {
+  DEFAULT_SEARCH_REGION,
+  DEFAULT_SEARCH_CATEGORY,
+} from "@/constants/defaults";
+import {
   API_REGION_TO_SLUG,
   buildSearchUrl,
   categorySlugFromType,
@@ -240,13 +244,13 @@ export function useSegmentSearchFilters(
 
   const buildUrlFromFilters = useCallback(
     (filters: SearchFiltersDisplay): string => {
-      const currentRegionSlug = params.region || "ingushetiya";
+      const currentRegionSlug = params.region || DEFAULT_SEARCH_REGION;
       const nextRegionSlug =
         filters.region === "all"
           ? "all"
           : regionDisplayToSlug(filters.region, currentRegionSlug);
       const nextCategorySlug =
-        filters.type === "all" ? "nedvizhimost" : categorySlugFromType(filters.type);
+        filters.type === "all" ? DEFAULT_SEARCH_CATEGORY : categorySlugFromType(filters.type);
       const nextDealTypeSlug =
         filters.dealType && filters.dealType !== "all"
           ? dealTypeSlugFromApi(filters.dealType)
@@ -311,7 +315,7 @@ export function useSegmentSearchFilters(
     // Иначе при текущем path /ingushetiya/kvartiry/prodam мы бы строили тот же URL и чипсы не исчезали.
     const cleanUrl = buildSearchUrl({
       region: userRegionSlug,
-      category: "nedvizhimost",
+      category: DEFAULT_SEARCH_CATEGORY,
     });
     startTransition(() => {
       router.push(cleanUrl, { scroll: false });

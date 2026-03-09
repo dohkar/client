@@ -16,6 +16,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { DealType } from "@/types/common";
 import { DEAL_TYPES } from "@/constants/search";
 import { PROPERTY_TYPE_OPTIONS, ROOMS_OPTIONS } from "@/lib/search-constants";
+import { DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import {
   buildSearchUrl,
   categorySlugFromType,
@@ -140,7 +141,7 @@ function useHeroSearchFilters(userRegionSlug: string) {
     return {
       searchUrl: buildSearchUrl({
         region: userRegionSlug,
-        category: type !== "all" ? categorySlugFromType(type) : "nedvizhimost",
+        category: type !== "all" ? categorySlugFromType(type) : DEFAULT_SEARCH_CATEGORY,
         dealType: dealSlug || undefined,
         params: {
           query: query.trim() || undefined,

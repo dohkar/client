@@ -30,6 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // import { useAuthModal } from "@/components/features/auth-modal"; // временно: редирект на /auth/login
 import { useAuthStore, useUIStore } from "@/stores";
 import { ROUTES } from "@/constants";
+import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { formatUserName } from "@/lib/utils/format-name";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/types";
@@ -49,23 +50,23 @@ const CATEGORIES: Array<{
 }> = [
   {
     name: "Квартиры",
-    href: buildSearchUrl({ region: "ingushetiya", category: "kvartiry", dealType: "prodam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "kvartiry", dealType: "prodam" }),
     type: "apartment",
   },
   {
     name: "Дома",
-    href: buildSearchUrl({ region: "ingushetiya", category: "doma", dealType: "prodam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "doma", dealType: "prodam" }),
     type: "house",
   },
   {
     name: "Участки",
-    href: buildSearchUrl({ region: "ingushetiya", category: "uchastki", dealType: "prodam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "uchastki", dealType: "prodam" }),
     type: "land",
   },
   {
     name: "Коммерция",
     href: buildSearchUrl({
-      region: "ingushetiya",
+      region: DEFAULT_SEARCH_REGION,
       category: "kommercheskaya_nedvizhimost",
       dealType: "prodam",
     }),

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ROUTES } from "@/constants";
+import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { buildSearchUrl } from "@/lib/url/segments";
 
 export function Footer() {
@@ -25,7 +26,7 @@ export function Footer() {
               <li>
                 <Link
                   href={buildSearchUrl({
-                    region: "ingushetiya",
+                    region: DEFAULT_SEARCH_REGION,
                     category: "kvartiry",
                     dealType: "prodam",
                   })}
@@ -37,7 +38,7 @@ export function Footer() {
               <li>
                 <Link
                   href={buildSearchUrl({
-                    region: "ingushetiya",
+                    region: DEFAULT_SEARCH_REGION,
                     category: "doma",
                     dealType: "prodam",
                   })}
@@ -49,7 +50,7 @@ export function Footer() {
               <li>
                 <Link
                   href={buildSearchUrl({
-                    region: "ingushetiya",
+                    region: DEFAULT_SEARCH_REGION,
                     category: "uchastki",
                     dealType: "prodam",
                   })}
@@ -61,7 +62,7 @@ export function Footer() {
               <li>
                 <Link
                   href={buildSearchUrl({
-                    region: "ingushetiya",
+                    region: DEFAULT_SEARCH_REGION,
                     category: "kommercheskaya_nedvizhimost",
                     dealType: "prodam",
                   })}

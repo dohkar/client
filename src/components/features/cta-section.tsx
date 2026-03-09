@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import { buildSearchUrl } from "@/lib/url/segments";
 
 export function CTASection() {
@@ -28,8 +29,8 @@ export function CTASection() {
             </Link>
             <Link
               href={buildSearchUrl({
-                region: "ingushetiya",
-                category: "nedvizhimost",
+                region: DEFAULT_SEARCH_REGION,
+                category: DEFAULT_SEARCH_CATEGORY,
                 dealType: "prodam",
               })}
             >

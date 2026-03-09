@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Building2, Home, Zap, Store } from "lucide-react";
 import type { PropertyType } from "@/types/property";
+import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { buildSearchUrl } from "@/lib/url/segments";
 
 export interface CategoryConfig {
@@ -18,7 +19,7 @@ export const CATEGORIES: CategoryConfig[] = [
     name: "Квартиры",
     description: "Студии, однушки, многокомнатные",
     icon: Building2,
-    href: buildSearchUrl({ region: "ingushetiya", category: "kvartiry", dealType: "prodam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "kvartiry", dealType: "prodam" }),
     color: "from-blue-500/10 to-cyan-500/10",
   },
   {
@@ -26,7 +27,7 @@ export const CATEGORIES: CategoryConfig[] = [
     name: "Дома",
     description: "Коттеджи, частные дома",
     icon: Home,
-    href: buildSearchUrl({ region: "ingushetiya", category: "doma", dealType: "prodam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "doma", dealType: "prodam" }),
     color: "from-green-500/10 to-emerald-500/10",
   },
   {
@@ -34,7 +35,7 @@ export const CATEGORIES: CategoryConfig[] = [
     name: "Участки",
     description: "Земля для строительства",
     icon: Zap,
-    href: buildSearchUrl({ region: "ingushetiya", category: "uchastki", dealType: "prodam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "uchastki", dealType: "prodam" }),
     color: "from-amber-500/10 to-orange-500/10",
   },
   {
@@ -43,7 +44,7 @@ export const CATEGORIES: CategoryConfig[] = [
     description: "Офисы, магазины, салоны красоты",
     icon: Store,
     href: buildSearchUrl({
-      region: "ingushetiya",
+      region: DEFAULT_SEARCH_REGION,
       category: "kommercheskaya_nedvizhimost",
       dealType: "prodam",
     }),
@@ -78,7 +79,7 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     id: "novostroyki",
     label: "Новостройки",
     description: "Квартиры в строящихся и сданных домах от застройщиков",
-    href: buildSearchUrl({ region: "ingushetiya", category: "novostroyki", dealType: "prodam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "novostroyki", dealType: "prodam" }),
     icon: {
       src: "https://avito.st/static/ims/rre_services_web_nd_light_216x116.png",
       srcSet: [
@@ -101,7 +102,7 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     id: "buy-apartment",
     label: "Покупка квартиры",
     description: "Вторичное жильё и новые квартиры от собственников и агентств",
-    href: buildSearchUrl({ region: "ingushetiya", category: "kvartiry", dealType: "prodam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "kvartiry", dealType: "prodam" }),
     icon: {
       src: "https://avito.st/static/ims/rre_services_web_ss_light_216x116.png",
       srcSet: [
@@ -124,7 +125,7 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     id: "buy-house",
     label: "Покупка дома",
     description: "Дома, дачи, коттеджи и таунхаусы для постоянного проживания",
-    href: buildSearchUrl({ region: "ingushetiya", category: "doma", dealType: "prodam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "doma", dealType: "prodam" }),
     icon: {
       src: "https://avito.st/static/ims/rre_services_web_su_light_216x116.png",
       srcSet: [
@@ -148,7 +149,7 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     label: "Жильё посуточно",
     description: "Квартиры и дома для краткосрочной аренды на отдых или командировку",
     href: buildSearchUrl({
-      region: "ingushetiya",
+      region: DEFAULT_SEARCH_REGION,
       category: "kvartiry",
       dealType: "posutochno",
     }),
@@ -173,7 +174,7 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     id: "long-rent-apartment",
     label: "Аренда квартиры надолго",
     description: "Квартиры для долгосрочной аренды от собственников и риелторов",
-    href: buildSearchUrl({ region: "ingushetiya", category: "kvartiry", dealType: "sdam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "kvartiry", dealType: "sdam" }),
     icon: {
       src: "https://avito.st/static/ims/rre_services_web_ltr_light_216x116.png",
       srcSet: [
@@ -196,7 +197,7 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     id: "rent-room",
     label: "Аренда комнаты",
     description: "Комнаты в квартирах и общежитиях для долгосрочной аренды",
-    href: buildSearchUrl({ region: "ingushetiya", category: "kvartiry", dealType: "sdam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "kvartiry", dealType: "sdam" }),
     icon: {
       src: "https://avito.st/static/ims/rre_services_web_ltr_light_216x116.png",
       srcSet: [
@@ -219,7 +220,7 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     label: "Коммерческая недвижимость",
     description: "Офисы, магазины, склады и помещения для бизнеса",
     href: buildSearchUrl({
-      region: "ingushetiya",
+      region: DEFAULT_SEARCH_REGION,
       category: "kommercheskaya_nedvizhimost",
       dealType: "prodam",
     }),
@@ -244,7 +245,7 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     id: "land",
     label: "Участки и земля",
     description: "Земельные участки под ИЖС, сельхозназначения и коммерцию",
-    href: buildSearchUrl({ region: "ingushetiya", category: "uchastki", dealType: "prodam" }),
+    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "uchastki", dealType: "prodam" }),
     icon: {
       src: "https://avito.st/static/ims/rre_services_web_land_light_216x116.png",
       srcSet: [
@@ -266,7 +267,7 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     label: "Гаражи и машиноместа",
     description: "Гаражи, парковочные места и боксы в собственности",
     href: buildSearchUrl({
-      region: "ingushetiya",
+      region: DEFAULT_SEARCH_REGION,
       category: "garazhi_i_mashinomesta",
       dealType: "prodam",
     }),

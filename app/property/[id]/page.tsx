@@ -56,6 +56,7 @@ import { useViewHistory } from "@/hooks/use-view-history";
 import { useCreatePropertyChat } from "@/hooks/use-chats";
 import { useAuthStore } from "@/stores";
 import { ROUTES } from "@/constants";
+import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import { formatDate, formatPhone, formatPrice, getPhoneHref } from "@/lib/utils/format";
 import { logger } from "@/lib/utils/logger";
 import { buildSearchUrl } from "@/lib/url/segments";
@@ -385,8 +386,8 @@ export default function PropertyPage() {
                   <BreadcrumbLink asChild>
                     <Link
                       href={buildSearchUrl({
-                        region: "ingushetiya",
-                        category: "nedvizhimost",
+                        region: DEFAULT_SEARCH_REGION,
+                        category: DEFAULT_SEARCH_CATEGORY,
                         dealType: "prodam",
                       })}
                     >

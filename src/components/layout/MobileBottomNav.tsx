@@ -6,11 +6,12 @@ import { Home, Search, Heart, LayoutDashboard, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
 import { ROUTES } from "@/constants";
+import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import { buildSearchUrl, isSearchPathname } from "@/lib/url/segments";
 
 const DEFAULT_SEARCH_URL = buildSearchUrl({
-  region: "ingushetiya",
-  category: "nedvizhimost",
+  region: DEFAULT_SEARCH_REGION,
+  category: DEFAULT_SEARCH_CATEGORY,
   dealType: "prodam",
 });
 

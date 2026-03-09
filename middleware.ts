@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { REGION_MAP } from "@/lib/url/segments";
 
 const USER_REGION_COOKIE = "user_region";
-const DEFAULT_REGION = "ingushetiya";
 
 /** Маппинг названий регионов (Vercel geo / ip-api) в slug. Варианты написания. */
 const REGION_NAME_TO_SLUG: Record<string, string> = {
@@ -39,9 +39,9 @@ async function detectRegionByIp(ip: string): Promise<string> {
       { next: { revalidate: 3600 } }
     );
     const data = (await res.json()) as { regionName?: string };
-    return regionNameToSlug(data.regionName) ?? DEFAULT_REGION;
+    return regionNameToSlug(data.regionName) ?? DEFAULT_SEARCH_REGION;
   } catch {
-    return DEFAULT_REGION;
+    return DEFAULT_SEARCH_REGION;
   }
 }
 

@@ -1,18 +1,18 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
+import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { REGION_MAP } from "@/lib/url/segments";
 
 export const USER_REGION_COOKIE = "user_region";
-const DEFAULT_REGION_SLUG = "ingushetiya";
 
 function getRegionFromCookie(): string {
-  if (typeof document === "undefined") return DEFAULT_REGION_SLUG;
+  if (typeof document === "undefined") return DEFAULT_SEARCH_REGION;
   const match = document.cookie
     .split("; ")
     .find((r) => r.startsWith(`${USER_REGION_COOKIE}=`));
   const val = match?.split("=")[1]?.trim();
-  return val && val in REGION_MAP && val !== "all" ? val : DEFAULT_REGION_SLUG;
+  return val && val in REGION_MAP && val !== "all" ? val : DEFAULT_SEARCH_REGION;
 }
 
 /**
@@ -26,7 +26,7 @@ export function useUserRegion(): string {
       return () => {};
     },
     () => getRegionFromCookie(), // клиент
-    () => DEFAULT_REGION_SLUG // сервер
+    () => DEFAULT_SEARCH_REGION // сервер
   );
 }
 

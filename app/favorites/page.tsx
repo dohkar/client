@@ -18,6 +18,7 @@ import { useAuthStore } from "@/stores";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { ROUTES } from "@/constants";
+import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import type { PropertyType } from "@/types/property";
 import { buildSearchUrl } from "@/lib/url/segments";
 
@@ -181,8 +182,8 @@ export default function FavoritesPage() {
                 onClick={() =>
                   router.push(
                     buildSearchUrl({
-                      region: "ingushetiya",
-                      category: "nedvizhimost",
+                      region: DEFAULT_SEARCH_REGION,
+                      category: DEFAULT_SEARCH_CATEGORY,
                       dealType: "prodam",
                     })
                   )

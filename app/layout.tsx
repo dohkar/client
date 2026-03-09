@@ -11,6 +11,10 @@ import { SupportButton } from "@/components/features/chats/SupportButton";
 import { APP_CONFIG } from "@/constants";
 import { THEME_COOKIE_NAME } from "@/constants/theme";
 import { DEFAULT_SITE_METADATA } from "@/lib/seo";
+import {
+  DEFAULT_SEARCH_REGION,
+  DEFAULT_SEARCH_CATEGORY,
+} from "@/constants/defaults";
 import { buildSearchUrl } from "@/lib/url/segments";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -55,8 +59,8 @@ export default async function RootLayout({
           target: {
             "@type": "EntryPoint",
             url: `${siteUrl}${buildSearchUrl({
-              region: "ingushetiya",
-              category: "nedvizhimost",
+              region: DEFAULT_SEARCH_REGION,
+              category: DEFAULT_SEARCH_CATEGORY,
             })}?query={search_term_string}`,
           },
           "query-input": "required name=search_term_string",

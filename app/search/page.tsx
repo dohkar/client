@@ -1,5 +1,9 @@
 import { permanentRedirect } from "next/navigation";
 import {
+  DEFAULT_SEARCH_REGION,
+  DEFAULT_SEARCH_CATEGORY,
+} from "@/constants/defaults";
+import {
   API_DEAL_TO_SLUG,
   API_TYPE_TO_SLUG,
   buildSearchUrl,
@@ -42,12 +46,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const category =
     rawType && API_TYPE_TO_SLUG[rawType.toLowerCase() as keyof typeof API_TYPE_TO_SLUG]
       ? API_TYPE_TO_SLUG[rawType.toLowerCase() as keyof typeof API_TYPE_TO_SLUG]
-      : "nedvizhimost";
+      : DEFAULT_SEARCH_CATEGORY;
   const dealSlug = rawDealType
     ? LEGACY_DEAL_TO_SLUG[rawDealType.toLowerCase().trim()] ??
       API_DEAL_TO_SLUG[rawDealType.toUpperCase().replace("-", "_")]
     : undefined;
-  const region = isAllRegions ? "all" : rawRegion ? regionSlugFromApi(rawRegion) : "ingushetiya";
+  const region = isAllRegions ? "all" : rawRegion ? regionSlugFromApi(rawRegion) : DEFAULT_SEARCH_REGION;
 
   const newUrl = buildSearchUrl({
     region,
