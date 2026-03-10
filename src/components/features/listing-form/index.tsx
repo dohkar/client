@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,6 +69,22 @@ export function ListingForm({ onSuccess }: ListingFormProps) {
       price: 0,
       description: "",
       realEstate: { type: "APARTMENT", area: 0, features: [] },
+      vehicle: {
+        brandId: "",
+        model: "",
+        year: new Date().getFullYear(),
+        mileage: undefined,
+        bodyType: "",
+        engine: "",
+        transmission: "",
+      },
+      electronics: {
+        brandId: "",
+        productType: "",
+        model: "",
+        storage: "",
+        condition: "",
+      },
     },
   });
 
@@ -108,10 +123,11 @@ export function ListingForm({ onSuccess }: ListingFormProps) {
       }
 
       const listing = await listingsService.createListing(payload);
-      toast.success("Объявление создано!");
       onSuccess?.(listing);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Ошибка создания объявления");
+      toast.error(
+        error instanceof Error ? error.message : "Ошибка создания объявления"
+      );
     } finally {
       setIsLoading(false);
     }

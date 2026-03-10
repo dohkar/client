@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { PropertySearchParams, PropertyDealType } from "@/types/property";
 import type { PropertyType } from "@/types/property";
+import type { ListingSearchParams, ListingCategory } from "@/types/listing";
 
 /**
  * Схема валидации параметров поиска из URL.
@@ -327,6 +328,50 @@ export function toPropertySearchParams(
   if (filters.cityId && filters.cityId.trim().length > 0) {
     params.cityId = filters.cityId.trim();
   }
+
+  return params;
+}
+
+export function toListingSearchParams(
+  filters: SearchFiltersDisplay,
+  itemsPerPage: number,
+  category?: ListingCategory
+): ListingSearchParams {
+  const params: ListingSearchParams = {
+    page: filters.page,
+    limit: itemsPerPage,
+    sortBy: filters.sortBy,
+  };
+
+  if (category) {
+    params.category = category;
+  }
+
+  if (filters.query && filters.query.trim().length > 0) {
+    params.query = filters.query.trim();
+  }
+
+  if (filters.dealType && filters.dealType !== "all") {
+    params.dealType =
+      filters.dealType === "DAILY"
+        ? "RENT_OUT"
+        : (filters.dealType as PropertyDealType);
+  }
+
+  if (filters.type !== "all") {
+    // Для REAL_ESTATE фильтр по типу недвижимости
+    params.propertyType = filters.type;
+  }
+
+  if (filters.priceMin != null) params.priceMin = filters.priceMin;
+  if (filters.priceMax != null) params.priceMax = filters.priceMax;
+  if (filters.roomsMin != null) params.rooms = filters.roomsMin;
+  if (filters.areaMin != null) params.areaMin = filters.areaMin;
+  if (filters.floorMin != null) params.floorMin = filters.floorMin;
+  if (filters.floorMax != null) params.floorMax = filters.floorMax;
+  if (filters.floorNotFirst === true) params.floorNotFirst = true;
+
+  // Регион и город пробрасываем отдельно (regionId вычисляется из имени региона в компоненте)
 
   return params;
 }

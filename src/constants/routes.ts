@@ -116,6 +116,8 @@ export const API_ENDPOINTS = {
     list: "/api/favorites",
     add: (propertyId: string) => `/api/favorites/${propertyId}`,
     remove: (propertyId: string) => `/api/favorites/${propertyId}`,
+    addListing: (listingId: string) => `/api/favorites/listing/${listingId}`,
+    removeListing: (listingId: string) => `/api/favorites/listing/${listingId}`,
   },
   // Admin
   admin: {

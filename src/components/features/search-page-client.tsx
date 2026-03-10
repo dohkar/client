@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { Search, XIcon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useProperties } from "@/hooks/use-properties";
+import { useListings } from "@/hooks/use-listings";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { useCities } from "@/hooks/use-cities";
 import { useSegmentSearchFilters } from "@/hooks/use-segment-search-filters";
-import { toPropertySearchParams } from "@/lib/search-params";
+import { toListingSearchParams } from "@/lib/search-params";
 import {
   getRegionIdByName,
   ensureRegionCacheInitialized,
@@ -27,8 +27,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { ActiveFilters, HorizontalFilters, SearchResults } from "@/components/search";
+import { ActiveFilters, HorizontalFilters, ListingsSearchResults } from "@/components/search";
 import { MobileFilterDrawer } from "@/components/features/MobileFilterDrawer";
+import type { ListingCategory } from "@/types/listing";
 
 export interface SegmentRouteParams {
   region: string;
@@ -39,6 +40,23 @@ export interface SegmentRouteParams {
 interface SearchPageClientProps {
   params: SegmentRouteParams;
   searchParams?: Record<string, string | string[] | undefined>;
+}
+
+function mapCategorySlugToListingCategory(slug: string): ListingCategory {
+  switch (slug) {
+    case "nedvizhimost":
+    case "kvartiry":
+    case "doma":
+    case "uchastki":
+    case "kommercheskaya_nedvizhimost":
+      return "REAL_ESTATE";
+    case "transport":
+      return "VEHICLE";
+    case "elektronika":
+      return "ELECTRONICS";
+    default:
+      return "REAL_ESTATE";
+  }
 }
 
 export function SearchPageClient({ params: paramsProp, searchParams: searchParamsProp }: SearchPageClientProps) {
@@ -113,6 +131,7 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
       .then(() => {
         forceRender();
         queryClient.invalidateQueries({ queryKey: queryKeys.properties.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
       })
       .catch(() => {});
   }, [queryClient]);
@@ -128,13 +147,28 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
       ? (cities.find((city) => city.id === appliedFilters.cityId)?.name ?? null)
       : null;
 
-  const apiParams = useMemo(
-    () => toPropertySearchParams(appliedFilters, SEARCH_CONSTANTS.ITEMS_PER_PAGE),
-    [appliedFilters]
+  const listingCategory = useMemo(
+    () => mapCategorySlugToListingCategory(params.category),
+    [params.category]
   );
-  const { data, isLoading, error } = useProperties(apiParams);
 
-  const properties = Array.isArray(data?.data) ? data.data : [];
+  const baseApiParams = useMemo(
+    () =>
+      toListingSearchParams(
+        appliedFilters,
+        SEARCH_CONSTANTS.ITEMS_PER_PAGE,
+        listingCategory
+      ),
+    [appliedFilters, listingCategory]
+  );
+
+  const { data, isLoading, error } = useListings({
+    ...baseApiParams,
+    regionId,
+    cityId: appliedFilters.cityId ?? undefined,
+  });
+
+  const listings = Array.isArray(data?.data) ? data.data : [];
   const totalPages = typeof data?.totalPages === "number" ? data.totalPages : 0;
 
   const activeFiltersCount = useMemo(() => {
@@ -280,8 +314,8 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
             </h1>
           </div>
 
-          <SearchResults
-            properties={properties}
+          <ListingsSearchResults
+            listings={listings}
             isLoading={isLoading || isPending}
             error={error}
             currentPage={currentPage}

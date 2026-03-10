@@ -23,11 +23,12 @@ import {
   Smartphone,
   Building2,
 } from "lucide-react";
-import { useAuthStore } from "@/stores";
+import { useAuthStore, useFavoritesStore } from "@/stores";
 import { ROUTES } from "@/constants";
 import { formatDate, formatPrice } from "@/lib/utils/format";
 import { logger } from "@/lib/utils/logger";
 import { listingsService } from "@/services/listings.service";
+import { favoritesService } from "@/services/favorites.service";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { getCategoryConfig } from "@/constants/listing-categories";
 import type { Listing, ListingCategory } from "@/types/listing";
@@ -122,6 +123,8 @@ export default function ListingPage() {
   const params = useParams();
   const router = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { isFavorite: isLocalFavorite, toggleFavorite: toggleLocalFavorite } =
+    useFavoritesStore();
 
   const listingId = useMemo(
     () => extractIdFromSegment(typeof params.id === "string" ? params.id : undefined),
@@ -134,6 +137,16 @@ export default function ListingPage() {
     enabled: !!listingId,
     staleTime: 30_000,
   });
+
+  const [isFavorite, setIsFavorite] = useState<boolean>(() =>
+    listingId ? isLocalFavorite(listingId) : false
+  );
+  const [isFavoritePending, setIsFavoritePending] = useState(false);
+
+  useEffect(() => {
+    if (!listingId) return;
+    setIsFavorite(isLocalFavorite(listingId));
+  }, [listingId, isLocalFavorite]);
 
   if (isLoading) {
     return (
@@ -161,6 +174,33 @@ export default function ListingPage() {
   const DetailsComponent = CATEGORY_DETAILS_COMPONENT[listing.category];
   const categoryConfig = getCategoryConfig(listing.category);
 
+  const handleToggleFavorite = async () => {
+    if (!listingId) return;
+
+    // Неавторизованные — только локальное избранное
+    if (!isAuthenticated) {
+      toggleLocalFavorite(listingId);
+      setIsFavorite((prev) => !prev);
+      return;
+    }
+
+    if (isFavoritePending) return;
+    setIsFavoritePending(true);
+    try {
+      if (isFavorite) {
+        await favoritesService.removeListingFavorite(listingId);
+        setIsFavorite(false);
+      } else {
+        await favoritesService.addListingFavorite(listingId);
+        setIsFavorite(true);
+      }
+    } catch (err) {
+      // Ошибка уже залогирована в сервисе
+    } finally {
+      setIsFavoritePending(false);
+    }
+  };
+
   return (
     <div className="container max-w-5xl mx-auto py-6 px-4 space-y-6">
       <Button variant="ghost" size="sm" onClick={() => router.back()}>
@@ -178,6 +218,24 @@ export default function ListingPage() {
             className="object-cover"
             priority
           />
+          <Button
+            size="icon"
+            variant="secondary"
+            className={`absolute top-4 right-4 rounded-full backdrop-blur shadow-md ${
+              isFavorite ? "bg-destructive text-white" : "bg-background/90"
+            }`}
+            aria-label={
+              isFavorite ? "Удалить из избранного" : "Добавить в избранное"
+            }
+            onClick={handleToggleFavorite}
+            disabled={isFavoritePending}
+          >
+            <Heart
+              className={`h-5 w-5 ${
+                isFavorite ? "fill-current" : ""
+              } ${isFavoritePending ? "opacity-70" : ""}`}
+            />
+          </Button>
         </div>
       )}
 
