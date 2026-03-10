@@ -3,6 +3,7 @@
  * Централизованное управление ключами запросов
  */
 import type { PropertySearchParams } from "@/types/property";
+import type { ListingSearchParams } from "@/types/listing";
 
 /**
  * Нормализует параметры поиска для стабильного ключа
@@ -97,6 +98,29 @@ export const queryKeys = {
     },
     categoryStats: ["properties", "categoryStats"] as const,
     limits: ["properties", "limits"] as const,
+  },
+
+  // Listings (multi-category)
+  listings: {
+    all: ["listings"] as const,
+    lists: () => ["listings", "list"] as const,
+    list: (filters?: ListingSearchParams) =>
+      filters
+        ? (["listings", "list", filters] as const)
+        : (["listings", "list"] as const),
+    details: () => ["listings", "detail"] as const,
+    detail: (id: string) => ["listings", "detail", id] as const,
+    categoryStats: ["listings", "categoryStats"] as const,
+    limits: ["listings", "limits"] as const,
+  },
+
+  // Brands
+  brands: {
+    all: ["brands"] as const,
+    list: (category?: string) =>
+      category
+        ? (["brands", "list", category] as const)
+        : (["brands", "list"] as const),
   },
 
   // Auth

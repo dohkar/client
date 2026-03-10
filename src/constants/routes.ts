@@ -13,6 +13,8 @@ export const ROUTES = {
   /** URL объявления: id или id-slug для SEO */
   property: (id: string, slug?: string) =>
     slug ? `/property/${id}-${slug}` : `/property/${id}`,
+  listing: (id: string, slug?: string) =>
+    slug ? `/listing/${id}-${slug}` : `/listing/${id}`,
   sell: "/sell",
   // User
   dashboard: "/dashboard",
@@ -78,6 +80,35 @@ export const API_ENDPOINTS = {
     update: (id: string) => `/api/properties/${id}`,
     delete: (id: string) => `/api/properties/${id}`,
     categoryStats: "/api/properties/stats/categories",
+  },
+
+  // Listings (multi-category)
+  listings: {
+    list: "/api/listings",
+    search: "/api/listings/search",
+    getById: (id: string) => `/api/listings/${id}`,
+    getRelated: (id: string) => `/api/listings/${id}/related`,
+    getLimits: "/api/listings/limits",
+    create: "/api/listings",
+    update: (id: string) => `/api/listings/${id}`,
+    delete: (id: string) => `/api/listings/${id}`,
+    categoryStats: "/api/listings/stats/categories",
+  },
+
+  // Brands
+  brands: {
+    list: "/api/brands",
+    getById: (id: string) => `/api/brands/${id}`,
+  },
+
+  // Analytics
+  analytics: {
+    recordView: (listingId: string) => `/api/analytics/listings/${listingId}/view`,
+    recordContact: (listingId: string) => `/api/analytics/listings/${listingId}/contact`,
+    viewStats: (listingId: string) => `/api/analytics/listings/${listingId}/views`,
+    contactStats: (listingId: string) => `/api/analytics/listings/${listingId}/contacts`,
+    priceHistory: (listingId: string) => `/api/analytics/listings/${listingId}/price-history`,
+    sellerStats: (userId: string) => `/api/analytics/sellers/${userId}/stats`,
   },
 
   // Favorites
