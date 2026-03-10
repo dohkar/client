@@ -1,18 +1,33 @@
 "use client";
 
+import type React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin } from "lucide-react";
+import { MapPin, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { Listing } from "@/types/listing";
 import { formatPrice, formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
+import { useFavorites } from "@/hooks/use-favorites";
 
 interface ListingCardProps {
   listing: Listing;
+  /** Скрыть кнопку избранного (например на странице «Избранное»). */
+  hideFavoriteButton?: boolean;
 }
 
-export function ListingCard({ listing }: ListingCardProps) {
+export function ListingCard({ listing, hideFavoriteButton = false }: ListingCardProps) {
+  const { isFavorite, toggleListingFavorite, isMutating } = useFavorites();
+  const favorite = isFavorite(listing.id);
+  const isPending = isMutating(listing.id);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleListingFavorite(listing.id, listing);
+  };
+
   const image = listing.image || listing.images[0] || "/placeholder.svg";
 
   return (
@@ -37,6 +52,25 @@ export function ListingCard({ listing }: ListingCardProps) {
               <Badge className="badge-premium shadow-md">Топ</Badge>
             )}
           </div>
+
+          {!hideFavoriteButton && (
+            <Button
+              size="icon"
+              variant="secondary"
+              className={`absolute top-3 right-3 rounded-full backdrop-blur transition-all shadow-md min-h-[44px] min-w-[44px] ${
+                favorite
+                  ? "bg-destructive text-white hover:bg-destructive/90"
+                  : "bg-background/90 hover:bg-background"
+              } ${isPending ? "opacity-70" : ""}`}
+              onClick={handleFavoriteClick}
+              disabled={isPending}
+              aria-label={favorite ? "Удалить из избранного" : "Добавить в избранное"}
+            >
+              <Heart
+                className={`w-4 h-4 transition-transform ${favorite ? "fill-current scale-110" : ""} ${isPending ? "animate-pulse" : ""}`}
+              />
+            </Button>
+          )}
         </div>
 
         <div className="p-2 sm:p-3 space-y-2 sm:space-y-3 flex-1 flex flex-col">

@@ -11,6 +11,7 @@ const ADMIN_TABS = [
   { href: "/dashboard/admin", label: "Обзор", exact: true },
   { href: "/dashboard/admin/users", label: "Пользователи" },
   { href: "/dashboard/admin/properties", label: "Объявления" },
+  { href: "/dashboard/admin/listings", label: "Листинги" },
   { href: "/dashboard/admin/inbox", label: "Входящие" },
   { href: "/dashboard/admin/chats", label: "Чаты" },
   { href: "/dashboard/admin/logs", label: "Логи" },

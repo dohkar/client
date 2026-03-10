@@ -5,6 +5,46 @@ import {
   REGION_BACKEND_TO_NAME,
 } from "@/lib/regions";
 
+/**
+ * Минимальный объект листинга из ответа API избранного (без полных связей region, city, realEstate, vehicle, electronics).
+ */
+export type FavoriteListingBackend = Partial<ListingBackend> & Pick<
+  ListingBackend,
+  "id" | "slug" | "title" | "price" | "currency" | "category" | "status" | "moderationStatus" | "dealType" | "description" | "createdAt" | "updatedAt"
+>;
+
+/**
+ * Адаптирует листинг из ответа getFavorites (может быть без полных связей) в тип Listing для карточки.
+ */
+export function adaptFavoriteListing(raw: FavoriteListingBackend): Listing {
+  const images = Array.isArray(raw.images) ? raw.images : [];
+  const placeholder = "/placeholder.svg";
+  return adaptListing({
+    ...raw,
+    images: images.length ? images : [placeholder],
+    region: raw.region ?? null,
+    city: raw.city ?? null,
+    realEstate: raw.realEstate ?? null,
+    vehicle: raw.vehicle ?? null,
+    electronics: raw.electronics ?? null,
+    user: raw.user ?? undefined,
+    regionId: raw.regionId ?? null,
+    cityId: raw.cityId ?? null,
+    location: raw.location ?? null,
+    videos: raw.videos,
+    userId: raw.userId ?? "",
+    views: raw.views ?? 0,
+    favoritesCount: raw.favoritesCount ?? 0,
+    rejectionReason: raw.rejectionReason,
+    archivedAt: raw.archivedAt,
+    previewAttributes: Array.isArray(raw.previewAttributes) ? raw.previewAttributes : [],
+    allowPhone: raw.allowPhone ?? true,
+    allowChat: raw.allowChat ?? true,
+    promotionTier: raw.promotionTier ?? "NONE",
+    floor: raw.floor,
+  } as ListingBackend);
+}
+
 export function adaptListing(backend: ListingBackend): Listing {
   let regionName: string | null = null;
 

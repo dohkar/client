@@ -6,12 +6,14 @@ import { useAuthStore } from "@/stores";
 import { useFavoritesStore } from "@/stores";
 import { toast } from "sonner";
 import type { Property } from "@/types/property";
+import type { Listing } from "@/types/listing";
+import type { FavoriteItem } from "@/types/favorites";
 
 /**
- * Контекст для отката optimistic updates
+ * Контекст для отката optimistic updates (property)
  */
 interface OptimisticContext {
-  previousFavorites: Property[] | undefined;
+  previousFavorites: FavoriteItem[] | undefined;
 }
 
 /**
@@ -33,7 +35,7 @@ export function useFavorites() {
     toggleFavorite: toggleLocalFavorite 
   } = useFavoritesStore();
 
-  // Защита от параллельных мутаций одного propertyId
+  // Защита от параллельных мутаций (propertyId или listingId)
   const pendingMutations = useRef<Set<string>>(new Set());
 
   // Запрос списка избранного (только для авторизованных)
@@ -47,186 +49,207 @@ export function useFavorites() {
     staleTime: 2 * 60 * 1000, // 2 минуты
   });
 
-  // Добавление в избранное с optimistic update
+  // Добавление property в избранное с optimistic update
   const addMutation = useMutation<void, Error, string, OptimisticContext>({
     mutationFn: (propertyId: string) => favoritesService.addFavorite(propertyId),
-    
     onMutate: async (propertyId) => {
-      // Отменяем исходящие запросы для предотвращения перезаписи optimistic update
       await queryClient.cancelQueries({ queryKey: queryKeys.favorites.all });
-      
-      // Сохраняем предыдущее состояние для отката
-      const previousFavorites = queryClient.getQueryData<Property[]>(queryKeys.favorites.all);
-      
-      // Optimistic update: создаём placeholder объект
-      // Реальные данные придут после invalidateQueries
-      queryClient.setQueryData<Property[]>(queryKeys.favorites.all, (old = []) => {
-        // Проверяем, нет ли уже этого property в списке
-        if (old.some(p => p.id === propertyId)) {
-          return old;
-        }
-        // Добавляем минимальный placeholder (будет заменён после refetch)
-        return [...old, { id: propertyId } as Property];
+      const previousFavorites = queryClient.getQueryData<FavoriteItem[]>(queryKeys.favorites.all);
+      queryClient.setQueryData<FavoriteItem[]>(queryKeys.favorites.all, (old = []) => {
+        if (old.some((item) => item.data.id === propertyId)) return old;
+        return [...old, { type: "property", data: { id: propertyId } as Property }];
       });
-      
       return { previousFavorites };
     },
-    
     onError: (error, propertyId, context) => {
       const status = (error as { status?: number }).status;
-      if (status === 409) {
-        // Уже в избранном — считаем успехом, onSettled обновит список
-        return;
-      }
+      if (status === 409) return;
       if (context?.previousFavorites) {
         queryClient.setQueryData(queryKeys.favorites.all, context.previousFavorites);
       }
       toast.error("Не удалось добавить в избранное");
     },
-    
     onSettled: (_, __, propertyId) => {
-      // Убираем из pending и синхронизируем с сервером
       pendingMutations.current.delete(propertyId);
       queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
     },
   });
 
-  // Удаление из избранного с optimistic update
+  // Удаление property из избранного с optimistic update
   const removeMutation = useMutation<void, Error, string, OptimisticContext>({
     mutationFn: (propertyId: string) => favoritesService.removeFavorite(propertyId),
-    
     onMutate: async (propertyId) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.favorites.all });
-      
-      const previousFavorites = queryClient.getQueryData<Property[]>(queryKeys.favorites.all);
-      
-      // Optimistic update: убираем property из списка
-      queryClient.setQueryData<Property[]>(queryKeys.favorites.all, (old = []) => {
-        return old.filter(p => p.id !== propertyId);
-      });
-      
+      const previousFavorites = queryClient.getQueryData<FavoriteItem[]>(queryKeys.favorites.all);
+      queryClient.setQueryData<FavoriteItem[]>(queryKeys.favorites.all, (old = []) =>
+        old.filter((item) => item.data.id !== propertyId)
+      );
       return { previousFavorites };
     },
-    
-    onError: (error, propertyId, context) => {
+    onError: (_, __, context) => {
       if (context?.previousFavorites) {
         queryClient.setQueryData(queryKeys.favorites.all, context.previousFavorites);
       }
       toast.error("Не удалось удалить из избранного");
     },
-    
     onSettled: (_, __, propertyId) => {
       pendingMutations.current.delete(propertyId);
       queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
     },
   });
 
-  /**
-   * Проверка, находится ли property в избранном
-   * Учитывает авторизацию и pending мутации
-   */
-  const isFavorite = useCallback((propertyId: string): boolean => {
-    if (!isAuthenticated) {
-      return isLocalFavorite(propertyId);
-    }
-    return favorites.some(fav => fav.id === propertyId);
-  }, [isAuthenticated, favorites, isLocalFavorite]);
+  // Добавление listing в избранное с optimistic update
+  const addListingMutation = useMutation<void, Error, string, OptimisticContext>({
+    mutationFn: (listingId: string) => favoritesService.addListingFavorite(listingId),
+    onMutate: async (listingId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.favorites.all });
+      const previousFavorites = queryClient.getQueryData<FavoriteItem[]>(queryKeys.favorites.all);
+      queryClient.setQueryData<FavoriteItem[]>(queryKeys.favorites.all, (old = []) => {
+        if (old.some((item) => item.data.id === listingId)) return old;
+        return [...old, { type: "listing", data: { id: listingId } as Listing }];
+      });
+      return { previousFavorites };
+    },
+    onError: (error, listingId, context) => {
+      const status = (error as { status?: number }).status;
+      if (status === 409) return;
+      if (context?.previousFavorites) {
+        queryClient.setQueryData(queryKeys.favorites.all, context.previousFavorites);
+      }
+      toast.error("Не удалось добавить в избранное");
+    },
+    onSettled: (_, __, listingId) => {
+      pendingMutations.current.delete(listingId);
+      queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
+    },
+  });
+
+  // Удаление listing из избранного с optimistic update
+  const removeListingMutation = useMutation<void, Error, string, OptimisticContext>({
+    mutationFn: (listingId: string) => favoritesService.removeListingFavorite(listingId),
+    onMutate: async (listingId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.favorites.all });
+      const previousFavorites = queryClient.getQueryData<FavoriteItem[]>(queryKeys.favorites.all);
+      queryClient.setQueryData<FavoriteItem[]>(queryKeys.favorites.all, (old = []) =>
+        old.filter((item) => item.data.id !== listingId)
+      );
+      return { previousFavorites };
+    },
+    onError: (_, __, context) => {
+      if (context?.previousFavorites) {
+        queryClient.setQueryData(queryKeys.favorites.all, context.previousFavorites);
+      }
+      toast.error("Не удалось удалить из избранного");
+    },
+    onSettled: (_, __, listingId) => {
+      pendingMutations.current.delete(listingId);
+      queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
+    },
+  });
 
   /**
-   * Проверка, выполняется ли мутация для конкретного property
+   * Проверка, находится ли объявление (property или listing) в избранном по id.
    */
-  const isMutating = useCallback((propertyId: string): boolean => {
-    return pendingMutations.current.has(propertyId);
+  const isFavorite = useCallback(
+    (id: string): boolean => {
+      if (!isAuthenticated) {
+        return isLocalFavorite(id);
+      }
+      return favorites.some((item) => item.data.id === id);
+    },
+    [isAuthenticated, favorites, isLocalFavorite]
+  );
+
+  /**
+   * Проверка, выполняется ли мутация для данного id (property или listing).
+   */
+  const isMutating = useCallback((id: string): boolean => {
+    return pendingMutations.current.has(id);
   }, []);
 
   /**
-   * Toggle избранного с защитой от spam-кликов
-   * Возвращает true если действие было выполнено
+   * Toggle избранного для property. Возвращает true если действие выполнено.
    */
-  const toggleFavorite = useCallback((propertyId: string, property?: Property): boolean => {
-    // Для неавторизованных используем локальное хранилище
-    if (!isAuthenticated) {
-      toggleLocalFavorite(propertyId);
+  const toggleFavorite = useCallback(
+    (propertyId: string, _property?: Property): boolean => {
+      if (!isAuthenticated) {
+        toggleLocalFavorite(propertyId);
+        return true;
+      }
+      if (pendingMutations.current.has(propertyId)) return false;
+      pendingMutations.current.add(propertyId);
+      const currentlyFavorite = favorites.some((item) => item.data.id === propertyId);
+      if (currentlyFavorite) {
+        removeMutation.mutate(propertyId);
+      } else {
+        addMutation.mutate(propertyId);
+      }
       return true;
-    }
+    },
+    [isAuthenticated, favorites, toggleLocalFavorite, addMutation, removeMutation]
+  );
 
-    // Защита от double submit
-    if (pendingMutations.current.has(propertyId)) {
-      return false;
-    }
+  /**
+   * Toggle избранного для listing. Возвращает true если действие выполнено.
+   */
+  const toggleListingFavorite = useCallback(
+    (listingId: string, _listing?: Listing): boolean => {
+      if (!isAuthenticated) {
+        toggleLocalFavorite(listingId);
+        return true;
+      }
+      if (pendingMutations.current.has(listingId)) return false;
+      pendingMutations.current.add(listingId);
+      const currentlyFavorite = favorites.some((item) => item.data.id === listingId);
+      if (currentlyFavorite) {
+        removeListingMutation.mutate(listingId);
+      } else {
+        addListingMutation.mutate(listingId);
+      }
+      return true;
+    },
+    [isAuthenticated, favorites, toggleLocalFavorite, addListingMutation, removeListingMutation]
+  );
 
-    pendingMutations.current.add(propertyId);
-
-    const currentlyFavorite = favorites.some(fav => fav.id === propertyId);
-    
-    if (currentlyFavorite) {
-      removeMutation.mutate(propertyId);
-    } else {
+  const addToFavorites = useCallback(
+    (propertyId: string): boolean => {
+      if (!isAuthenticated) {
+        toggleLocalFavorite(propertyId);
+        return true;
+      }
+      if (pendingMutations.current.has(propertyId)) return false;
+      if (favorites.some((item) => item.data.id === propertyId)) return false;
+      pendingMutations.current.add(propertyId);
       addMutation.mutate(propertyId);
-    }
-
-    return true;
-  }, [isAuthenticated, favorites, toggleLocalFavorite, addMutation, removeMutation]);
-
-  /**
-   * Добавить в избранное (явный метод)
-   */
-  const addToFavorites = useCallback((propertyId: string): boolean => {
-    if (!isAuthenticated) {
-      toggleLocalFavorite(propertyId);
       return true;
-    }
+    },
+    [isAuthenticated, favorites, toggleLocalFavorite, addMutation]
+  );
 
-    if (pendingMutations.current.has(propertyId)) {
-      return false;
-    }
-
-    if (favorites.some(fav => fav.id === propertyId)) {
-      return false; // Уже в избранном
-    }
-
-    pendingMutations.current.add(propertyId);
-    addMutation.mutate(propertyId);
-    return true;
-  }, [isAuthenticated, favorites, toggleLocalFavorite, addMutation]);
-
-  /**
-   * Удалить из избранного (явный метод)
-   */
-  const removeFromFavorites = useCallback((propertyId: string): boolean => {
-    if (!isAuthenticated) {
-      toggleLocalFavorite(propertyId);
+  const removeFromFavorites = useCallback(
+    (propertyId: string): boolean => {
+      if (!isAuthenticated) {
+        toggleLocalFavorite(propertyId);
+        return true;
+      }
+      if (pendingMutations.current.has(propertyId)) return false;
+      if (!favorites.some((item) => item.data.id === propertyId)) return false;
+      pendingMutations.current.add(propertyId);
+      removeMutation.mutate(propertyId);
       return true;
-    }
-
-    if (pendingMutations.current.has(propertyId)) {
-      return false;
-    }
-
-    if (!favorites.some(fav => fav.id === propertyId)) {
-      return false; // Не в избранном
-    }
-
-    pendingMutations.current.add(propertyId);
-    removeMutation.mutate(propertyId);
-    return true;
-  }, [isAuthenticated, favorites, toggleLocalFavorite, removeMutation]);
+    },
+    [isAuthenticated, favorites, toggleLocalFavorite, removeMutation]
+  );
 
   return {
-    // Данные
     favorites,
     isLoading,
-    
-    // Проверки
     isFavorite,
     isMutating,
-    
-    // Действия
     toggleFavorite,
+    toggleListingFavorite,
     addToFavorites,
     removeFromFavorites,
-    
-    // Для доступа к состоянию мутаций (если нужно в UI)
     isAdding: addMutation.isPending,
     isRemoving: removeMutation.isPending,
   };

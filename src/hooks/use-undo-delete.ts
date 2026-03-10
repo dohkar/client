@@ -4,16 +4,22 @@ import { toast } from "sonner";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { propertyService } from "@/services/property.service";
 import type { Property } from "@/types/property";
+import type { FavoriteItem } from "@/types/favorites";
 import type { PaginatedResponse } from "@/types";
 
 const UNDO_TIMEOUT_MS = 5000;
 
+/** Тип элемента избранного для удаления с Undo */
+export type FavoriteRemoveType = "property" | "listing";
+
 /**
- * Состояние отложенного удаления
+ * Состояние отложенного удаления (общее для удаления объявлений и удаления из избранного).
  */
 interface PendingDelete {
   propertyId: string;
   propertyTitle?: string;
+  /** Только для useRemoveFavoriteWithUndo: property или listing. */
+  type?: FavoriteRemoveType;
   previousData: Map<string, unknown>;
   timeoutId: ReturnType<typeof setTimeout>;
   toastId: string | number;
@@ -303,138 +309,152 @@ function isPaginatedResponse(data: unknown): data is PaginatedResponse<Property>
 }
 
 /**
- * Хук для удаления из избранного с Undo
+ * Хук для удаления из избранного с Undo (property и listing).
  */
 export function useRemoveFavoriteWithUndo() {
   const queryClient = useQueryClient();
   const pendingRemoves = useRef<Map<string, PendingDelete>>(new Map());
   const isMounted = useRef(true);
 
-  // Ref для хранения executeRemove, чтобы использовать в cleanup
-  const executeRemoveRef = useRef<((propertyId: string) => Promise<boolean>) | undefined>(undefined);
+  const executeRemoveRef = useRef<
+    ((id: string, type: FavoriteRemoveType) => Promise<boolean>) | undefined
+  >(undefined);
 
-  const executeRemove = useCallback(async (propertyId: string): Promise<boolean> => {
-    const pending = pendingRemoves.current.get(propertyId);
-    if (!pending || pending.status === "cancelled") {
-      return false;
-    }
-
-    pending.status = "executing";
-
-    try {
-      const { favoritesService } = await import("@/services/favorites.service");
-      await favoritesService.removeFavorite(propertyId);
-      
-      if (isMounted.current) {
-        await queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
+  const executeRemove = useCallback(
+    async (id: string, type: FavoriteRemoveType): Promise<boolean> => {
+      const pending = pendingRemoves.current.get(id);
+      if (!pending || pending.status === "cancelled") {
+        return false;
       }
-      
-      pendingRemoves.current.delete(propertyId);
-      return true;
-    } catch (error) {
-      if (pending.previousData && isMounted.current) {
-        const previousFavorites = pending.previousData.get("favorites");
-        if (previousFavorites) {
-          queryClient.setQueryData(queryKeys.favorites.all, previousFavorites);
+
+      pending.status = "executing";
+
+      try {
+        const { favoritesService } = await import("@/services/favorites.service");
+        if (type === "listing") {
+          await favoritesService.removeListingFavorite(id);
+        } else {
+          await favoritesService.removeFavorite(id);
         }
-        toast.error("Не удалось удалить из избранного");
-      }
-      
-      pendingRemoves.current.delete(propertyId);
-      return false;
-    }
-  }, [queryClient]);
 
-  // Обновляем ref при изменении executeRemove
+        if (isMounted.current) {
+          await queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
+        }
+
+        pendingRemoves.current.delete(id);
+        return true;
+      } catch (error) {
+        if (pending.previousData && isMounted.current) {
+          const previousFavorites = pending.previousData.get("favorites");
+          if (previousFavorites) {
+            queryClient.setQueryData(queryKeys.favorites.all, previousFavorites);
+          }
+          toast.error("Не удалось удалить из избранного");
+        }
+
+        pendingRemoves.current.delete(id);
+        return false;
+      }
+    },
+    [queryClient]
+  );
+
   executeRemoveRef.current = executeRemove;
 
   useEffect(() => {
     isMounted.current = true;
-    
+
     return () => {
       isMounted.current = false;
-      // При unmount выполняем все pending removes
       pendingRemoves.current.forEach((pending) => {
         if (pending.status === "pending") {
           clearTimeout(pending.timeoutId);
           toast.dismiss(pending.toastId);
-          executeRemoveRef.current?.(pending.propertyId);
+          executeRemoveRef.current?.(pending.propertyId, pending.type ?? "property");
         }
       });
     };
   }, []);
 
-  const undoRemove = useCallback((propertyId: string) => {
-    const pending = pendingRemoves.current.get(propertyId);
-    if (!pending || pending.status !== "pending") {
-      return;
-    }
-
-    clearTimeout(pending.timeoutId);
-    pending.status = "cancelled";
-    toast.dismiss(pending.toastId);
-
-    const previousFavorites = pending.previousData.get("favorites");
-    if (previousFavorites) {
-      queryClient.setQueryData(queryKeys.favorites.all, previousFavorites);
-    }
-
-    toast.success("Удаление отменено");
-    pendingRemoves.current.delete(propertyId);
-  }, [queryClient]);
-
-  const removeWithUndo = useCallback(async (
-    propertyId: string,
-    propertyTitle?: string
-  ): Promise<boolean> => {
-    if (pendingRemoves.current.has(propertyId)) {
-      return false;
-    }
-
-    await queryClient.cancelQueries({ queryKey: queryKeys.favorites.all });
-
-    const previousFavorites = queryClient.getQueryData<Property[]>(queryKeys.favorites.all);
-    const previousData = new Map<string, unknown>();
-    previousData.set("favorites", structuredClone(previousFavorites));
-
-    // Optimistic remove
-    queryClient.setQueryData<Property[]>(queryKeys.favorites.all, (old = []) => {
-      return old.filter(p => p.id !== propertyId);
-    });
-
-    const toastId = toast.success(
-      propertyTitle ? `"${propertyTitle}" удалено из избранного` : "Удалено из избранного",
-      {
-        duration: UNDO_TIMEOUT_MS,
-        action: {
-          label: "Отменить",
-          onClick: () => undoRemove(propertyId),
-        },
+  const undoRemove = useCallback(
+    (id: string) => {
+      const pending = pendingRemoves.current.get(id);
+      if (!pending || pending.status !== "pending") {
+        return;
       }
-    );
 
-    const timeoutId = setTimeout(() => {
-      const pending = pendingRemoves.current.get(propertyId);
-      if (pending?.status === "pending") {
-        toast.dismiss(toastId);
-        executeRemove(propertyId);
+      clearTimeout(pending.timeoutId);
+      pending.status = "cancelled";
+      toast.dismiss(pending.toastId);
+
+      const previousFavorites = pending.previousData.get("favorites");
+      if (previousFavorites) {
+        queryClient.setQueryData(queryKeys.favorites.all, previousFavorites);
       }
-    }, UNDO_TIMEOUT_MS);
 
-    pendingRemoves.current.set(propertyId, {
-      propertyId,
-      propertyTitle,
-      previousData,
-      timeoutId,
-      toastId,
-      status: "pending",
-    });
+      toast.success("Удаление отменено");
+      pendingRemoves.current.delete(id);
+    },
+    [queryClient]
+  );
 
-    return true;
-  }, [queryClient, undoRemove, executeRemove]);
+  const removeWithUndo = useCallback(
+    async (
+      id: string,
+      title?: string,
+      type: FavoriteRemoveType = "property"
+    ): Promise<boolean> => {
+      if (pendingRemoves.current.has(id)) {
+        return false;
+      }
 
-  const isRemoving = useCallback((propertyId: string): boolean => {
-    const pending = pendingRemoves.current.get(propertyId);
+      await queryClient.cancelQueries({ queryKey: queryKeys.favorites.all });
+
+      const previousFavorites = queryClient.getQueryData(queryKeys.favorites.all);
+      const previousData = new Map<string, unknown>();
+      previousData.set("favorites", structuredClone(previousFavorites));
+
+      // Optimistic remove (универсально по id для property и listing)
+      queryClient.setQueryData<FavoriteItem[]>(queryKeys.favorites.all, (old = []) =>
+        old.filter((item) => item.data.id !== id)
+      );
+
+      const toastId = toast.success(
+        title ? `"${title}" удалено из избранного` : "Удалено из избранного",
+        {
+          duration: UNDO_TIMEOUT_MS,
+          action: {
+            label: "Отменить",
+            onClick: () => undoRemove(id),
+          },
+        }
+      );
+
+      const timeoutId = setTimeout(() => {
+        const pending = pendingRemoves.current.get(id);
+        if (pending?.status === "pending") {
+          toast.dismiss(toastId);
+          executeRemove(id, type);
+        }
+      }, UNDO_TIMEOUT_MS);
+
+      pendingRemoves.current.set(id, {
+        propertyId: id,
+        propertyTitle: title,
+        type,
+        previousData,
+        timeoutId,
+        toastId,
+        status: "pending",
+      });
+
+      return true;
+    },
+    [queryClient, undoRemove, executeRemove]
+  );
+
+  const isRemoving = useCallback((id: string): boolean => {
+    const pending = pendingRemoves.current.get(id);
     return pending !== undefined && pending.status !== "cancelled";
   }, []);
 

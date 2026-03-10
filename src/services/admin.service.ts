@@ -28,6 +28,25 @@ export type AdminProperty = PropertyResponseDto & {
   user?: { id: string; name?: string; email?: string };
   region?: { id: string; name: string };
 };
+
+export type AdminListing = {
+  id: string;
+  slug: string;
+  title: string;
+  price: number;
+  currency: string;
+  category: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+  status: string;
+  moderationStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+  rejectionReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: { id: string; name: string | null; email: string | null };
+  realEstate?: unknown;
+  vehicle?: unknown;
+  electronics?: unknown;
+};
+
 export type AdminStatistics = AdminStatisticsResponse;
 
 export const adminService = {
@@ -146,6 +165,46 @@ export const adminService = {
   async closeChat(chatId: string): Promise<{ success?: boolean }> {
     return apiClient.patch<{ success?: boolean }>(
       API_ENDPOINTS.admin.closeChat(chatId)
+    );
+  },
+
+  async getListings(params?: {
+    page?: number;
+    limit?: number;
+    moderationStatus?: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+    category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+  }): Promise<PaginatedResponse<AdminListing>> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.moderationStatus) queryParams.append("moderationStatus", params.moderationStatus);
+    if (params?.category) queryParams.append("category", params.category);
+    const queryString = queryParams.toString();
+    const endpoint = queryString
+      ? `${API_ENDPOINTS.admin.listings}?${queryString}`
+      : API_ENDPOINTS.admin.listings;
+    return apiClient.get<PaginatedResponse<AdminListing>>(endpoint);
+  },
+
+  async approveListing(listingId: string): Promise<{ success: boolean }> {
+    return apiClient.patch<{ success: boolean }>(
+      API_ENDPOINTS.admin.approveListing(listingId)
+    );
+  },
+
+  async rejectListing(
+    listingId: string,
+    rejectionReason: string
+  ): Promise<{ success: boolean }> {
+    return apiClient.patch<{ success: boolean }>(
+      API_ENDPOINTS.admin.rejectListing(listingId),
+      { rejectionReason }
+    );
+  },
+
+  async deleteListing(listingId: string): Promise<{ success: boolean }> {
+    return apiClient.delete<{ success: boolean }>(
+      API_ENDPOINTS.admin.deleteListing(listingId)
     );
   },
 

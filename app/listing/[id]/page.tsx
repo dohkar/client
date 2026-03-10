@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -29,6 +29,7 @@ import { formatDate, formatPrice } from "@/lib/utils/format";
 import { logger } from "@/lib/utils/logger";
 import { listingsService } from "@/services/listings.service";
 import { favoritesService } from "@/services/favorites.service";
+import { analyticsService } from "@/services/analytics.service";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { getCategoryConfig } from "@/constants/listing-categories";
 import type { Listing, ListingCategory } from "@/types/listing";
@@ -142,11 +143,19 @@ export default function ListingPage() {
     listingId ? isLocalFavorite(listingId) : false
   );
   const [isFavoritePending, setIsFavoritePending] = useState(false);
+  const viewRecordedRef = useRef(false);
 
   useEffect(() => {
     if (!listingId) return;
     setIsFavorite(isLocalFavorite(listingId));
   }, [listingId, isLocalFavorite]);
+
+  // Записать просмотр один раз при успешной загрузке листинга
+  useEffect(() => {
+    if (!listingId || !listing || viewRecordedRef.current) return;
+    viewRecordedRef.current = true;
+    analyticsService.recordView(listingId);
+  }, [listingId, listing]);
 
   if (isLoading) {
     return (
@@ -268,14 +277,29 @@ export default function ListingPage() {
       <div className="flex gap-3">
         {listing.allowPhone && listing.contact.phone !== "Не указано" && (
           <Button asChild>
-            <a href={`tel:${listing.contact.phone}`}>
+            <a
+              href={`tel:${listing.contact.phone}`}
+              onClick={() => {
+                if (listingId) {
+                  analyticsService.recordContact(listingId, "PHONE_CLICK");
+                }
+              }}
+            >
               <Phone className="mr-2 h-4 w-4" />
               {listing.contact.phone}
             </a>
           </Button>
         )}
         {listing.allowChat && (
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (listingId) {
+                analyticsService.recordContact(listingId, "CHAT_OPEN");
+              }
+              // TODO: открыть чат по listingId
+            }}
+          >
             <MessageSquare className="mr-2 h-4 w-4" />
             Написать
           </Button>

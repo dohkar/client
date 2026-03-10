@@ -1,6 +1,7 @@
 "use client";
 
 import { PropertyCard } from "@/components/features/property-card";
+import { ListingCard } from "@/components/features/listing-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,13 +14,15 @@ import {
 } from "@/components/ui/select";
 import { Heart, Trash2, Search, SlidersHorizontal, X } from "lucide-react";
 import { useFavorites } from "@/hooks/use-favorites";
-import { useRemoveFavoriteWithUndo } from "@/hooks/use-undo-delete";
+import { useRemoveFavoriteWithUndo, type FavoriteRemoveType } from "@/hooks/use-undo-delete";
 import { useAuthStore } from "@/stores";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { ROUTES } from "@/constants";
 import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import type { PropertyType } from "@/types/property";
+import type { FavoriteItem } from "@/types/favorites";
+import { isPropertyItem, isListingItem } from "@/types/favorites";
 import { buildSearchUrl } from "@/lib/url/segments";
 
 type SortOption = "date" | "price-asc" | "price-desc" | "area-asc" | "area-desc";
@@ -44,47 +47,61 @@ export default function FavoritesPage() {
     }
   }, [isAuthenticated, isInitialized, router]);
 
-  // Фильтрованные и отсортированные данные
-  const filteredData = useMemo(() => {
-    if (!data) return [];
+  // Фильтрованные и отсортированные данные (property + listing)
+  const filteredData = useMemo((): FavoriteItem[] => {
+    if (!data?.length) return [];
 
-    let result = [...data];
+    let result: FavoriteItem[] = [...data];
 
-    // Поиск по названию и адресу
+    // Поиск по названию и адресу/локации
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
+      result = result.filter((item) => {
+        const title = item.data.title?.toLowerCase() ?? "";
+        const location = (item.data as { location?: string }).location?.toLowerCase() ?? "";
+        return title.includes(query) || location.includes(query);
+      });
+    }
+
+    // Фильтр по типу недвижимости (только для property)
+    if (typeFilter !== "all") {
       result = result.filter(
-        (p) =>
-          p.title?.toLowerCase().includes(query) ||
-          p.location?.toLowerCase().includes(query)
+        (item) => !isPropertyItem(item) || item.data.type === typeFilter
       );
     }
 
-    // Фильтр по типу
-    if (typeFilter !== "all") {
-      result = result.filter((p) => p.type === typeFilter);
-    }
-
-    // Сортировка
+    // Сортировка по цене или дате
+    const getPrice = (item: FavoriteItem) => item.data.price ?? 0;
+    const getDate = (item: FavoriteItem) =>
+      (item.data as { datePosted?: string; updatedAt?: string }).datePosted ??
+      (item.data as { updatedAt?: string }).updatedAt ??
+      "";
     switch (sortBy) {
       case "price-asc":
-        result.sort((a, b) => (a.price || 0) - (b.price || 0));
+        result.sort((a, b) => getPrice(a) - getPrice(b));
         break;
       case "price-desc":
-        result.sort((a, b) => (b.price || 0) - (a.price || 0));
+        result.sort((a, b) => getPrice(b) - getPrice(a));
         break;
       case "area-asc":
-        result.sort((a, b) => (a.area || 0) - (b.area || 0));
+        result.sort((a, b) => {
+          const areaA = isPropertyItem(a) ? (a.data.area ?? 0) : 0;
+          const areaB = isPropertyItem(b) ? (b.data.area ?? 0) : 0;
+          return areaA - areaB;
+        });
         break;
       case "area-desc":
-        result.sort((a, b) => (b.area || 0) - (a.area || 0));
+        result.sort((a, b) => {
+          const areaA = isPropertyItem(a) ? (a.data.area ?? 0) : 0;
+          const areaB = isPropertyItem(b) ? (b.data.area ?? 0) : 0;
+          return areaB - areaA;
+        });
         break;
       case "date":
       default:
-        // По дате публикации (новые первые)
         result.sort((a, b) => {
-          const dateA = a.datePosted ? new Date(a.datePosted).getTime() : 0;
-          const dateB = b.datePosted ? new Date(b.datePosted).getTime() : 0;
+          const dateA = new Date(getDate(a)).getTime() || 0;
+          const dateB = new Date(getDate(b)).getTime() || 0;
           return dateB - dateA;
         });
         break;
@@ -166,7 +183,7 @@ export default function FavoritesPage() {
   }
 
   // Если избранное пустое
-  if (!data.length) {
+  if (!data?.length) {
     return (
       <div className='container mx-auto px-4 py-8 sm:py-20 min-h-[70vh] flex flex-col justify-center'>
         <div className='max-w-xl mx-auto text-center'>
@@ -219,8 +236,8 @@ export default function FavoritesPage() {
             Избранное
           </h1>
           <p className='text-base sm:text-lg text-muted-foreground'>
-            {data.length}{" "}
-            {declOfNum(data.length, ["объявление", "объявления", "объявлений"])}{" "}
+            {data?.length ?? 0}{" "}
+            {declOfNum(data?.length ?? 0, ["объявление", "объявления", "объявлений"])}{" "}
             в&nbsp;избранном
           </p>
         </div>
@@ -371,7 +388,7 @@ export default function FavoritesPage() {
         </div>
 
         {/* Пустое состояние после фильтрации */}
-        {filteredData.length === 0 && data.length > 0 && (
+        {filteredData.length === 0 && (data?.length ?? 0) > 0 && (
           <div className='mx-auto max-w-xl text-center py-12'>
             <Search className='w-12 h-12 text-muted-foreground mx-auto mb-4' />
             <h3 className='text-lg font-semibold mb-2'>Ничего не найдено</h3>
@@ -386,11 +403,14 @@ export default function FavoritesPage() {
 
         <div className='mx-auto max-w-7xl'>
           <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 xl:gap-10'>
-            {filteredData.map((property) => {
-              const removing = isRemoving(property.id);
+            {filteredData.map((item) => {
+              const id = item.data.id;
+              const title = item.data.title ?? "";
+              const removeType: FavoriteRemoveType = item.type === "listing" ? "listing" : "property";
+              const removing = isRemoving(id);
               return (
                 <div
-                  key={property.id}
+                  key={`${item.type}-${id}`}
                   className={`
                     relative group flex flex-col h-full
                     transition-all duration-300 ease-out
@@ -398,8 +418,11 @@ export default function FavoritesPage() {
                   `}
                   style={{ minHeight: 410 }}
                 >
-                  <PropertyCard property={property} hideFavoriteButton />
-                  {/* Overlayed delete button for all devices, always visible on mobile, hover on desktop */}
+                  {isPropertyItem(item) ? (
+                    <PropertyCard property={item.data} hideFavoriteButton />
+                  ) : isListingItem(item) ? (
+                    <ListingCard listing={item.data} hideFavoriteButton />
+                  ) : null}
                   <Button
                     variant='destructive'
                     size='icon'
@@ -414,7 +437,7 @@ export default function FavoritesPage() {
                       w-10 h-10
                       focus:outline-none focus:ring-2 focus:ring-primary/40
                     `}
-                    onClick={() => removeWithUndo(property.id, property.title)}
+                    onClick={() => removeWithUndo(id, title, removeType)}
                     disabled={removing}
                     aria-label='Удалить из избранного'
                     title='Удалить из избранного'

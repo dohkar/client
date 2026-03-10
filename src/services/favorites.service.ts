@@ -1,9 +1,12 @@
 import { apiClient } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/constants/routes";
 import { adaptProperty } from "@/lib/property-adapter";
+import { adaptFavoriteListing } from "@/lib/listing-adapter";
 import type { Property } from "@/types/property";
-import type { FavoritesListResponse, OperationResponse } from "@/lib/api-types";
 import type { PropertyBackend } from "@/types/property";
+import type { FavoriteItem } from "@/types/favorites";
+import type { FavoriteListingBackend } from "@/lib/listing-adapter";
+import type { FavoritesListResponse, OperationResponse } from "@/lib/api-types";
 import type { ExtendedError } from "@/types";
 
 /** Проверяет, что строка является валидным UUID */
@@ -22,29 +25,41 @@ function sanitizeAndValidateId(rawId: string, fieldName: string): string {
   return id;
 }
 
+/** Элемент ответа API избранного: может содержать property и/или listing */
+type FavoriteApiItem = {
+  property?: PropertyBackend;
+  listing?: FavoriteListingBackend;
+};
+
 /**
  * Сервис для работы с избранным. Все методы — fail-fast и с логированием ошибок.
  */
 export const favoritesService = {
   /**
-   * Получить список избранных объявлений недвижимости (Property).
+   * Получить список избранного: объявления недвижимости (Property) и листинги (Listing).
+   * Для раздела «Избранное» можно отображать оба типа в одном списке.
    */
-  async getFavorites(): Promise<Property[]> {
+  async getFavorites(): Promise<FavoriteItem[]> {
     try {
       const response = await apiClient.get<FavoritesListResponse>(
         API_ENDPOINTS.favorites.list
       );
       if (!Array.isArray(response)) {
-        console.error("Некорректный ответ favorites.list: ожидался массив", response);
         throw new Error("Некорректный ответ от сервера");
       }
-      const propertiesBackend = response
-        .map((fav) => fav?.property)
-        .filter(Boolean) as PropertyBackend[];
-      return propertiesBackend.map(adaptProperty);
+      const items: FavoriteItem[] = [];
+      for (const fav of response as FavoriteApiItem[]) {
+        if (fav?.property) {
+          items.push({ type: "property", data: adaptProperty(fav.property) });
+        }
+        if (fav?.listing) {
+          items.push({ type: "listing", data: adaptFavoriteListing(fav.listing) });
+        }
+      }
+      return items;
     } catch (error) {
-      console.error("Ошибка получения избранных объявлений:", error);
-      throw error instanceof Error ? error : new Error("Не удалось получить избранное");
+      if (error instanceof Error) throw error;
+      throw new Error("Не удалось получить избранное");
     }
   },
 
