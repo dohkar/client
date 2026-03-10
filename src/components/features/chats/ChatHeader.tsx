@@ -248,10 +248,14 @@ export function ChatHeader({
           />
         </div>
       </div>
-      {/* Кликабельная панель объявления снизу (PROPERTY) */}
+      {/* Кликабельная панель объявления снизу (PROPERTY или LISTING) */}
       {isPropertyChat && chat.property && (
         <Link
-          href={`/property/${chat.property.id}`}
+          href={
+            chat.listingId
+              ? ROUTES.listing(chat.listingId)
+              : `/property/${chat.property.id}`
+          }
           target='_blank'
           className='flex items-center gap-2 px-3 sm:px-4 pb-2 sm:pb-3 pt-0.5 group transition hover:bg-muted/40 rounded'
         >

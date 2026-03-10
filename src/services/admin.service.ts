@@ -255,6 +255,7 @@ export type AdminChat = {
   id: string;
   type: "PROPERTY" | "SUPPORT";
   propertyId: string | null;
+  listingId?: string | null;
   isArchived: boolean;
   lastMessageAt: string | null;
   lastMessageText: string | null;
@@ -266,6 +267,7 @@ export type AdminChat = {
     user?: { id: string; name: string | null; email: string | null };
   }>;
   property?: { id: string; title: string; status: string } | null;
+  listing?: { id: string; title: string } | null;
 };
 
 export type InboxRequestItem = {

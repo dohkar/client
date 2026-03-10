@@ -77,9 +77,9 @@ export default function AdminChatsPage() {
                       <div className='flex items-center gap-2 flex-wrap'>
                         <Badge variant='outline'>{chat.type}</Badge>
                         {chat.isArchived && <Badge variant='secondary'>Архив</Badge>}
-                        {chat.property && (
+                        {(chat.property ?? chat.listing) && (
                           <span className='text-sm text-muted-foreground'>
-                            {chat.property.title}
+                            {(chat.property ?? chat.listing)!.title}
                           </span>
                         )}
                       </div>
