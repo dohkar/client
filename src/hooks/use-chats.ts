@@ -219,8 +219,9 @@ export function useCreatePropertyChat() {
       queryClient.invalidateQueries({ queryKey: queryKeys.chats.list() });
     },
 
-    onError: (error: any) => {
-      if (error.message?.includes("своим объявлением")) {
+    onError: (error: unknown) => {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes("своим объявлением")) {
         toast.error("Вы не можете создать чат со своим объявлением");
       } else {
         toast.error("Не удалось создать чат");
@@ -243,8 +244,9 @@ export function useCreateListingChat() {
       queryClient.invalidateQueries({ queryKey: queryKeys.chats.list() });
     },
 
-    onError: (error: any) => {
-      if (error.message?.includes("своим объявлением")) {
+    onError: (error: unknown) => {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes("своим объявлением")) {
         toast.error("Вы не можете создать чат со своим объявлением");
       } else {
         toast.error("Не удалось создать чат");
