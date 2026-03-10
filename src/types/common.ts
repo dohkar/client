@@ -70,8 +70,8 @@ export enum UserRole {
   ADMIN = "ADMIN",
 }
 
-/** Провайдер входа (LOCAL, GOOGLE, YANDEX, VK) */
-export type AuthProviderType = "LOCAL" | "GOOGLE" | "YANDEX" | "VK";
+/** Провайдер входа (LOCAL, GOOGLE, YANDEX, TELEGRAM) */
+export type AuthProviderType = "LOCAL" | "GOOGLE" | "YANDEX" | "TELEGRAM";
 
 /**
  * Интерфейс пользователя

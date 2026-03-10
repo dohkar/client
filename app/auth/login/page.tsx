@@ -16,6 +16,7 @@ import { ROUTES } from "@/constants";
 import { formatPhoneInput, validateContact, normalizeContact } from "@/lib/contact-utils";
 import { cn } from "@/lib/utils";
 import { OAuthPopupButton } from "@/components/features";
+import { TelegramLoginButton } from "@/components/features/auth-modal/TelegramLoginButton";
 
 const INPUT_BASE =
   "h-11 sm:h-12 w-full tracking-wider rounded-xl pr-4 py-3 text-base placeholder:text-muted-foreground transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed border border-input bg-background";
@@ -135,22 +136,20 @@ export default function LoginPage() {
                 onSuccessRedirect={ROUTES.dashboard}
               />
             </Button>
-            <Button variant='outline' className={oauthBtnClass} asChild>
-              <OAuthPopupButton
-                provider='vk'
-                label='VK'
-                icon={
-                  <Image
-                    src='/vk.png'
-                    alt=''
-                    width={20}
-                    height={20}
-                    className='shrink-0'
-                  />
-                }
-                onSuccessRedirect={ROUTES.dashboard}
-              />
-            </Button>
+            {process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ? (
+              <div className={oauthBtnClass}>
+                <TelegramLoginButton
+                  botUsername={process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME}
+                  onError={(msg) => toast.error(msg)}
+                  onSuccess={() => {
+                    toast.success("Вы успешно вошли в аккаунт", {
+                      description: "Перенаправление в личный кабинет",
+                    });
+                    router.push(ROUTES.dashboard);
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
 
           <div className='relative'>

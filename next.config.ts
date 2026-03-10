@@ -6,23 +6,17 @@ const nextConfig: NextConfig = {
   // Output для оптимального деплоя
   output: "standalone",
 
-  // Оптимизация изображений
+  // Оптимизация изображений: явные домены для сидов (picsum) и загрузок (Cloudinary)
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
-      // Разрешаем любые внешние изображения (ВНИМАНИЕ: риски безопасности!)
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-      {
-        protocol: "http",
-        hostname: "**",
-      },
+      { protocol: "https", hostname: "picsum.photos", pathname: "/**" },
+      { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
+      { protocol: "http", hostname: "res.cloudinary.com", pathname: "/**" },
+      { protocol: "https", hostname: "**", pathname: "/**" },
+      { protocol: "http", hostname: "**", pathname: "/**" },
     ],
-    dangerouslyAllowSVG: true, // если хотите SVG, опционально
-    // или можно просто отключить domains и remotePatterns для полного разрешения (Next 13+)
-    // unoptimized: true, // <- альтернативный способ (отключает оптимизацию и ограничения)
+    dangerouslyAllowSVG: true,
   },
 
   // Экспериментальные функции

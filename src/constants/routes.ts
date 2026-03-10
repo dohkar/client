@@ -47,8 +47,7 @@ export const API_ENDPOINTS = {
     googleCallback: "/api/auth/google/callback",
     yandex: "/api/auth/yandex",
     yandexCallback: "/api/auth/yandex/callback",
-    vk: "/api/auth/vk",
-    vkCallback: "/api/auth/vk/callback",
+    telegram: "/api/auth/telegram",
   },
 
   // Users

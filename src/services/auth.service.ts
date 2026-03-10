@@ -136,14 +136,13 @@ export const authService = {
    * Получить OAuth URL (для popup/redirect и для привязки аккаунта)
    */
   getOAuthUrl(
-    provider: "google" | "yandex" | "vk",
+    provider: "google" | "yandex",
     options?: { state?: string }
   ): string {
     const baseUrl = API_URL;
     const endpoints: Record<string, string> = {
       google: API_ENDPOINTS.auth.google,
       yandex: API_ENDPOINTS.auth.yandex,
-      vk: API_ENDPOINTS.auth.vk,
     };
     const path = endpoints[provider] ?? "";
     const url = `${baseUrl}${path}`;

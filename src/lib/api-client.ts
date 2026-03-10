@@ -137,7 +137,9 @@ class ApiClient {
       // Не делаем refresh для login/register — там 401 значит «неверный логин или пароль»
       // Не делаем refresh для /auth/refresh — если refresh вернул 401, выходим (защита от цикла)
       const isLoginOrRegister =
-        endpoint.includes("/auth/login") || endpoint.includes("/auth/register");
+        endpoint.includes("/auth/login") ||
+        endpoint.includes("/auth/register") ||
+        endpoint.includes("/auth/telegram");
       const isRefreshEndpoint = endpoint.includes("/auth/refresh");
       if (
         response.status === 401 &&

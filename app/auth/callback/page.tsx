@@ -72,9 +72,8 @@ function AuthCallbackHandler() {
         const linked = searchParams.get("linked");
         const errorParam = searchParams.get("error");
 
-        if (linked === "google" || linked === "yandex" || linked === "vk") {
-          const providerName =
-            linked === "google" ? "Google" : linked === "yandex" ? "Яндекс" : "VK";
+        if (linked === "google" || linked === "yandex") {
+          const providerName = linked === "google" ? "Google" : "Яндекс";
           toast.success(`${providerName} привязан к аккаунту`);
           if (typeof window !== "undefined") {
             window.history.replaceState({}, "", "/auth/callback");
@@ -94,7 +93,7 @@ function AuthCallbackHandler() {
                 const providerParam = searchParams.get("linked");
                 if (
                   u &&
-                  (providerParam === "google" || providerParam === "yandex" || providerParam === "vk")
+                  (providerParam === "google" || providerParam === "yandex")
                 ) {
                   window.opener.postMessage(
                     {

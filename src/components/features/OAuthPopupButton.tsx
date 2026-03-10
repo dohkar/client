@@ -167,11 +167,7 @@ export const OAuthPopupButton = forwardRef<HTMLButtonElement, OAuthPopupButtonPr
             error: null,
           });
           const name =
-            event.data.provider === "google"
-              ? "Google"
-              : event.data.provider === "yandex"
-                ? "Яндекс"
-                : "VK";
+            event.data.provider === "google" ? "Google" : "Яндекс";
           toast.success(`${name} привязан к аккаунту`);
           return;
         }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useRef, useReducer } from "react";
+import { useMemo, useEffect, useRef, useReducer, useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { Search, XIcon } from "lucide-react";
@@ -9,12 +9,16 @@ import { useProperties } from "@/hooks/use-properties";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { useCities } from "@/hooks/use-cities";
 import { useSegmentSearchFilters } from "@/hooks/use-segment-search-filters";
-import { toPropertySearchParams } from "@/lib/search-params";
+import { toPropertySearchParams, type SearchFiltersDisplay } from "@/lib/search-params";
 import {
   getRegionIdByName,
   ensureRegionCacheInitialized,
 } from "@/services/region.service";
-import { SEARCH_CONSTANTS, PROPERTY_TYPE_LABELS, REGION_OPTIONS } from "@/lib/search-constants";
+import {
+  SEARCH_CONSTANTS,
+  PROPERTY_TYPE_LABELS,
+  REGION_OPTIONS,
+} from "@/lib/search-constants";
 import { useSortedRegionOptions } from "@/hooks/use-user-region";
 import type { RegionOption } from "@/hooks/use-user-region";
 import { ROUTES } from "@/constants";
@@ -27,7 +31,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { ActiveFilters, HorizontalFilters, SearchResults } from "@/components/search";
+import {
+  ActiveFilters,
+  HorizontalFilters,
+  QuickPresets,
+  SearchResults,
+} from "@/components/search";
 import { MobileFilterDrawer } from "@/components/features/MobileFilterDrawer";
 
 export interface SegmentRouteParams {
@@ -41,7 +50,10 @@ interface SearchPageClientProps {
   searchParams?: Record<string, string | string[] | undefined>;
 }
 
-export function SearchPageClient({ params: paramsProp, searchParams: searchParamsProp }: SearchPageClientProps) {
+export function SearchPageClient({
+  params: paramsProp,
+  searchParams: searchParamsProp,
+}: SearchPageClientProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const pathParams = useParams();
@@ -50,14 +62,24 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
   // не показывать старые данные из кэша/пропсов
   const params = useMemo<SegmentRouteParams>(
     () => ({
-      region: typeof pathParams.region === "string" ? pathParams.region : paramsProp.region,
-      category: typeof pathParams.category === "string" ? pathParams.category : paramsProp.category,
+      region:
+        typeof pathParams.region === "string" ? pathParams.region : paramsProp.region,
+      category:
+        typeof pathParams.category === "string"
+          ? pathParams.category
+          : paramsProp.category,
       dealType:
         typeof pathParams.dealType === "string" && pathParams.dealType
           ? pathParams.dealType
           : undefined,
     }),
-    [pathParams.region, pathParams.category, pathParams.dealType, paramsProp.region, paramsProp.category]
+    [
+      pathParams.region,
+      pathParams.category,
+      pathParams.dealType,
+      paramsProp.region,
+      paramsProp.category,
+    ]
   );
 
   const searchParams = searchParamsProp;
@@ -97,10 +119,89 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
     handleFloorReset,
     handleResetAll,
     priceErrors,
-    currentPage,
     setCurrentPage,
     isPending,
+    updateFilters,
   } = useSegmentSearchFilters(params, searchParams);
+
+  // Оптимистичные фильтры: при клике по пресету URL обновляется асинхронно,
+  // поэтому сразу подставляем объединённые фильтры для запроса, чтобы сработало с первого клика.
+  const [optimisticFilters, setOptimisticFilters] = useState<SearchFiltersDisplay | null>(
+    null
+  );
+
+  const handlePresetSelect = useCallback(
+    (
+      filters: Parameters<typeof updateFilters>[0],
+      localPriceMin?: string,
+      localPriceMax?: string
+    ) => {
+      const merged: SearchFiltersDisplay = {
+        ...appliedFilters,
+        ...filters,
+        page: 1,
+      };
+      setOptimisticFilters(merged);
+      updateFilters({ ...filters }, { resetPage: true });
+      setDraftPriceMin(localPriceMin ?? "");
+      setDraftPriceMax(localPriceMax ?? "");
+    },
+    [appliedFilters, updateFilters, setDraftPriceMin, setDraftPriceMax]
+  );
+
+  // Сбрасываем оптимистичные фильтры, когда URL догнал (appliedFilters совпал с тем, что мы выставили).
+  useEffect(() => {
+    if (optimisticFilters == null) return;
+    const keyFields: (keyof SearchFiltersDisplay)[] = [
+      "type",
+      "priceMin",
+      "priceMax",
+      "roomsMin",
+      "region",
+      "areaMin",
+      "page",
+    ];
+    const caughtUp = keyFields.every((k) => {
+      const a = appliedFilters[k];
+      const o = optimisticFilters[k];
+      return a === o || (a == null && o == null);
+    });
+    if (caughtUp) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Очистка optimistic при синхронизации с URL; один лишний рендер допустим.
+      setOptimisticFilters(null);
+    }
+  }, [appliedFilters, optimisticFilters]);
+
+  const effectiveFilters = optimisticFilters ?? appliedFilters;
+
+  // Пока пресет только применился, показываем цены из пресета (иначе эффекты хука перезапишут draft из старого URL).
+  const displayPriceMin =
+    optimisticFilters != null
+      ? optimisticFilters.priceMin != null
+        ? String(optimisticFilters.priceMin)
+        : ""
+      : draftPriceMin;
+  const displayPriceMax =
+    optimisticFilters != null
+      ? optimisticFilters.priceMax != null
+        ? String(optimisticFilters.priceMax)
+        : ""
+      : draftPriceMax;
+
+  const handlePriceMinChange = useCallback(
+    (v: string) => {
+      setOptimisticFilters(null);
+      setDraftPriceMin(v);
+    },
+    [setDraftPriceMin]
+  );
+  const handlePriceMaxChange = useCallback(
+    (v: string) => {
+      setOptimisticFilters(null);
+      setDraftPriceMax(v);
+    },
+    [setDraftPriceMax]
+  );
 
   const regionCacheInitRef = useRef(false);
   const [, forceRender] = useReducer((x: number) => x + 1, 0);
@@ -118,19 +219,19 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
   }, [queryClient]);
 
   const regionId =
-    appliedFilters.region !== "all"
-      ? getRegionIdByName(appliedFilters.region)
+    effectiveFilters.region !== "all"
+      ? getRegionIdByName(effectiveFilters.region)
       : undefined;
 
   const { data: cities = [] } = useCities(regionId ?? undefined);
   const selectedCityName =
-    appliedFilters.cityId != null
-      ? (cities.find((city) => city.id === appliedFilters.cityId)?.name ?? null)
+    effectiveFilters.cityId != null
+      ? (cities.find((city) => city.id === effectiveFilters.cityId)?.name ?? null)
       : null;
 
   const apiParams = useMemo(
-    () => toPropertySearchParams(appliedFilters, SEARCH_CONSTANTS.ITEMS_PER_PAGE),
-    [appliedFilters]
+    () => toPropertySearchParams(effectiveFilters, SEARCH_CONSTANTS.ITEMS_PER_PAGE),
+    [effectiveFilters]
   );
   const { data, isLoading, error } = useProperties(apiParams);
 
@@ -139,24 +240,24 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (appliedFilters.query && appliedFilters.query.trim().length > 0) count++;
-    if (appliedFilters.dealType && appliedFilters.dealType !== "all") count++;
-    if (appliedFilters.type && appliedFilters.type !== "all") count++;
-    if (appliedFilters.priceMin != null) count++;
-    if (appliedFilters.priceMax != null) count++;
-    if (appliedFilters.roomsMin != null) count++;
-    if (appliedFilters.areaMin != null) count++;
+    if (effectiveFilters.query && effectiveFilters.query.trim().length > 0) count++;
+    if (effectiveFilters.dealType && effectiveFilters.dealType !== "all") count++;
+    if (effectiveFilters.type && effectiveFilters.type !== "all") count++;
+    if (effectiveFilters.priceMin != null) count++;
+    if (effectiveFilters.priceMax != null) count++;
+    if (effectiveFilters.roomsMin != null) count++;
+    if (effectiveFilters.areaMin != null) count++;
     if (
-      appliedFilters.floorMin != null ||
-      appliedFilters.floorMax != null ||
-      appliedFilters.floorNotFirst === true
+      effectiveFilters.floorMin != null ||
+      effectiveFilters.floorMax != null ||
+      effectiveFilters.floorNotFirst === true
     )
       count++;
-    if (showRegionChip && appliedFilters.region && appliedFilters.region !== "all")
+    if (showRegionChip && effectiveFilters.region && effectiveFilters.region !== "all")
       count++;
-    if (appliedFilters.cityId && appliedFilters.cityId.trim().length > 0) count++;
+    if (effectiveFilters.cityId && effectiveFilters.cityId.trim().length > 0) count++;
     return count;
-  }, [appliedFilters, showRegionChip]);
+  }, [effectiveFilters, showRegionChip]);
 
   return (
     <div className='min-h-screen flex flex-col'>
@@ -172,12 +273,12 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
             <BreadcrumbItem>
               <BreadcrumbPage>Поиск</BreadcrumbPage>
             </BreadcrumbItem>
-            {appliedFilters.type !== "all" && (
+            {effectiveFilters.type !== "all" && (
               <>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbPage>
-                    {PROPERTY_TYPE_LABELS[appliedFilters.type] || "Тип недвижимости"}
+                    {PROPERTY_TYPE_LABELS[effectiveFilters.type] || "Тип недвижимости"}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
               </>
@@ -190,28 +291,28 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
             <div className='flex-1 relative'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none' />
               <Input
-              placeholder='Город, район, ключевые слова...'
-              value={draftQuery}
-              onChange={(event) => setDraftQuery(event.target.value)}
-              className='pl-9 h-12 text-base'
-              aria-label='Поиск по объявлениям'
-              autoComplete='off'
-            />
-            {draftQuery && (
-              <button
-                onClick={() => {
-                  setDraftQuery("");
-                  handleQueryReset();
-                }}
-                className='absolute right-4 top-1/2 -translate-y-1/2 size-5 cursor-pointer text-muted-foreground'
-              >
-                <XIcon className='size-5' />
-              </button>
-            )}
+                placeholder='Город, район, ключевые слова...'
+                value={draftQuery}
+                onChange={(event) => setDraftQuery(event.target.value)}
+                className='pl-9 h-12 text-base'
+                aria-label='Поиск по объявлениям'
+                autoComplete='off'
+              />
+              {draftQuery && (
+                <button
+                  onClick={() => {
+                    setDraftQuery("");
+                    handleQueryReset();
+                  }}
+                  className='absolute right-4 top-1/2 -translate-y-1/2 size-5 cursor-pointer text-muted-foreground'
+                >
+                  <XIcon className='size-5' />
+                </button>
+              )}
             </div>
             <div className='md:hidden shrink-0'>
               <MobileFilterDrawer
-                appliedFilters={appliedFilters}
+                appliedFilters={effectiveFilters}
                 cities={cities}
                 regionOptions={regionOptions}
                 draftPriceMin={draftPriceMin}
@@ -233,12 +334,14 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
           </div>
         </div>
 
+        {/* <QuickPresets onPresetSelect={handlePresetSelect} /> */}
+
         <HorizontalFilters
-          filters={appliedFilters}
+          filters={effectiveFilters}
           cities={cities}
           regionOptions={regionOptions}
-          localPriceMin={draftPriceMin}
-          localPriceMax={draftPriceMax}
+          localPriceMin={displayPriceMin}
+          localPriceMax={displayPriceMax}
           localAreaMin={draftAreaMin}
           priceErrors={priceErrors}
           onTypeChange={handleTypeChange}
@@ -246,8 +349,8 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
           onCityChange={handleCityChange}
           onRoomsChange={handleRoomsChange}
           onSortChange={handleSortChange}
-          onPriceMinChange={setDraftPriceMin}
-          onPriceMaxChange={setDraftPriceMax}
+          onPriceMinChange={handlePriceMinChange}
+          onPriceMaxChange={handlePriceMaxChange}
           onPriceMinBlur={handlePriceMinBlur}
           onPriceMaxBlur={handlePriceMaxBlur}
           onAreaMinChange={setDraftAreaMin}
@@ -256,7 +359,7 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
         />
 
         <ActiveFilters
-          filters={appliedFilters}
+          filters={effectiveFilters}
           activeFiltersCount={activeFiltersCount}
           showRegionChip={showRegionChip}
           selectedCityName={selectedCityName}
@@ -284,7 +387,7 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
             properties={properties}
             isLoading={isLoading || isPending}
             error={error}
-            currentPage={currentPage}
+            currentPage={effectiveFilters.page}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
             onResetFilters={handleResetAll}
