@@ -29,7 +29,8 @@ import type { Chat } from "@/types/chat";
 
 interface ActionMenuButtonProps {
   isPropertyChat: boolean;
-  propertyId?: string;
+  propertyId?: string | null;
+  listingId?: string | null;
   onBlock?: () => void;
   onReport?: () => void;
 }
@@ -37,9 +38,14 @@ interface ActionMenuButtonProps {
 function ActionMenuButton({
   isPropertyChat,
   propertyId,
+  listingId,
   onBlock,
   onReport,
 }: ActionMenuButtonProps) {
+  const listingHref = listingId ? ROUTES.listing(listingId) : null;
+  const propertyHref = propertyId ? `/property/${propertyId}` : null;
+  const openAdHref = listingHref ?? propertyHref;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -48,10 +54,10 @@ function ActionMenuButton({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='min-w-48'>
-        {isPropertyChat && propertyId && (
+        {isPropertyChat && openAdHref && (
           <DropdownMenuItem asChild>
             <Link
-              href={`/property/${propertyId}`}
+              href={openAdHref}
               target='_blank'
               rel='noopener noreferrer'
             >
@@ -216,10 +222,14 @@ export function ChatHeader({
         {/* Правая часть: действия */}
         <div className='flex items-center gap-1 pl-2'>
           {/* Ссылка на объявление (у иконки external link) */}
-          {isPropertyChat && chat.property && (
+          {isPropertyChat && (chat.listingId || chat.property) && (
             <Button asChild variant='ghost' size='icon'>
               <Link
-                href={`/property/${chat.property.id}`}
+                href={
+                  chat.listingId
+                    ? ROUTES.listing(chat.listingId)
+                    : `/property/${chat.property!.id}`
+                }
                 target='_blank'
                 tabIndex={-1}
                 aria-label='Открыть объявление в новом окне'
@@ -232,6 +242,7 @@ export function ChatHeader({
           <ActionMenuButton
             isPropertyChat={isPropertyChat}
             propertyId={chat.property?.id}
+            listingId={chat.listingId}
             onBlock={onBlock}
             onReport={onReport}
           />

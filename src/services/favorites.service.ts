@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/constants/routes";
 import { adaptProperty } from "@/lib/property-adapter";
 import { adaptFavoriteListing } from "@/lib/listing-adapter";
+import { logger } from "@/lib/utils/logger";
 import type { Property } from "@/types/property";
 import type { PropertyBackend } from "@/types/property";
 import type { FavoriteItem } from "@/types/favorites";
@@ -80,7 +81,7 @@ export const favoritesService = {
       if (status === 409) {
         return;
       }
-      console.error(`Ошибка при добавлении в избранное id:${id}:`, error);
+      logger.error("Ошибка при добавлении в избранное", { propertyId: id, error });
       throw error instanceof Error ? error : new Error("Не удалось добавить в избранное");
     }
   },
@@ -95,7 +96,7 @@ export const favoritesService = {
         API_ENDPOINTS.favorites.remove(id)
       );
     } catch (error) {
-      console.error(`Ошибка при удалении из избранного id:${id}:`, error);
+      logger.error("Ошибка при удалении из избранного", { propertyId: id, error });
       throw error instanceof Error
         ? error
         : new Error("Не удалось удалить из избранного");
@@ -117,7 +118,7 @@ export const favoritesService = {
       if (status === 409) {
         return;
       }
-      console.error(`Ошибка при добавлении listing в избранное id:${id}:`, error);
+      logger.error("Ошибка при добавлении listing в избранное", { listingId: id, error });
       throw error instanceof Error ? error : new Error("Не удалось добавить в избранное");
     }
   },
@@ -130,7 +131,7 @@ export const favoritesService = {
     try {
       await apiClient.delete(API_ENDPOINTS.favorites.removeListing(id));
     } catch (error) {
-      console.error(`Ошибка при удалении listing из избранного id:${id}:`, error);
+      logger.error("Ошибка при удалении listing из избранного", { listingId: id, error });
       throw error instanceof Error
         ? error
         : new Error("Не удалось удалить из избранного");

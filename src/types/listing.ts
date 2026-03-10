@@ -71,6 +71,7 @@ export interface ListingBackend {
     id: string;
     name: string | null;
     phone: string | null;
+    createdAt?: string;
   };
   views: number;
   favoritesCount: number;
@@ -108,6 +109,8 @@ export interface Listing {
   city?: string | null;
   userId: string;
   contact: { name: string; phone: string };
+  /** Дата регистрации продавца (для блока «на Dohkar с YYYY») */
+  sellerCreatedAt?: string | null;
   views: number;
   favoritesCount: number;
   rejectionReason?: string | null;

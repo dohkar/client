@@ -292,9 +292,18 @@ export default function AdminListingsPage() {
                                   variant="outline"
                                   className="text-green-600 hover:text-green-700"
                                   onClick={() => approveMutation.mutate(row.id)}
-                                  disabled={approveMutation.isPending}
+                                  disabled={
+                                    approveMutation.isPending ||
+                                    rejectMutation.isPending
+                                  }
+                                  title="Одобрить"
                                 >
-                                  <Check className="h-4 w-4" />
+                                  {approveMutation.isPending &&
+                                  approveMutation.variables === row.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Check className="h-4 w-4" />
+                                  )}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -306,6 +315,11 @@ export default function AdminListingsPage() {
                                       title: row.title,
                                     })
                                   }
+                                  disabled={
+                                    approveMutation.isPending ||
+                                    rejectMutation.isPending
+                                  }
+                                  title="Отклонить"
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
@@ -324,9 +338,19 @@ export default function AdminListingsPage() {
                                   deleteMutation.mutate(row.id);
                                 }
                               }}
-                              disabled={deleteMutation.isPending}
+                              disabled={
+                                deleteMutation.isPending ||
+                                approveMutation.isPending ||
+                                rejectMutation.isPending
+                              }
+                              title="Удалить (архивировать)"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              {deleteMutation.isPending &&
+                              deleteMutation.variables === row.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </Button>
                           </div>
                         </TableCell>

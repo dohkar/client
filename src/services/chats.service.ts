@@ -4,6 +4,7 @@ import type {
   Chat,
   Message,
   CreatePropertyChatRequest,
+  CreateListingChatRequest,
   SendMessageRequest,
   GetMessagesParams,
   MessagesResponse,
@@ -19,6 +20,13 @@ export const chatsService = {
    */
   async createPropertyChat(data: CreatePropertyChatRequest): Promise<Chat> {
     return apiClient.post<Chat>(API_ENDPOINTS.chats.createProperty, data);
+  },
+
+  /**
+   * Создать или получить чат по листингу (Listing)
+   */
+  async createListingChat(data: CreateListingChatRequest): Promise<Chat> {
+    return apiClient.post<Chat>(API_ENDPOINTS.chats.createListing, data);
   },
 
   /**

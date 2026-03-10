@@ -230,6 +230,30 @@ export function useCreatePropertyChat() {
 }
 
 /**
+ * Хук для создания чата по листингу (Listing)
+ */
+export function useCreateListingChat() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (listingId: string) =>
+      chatsService.createListingChat({ listingId }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chats.list() });
+    },
+
+    onError: (error: any) => {
+      if (error.message?.includes("своим объявлением")) {
+        toast.error("Вы не можете создать чат со своим объявлением");
+      } else {
+        toast.error("Не удалось создать чат");
+      }
+    },
+  });
+}
+
+/**
  * Хук для создания или получения чата поддержки
  */
 export function useSupportChat() {

@@ -46,6 +46,8 @@ export interface Chat {
   id: string;
   type: ChatType;
   propertyId: string | null;
+  /** Для новых чатов по Listing: id листинга (опционально). */
+  listingId?: string | null;
   isArchived: boolean;
   lastMessageAt: Date | null;
   lastMessageText: string | null;
@@ -62,6 +64,10 @@ export interface Chat {
 
 export interface CreatePropertyChatRequest {
   propertyId: string;
+}
+
+export interface CreateListingChatRequest {
+  listingId: string;
 }
 
 export interface SendMessageRequest {

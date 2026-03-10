@@ -158,6 +158,7 @@ export const API_ENDPOINTS = {
   chats: {
     list: "/api/chats",
     createProperty: "/api/chats/property",
+    createListing: "/api/chats/listing",
     createSupport: "/api/chats/support",
     messages: (chatId: string) => `/api/chats/${chatId}/messages`,
     sendMessage: (chatId: string) => `/api/chats/${chatId}/messages`,

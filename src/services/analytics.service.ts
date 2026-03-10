@@ -36,4 +36,21 @@ export const analyticsService = {
       // Не блокируем UI при ошибке аналитики
     }
   },
+
+  /**
+   * Статистика продавца (soft signals для карточки объявления).
+   */
+  async getSellerStats(userId: string): Promise<SellerStats> {
+    const data = await apiClient.get<SellerStats>(
+      API_ENDPOINTS.analytics.sellerStats(userId)
+    );
+    return data;
+  },
 };
+
+export interface SellerStats {
+  userId: string;
+  totalListingsSold: number;
+  totalContactAttempts: number;
+  responseRatePercent: number;
+}

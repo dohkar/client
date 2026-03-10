@@ -98,6 +98,10 @@ export function adaptListing(backend: ListingBackend): Listing {
       name: backend.user?.name || "Не указано",
       phone: backend.user?.phone || "Не указано",
     },
+    sellerCreatedAt:
+      backend.user && "createdAt" in backend.user
+        ? (backend.user.createdAt as string)
+        : null,
     views: backend.views ?? 0,
     favoritesCount: backend.favoritesCount ?? 0,
     rejectionReason: backend.rejectionReason,
