@@ -8,11 +8,13 @@ export const ROUTES = {
   // Auth
   login: "/auth/login",
   register: "/auth/register",
-  // Property
   search: "/search",
-  /** URL объявления: id или id-slug для SEO */
+  /**
+   * Алиас на канонический URL листинга (старый код может вызывать ROUTES.property).
+   */
   property: (id: string, slug?: string) =>
-    slug ? `/property/${id}-${slug}` : `/property/${id}`,
+    slug ? `/listing/${id}-${slug}` : `/listing/${id}`,
+  /** Канонический URL объявления: id или id-slug */
   listing: (id: string, slug?: string) =>
     slug ? `/listing/${id}-${slug}` : `/listing/${id}`,
   sell: "/sell",

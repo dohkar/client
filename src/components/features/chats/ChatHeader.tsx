@@ -43,7 +43,7 @@ function ActionMenuButton({
   onReport,
 }: ActionMenuButtonProps) {
   const listingHref = listingId ? ROUTES.listing(listingId) : null;
-  const propertyHref = propertyId ? `/property/${propertyId}` : null;
+  const propertyHref = propertyId ? ROUTES.property(propertyId) : null;
   const openAdHref = listingHref ?? propertyHref;
 
   return (
@@ -56,11 +56,7 @@ function ActionMenuButton({
       <DropdownMenuContent align='end' className='min-w-48'>
         {isPropertyChat && openAdHref && (
           <DropdownMenuItem asChild>
-            <Link
-              href={openAdHref}
-              target='_blank'
-              rel='noopener noreferrer'
-            >
+            <Link href={openAdHref} target='_blank' rel='noopener noreferrer'>
               <ExternalLink className='h-4 w-4' />
               Открыть объявление
             </Link>
@@ -228,7 +224,7 @@ export function ChatHeader({
                 href={
                   chat.listingId
                     ? ROUTES.listing(chat.listingId)
-                    : `/property/${chat.property!.id}`
+                    : ROUTES.property(chat.property!.id)
                 }
                 target='_blank'
                 tabIndex={-1}
@@ -254,7 +250,7 @@ export function ChatHeader({
           href={
             chat.listingId
               ? ROUTES.listing(chat.listingId)
-              : `/property/${chat.property.id}`
+              : ROUTES.property(chat.property.id)
           }
           target='_blank'
           className='flex items-center gap-2 px-3 sm:px-4 pb-2 sm:pb-3 pt-0.5 group transition hover:bg-muted/40 rounded'

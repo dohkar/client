@@ -74,6 +74,87 @@ function normalizeSearchParams(
   return normalized;
 }
 
+function normalizeListingSearchParams(
+  params?: ListingSearchParams
+): ListingSearchParams | undefined {
+  if (!params) return undefined;
+
+  const normalized: ListingSearchParams = {};
+
+  if (params.query !== undefined && params.query.trim().length > 0) {
+    normalized.query = params.query.trim();
+  }
+  if (params.my !== undefined) {
+    normalized.my = params.my;
+  }
+  if (params.category !== undefined) {
+    normalized.category = params.category;
+  }
+  if (params.dealType !== undefined) {
+    normalized.dealType = params.dealType;
+  }
+  if (params.priceMin !== undefined && params.priceMin !== null) {
+    normalized.priceMin = params.priceMin;
+  }
+  if (params.priceMax !== undefined && params.priceMax !== null) {
+    normalized.priceMax = params.priceMax;
+  }
+  if (params.regionId !== undefined && params.regionId.trim().length > 0) {
+    normalized.regionId = params.regionId.trim();
+  }
+  if (params.cityId !== undefined && params.cityId.trim().length > 0) {
+    normalized.cityId = params.cityId.trim();
+  }
+  if (params.propertyType !== undefined) {
+    normalized.propertyType = params.propertyType;
+  }
+  if (params.rooms !== undefined && params.rooms !== null) {
+    normalized.rooms = params.rooms;
+  }
+  if (params.areaMin !== undefined && params.areaMin !== null) {
+    normalized.areaMin = params.areaMin;
+  }
+  if (params.floorMin !== undefined && params.floorMin !== null) {
+    normalized.floorMin = params.floorMin;
+  }
+  if (params.floorMax !== undefined && params.floorMax !== null) {
+    normalized.floorMax = params.floorMax;
+  }
+  if (params.floorNotFirst !== undefined && params.floorNotFirst !== null) {
+    normalized.floorNotFirst = params.floorNotFirst;
+  }
+  if (params.brandId !== undefined && params.brandId.trim().length > 0) {
+    normalized.brandId = params.brandId.trim();
+  }
+  if (params.yearMin !== undefined && params.yearMin !== null) {
+    normalized.yearMin = params.yearMin;
+  }
+  if (params.yearMax !== undefined && params.yearMax !== null) {
+    normalized.yearMax = params.yearMax;
+  }
+  if (params.mileageMax !== undefined && params.mileageMax !== null) {
+    normalized.mileageMax = params.mileageMax;
+  }
+  if (params.productType !== undefined && params.productType.trim().length > 0) {
+    normalized.productType = params.productType.trim();
+  }
+  if (params.sortBy !== undefined) {
+    normalized.sortBy = params.sortBy;
+  }
+  if (params.page !== undefined && params.page > 1) {
+    normalized.page = params.page;
+  }
+  if (params.limit !== undefined) {
+    normalized.limit = params.limit;
+  }
+
+  if (Object.keys(normalized).length === 0) {
+    return undefined;
+  }
+
+  return normalized;
+}
+
 export const queryKeys = {
   // Properties
   properties: {
@@ -104,10 +185,12 @@ export const queryKeys = {
   listings: {
     all: ["listings"] as const,
     lists: () => ["listings", "list"] as const,
-    list: (filters?: ListingSearchParams) =>
-      filters
-        ? (["listings", "list", filters] as const)
-        : (["listings", "list"] as const),
+    list: (filters?: ListingSearchParams) => {
+      const normalized = normalizeListingSearchParams(filters);
+      return normalized
+        ? (["listings", "list", normalized] as const)
+        : (["listings", "list"] as const);
+    },
     details: () => ["listings", "detail"] as const,
     detail: (id: string) => ["listings", "detail", id] as const,
     categoryStats: ["listings", "categoryStats"] as const,
@@ -118,9 +201,7 @@ export const queryKeys = {
   brands: {
     all: ["brands"] as const,
     list: (category?: string) =>
-      category
-        ? (["brands", "list", category] as const)
-        : (["brands", "list"] as const),
+      category ? (["brands", "list", category] as const) : (["brands", "list"] as const),
   },
 
   // Auth

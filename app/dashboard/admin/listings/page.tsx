@@ -32,6 +32,7 @@ import {
 import { Check, X, Trash2, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { ROUTES } from "@/constants";
+import { queryKeys } from "@/lib/react-query/query-keys";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils/format";
 
@@ -69,15 +70,15 @@ function RejectDialog({
         <DialogHeader>
           <DialogTitle>Отклонить объявление</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <p className="text-sm text-muted-foreground">
-            Объявление: <strong className="text-foreground">{listingTitle}</strong>
+        <div className='grid gap-4 py-4'>
+          <p className='text-sm text-muted-foreground'>
+            Объявление: <strong className='text-foreground'>{listingTitle}</strong>
           </p>
-          <div className="space-y-2">
-            <Label htmlFor="rejection-reason">Причина отклонения</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='rejection-reason'>Причина отклонения</Label>
             <Textarea
-              id="rejection-reason"
-              placeholder="Укажите причину отклонения (обязательно)"
+              id='rejection-reason'
+              placeholder='Укажите причину отклонения (обязательно)'
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               rows={3}
@@ -85,19 +86,15 @@ function RejectDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isPending}>
+          <Button variant='outline' onClick={onClose} disabled={isPending}>
             Отмена
           </Button>
           <Button
-            variant="destructive"
+            variant='destructive'
             onClick={() => onConfirm(rejectionReason.trim())}
             disabled={!rejectionReason.trim() || isPending}
           >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Отклонить"
-            )}
+            {isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : "Отклонить"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -141,6 +138,8 @@ export default function AdminListingsPage() {
     mutationFn: (id: string) => adminService.approveListing(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.listings.categoryStats });
       toast.success("Объявление одобрено");
     },
     onError: () => toast.error("Не удалось одобрить"),
@@ -152,6 +151,8 @@ export default function AdminListingsPage() {
     onSuccess: () => {
       setRejectDialog(null);
       queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.listings.categoryStats });
       toast.success("Объявление отклонено");
     },
     onError: () => toast.error("Не удалось отклонить"),
@@ -161,6 +162,8 @@ export default function AdminListingsPage() {
     mutationFn: (id: string) => adminService.deleteListing(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.listings.categoryStats });
       toast.success("Объявление архивировано");
     },
     onError: () => toast.error("Не удалось удалить"),
@@ -171,30 +174,27 @@ export default function AdminListingsPage() {
   const total = data?.total ?? 0;
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+          <CardTitle className='flex items-center gap-2'>
+            <FileText className='h-5 w-5' />
             Модерация листингов
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className='text-sm text-muted-foreground'>
             Одобрение, отклонение и удаление объявлений (листингов) по категориям.
           </p>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-4">
-            <div className="space-y-2">
+        <CardContent className='space-y-4'>
+          <div className='flex flex-wrap gap-4'>
+            <div className='space-y-2'>
               <Label>Статус модерации</Label>
-              <Select
-                value={moderationStatus}
-                onValueChange={setModerationStatus}
-              >
-                <SelectTrigger className="w-[180px]">
+              <Select value={moderationStatus} onValueChange={setModerationStatus}>
+                <SelectTrigger className='w-[180px]'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все</SelectItem>
+                  <SelectItem value='all'>Все</SelectItem>
                   {Object.entries(MODERATION_LABELS).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
@@ -203,14 +203,14 @@ export default function AdminListingsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className='space-y-2'>
               <Label>Категория</Label>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className='w-[180px]'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все</SelectItem>
+                  <SelectItem value='all'>Все</SelectItem>
                   {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
@@ -222,16 +222,16 @@ export default function AdminListingsPage() {
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className='flex items-center justify-center py-12'>
+              <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
             </div>
           ) : listings.length === 0 ? (
-            <p className="py-8 text-center text-muted-foreground">
+            <p className='py-8 text-center text-muted-foreground'>
               Нет объявлений по выбранным фильтрам.
             </p>
           ) : (
             <>
-              <div className="rounded-md border">
+              <div className='rounded-md border'>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -241,7 +241,7 @@ export default function AdminListingsPage() {
                       <TableHead>Цена</TableHead>
                       <TableHead>Пользователь</TableHead>
                       <TableHead>Дата</TableHead>
-                      <TableHead className="text-right">Действия</TableHead>
+                      <TableHead className='text-right'>Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -250,9 +250,9 @@ export default function AdminListingsPage() {
                         <TableCell>
                           <Link
                             href={ROUTES.listing(row.id, row.slug)}
-                            className="font-medium text-primary hover:underline"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            className='font-medium text-primary hover:underline'
+                            target='_blank'
+                            rel='noopener noreferrer'
                           >
                             {row.title}
                           </Link>
@@ -277,38 +277,35 @@ export default function AdminListingsPage() {
                           </span>
                         </TableCell>
                         <TableCell>{formatPrice(row.price)}</TableCell>
-                        <TableCell>
-                          {row.user?.name ?? row.user?.email ?? "—"}
-                        </TableCell>
+                        <TableCell>{row.user?.name ?? row.user?.email ?? "—"}</TableCell>
                         <TableCell>
                           {new Date(row.createdAt).toLocaleDateString("ru-RU")}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                        <TableCell className='text-right'>
+                          <div className='flex justify-end gap-2'>
                             {row.moderationStatus === "PENDING" && (
                               <>
                                 <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-green-600 hover:text-green-700"
+                                  size='sm'
+                                  variant='outline'
+                                  className='text-green-600 hover:text-green-700'
                                   onClick={() => approveMutation.mutate(row.id)}
                                   disabled={
-                                    approveMutation.isPending ||
-                                    rejectMutation.isPending
+                                    approveMutation.isPending || rejectMutation.isPending
                                   }
-                                  title="Одобрить"
+                                  title='Одобрить'
                                 >
                                   {approveMutation.isPending &&
                                   approveMutation.variables === row.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <Loader2 className='h-4 w-4 animate-spin' />
                                   ) : (
-                                    <Check className="h-4 w-4" />
+                                    <Check className='h-4 w-4' />
                                   )}
                                 </Button>
                                 <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-destructive"
+                                  size='sm'
+                                  variant='outline'
+                                  className='text-destructive'
                                   onClick={() =>
                                     setRejectDialog({
                                       id: row.id,
@@ -316,19 +313,18 @@ export default function AdminListingsPage() {
                                     })
                                   }
                                   disabled={
-                                    approveMutation.isPending ||
-                                    rejectMutation.isPending
+                                    approveMutation.isPending || rejectMutation.isPending
                                   }
-                                  title="Отклонить"
+                                  title='Отклонить'
                                 >
-                                  <X className="h-4 w-4" />
+                                  <X className='h-4 w-4' />
                                 </Button>
                               </>
                             )}
                             <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive"
+                              size='sm'
+                              variant='ghost'
+                              className='text-destructive hover:text-destructive'
                               onClick={() => {
                                 if (
                                   window.confirm(
@@ -343,13 +339,13 @@ export default function AdminListingsPage() {
                                 approveMutation.isPending ||
                                 rejectMutation.isPending
                               }
-                              title="Удалить (архивировать)"
+                              title='Удалить (архивировать)'
                             >
                               {deleteMutation.isPending &&
                               deleteMutation.variables === row.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className='h-4 w-4 animate-spin' />
                               ) : (
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className='h-4 w-4' />
                               )}
                             </Button>
                           </div>
@@ -361,25 +357,23 @@ export default function AdminListingsPage() {
               </div>
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
+                <div className='flex items-center justify-between'>
+                  <p className='text-sm text-muted-foreground'>
                     Всего: {total}. Страница {page} из {totalPages}.
                   </p>
-                  <div className="flex gap-2">
+                  <div className='flex gap-2'>
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant='outline'
+                      size='sm'
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page <= 1}
                     >
                       Назад
                     </Button>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page >= totalPages}
                     >
                       Вперёд
@@ -397,9 +391,7 @@ export default function AdminListingsPage() {
           listingId={rejectDialog.id}
           listingTitle={rejectDialog.title}
           onClose={() => setRejectDialog(null)}
-          onConfirm={(reason) =>
-            rejectMutation.mutate({ id: rejectDialog.id, reason })
-          }
+          onConfirm={(reason) => rejectMutation.mutate({ id: rejectDialog.id, reason })}
           isPending={rejectMutation.isPending}
         />
       )}

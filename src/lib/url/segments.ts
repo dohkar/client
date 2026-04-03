@@ -2,13 +2,7 @@ import type { PropertyType } from "@/types/property";
 
 type RegionApiValue = "Chechnya" | "Ingushetia" | "Other";
 /** Тип сделки в URL/API: роль объявления (один к одному с API). */
-type DealApiValue =
-  | "SALE"
-  | "BUY"
-  | "RENT_OUT"
-  | "RENT_IN"
-  | "DAILY"
-  | "EXCHANGE";
+type DealApiValue = "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "DAILY" | "EXCHANGE";
 type SearchParamValue = string | number | boolean | null | undefined;
 
 export const REGION_MAP = {
@@ -44,6 +38,8 @@ export const CATEGORY_MAP = {
   garazhi_i_mashinomesta: { label: "Гаражи и машиноместа", apiType: undefined },
   // Пока API не поддерживает отдельный type=newbuild, оставляем без type-фильтра.
   novostroyki: { label: "Новостройки", apiType: undefined },
+  transport: { label: "Транспорт", apiType: undefined },
+  elektronika: { label: "Электроника", apiType: undefined },
 } as const satisfies Record<string, { label: string; apiType: PropertyType | undefined }>;
 
 /** Слаг (path) → значение API. Каждый слаг = роль объявления (один к одному с API). */

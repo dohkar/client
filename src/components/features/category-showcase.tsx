@@ -1,19 +1,69 @@
 "use client";
 
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import { useMemo, useCallback } from "react";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { Building2, Car, Smartphone, RefreshCw, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCategoryStats } from "@/hooks/use-properties";
-import { CATEGORIES, type CategoryConfig } from "@/constants/categories";
+import { useListingCategoryStats } from "@/hooks/use-listings";
+import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
+import { buildSearchUrl } from "@/lib/url/segments";
 
-interface CategoryWithCount extends CategoryConfig {
+interface ListingCategoryShowcaseConfig {
+  apiKey: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+  name: string;
+  description: string;
+  icon: LucideIcon;
+  href: string;
+  color: string;
+}
+
+const LISTING_SHOWCASE_CATEGORIES: ListingCategoryShowcaseConfig[] = [
+  {
+    apiKey: "REAL_ESTATE",
+    name: "Недвижимость",
+    description: "Квартиры, дома, участки",
+    icon: Building2,
+    href: buildSearchUrl({
+      region: DEFAULT_SEARCH_REGION,
+      category: "nedvizhimost",
+      dealType: "prodam",
+    }),
+    color: "from-blue-500/10 to-cyan-500/10",
+  },
+  {
+    apiKey: "VEHICLE",
+    name: "Транспорт",
+    description: "Легковые и спецтехника",
+    icon: Car,
+    href: buildSearchUrl({
+      region: DEFAULT_SEARCH_REGION,
+      category: "transport",
+      dealType: "prodam",
+    }),
+    color: "from-green-500/10 to-emerald-500/10",
+  },
+  {
+    apiKey: "ELECTRONICS",
+    name: "Электроника",
+    description: "Телефоны, ноутбуки, техника",
+    icon: Smartphone,
+    href: buildSearchUrl({
+      region: DEFAULT_SEARCH_REGION,
+      category: "elektronika",
+      dealType: "prodam",
+    }),
+    color: "from-amber-500/10 to-orange-500/10",
+  },
+];
+
+interface CategoryWithCount extends ListingCategoryShowcaseConfig {
   count: number;
 }
 
 interface CategoryStatEntry {
-  type: string;
+  category: string;
   count: number;
 }
 
@@ -57,8 +107,8 @@ interface CategoryCardProps {
 
 function CategoryCard({ category, isMobile = false }: CategoryCardProps) {
   const Icon = category.icon;
-  const descriptionId = `category-desc-${category.id}`;
-  const nameId = `category-name-${category.id}`;
+  const descriptionId = `category-desc-${category.apiKey}`;
+  const nameId = `category-name-${category.apiKey}`;
 
   return (
     <div className={`group ${isMobile ? "shrink-0 w-[240px]" : ""}`}>
@@ -97,21 +147,27 @@ function CategoryCard({ category, isMobile = false }: CategoryCardProps) {
                 <div className='flex flex-col gap-4 items-center'>
                   <span
                     id={nameId}
-                    className={`text-foreground font-medium group-hover:text-primary transition-colors leading-tight`}
+                    className='text-foreground font-medium group-hover:text-primary transition-colors leading-tight'
                   >
                     {category.name}
                   </span>
                   <span
                     id={descriptionId}
-                    className={`${
-                      isMobile ? "text-sm" : "text-sm"
-                    } text-muted-foreground group-hover:text-primary transition-colors leading-tight`}
+                    className='text-xs text-muted-foreground group-hover:text-primary transition-colors leading-tight'
                   >
                     {category.description}
                   </span>
                 </div>
               )}
             </div>
+            {isMobile && (
+              <span
+                id={nameId}
+                className='text-foreground font-medium group-hover:text-primary transition-colors'
+              >
+                {category.name}
+              </span>
+            )}
             <div className='flex items-baseline gap-2'>
               <span className='text-xl font-bold text-gold/80'>
                 {formatNumber(category.count)}
@@ -128,10 +184,11 @@ function CategoryCard({ category, isMobile = false }: CategoryCardProps) {
 }
 
 function SkeletonLoader({ isMobile }: { isMobile: boolean }) {
+  const n = LISTING_SHOWCASE_CATEGORIES.length;
   if (isMobile) {
     return (
       <div className='flex gap-3 overflow-x-auto pb-2 scrollbar-hide animate-pulse'>
-        {Array.from({ length: CATEGORIES.length }).map((_, idx) => (
+        {Array.from({ length: n }).map((_, idx) => (
           <Skeleton
             key={`skeleton-${idx}`}
             className='w-[240px] h-[120px] rounded-xl shrink-0'
@@ -143,7 +200,7 @@ function SkeletonLoader({ isMobile }: { isMobile: boolean }) {
 
   return (
     <>
-      {Array.from({ length: CATEGORIES.length }).map((_, idx) => (
+      {Array.from({ length: n }).map((_, idx) => (
         <Skeleton key={`skeleton-${idx}`} className='w-full h-[140px] rounded-xl' />
       ))}
     </>
@@ -159,7 +216,7 @@ function CategoryList({ categories, isMobile }: CategoryListProps) {
   if (categories.length === 0) {
     return (
       <div
-        className={`text-center py-12 text-muted-foreground ${isMobile ? "w-full" : "col-span-4"}`}
+        className={`text-center py-12 text-muted-foreground ${isMobile ? "w-full" : "col-span-3"}`}
       >
         Нет категорий
       </div>
@@ -170,7 +227,7 @@ function CategoryList({ categories, isMobile }: CategoryListProps) {
     return (
       <div className='flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth touch-pan-x'>
         {categories.map((category) => (
-          <CategoryCard key={category.id} category={category} isMobile />
+          <CategoryCard key={category.apiKey} category={category} isMobile />
         ))}
       </div>
     );
@@ -179,27 +236,25 @@ function CategoryList({ categories, isMobile }: CategoryListProps) {
   return (
     <>
       {categories.map((category) => (
-        <CategoryCard key={category.id} category={category} />
+        <CategoryCard key={category.apiKey} category={category} />
       ))}
     </>
   );
 }
 
 export function CategoryShowcase() {
-  const { data, isLoading, error, refetch, isRefetching } = useCategoryStats();
+  const { data, isLoading, error, refetch, isRefetching } = useListingCategoryStats();
 
   const handleRefetch = useCallback(() => {
     refetch();
   }, [refetch]);
 
   const categoriesWithStats = useMemo<CategoryWithCount[]>(() => {
-    return CATEGORIES.map((config) => {
-      const stat = data?.find(
-        (s: CategoryStatEntry) => s.type.toLowerCase() === config.id.toLowerCase()
-      );
+    return LISTING_SHOWCASE_CATEGORIES.map((config) => {
+      const stat = data?.find((s: CategoryStatEntry) => s.category === config.apiKey);
       return {
         ...config,
-        count: stat?.count || 0,
+        count: stat?.count ?? 0,
       };
     });
   }, [data]);
@@ -224,7 +279,6 @@ export function CategoryShowcase() {
           </h2>
         </div>
 
-        {/* Mobile Carousel */}
         <div className='block sm:hidden relative'>
           {isLoading && <SkeletonLoader isMobile />}
           {error && !isLoading && (
@@ -235,10 +289,16 @@ export function CategoryShowcase() {
           )}
         </div>
 
-        {/* Desktop Grid */}
-        <div className='hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[140px]'>
+        <div className='hidden sm:grid grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-[140px]'>
           {isLoading && <SkeletonLoader isMobile={false} />}
-          {!isLoading && <CategoryList categories={sortedCategories} isMobile={false} />}
+          {error && !isLoading && (
+            <div className='col-span-full'>
+              <ErrorBlock onRetry={handleRefetch} isRefetching={isRefetching} />
+            </div>
+          )}
+          {!isLoading && !error && (
+            <CategoryList categories={sortedCategories} isMobile={false} />
+          )}
         </div>
       </div>
     </section>
