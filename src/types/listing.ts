@@ -103,6 +103,8 @@ export interface Listing {
   images: string[];
   videos?: string[];
   location?: string | null;
+  street?: string | null;
+  house?: string | null;
   regionId?: string | null;
   region?: string | null;
   cityId?: string | null;

@@ -8,10 +8,22 @@ import {
 /**
  * Минимальный объект листинга из ответа API избранного (без полных связей region, city, realEstate, vehicle, electronics).
  */
-export type FavoriteListingBackend = Partial<ListingBackend> & Pick<
-  ListingBackend,
-  "id" | "slug" | "title" | "price" | "currency" | "category" | "status" | "moderationStatus" | "dealType" | "description" | "createdAt" | "updatedAt"
->;
+export type FavoriteListingBackend = Partial<ListingBackend> &
+  Pick<
+    ListingBackend,
+    | "id"
+    | "slug"
+    | "title"
+    | "price"
+    | "currency"
+    | "category"
+    | "status"
+    | "moderationStatus"
+    | "dealType"
+    | "description"
+    | "createdAt"
+    | "updatedAt"
+  >;
 
 /**
  * Адаптирует листинг из ответа getFavorites (может быть без полных связей) в тип Listing для карточки.
@@ -48,12 +60,19 @@ export function adaptFavoriteListing(raw: FavoriteListingBackend): Listing {
 export function adaptListing(backend: ListingBackend): Listing {
   let regionName: string | null = null;
 
-  if (backend.region && "name" in backend.region && typeof backend.region.name === "string") {
+  if (
+    backend.region &&
+    "name" in backend.region &&
+    typeof backend.region.name === "string"
+  ) {
     const region = backend.region;
     const backendName = region.name as keyof typeof REGION_BACKEND_TO_NAME;
     regionName = REGION_BACKEND_TO_NAME[backendName] || region.name;
     if (backend.regionId) {
-      registerRegionMapping(backend.regionId, regionName as "Chechnya" | "Ingushetia" | "Other");
+      registerRegionMapping(
+        backend.regionId,
+        regionName as "Chechnya" | "Ingushetia" | "Other"
+      );
     }
   } else if (backend.regionId) {
     regionName = getRegionNameById(backend.regionId);
@@ -89,6 +108,8 @@ export function adaptListing(backend: ListingBackend): Listing {
     images,
     videos: backend.videos,
     location: backend.location,
+    street: backend.street ?? null,
+    house: backend.house ?? null,
     regionId: backend.regionId,
     region: regionName,
     cityId: backend.cityId,

@@ -1,15 +1,17 @@
 "use client";
 
+import { useMemo } from "react";
 import { HeroSearch } from "@/components/features/hero-search";
-import { PropertyGrid } from "@/components/features/property-grid";
+import { ListingGrid } from "@/components/features/listing-grid";
 import { PropertyGridSkeleton } from "@/components/features/property-grid-skeleton";
 import { CTASection } from "@/components/features/cta-section";
-import { useProperties } from "@/hooks/use-properties";
+import { useListings } from "@/hooks/use-listings";
 import { SearchHistorySection } from "@/components/features/search-history/search-history-section";
 import { ViewHistorySection } from "@/components/features/view-history/view-history-section";
 
 export default function HomePage() {
-  const { data, isLoading } = useProperties({ limit: 12 });
+  const homeListParams = useMemo(() => ({ limit: 12, sortBy: "date-desc" as const }), []);
+  const { data, isLoading } = useListings(homeListParams);
 
   return (
     <div className='min-h-screen flex flex-col'>
@@ -29,7 +31,7 @@ export default function HomePage() {
           {isLoading ? (
             <PropertyGridSkeleton count={12} />
           ) : (
-            <PropertyGrid properties={data?.data || []} limit={12} />
+            <ListingGrid listings={data?.data || []} limit={12} />
           )}
         </section>
 
