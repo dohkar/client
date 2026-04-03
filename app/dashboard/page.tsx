@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { favoritesService } from "@/services/favorites.service";
-import { usePropertyLimits } from "@/hooks/use-properties";
+import { useListingLimits } from "@/hooks/use-listings";
 import { useChatsList } from "@/hooks/use-chats";
 import { ROUTES } from "@/constants";
 
@@ -28,8 +28,8 @@ export default function DashboardPage() {
     data: limits,
     isError: limitsError,
     refetch: refetchLimits,
-  } = usePropertyLimits(!!user && isAuthenticated && isInitialized);
-  const propertiesCount = limits?.myPropertiesCount ?? 0;
+  } = useListingLimits(!!user && isAuthenticated && isInitialized);
+  const propertiesCount = limits?.myListingsCount ?? 0;
 
   const { data: favorites } = useQuery({
     queryKey: queryKeys.favorites.all,

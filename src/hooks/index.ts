@@ -13,6 +13,7 @@ export { useDeleteListing, useRemoveFavoriteOptimistic } from "./use-optimistic-
 
 // Undo delete hooks (production-grade)
 export { useDeleteWithUndo, useRemoveFavoriteWithUndo } from "./use-undo-delete";
+export { useDeleteListingWithUndo } from "./use-delete-listing-with-undo";
 
 // Re-export existing hooks
 export {

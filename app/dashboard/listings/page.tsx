@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { propertyService } from "@/services/property.service";
+import { listingsService } from "@/services/listings.service";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { useAuthStore } from "@/stores";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,43 +31,55 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils/format";
 import { formatDate } from "@/lib/utils/format";
 import { ROUTES, PAGINATION } from "@/constants";
-import { useDeleteWithUndo } from "@/hooks/use-undo-delete";
+import { useDeleteListingWithUndo } from "@/hooks/use-delete-listing-with-undo";
 import { useMemo, useState, useEffect } from "react";
-import type { Property } from "@/types/property";
 import type { PropertyType } from "@/types/property";
+import type { Listing, ListingSearchParams } from "@/types/listing";
 
 type SortOption = "date" | "price-asc" | "price-desc" | "area-asc" | "area-desc";
 
-const STATUS_LABELS: Record<string, string> = {
-  active: "Активно",
-  pending: "На модерации",
-  rejected: "Отклонено",
-  sold: "Продано",
-  archived: "Архив",
-};
-
-function StatusBadge({
-  status,
-  rejectionReason,
-}: {
-  status: Property["status"];
-  rejectionReason?: string | null;
-}) {
-  const label = STATUS_LABELS[status] ?? status;
-  const isRejected = status === "rejected";
+function ListingStatusBadge({ listing }: { listing: Listing }) {
+  const rej = listing.rejectionReason;
+  if (listing.moderationStatus === "PENDING") {
+    return (
+      <Badge variant='secondary' className='text-xs'>
+        На модерации
+      </Badge>
+    );
+  }
+  if (listing.moderationStatus === "REJECTED") {
+    return (
+      <Badge variant='outline' className='text-xs' title={rej ?? undefined}>
+        Отклонено{rej ? " — см. причину" : ""}
+      </Badge>
+    );
+  }
+  if (listing.status === "SOLD") {
+    return (
+      <Badge variant='outline' className='text-xs'>
+        Продано
+      </Badge>
+    );
+  }
+  if (listing.status === "ARCHIVED") {
+    return (
+      <Badge variant='outline' className='text-xs'>
+        Архив
+      </Badge>
+    );
+  }
   return (
-    <Badge
-      variant={
-        status === "active" ? "default" : status === "pending" ? "secondary" : "outline"
-      }
-      className='text-xs'
-      title={isRejected && rejectionReason ? rejectionReason : undefined}
-    >
-      {label}
-      {isRejected && rejectionReason && " — см. причину"}
+    <Badge variant='default' className='text-xs'>
+      Активно
     </Badge>
   );
 }
+
+const CATEGORY_SHORT: Record<string, string> = {
+  REAL_ESTATE: "Недвижимость",
+  VEHICLE: "Транспорт",
+  ELECTRONICS: "Электроника",
+};
 
 function declOfNum(n: number, forms: [string, string, string]) {
   return forms[
@@ -89,10 +101,10 @@ export default function ListingsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
 
-  const { deleteWithUndo, isDeleting } = useDeleteWithUndo();
+  const { deleteWithUndo, isDeleting } = useDeleteListingWithUndo();
 
   /** sortBy для API (включая area-asc | area-desc — поддерживается сервером) */
-  const sortByApi = useMemo(() => {
+  const sortByApi = useMemo((): ListingSearchParams["sortBy"] => {
     if (sortBy === "date") return "date-desc";
     return sortBy;
   }, [sortBy]);
@@ -102,6 +114,25 @@ export default function ListingsPage() {
       ? undefined
       : (typeFilter.toUpperCase() as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL");
 
+  const listingQueryParams = useMemo(() => {
+    const q = searchQuery.trim() || undefined;
+    const base = {
+      my: true as const,
+      page,
+      limit: PAGINATION.propertiesMaxLimit,
+      sortBy: sortByApi,
+      query: q,
+    };
+    if (typeFilter === "all") {
+      return base;
+    }
+    return {
+      ...base,
+      category: "REAL_ESTATE" as const,
+      propertyType: apiType,
+    };
+  }, [page, sortByApi, searchQuery, typeFilter, apiType]);
+
   const {
     data: response,
     isLoading,
@@ -109,24 +140,8 @@ export default function ListingsPage() {
     error,
     refetch,
   } = useQuery({
-    queryKey: queryKeys.properties.list({
-      my: true,
-      page,
-      limit: PAGINATION.propertiesMaxLimit,
-      sortBy: sortByApi,
-      type: typeFilter === "all" ? undefined : typeFilter,
-      query: searchQuery.trim() || undefined,
-    }),
-    queryFn: async () => {
-      return propertyService.getProperties({
-        my: true,
-        limit: PAGINATION.propertiesMaxLimit,
-        page,
-        sortBy: sortByApi,
-        type: apiType,
-        query: searchQuery.trim() || undefined,
-      });
-    },
+    queryKey: queryKeys.listings.list(listingQueryParams),
+    queryFn: () => listingsService.getListings(listingQueryParams),
     enabled: !!user,
     placeholderData: keepPreviousData,
   });
@@ -400,11 +415,11 @@ export default function ListingsPage() {
           </Card>
         ) : filteredData.length > 0 ? (
           <div className='mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
-            {filteredData.map((property: Property) => {
-              const deleting = isDeleting(property.id);
+            {filteredData.map((listing: Listing) => {
+              const deleting = isDeleting(listing.id);
               return (
                 <Card
-                  key={property.id}
+                  key={listing.id}
                   className={`
                   border-primary/20 transition-all bg-card
                   ${
@@ -417,15 +432,17 @@ export default function ListingsPage() {
                   <CardContent className='p-0'>
                     <div className='relative group'>
                       <img
-                        src={property.image}
-                        alt={property.title}
+                        src={listing.image}
+                        alt={listing.title}
                         className='w-full h-48 object-cover rounded-t-xl'
                       />
                       <div className='absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity'>
                         <Button
                           size='sm'
                           variant='secondary'
-                          onClick={() => router.push(`/property/${property.id}`)}
+                          onClick={() =>
+                            router.push(ROUTES.listing(listing.id, listing.slug))
+                          }
                           className='min-h-[36px] min-w-[36px] shadow-md'
                           aria-label='Просмотреть'
                         >
@@ -435,7 +452,7 @@ export default function ListingsPage() {
                           size='sm'
                           variant='secondary'
                           onClick={() =>
-                            router.push(`/dashboard/listings/${property.id}/edit`)
+                            router.push(`/dashboard/listings/${listing.id}/edit`)
                           }
                           className='min-h-[36px] min-w-[36px] shadow-md'
                           aria-label='Редактировать'
@@ -445,7 +462,7 @@ export default function ListingsPage() {
                         <Button
                           size='sm'
                           variant='destructive'
-                          onClick={() => deleteWithUndo(property.id, property.title)}
+                          onClick={() => deleteWithUndo(listing.id, listing.title)}
                           disabled={deleting}
                           className='min-h-[36px] min-w-[36px] shadow-md'
                           aria-label='Удалить'
@@ -460,28 +477,28 @@ export default function ListingsPage() {
                     </div>
                     <div className='p-4 sm:p-5'>
                       <div className='flex items-center gap-2 mb-2 flex-wrap'>
-                        <StatusBadge
-                          status={property.status}
-                          rejectionReason={property.rejectionReason}
-                        />
+                        <ListingStatusBadge listing={listing} />
+                        <Badge variant='outline' className='text-xs font-normal'>
+                          {CATEGORY_SHORT[listing.category] ?? listing.category}
+                        </Badge>
                       </div>
                       <h3 className='font-semibold mb-2 line-clamp-2 text-sm sm:text-base'>
-                        {property.title}
+                        {listing.title}
                       </h3>
                       <p className='text-xl sm:text-2xl font-bold text-primary mb-2'>
-                        {property.dealType === "BUY" && (property.price ?? 0) === 0
+                        {listing.dealType === "BUY" && (listing.price ?? 0) === 0
                           ? "По договорённости"
-                          : formatCurrency(property.price ?? 0, property.currency)}
+                          : formatCurrency(listing.price ?? 0, listing.currency)}
                       </p>
                       <p className='text-xs sm:text-sm text-muted-foreground line-clamp-1'>
-                        {property.location}
+                        {listing.location}
                       </p>
                       <div className='flex items-center justify-between mt-3 pt-3 border-t border-border text-xs text-muted-foreground'>
                         <span>
                           Создано:{" "}
-                          {formatDate(property.datePosted, "ru-RU", { relative: true })}
+                          {formatDate(listing.createdAt, "ru-RU", { relative: true })}
                         </span>
-                        <span>👁 {property.views ?? 0}</span>
+                        <span>👁 {listing.views ?? 0}</span>
                       </div>
                     </div>
                   </CardContent>
