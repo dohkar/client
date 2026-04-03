@@ -107,17 +107,17 @@ export const API_ENDPOINTS = {
     recordContact: (listingId: string) => `/api/analytics/listings/${listingId}/contact`,
     viewStats: (listingId: string) => `/api/analytics/listings/${listingId}/views`,
     contactStats: (listingId: string) => `/api/analytics/listings/${listingId}/contacts`,
-    priceHistory: (listingId: string) => `/api/analytics/listings/${listingId}/price-history`,
+    priceHistory: (listingId: string) =>
+      `/api/analytics/listings/${listingId}/price-history`,
     sellerStats: (userId: string) => `/api/analytics/sellers/${userId}/stats`,
   },
 
   // Favorites
   favorites: {
     list: "/api/favorites",
-    add: (propertyId: string) => `/api/favorites/${propertyId}`,
-    remove: (propertyId: string) => `/api/favorites/${propertyId}`,
-    addListing: (listingId: string) => `/api/favorites/listing/${listingId}`,
-    removeListing: (listingId: string) => `/api/favorites/listing/${listingId}`,
+    /** listingId — единственный контракт избранного */
+    add: (listingId: string) => `/api/favorites/${listingId}`,
+    remove: (listingId: string) => `/api/favorites/${listingId}`,
   },
   // Admin
   admin: {
@@ -151,13 +151,13 @@ export const API_ENDPOINTS = {
   subscriptions: {
     plans: "/api/subscriptions/plans",
     createPayment: "/api/subscriptions/create-payment",
-    paymentStatus: (paymentId: string) => `/api/subscriptions/payments/${paymentId}/status`,
+    paymentStatus: (paymentId: string) =>
+      `/api/subscriptions/payments/${paymentId}/status`,
   },
 
   // Chats
   chats: {
     list: "/api/chats",
-    createProperty: "/api/chats/property",
     createListing: "/api/chats/listing",
     createSupport: "/api/chats/support",
     messages: (chatId: string) => `/api/chats/${chatId}/messages`,

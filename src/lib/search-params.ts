@@ -1,7 +1,19 @@
 import { z } from "zod";
 import type { PropertySearchParams, PropertyDealType } from "@/types/property";
 import type { PropertyType } from "@/types/property";
-import type { ListingSearchParams, ListingCategory } from "@/types/listing";
+import type {
+  ListingSearchParams,
+  ListingCategory,
+  ListingPropertyTypeParam,
+} from "@/types/listing";
+
+/** UI / Property search используют нижний регистр; Listings API ожидает Prisma enum. */
+const PROPERTY_TYPE_TO_LISTING_API: Record<PropertyType, ListingPropertyTypeParam> = {
+  apartment: "APARTMENT",
+  house: "HOUSE",
+  land: "LAND",
+  commercial: "COMMERCIAL",
+};
 
 /**
  * Схема валидации параметров поиска из URL.
@@ -13,70 +25,36 @@ const SearchParamsSchema = z
     dealType: z
       .enum(["sale", "buy", "rent_out", "rent_in", "exchange", "daily"])
       .optional()
-      .transform((v) => (v ? (v.toUpperCase().replace(" ", "_") as PropertyDealType | "DAILY") : undefined)),
+      .transform((v) =>
+        v ? (v.toUpperCase().replace(" ", "_") as PropertyDealType | "DAILY") : undefined
+      ),
     type: z
       .enum(["apartment", "house", "land", "commercial"])
       .optional()
       .transform((v) => v as PropertyType | undefined),
     priceMin: z.preprocess(
       (v) => (v === "" ? undefined : v),
-      z.coerce
-        .number()
-        .min(0)
-        .max(1_000_000_000)
-        .optional()
-        .nullable()
-        .catch(null)
+      z.coerce.number().min(0).max(1_000_000_000).optional().nullable().catch(null)
     ),
     priceMax: z.preprocess(
       (v) => (v === "" ? undefined : v),
-      z.coerce
-        .number()
-        .min(0)
-        .max(1_000_000_000)
-        .optional()
-        .nullable()
-        .catch(null)
+      z.coerce.number().min(0).max(1_000_000_000).optional().nullable().catch(null)
     ),
     roomsMin: z.preprocess(
       (v) => (v === "" ? undefined : v),
-      z.coerce
-        .number()
-        .min(0)
-        .max(20)
-        .optional()
-        .nullable()
-        .catch(null)
+      z.coerce.number().min(0).max(20).optional().nullable().catch(null)
     ),
     areaMin: z.preprocess(
       (v) => (v === "" ? undefined : v),
-      z.coerce
-        .number()
-        .min(0)
-        .max(100_000)
-        .optional()
-        .nullable()
-        .catch(null)
+      z.coerce.number().min(0).max(100_000).optional().nullable().catch(null)
     ),
     floorMin: z.preprocess(
       (v) => (v === "" ? undefined : v),
-      z.coerce
-        .number()
-        .min(0)
-        .max(200)
-        .optional()
-        .nullable()
-        .catch(null)
+      z.coerce.number().min(0).max(200).optional().nullable().catch(null)
     ),
     floorMax: z.preprocess(
       (v) => (v === "" ? undefined : v),
-      z.coerce
-        .number()
-        .min(0)
-        .max(200)
-        .optional()
-        .nullable()
-        .catch(null)
+      z.coerce.number().min(0).max(200).optional().nullable().catch(null)
     ),
     floorNotFirst: z.preprocess(
       (v) => v === "1" || v === "true",
@@ -308,9 +286,7 @@ export function toPropertySearchParams(
   if (filters.dealType && filters.dealType !== "all") {
     // Бэкенд не имеет типа DAILY; посуточная аренда отображается как RENT_OUT
     params.dealType =
-      filters.dealType === "DAILY"
-        ? "RENT_OUT"
-        : (filters.dealType as PropertyDealType);
+      filters.dealType === "DAILY" ? "RENT_OUT" : (filters.dealType as PropertyDealType);
   }
   if (filters.type !== "all") {
     params.type = filters.type as PropertyType;
@@ -353,14 +329,11 @@ export function toListingSearchParams(
 
   if (filters.dealType && filters.dealType !== "all") {
     params.dealType =
-      filters.dealType === "DAILY"
-        ? "RENT_OUT"
-        : (filters.dealType as PropertyDealType);
+      filters.dealType === "DAILY" ? "RENT_OUT" : (filters.dealType as PropertyDealType);
   }
 
   if (filters.type !== "all") {
-    // Для REAL_ESTATE фильтр по типу недвижимости
-    params.propertyType = filters.type;
+    params.propertyType = PROPERTY_TYPE_TO_LISTING_API[filters.type as PropertyType];
   }
 
   if (filters.priceMin != null) params.priceMin = filters.priceMin;

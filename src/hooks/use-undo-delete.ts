@@ -9,17 +9,12 @@ import type { PaginatedResponse } from "@/types";
 
 const UNDO_TIMEOUT_MS = 5000;
 
-/** Тип элемента избранного для удаления с Undo */
-export type FavoriteRemoveType = "property" | "listing";
-
 /**
  * Состояние отложенного удаления (общее для удаления объявлений и удаления из избранного).
  */
 interface PendingDelete {
-  propertyId: string;
-  propertyTitle?: string;
-  /** Только для useRemoveFavoriteWithUndo: property или listing. */
-  type?: FavoriteRemoveType;
+  targetId: string;
+  targetTitle?: string;
   previousData: Map<string, unknown>;
   timeoutId: ReturnType<typeof setTimeout>;
   toastId: string | number;
@@ -28,13 +23,13 @@ interface PendingDelete {
 
 /**
  * Production-grade хук для удаления с Undo
- * 
+ *
  * Архитектура:
  * - Optimistic delete происходит СРАЗУ (мгновенный UI feedback)
  * - Реальный запрос откладывается на 5 секунд
  * - Если пользователь нажал Undo — rollback без запроса к серверу
  * - Если таймаут истёк — выполняется реальный delete
- * 
+ *
  * Edge cases:
  * - Множественные удаления — каждое независимо
  * - Unmount компонента — таймеры очищаются, но pending deletes выполняются
@@ -43,15 +38,17 @@ interface PendingDelete {
  */
 export function useDeleteWithUndo() {
   const queryClient = useQueryClient();
-  
+
   // Map для хранения всех pending deletes
   const pendingDeletes = useRef<Map<string, PendingDelete>>(new Map());
-  
+
   // Флаг для отслеживания unmount
   const isMounted = useRef(true);
-  
+
   // Ref для хранения executeDelete, чтобы использовать в cleanup
-  const executeDeleteRef = useRef<((propertyId: string) => Promise<boolean>) | undefined>(undefined);
+  const executeDeleteRef = useRef<((propertyId: string) => Promise<boolean>) | undefined>(
+    undefined
+  );
 
   /**
    * Сохраняет текущее состояние кэша для возможного отката
@@ -72,82 +69,91 @@ export function useDeleteWithUndo() {
   /**
    * Применяет optimistic delete к кэшу
    */
-  const applyOptimisticDelete = useCallback(async (propertyId: string) => {
-    await queryClient.cancelQueries({ queryKey: queryKeys.properties.all });
+  const applyOptimisticDelete = useCallback(
+    async (propertyId: string) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.properties.all });
 
-    const cache = queryClient.getQueryCache();
-    const propertyQueries = cache.findAll({ queryKey: queryKeys.properties.all });
+      const cache = queryClient.getQueryCache();
+      const propertyQueries = cache.findAll({ queryKey: queryKeys.properties.all });
 
-    propertyQueries.forEach((query) => {
-      queryClient.setQueryData(query.queryKey, (oldData: unknown) => {
-        if (!oldData) return oldData;
+      propertyQueries.forEach((query) => {
+        queryClient.setQueryData(query.queryKey, (oldData: unknown) => {
+          if (!oldData) return oldData;
 
-        if (isPaginatedResponse(oldData)) {
-          return {
-            ...oldData,
-            data: oldData.data.filter((p) => p.id !== propertyId),
-            total: Math.max(0, oldData.total - 1),
-          };
-        }
+          if (isPaginatedResponse(oldData)) {
+            return {
+              ...oldData,
+              data: oldData.data.filter((p) => p.id !== propertyId),
+              total: Math.max(0, oldData.total - 1),
+            };
+          }
 
-        if (Array.isArray(oldData)) {
-          return oldData.filter((p: Property) => p.id !== propertyId);
-        }
+          if (Array.isArray(oldData)) {
+            return oldData.filter((p: Property) => p.id !== propertyId);
+          }
 
-        return oldData;
+          return oldData;
+        });
       });
-    });
 
-    // Удаляем детальную страницу из кэша
-    queryClient.removeQueries({
-      queryKey: queryKeys.properties.detail(propertyId),
-    });
-  }, [queryClient]);
+      // Удаляем детальную страницу из кэша
+      queryClient.removeQueries({
+        queryKey: queryKeys.properties.detail(propertyId),
+      });
+    },
+    [queryClient]
+  );
 
   /**
    * Восстанавливает кэш из snapshot
    */
-  const restoreCache = useCallback((snapshot: Map<string, unknown>) => {
-    snapshot.forEach((data, key) => {
-      const queryKey = JSON.parse(key);
-      queryClient.setQueryData(queryKey, data);
-    });
-  }, [queryClient]);
+  const restoreCache = useCallback(
+    (snapshot: Map<string, unknown>) => {
+      snapshot.forEach((data, key) => {
+        const queryKey = JSON.parse(key);
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+    [queryClient]
+  );
 
   /**
    * Выполняет реальный delete-запрос к серверу
    */
-  const executeDelete = useCallback(async (propertyId: string): Promise<boolean> => {
-    const pending = pendingDeletes.current.get(propertyId);
-    if (!pending || pending.status === "cancelled") {
-      return false;
-    }
-
-    pending.status = "executing";
-
-    try {
-      await propertyService.deleteProperty(propertyId);
-      
-      // Инвалидируем для синхронизации с сервером
-      if (isMounted.current) {
-        await queryClient.invalidateQueries({ queryKey: queryKeys.properties.all });
+  const executeDelete = useCallback(
+    async (propertyId: string): Promise<boolean> => {
+      const pending = pendingDeletes.current.get(propertyId);
+      if (!pending || pending.status === "cancelled") {
+        return false;
       }
-      
-      pendingDeletes.current.delete(propertyId);
-      return true;
-    } catch (error) {
-      // Rollback при ошибке сервера
-      if (pending.previousData && isMounted.current) {
-        restoreCache(pending.previousData);
-        toast.error("Не удалось удалить объявление", {
-          description: "Данные восстановлены",
-        });
+
+      pending.status = "executing";
+
+      try {
+        await propertyService.deleteProperty(propertyId);
+
+        // Инвалидируем для синхронизации с сервером
+        if (isMounted.current) {
+          await queryClient.invalidateQueries({ queryKey: queryKeys.properties.all });
+        }
+
+        pendingDeletes.current.delete(propertyId);
+        return true;
+      } catch (error) {
+        // Rollback при ошибке сервера
+        if (pending.previousData && isMounted.current) {
+          restoreCache(pending.previousData);
+          toast.error("Не удалось удалить объявление", {
+            description: "Данные восстановлены",
+          });
+        }
+
+        pendingDeletes.current.delete(propertyId);
+        return false;
       }
-      
-      pendingDeletes.current.delete(propertyId);
-      return false;
-    }
-  }, [queryClient, restoreCache]);
+    },
+    [queryClient, restoreCache]
+  );
 
   // Обновляем ref при изменении executeDelete
   executeDeleteRef.current = executeDelete;
@@ -155,7 +161,7 @@ export function useDeleteWithUndo() {
   // Очистка при unmount
   useEffect(() => {
     isMounted.current = true;
-    
+
     return () => {
       isMounted.current = false;
       // При unmount выполняем все pending deletes немедленно
@@ -164,7 +170,7 @@ export function useDeleteWithUndo() {
           clearTimeout(pending.timeoutId);
           toast.dismiss(pending.toastId);
           // Запускаем delete без await — компонент уже unmounted
-          executeDeleteRef.current?.(pending.propertyId);
+          executeDeleteRef.current?.(pending.targetId);
         }
       });
     };
@@ -173,84 +179,87 @@ export function useDeleteWithUndo() {
   /**
    * Отменяет удаление (Undo)
    */
-  const undoDelete = useCallback((propertyId: string) => {
-    const pending = pendingDeletes.current.get(propertyId);
-    if (!pending || pending.status !== "pending") {
-      return;
-    }
+  const undoDelete = useCallback(
+    (propertyId: string) => {
+      const pending = pendingDeletes.current.get(propertyId);
+      if (!pending || pending.status !== "pending") {
+        return;
+      }
 
-    // Отменяем таймер
-    clearTimeout(pending.timeoutId);
-    pending.status = "cancelled";
+      // Отменяем таймер
+      clearTimeout(pending.timeoutId);
+      pending.status = "cancelled";
 
-    // Закрываем toast
-    toast.dismiss(pending.toastId);
+      // Закрываем toast
+      toast.dismiss(pending.toastId);
 
-    // Восстанавливаем данные
-    restoreCache(pending.previousData);
+      // Восстанавливаем данные
+      restoreCache(pending.previousData);
 
-    // Показываем подтверждение
-    toast.success("Удаление отменено");
+      // Показываем подтверждение
+      toast.success("Удаление отменено");
 
-    // Убираем из pending
-    pendingDeletes.current.delete(propertyId);
-  }, [restoreCache]);
+      // Убираем из pending
+      pendingDeletes.current.delete(propertyId);
+    },
+    [restoreCache]
+  );
 
   /**
    * Основной метод удаления с Undo
    */
-  const deleteWithUndo = useCallback(async (
-    propertyId: string, 
-    propertyTitle?: string
-  ): Promise<boolean> => {
-    // Защита от double delete
-    if (pendingDeletes.current.has(propertyId)) {
-      return false;
-    }
-
-    // 1. Сохраняем snapshot ПЕРЕД удалением
-    const previousData = snapshotCache();
-
-    // 2. Optimistic delete — UI обновляется СРАЗУ
-    await applyOptimisticDelete(propertyId);
-
-    // 3. Создаём toast с Undo кнопкой
-    const toastId = toast.success(
-      propertyTitle ? `"${propertyTitle}" удалено` : "Объявление удалено",
-      {
-        duration: UNDO_TIMEOUT_MS,
-        action: {
-          label: "Отменить",
-          onClick: () => undoDelete(propertyId),
-        },
-        onDismiss: () => {
-          // Toast закрыт пользователем (не через Undo) — ничего не делаем
-          // таймер сам выполнит delete
-        },
+  const deleteWithUndo = useCallback(
+    async (propertyId: string, propertyTitle?: string): Promise<boolean> => {
+      // Защита от double delete
+      if (pendingDeletes.current.has(propertyId)) {
+        return false;
       }
-    );
 
-    // 4. Устанавливаем таймер для реального удаления
-    const timeoutId = setTimeout(() => {
-      const pending = pendingDeletes.current.get(propertyId);
-      if (pending?.status === "pending") {
-        toast.dismiss(toastId);
-        executeDelete(propertyId);
-      }
-    }, UNDO_TIMEOUT_MS);
+      // 1. Сохраняем snapshot ПЕРЕД удалением
+      const previousData = snapshotCache();
 
-    // 5. Сохраняем состояние pending delete
-    pendingDeletes.current.set(propertyId, {
-      propertyId,
-      propertyTitle,
-      previousData,
-      timeoutId,
-      toastId,
-      status: "pending",
-    });
+      // 2. Optimistic delete — UI обновляется СРАЗУ
+      await applyOptimisticDelete(propertyId);
 
-    return true;
-  }, [snapshotCache, applyOptimisticDelete, undoDelete, executeDelete]);
+      // 3. Создаём toast с Undo кнопкой
+      const toastId = toast.success(
+        propertyTitle ? `"${propertyTitle}" удалено` : "Объявление удалено",
+        {
+          duration: UNDO_TIMEOUT_MS,
+          action: {
+            label: "Отменить",
+            onClick: () => undoDelete(propertyId),
+          },
+          onDismiss: () => {
+            // Toast закрыт пользователем (не через Undo) — ничего не делаем
+            // таймер сам выполнит delete
+          },
+        }
+      );
+
+      // 4. Устанавливаем таймер для реального удаления
+      const timeoutId = setTimeout(() => {
+        const pending = pendingDeletes.current.get(propertyId);
+        if (pending?.status === "pending") {
+          toast.dismiss(toastId);
+          executeDelete(propertyId);
+        }
+      }, UNDO_TIMEOUT_MS);
+
+      // 5. Сохраняем состояние pending delete
+      pendingDeletes.current.set(propertyId, {
+        targetId: propertyId,
+        targetTitle: propertyTitle,
+        previousData,
+        timeoutId,
+        toastId,
+        status: "pending",
+      });
+
+      return true;
+    },
+    [snapshotCache, applyOptimisticDelete, undoDelete, executeDelete]
+  );
 
   /**
    * Проверяет, находится ли объявление в процессе удаления
@@ -274,12 +283,12 @@ export function useDeleteWithUndo() {
    */
   const flushPendingDeletes = useCallback(async () => {
     const promises: Promise<boolean>[] = [];
-    
+
     pendingDeletes.current.forEach((pending) => {
       if (pending.status === "pending") {
         clearTimeout(pending.timeoutId);
         toast.dismiss(pending.toastId);
-        promises.push(executeDelete(pending.propertyId));
+        promises.push(executeDelete(pending.targetId));
       }
     });
 
@@ -309,19 +318,19 @@ function isPaginatedResponse(data: unknown): data is PaginatedResponse<Property>
 }
 
 /**
- * Хук для удаления из избранного с Undo (property и listing).
+ * Хук для удаления из избранного с Undo (listingId).
  */
 export function useRemoveFavoriteWithUndo() {
   const queryClient = useQueryClient();
   const pendingRemoves = useRef<Map<string, PendingDelete>>(new Map());
   const isMounted = useRef(true);
 
-  const executeRemoveRef = useRef<
-    ((id: string, type: FavoriteRemoveType) => Promise<boolean>) | undefined
-  >(undefined);
+  const executeRemoveRef = useRef<((id: string) => Promise<boolean>) | undefined>(
+    undefined
+  );
 
   const executeRemove = useCallback(
-    async (id: string, type: FavoriteRemoveType): Promise<boolean> => {
+    async (id: string): Promise<boolean> => {
       const pending = pendingRemoves.current.get(id);
       if (!pending || pending.status === "cancelled") {
         return false;
@@ -331,11 +340,7 @@ export function useRemoveFavoriteWithUndo() {
 
       try {
         const { favoritesService } = await import("@/services/favorites.service");
-        if (type === "listing") {
-          await favoritesService.removeListingFavorite(id);
-        } else {
-          await favoritesService.removeFavorite(id);
-        }
+        await favoritesService.removeFavorite(id);
 
         if (isMounted.current) {
           await queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
@@ -370,7 +375,7 @@ export function useRemoveFavoriteWithUndo() {
         if (pending.status === "pending") {
           clearTimeout(pending.timeoutId);
           toast.dismiss(pending.toastId);
-          executeRemoveRef.current?.(pending.propertyId, pending.type ?? "property");
+          executeRemoveRef.current?.(pending.targetId);
         }
       });
     };
@@ -399,11 +404,7 @@ export function useRemoveFavoriteWithUndo() {
   );
 
   const removeWithUndo = useCallback(
-    async (
-      id: string,
-      title?: string,
-      type: FavoriteRemoveType = "property"
-    ): Promise<boolean> => {
+    async (id: string, title?: string): Promise<boolean> => {
       if (pendingRemoves.current.has(id)) {
         return false;
       }
@@ -414,7 +415,6 @@ export function useRemoveFavoriteWithUndo() {
       const previousData = new Map<string, unknown>();
       previousData.set("favorites", structuredClone(previousFavorites));
 
-      // Optimistic remove (универсально по id для property и listing)
       queryClient.setQueryData<FavoriteItem[]>(queryKeys.favorites.all, (old = []) =>
         old.filter((item) => item.data.id !== id)
       );
@@ -434,14 +434,13 @@ export function useRemoveFavoriteWithUndo() {
         const pending = pendingRemoves.current.get(id);
         if (pending?.status === "pending") {
           toast.dismiss(toastId);
-          executeRemove(id, type);
+          executeRemove(id);
         }
       }, UNDO_TIMEOUT_MS);
 
       pendingRemoves.current.set(id, {
-        propertyId: id,
-        propertyTitle: title,
-        type,
+        targetId: id,
+        targetTitle: title,
         previousData,
         timeoutId,
         toastId,

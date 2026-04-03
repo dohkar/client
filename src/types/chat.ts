@@ -62,10 +62,6 @@ export interface Chat {
   };
 }
 
-export interface CreatePropertyChatRequest {
-  propertyId: string;
-}
-
 export interface CreateListingChatRequest {
   listingId: string;
 }

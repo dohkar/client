@@ -365,7 +365,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/favorites/{propertyId}": {
+    "/api/favorites/{listingId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -374,9 +374,9 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Добавить объявление в избранное */
+        /** Добавить листинг в избранное */
         post: operations["FavoritesController_add"];
-        /** Удалить объявление из избранного */
+        /** Удалить листинг из избранного */
         delete: operations["FavoritesController_remove"];
         options?: never;
         head?: never;
@@ -588,6 +588,74 @@ export interface paths {
         patch: operations["AdminController_closeChat"];
         trace?: never;
     };
+    "/api/admin/listings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить объявления (Listing) для модерации */
+        get: operations["AdminController_getListings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/listings/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Одобрить объявление (Listing) */
+        patch: operations["AdminController_approveListing"];
+        trace?: never;
+    };
+    "/api/admin/listings/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Отклонить объявление (Listing) */
+        patch: operations["AdminController_rejectListing"];
+        trace?: never;
+    };
+    "/api/admin/listings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Удалить (архивировать) объявление (Listing) */
+        delete: operations["AdminController_deleteListingAdmin"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/upload/avatar": {
         parameters: {
             query?: never;
@@ -673,6 +741,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/subscriptions/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Список активных тарифов (публичный) */
+        get: operations["SubscriptionsController_getPlans"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/subscriptions/create-payment": {
         parameters: {
             query?: never;
@@ -732,6 +817,23 @@ export interface paths {
         put?: never;
         /** Создать или получить чат по объявлению */
         post: operations["ChatsController_createPropertyChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/listing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Создать или получить чат по листингу (Listing) */
+        post: operations["ChatsController_createListingChat"];
         delete?: never;
         options?: never;
         head?: never;
@@ -944,6 +1046,250 @@ export interface paths {
         patch: operations["InboxController_updateStatus"];
         trace?: never;
     };
+    "/api/listings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Список объявлений с фильтрами по категории */
+        get: operations["ListingsController_findAll"];
+        put?: never;
+        /** Создать объявление (любая категория) */
+        post: operations["ListingsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/listings/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Быстрый поиск объявлений */
+        get: operations["ListingsController_search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/listings/stats/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Статистика по категориям объявлений */
+        get: operations["ListingsController_getCategoryStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/listings/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Лимиты объявлений текущего пользователя */
+        get: operations["ListingsController_getMyLimits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/listings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить объявление по ID или slug */
+        get: operations["ListingsController_findOne"];
+        put?: never;
+        post?: never;
+        /** Удалить (архивировать) объявление */
+        delete: operations["ListingsController_remove"];
+        options?: never;
+        head?: never;
+        /** Обновить объявление */
+        patch: operations["ListingsController_update"];
+        trace?: never;
+    };
+    "/api/listings/{id}/related": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Похожие объявления */
+        get: operations["ListingsController_findRelated"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/listings/{id}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Записать просмотр объявления */
+        post: operations["AnalyticsController_recordView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/listings/{id}/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Записать контакт-попытку */
+        post: operations["AnalyticsController_recordContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/listings/{id}/views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Статистика просмотров объявления */
+        get: operations["AnalyticsController_getViewStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/listings/{id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Статистика контактов объявления */
+        get: operations["AnalyticsController_getContactStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/listings/{id}/price-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** История цен объявления */
+        get: operations["AnalyticsController_getPriceHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/sellers/{userId}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Статистика продавца */
+        get: operations["AnalyticsController_getSellerStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/brands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Список брендов (с фильтром по категории) */
+        get: operations["BrandsController_findAll"];
+        put?: never;
+        /** Создать бренд (только админ) */
+        post: operations["BrandsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/brands/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить бренд по ID */
+        get: operations["BrandsController_findOne"];
+        put?: never;
+        post?: never;
+        /** Удалить бренд (только админ) */
+        delete: operations["BrandsController_remove"];
+        options?: never;
+        head?: never;
+        /** Обновить бренд (только админ) */
+        patch: operations["BrandsController_update"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1127,6 +1473,8 @@ export interface components {
             latitude?: number;
             /** @description Долгота */
             longitude?: number;
+            /** @description ID связанного Listing с тем же slug (после миграции property→listing) */
+            listingId?: string | null;
         };
         UpdatePropertyDto: {
             /** @example Квартира в центре Грозного */
@@ -1184,13 +1532,88 @@ export interface components {
             /** @example 45.6949 */
             longitude?: number;
         };
+        RealEstateDetailsResponseDto: {
+            /** @enum {string} */
+            type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+            rooms?: number;
+            area: number;
+            features: string[];
+            latitude?: number;
+            longitude?: number;
+        };
+        VehicleDetailsResponseDto: {
+            brandId: string;
+            brand?: Record<string, never>;
+            model: string;
+            year: number;
+            mileage?: number;
+            bodyType?: string;
+            engine?: string;
+            transmission?: string;
+        };
+        ElectronicsDetailsResponseDto: {
+            brandId: string;
+            brand?: Record<string, never>;
+            productType: string;
+            model: string;
+            storage?: string;
+            condition?: string;
+        };
+        ListingResponseDto: {
+            id: string;
+            slug: string;
+            title: string;
+            /** @description Цена в рублях */
+            price: number;
+            /** @enum {string} */
+            currency: "RUB";
+            /** @enum {string} */
+            category: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+            /** @enum {string} */
+            status: "ACTIVE" | "SOLD" | "ARCHIVED";
+            /** @enum {string} */
+            moderationStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+            /** @enum {string} */
+            dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+            description: string;
+            images: string[];
+            videos?: string[];
+            location?: string;
+            regionId?: string;
+            region?: Record<string, never>;
+            cityId?: string;
+            city?: Record<string, never>;
+            userId: string;
+            user?: Record<string, never>;
+            views: number;
+            favoritesCount: number;
+            rejectionReason?: string;
+            /** Format: date-time */
+            archivedAt?: string;
+            previewAttributes: string[];
+            allowPhone: boolean;
+            allowChat: boolean;
+            /** @enum {string} */
+            promotionTier: "NONE" | "ELIGIBLE" | "BOOSTED";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            realEstate?: components["schemas"]["RealEstateDetailsResponseDto"];
+            vehicle?: components["schemas"]["VehicleDetailsResponseDto"];
+            electronics?: components["schemas"]["ElectronicsDetailsResponseDto"];
+        };
         FavoriteResponseDto: {
             id: string;
             userId: string;
-            propertyId: string;
+            /** @description Legacy: избранное по Property */
+            propertyId?: string | null;
+            /** @description Избранное по Listing */
+            listingId?: string | null;
             /** Format: date-time */
             createdAt: string;
-            property: components["schemas"]["PropertyResponseDto"];
+            property?: components["schemas"]["PropertyResponseDto"] | null;
+            listing?: components["schemas"]["ListingResponseDto"] | null;
         };
         BanUserDto: {
             /** @description Причина бана */
@@ -1243,6 +1666,8 @@ export interface components {
             type: "PROPERTY" | "SUPPORT";
             /** @example 550e8400-e29b-41d4-a716-446655440001 */
             propertyId: string | null;
+            /** @example 550e8400-e29b-41d4-a716-446655440002 */
+            listingId: string | null;
             /** @example false */
             isArchived: boolean;
             /**
@@ -1265,6 +1690,13 @@ export interface components {
             unreadCount: number;
             /** @description Информация об объявлении (если тип PROPERTY) */
             property?: Record<string, never>;
+        };
+        CreateListingChatDto: {
+            /**
+             * @description ID объявления (Listing)
+             * @example 550e8400-e29b-41d4-a716-446655440000
+             */
+            listingId: string;
         };
         MessageResponseDto: {
             /** @example 550e8400-e29b-41d4-a716-446655440000 */
@@ -1345,6 +1777,141 @@ export interface components {
             status: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
             /** @description Комментарий администратора */
             adminComment?: string;
+        };
+        CreateRealEstateDetailsDto: {
+            /** @enum {string} */
+            type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+            /** @example 3 */
+            rooms?: number;
+            /** @example 75.5 */
+            area: number;
+            /**
+             * @example [
+             *       "Балкон",
+             *       "Парковка"
+             *     ]
+             */
+            features?: string[];
+            /** @example 43.3156 */
+            latitude?: number;
+            /** @example 45.6949 */
+            longitude?: number;
+        };
+        CreateVehicleDetailsDto: {
+            /** @description ID бренда (марки) */
+            brandId: string;
+            /** @example Camry */
+            model: string;
+            /** @example 2020 */
+            year: number;
+            /**
+             * @description Пробег, км
+             * @example 85000
+             */
+            mileage?: number;
+            /** @example Седан */
+            bodyType?: string;
+            /** @example 2.5L Бензин */
+            engine?: string;
+            /** @example Автомат */
+            transmission?: string;
+        };
+        CreateElectronicsDetailsDto: {
+            /** @description ID бренда (производителя) */
+            brandId: string;
+            /**
+             * @description PHONE, TABLET, LAPTOP и т.д.
+             * @example PHONE
+             */
+            productType: string;
+            /** @example iPhone 15 Pro */
+            model: string;
+            /** @example 256 GB */
+            storage?: string;
+            /**
+             * @description Состояние товара
+             * @example Б/у, отличное
+             */
+            condition?: string;
+        };
+        CreateListingDto: {
+            /** @enum {string} */
+            category: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+            /** @example Toyota Camry 2020 */
+            title: string;
+            /** @enum {string} */
+            dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+            /**
+             * @description Цена в рублях
+             * @example 5000000
+             */
+            price?: number;
+            /**
+             * @default RUB
+             * @enum {string}
+             */
+            currency: "RUB";
+            description: string;
+            images?: string[];
+            videos?: string[];
+            /** @example г. Грозный, ул. Ленина, д. 10 */
+            location?: string;
+            regionId?: string;
+            cityId?: string;
+            street?: string;
+            house?: string;
+            /**
+             * @description Этаж
+             * @example 2
+             */
+            floor?: number;
+            realEstate?: components["schemas"]["CreateRealEstateDetailsDto"];
+            vehicle?: components["schemas"]["CreateVehicleDetailsDto"];
+            electronics?: components["schemas"]["CreateElectronicsDetailsDto"];
+        };
+        UpdateListingDto: {
+            title?: string;
+            price?: number;
+            /** @enum {string} */
+            currency?: "RUB";
+            /** @enum {string} */
+            dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+            description?: string;
+            images?: string[];
+            videos?: string[];
+            location?: string;
+            regionId?: string;
+            cityId?: string;
+            street?: string;
+            house?: string;
+            floor?: number;
+            realEstate?: components["schemas"]["CreateRealEstateDetailsDto"];
+            vehicle?: components["schemas"]["CreateVehicleDetailsDto"];
+            electronics?: components["schemas"]["CreateElectronicsDetailsDto"];
+        };
+        CreateBrandDto: {
+            /** @example Toyota */
+            name: string;
+            /** @example toyota */
+            slug: string;
+            /**
+             * @description Категория (null = все)
+             * @enum {string}
+             */
+            category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+            isVerified?: boolean;
+            logoUrl?: string;
+            /** @example 0 */
+            sortOrder?: number;
+        };
+        UpdateBrandDto: {
+            name?: string;
+            slug?: string;
+            /** @enum {string} */
+            category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+            isVerified?: boolean;
+            logoUrl?: string;
+            sortOrder?: number;
         };
     };
     responses: never;
@@ -1972,13 +2539,13 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                propertyId: string;
+                listingId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Объявление добавлено в избранное */
+            /** @description Листинг добавлен в избранное */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -1987,14 +2554,14 @@ export interface operations {
                     "application/json": components["schemas"]["FavoriteResponseDto"];
                 };
             };
-            /** @description Объявление не найдено */
+            /** @description Листинг не найден */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Объявление уже в избранном */
+            /** @description Уже в избранном */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -2008,20 +2575,20 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                propertyId: string;
+                listingId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Объявление удалено из избранного */
+            /** @description Удалено из избранного */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Объявление не найдено в избранном */
+            /** @description Не найдено в избранном */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2357,6 +2924,110 @@ export interface operations {
             };
         };
     };
+    AdminController_getListings: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                moderationStatus?: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+                category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список объявлений */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_approveListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Объявление одобрено */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Объявление не найдено */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_rejectListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Объявление отклонено */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Объявление не найдено */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_deleteListingAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Объявление архивировано */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Объявление не найдено */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     UploadController_uploadAvatar: {
         parameters: {
             query?: never;
@@ -2526,6 +3197,24 @@ export interface operations {
             };
         };
     };
+    SubscriptionsController_getPlans: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Массив тарифов с ценой в рублях */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     SubscriptionsController_createPayment: {
         parameters: {
             query?: never;
@@ -2596,6 +3285,44 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CreatePropertyChatDto"];
+            };
+        };
+        responses: {
+            /** @description Чат создан или получен */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatResponseDto"];
+                };
+            };
+            /** @description Нельзя создать чат со своим объявлением */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Объявление не найдено */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChatsController_createListingChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateListingChatDto"];
             };
         };
         responses: {
@@ -3013,6 +3740,452 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UpdateInboxStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ListingsController_findAll: {
+        parameters: {
+            query?: {
+                query?: string;
+                /** @description Только мои объявления (все статусы) */
+                my?: boolean;
+                category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+                dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+                /** @description Цена мин. (рубли) */
+                priceMin?: number;
+                /** @description Цена макс. (рубли) */
+                priceMax?: number;
+                regionId?: string;
+                cityId?: string;
+                /** @description Тип недвижимости (REAL_ESTATE). Допустимо: APARTMENT | HOUSE | … или apartment | house | … */
+                propertyType?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+                rooms?: number;
+                areaMin?: number;
+                floorMin?: number;
+                floorMax?: number;
+                /** @description Исключить первый этаж */
+                floorNotFirst?: boolean;
+                /** @description ID бренда (марки/производителя) */
+                brandId?: string;
+                yearMin?: number;
+                yearMax?: number;
+                /** @description Макс. пробег, км */
+                mileageMax?: number;
+                /** @description Тип электроники */
+                productType?: string;
+                sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance" | "area-asc" | "area-desc";
+                page?: number;
+                /** @description Макс. 50 */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список объявлений */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ListingsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateListingDto"];
+            };
+        };
+        responses: {
+            /** @description Объявление создано */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingResponseDto"];
+                };
+            };
+        };
+    };
+    ListingsController_search: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingResponseDto"][];
+                };
+            };
+        };
+    };
+    ListingsController_getCategoryStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ListingsController_getMyLimits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ListingsController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingResponseDto"];
+                };
+            };
+            /** @description Объявление не найдено */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ListingsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ListingsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateListingDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingResponseDto"];
+                };
+            };
+        };
+    };
+    ListingsController_findRelated: {
+        parameters: {
+            query: {
+                limit: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AnalyticsController_recordView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Просмотр записан */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AnalyticsController_recordContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Контакт записан */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AnalyticsController_getViewStats: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AnalyticsController_getContactStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AnalyticsController_getPriceHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AnalyticsController_getSellerStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BrandsController_findAll: {
+        parameters: {
+            query?: {
+                category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+                /** @description Поиск по названию */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список брендов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BrandsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBrandDto"];
+            };
+        };
+        responses: {
+            /** @description Бренд создан */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BrandsController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BrandsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BrandsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBrandDto"];
             };
         };
         responses: {

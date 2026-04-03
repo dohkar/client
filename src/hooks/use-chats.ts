@@ -193,39 +193,12 @@ export function useMarkAsRead() {
       // Обновляем только список чатов (unreadCount: 0). Сообщения обновляет обработчик message:read по WS.
       queryClient.setQueryData<Chat[]>(queryKeys.chats.list(), (oldChats) => {
         if (!oldChats) return oldChats;
-        return oldChats.map((c) =>
-          c.id === chatId ? { ...c, unreadCount: 0 } : c
-        );
+        return oldChats.map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c));
       });
     },
 
     onError: () => {
       toast.error("Не удалось пометить сообщения как прочитанные");
-    },
-  });
-}
-
-/**
- * Хук для создания чата по объявлению
- */
-export function useCreatePropertyChat() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (propertyId: string) => chatsService.createPropertyChat({ propertyId }),
-
-    onSuccess: () => {
-      // Обновляем список чатов
-      queryClient.invalidateQueries({ queryKey: queryKeys.chats.list() });
-    },
-
-    onError: (error: unknown) => {
-      const msg = error instanceof Error ? error.message : String(error);
-      if (msg.includes("своим объявлением")) {
-        toast.error("Вы не можете создать чат со своим объявлением");
-      } else {
-        toast.error("Не удалось создать чат");
-      }
     },
   });
 }
@@ -237,8 +210,7 @@ export function useCreateListingChat() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (listingId: string) =>
-      chatsService.createListingChat({ listingId }),
+    mutationFn: (listingId: string) => chatsService.createListingChat({ listingId }),
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chats.list() });

@@ -3,20 +3,19 @@ import {
   getRegionNameById,
   registerRegionMapping,
   REGION_BACKEND_TO_NAME,
-  type RegionName
+  type RegionName,
 } from "@/lib/regions";
 
 /**
  * Адаптер для преобразования данных недвижимости из формата бэкенда в формат фронтенда
  */
 export function adaptProperty(backend: PropertyBackend): Property {
-  const typeMap: Record<string, "apartment" | "house" | "land" | "commercial"> =
-    {
-      APARTMENT: "apartment",
-      HOUSE: "house",
-      LAND: "land",
-      COMMERCIAL: "commercial",
-    };
+  const typeMap: Record<string, "apartment" | "house" | "land" | "commercial"> = {
+    APARTMENT: "apartment",
+    HOUSE: "house",
+    LAND: "land",
+    COMMERCIAL: "commercial",
+  };
 
   // Определяем название региона:
   // 1. Если есть relation с region, используем его
@@ -25,7 +24,11 @@ export function adaptProperty(backend: PropertyBackend): Property {
   let regionName: RegionName = "Other";
 
   // Type guard: проверяем, что region имеет правильную структуру (не Record<string, never>)
-  if (backend.region && "name" in backend.region && typeof backend.region.name === "string") {
+  if (
+    backend.region &&
+    "name" in backend.region &&
+    typeof backend.region.name === "string"
+  ) {
     // Если API вернул relation с регионом, используем его
     const region = backend.region as { id: string; name: string };
     const backendName = region.name as keyof typeof REGION_BACKEND_TO_NAME;
@@ -43,6 +46,7 @@ export function adaptProperty(backend: PropertyBackend): Property {
 
   return {
     id: backend.id,
+    listingId: backend.listingId ?? null,
     slug: backend.slug ?? backend.id,
     title: backend.title,
     price: backend.price,
@@ -64,7 +68,7 @@ export function adaptProperty(backend: PropertyBackend): Property {
       name: backend.user?.name || "Не указано",
       phone: backend.user?.phone || "Не указано",
     },
-    status: (backend.status.toLowerCase() as PropertyStatus) as Property["status"],
+    status: backend.status.toLowerCase() as PropertyStatus as Property["status"],
     views: backend.views ?? 0,
     favoritesCount: backend.favoritesCount ?? 0,
     userId: backend.userId,
@@ -77,7 +81,9 @@ export function adaptProperty(backend: PropertyBackend): Property {
     longitude: backend.longitude,
     cityId: backend.cityId ?? undefined,
     city:
-      backend.city && "name" in backend.city && typeof (backend.city as { name: string }).name === "string"
+      backend.city &&
+      "name" in backend.city &&
+      typeof (backend.city as { name: string }).name === "string"
         ? (backend.city as { name: string }).name
         : undefined,
     floor: backend.floor ?? undefined,

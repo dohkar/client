@@ -1,22 +1,21 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Property } from "@/types/property";
 
 interface FavoritesState {
-  favorites: string[]; // Array of property IDs
+  favorites: string[]; // listingId (и локально для гостей)
   isLoading: boolean;
   error: string | null;
 
   // Actions
-  addFavorite: (propertyId: string) => void;
-  removeFavorite: (propertyId: string) => void;
-  toggleFavorite: (propertyId: string) => void;
+  addFavorite: (listingId: string) => void;
+  removeFavorite: (listingId: string) => void;
+  toggleFavorite: (listingId: string) => void;
   clearFavorites: () => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
 
   // Computed
-  isFavorite: (propertyId: string) => boolean;
+  isFavorite: (listingId: string) => boolean;
   getFavoriteCount: () => number;
 }
 
@@ -27,25 +26,25 @@ export const useFavoritesStore = create<FavoritesState>()(
       isLoading: false,
       error: null,
 
-      addFavorite: (propertyId) => {
+      addFavorite: (listingId) => {
         const { favorites } = get();
-        if (!favorites.includes(propertyId)) {
-          set({ favorites: [...favorites, propertyId] });
+        if (!favorites.includes(listingId)) {
+          set({ favorites: [...favorites, listingId] });
         }
       },
 
-      removeFavorite: (propertyId) => {
+      removeFavorite: (listingId) => {
         set((state) => ({
-          favorites: state.favorites.filter((id) => id !== propertyId),
+          favorites: state.favorites.filter((id) => id !== listingId),
         }));
       },
 
-      toggleFavorite: (propertyId) => {
+      toggleFavorite: (listingId) => {
         const { isFavorite, addFavorite, removeFavorite } = get();
-        if (isFavorite(propertyId)) {
-          removeFavorite(propertyId);
+        if (isFavorite(listingId)) {
+          removeFavorite(listingId);
         } else {
-          addFavorite(propertyId);
+          addFavorite(listingId);
         }
       },
 
@@ -55,8 +54,8 @@ export const useFavoritesStore = create<FavoritesState>()(
 
       setError: (error) => set({ error }),
 
-      isFavorite: (propertyId) => {
-        return get().favorites.includes(propertyId);
+      isFavorite: (listingId) => {
+        return get().favorites.includes(listingId);
       },
 
       getFavoriteCount: () => {

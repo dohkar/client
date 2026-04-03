@@ -190,16 +190,13 @@ export type ApiPropertyDeleteParams = RequestParams<"/api/properties/{id}", "del
 
 // Favorites endpoints
 export type FavoritesListResponse = ResponseData<"/api/favorites", "get">;
-export type FavoritesAddParams = RequestParams<"/api/favorites/{propertyId}", "post">;
+export type FavoritesAddParams = RequestParams<"/api/favorites/{listingId}", "post">;
 export type FavoritesAddResponse = ResponseData<
-  "/api/favorites/{propertyId}",
+  "/api/favorites/{listingId}",
   "post",
   201
 >;
-export type FavoritesRemoveParams = RequestParams<
-  "/api/favorites/{propertyId}",
-  "delete"
->;
+export type FavoritesRemoveParams = RequestParams<"/api/favorites/{listingId}", "delete">;
 
 // Admin endpoints
 // Note: OpenAPI spec has content?: never for these endpoints, but API actually returns data

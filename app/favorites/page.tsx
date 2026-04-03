@@ -1,6 +1,5 @@
 "use client";
 
-import { PropertyCard } from "@/components/features/property-card";
 import { ListingCard } from "@/components/features/listing-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Heart, Trash2, Search, SlidersHorizontal, X } from "lucide-react";
 import { useFavorites } from "@/hooks/use-favorites";
-import { useRemoveFavoriteWithUndo, type FavoriteRemoveType } from "@/hooks/use-undo-delete";
+import { useRemoveFavoriteWithUndo } from "@/hooks/use-undo-delete";
 import { useAuthStore } from "@/stores";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
@@ -22,10 +21,19 @@ import { ROUTES } from "@/constants";
 import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import type { PropertyType } from "@/types/property";
 import type { FavoriteItem } from "@/types/favorites";
-import { isPropertyItem, isListingItem } from "@/types/favorites";
 import { buildSearchUrl } from "@/lib/url/segments";
 
 type SortOption = "date" | "price-asc" | "price-desc" | "area-asc" | "area-desc";
+
+const REAL_ESTATE_TYPE_FILTER: Record<
+  PropertyType,
+  "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"
+> = {
+  apartment: "APARTMENT",
+  house: "HOUSE",
+  land: "LAND",
+  commercial: "COMMERCIAL",
+};
 
 export default function FavoritesPage() {
   const router = useRouter();
@@ -47,35 +55,33 @@ export default function FavoritesPage() {
     }
   }, [isAuthenticated, isInitialized, router]);
 
-  // Фильтрованные и отсортированные данные (property + listing)
   const filteredData = useMemo((): FavoriteItem[] => {
     if (!data?.length) return [];
 
     let result: FavoriteItem[] = [...data];
 
-    // Поиск по названию и адресу/локации
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter((item) => {
         const title = item.data.title?.toLowerCase() ?? "";
-        const location = (item.data as { location?: string }).location?.toLowerCase() ?? "";
+        const location = item.data.location?.toLowerCase() ?? "";
         return title.includes(query) || location.includes(query);
       });
     }
 
-    // Фильтр по типу недвижимости (только для property)
     if (typeFilter !== "all") {
-      result = result.filter(
-        (item) => !isPropertyItem(item) || item.data.type === typeFilter
-      );
+      const backendType = REAL_ESTATE_TYPE_FILTER[typeFilter];
+      result = result.filter((item) => {
+        if (item.data.category !== "REAL_ESTATE") return false;
+        return item.data.realEstate?.type === backendType;
+      });
     }
 
-    // Сортировка по цене или дате
     const getPrice = (item: FavoriteItem) => item.data.price ?? 0;
-    const getDate = (item: FavoriteItem) =>
-      (item.data as { datePosted?: string; updatedAt?: string }).datePosted ??
-      (item.data as { updatedAt?: string }).updatedAt ??
-      "";
+    const getDate = (item: FavoriteItem) => item.data.updatedAt ?? "";
+    const getArea = (item: FavoriteItem) =>
+      item.data.category === "REAL_ESTATE" ? (item.data.realEstate?.area ?? 0) : 0;
+
     switch (sortBy) {
       case "price-asc":
         result.sort((a, b) => getPrice(a) - getPrice(b));
@@ -84,18 +90,10 @@ export default function FavoritesPage() {
         result.sort((a, b) => getPrice(b) - getPrice(a));
         break;
       case "area-asc":
-        result.sort((a, b) => {
-          const areaA = isPropertyItem(a) ? (a.data.area ?? 0) : 0;
-          const areaB = isPropertyItem(b) ? (b.data.area ?? 0) : 0;
-          return areaA - areaB;
-        });
+        result.sort((a, b) => getArea(a) - getArea(b));
         break;
       case "area-desc":
-        result.sort((a, b) => {
-          const areaA = isPropertyItem(a) ? (a.data.area ?? 0) : 0;
-          const areaB = isPropertyItem(b) ? (b.data.area ?? 0) : 0;
-          return areaB - areaA;
-        });
+        result.sort((a, b) => getArea(b) - getArea(a));
         break;
       case "date":
       default:
@@ -406,11 +404,10 @@ export default function FavoritesPage() {
             {filteredData.map((item) => {
               const id = item.data.id;
               const title = item.data.title ?? "";
-              const removeType: FavoriteRemoveType = item.type === "listing" ? "listing" : "property";
               const removing = isRemoving(id);
               return (
                 <div
-                  key={`${item.type}-${id}`}
+                  key={id}
                   className={`
                     relative group flex flex-col h-full
                     transition-all duration-300 ease-out
@@ -418,11 +415,7 @@ export default function FavoritesPage() {
                   `}
                   style={{ minHeight: 410 }}
                 >
-                  {isPropertyItem(item) ? (
-                    <PropertyCard property={item.data} hideFavoriteButton />
-                  ) : isListingItem(item) ? (
-                    <ListingCard listing={item.data} hideFavoriteButton />
-                  ) : null}
+                  <ListingCard listing={item.data} hideFavoriteButton />
                   <Button
                     variant='destructive'
                     size='icon'
@@ -437,7 +430,7 @@ export default function FavoritesPage() {
                       w-10 h-10
                       focus:outline-none focus:ring-2 focus:ring-primary/40
                     `}
-                    onClick={() => removeWithUndo(id, title, removeType)}
+                    onClick={() => removeWithUndo(id, title)}
                     disabled={removing}
                     aria-label='Удалить из избранного'
                     title='Удалить из избранного'

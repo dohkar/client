@@ -49,6 +49,8 @@ export interface PropertyBackend {
   rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Связанный листинг с тем же slug (после миграции) */
+  listingId?: string | null;
   user?: {
     id: string;
     name: string;
@@ -98,6 +100,8 @@ export interface Property {
   yearBuilt?: number;
   condition?: string;
   city?: string | null;
+  /** Для избранного и чата по listing */
+  listingId?: string | null;
   cityId?: string | null;
   latitude?: number;
   longitude?: number;

@@ -4,6 +4,7 @@ import { queryKeys } from "@/lib/react-query/query-keys";
 import { propertyService } from "@/services/property.service";
 import { toast } from "sonner";
 import type { Property } from "@/types/property";
+import type { FavoriteItem } from "@/types/favorites";
 import type { PaginatedResponse } from "@/types";
 
 /**
@@ -15,7 +16,7 @@ interface DeleteListingContext {
 
 /**
  * Production-grade хук для удаления объявлений с optimistic update
- * 
+ *
  * Особенности:
  * - Мгновенное удаление из UI
  * - Корректный откат при ошибке
@@ -67,8 +68,8 @@ export function useDeleteListing() {
       });
 
       // Также удаляем из кэша детальной страницы
-      queryClient.removeQueries({ 
-        queryKey: queryKeys.properties.detail(propertyId) 
+      queryClient.removeQueries({
+        queryKey: queryKeys.properties.detail(propertyId),
       });
 
       return { previousData };
@@ -99,38 +100,47 @@ export function useDeleteListing() {
   /**
    * Проверка, удаляется ли конкретное объявление
    */
-  const isDeleting = useCallback((propertyId: string): boolean => {
-    return pendingDeletes.current.has(propertyId) || 
-           (mutation.isPending && mutation.variables === propertyId);
-  }, [mutation.isPending, mutation.variables]);
+  const isDeleting = useCallback(
+    (propertyId: string): boolean => {
+      return (
+        pendingDeletes.current.has(propertyId) ||
+        (mutation.isPending && mutation.variables === propertyId)
+      );
+    },
+    [mutation.isPending, mutation.variables]
+  );
 
   /**
    * Удалить объявление с защитой от double submit
    */
-  const deleteProperty = useCallback((propertyId: string): boolean => {
-    if (pendingDeletes.current.has(propertyId)) {
-      return false;
-    }
+  const deleteProperty = useCallback(
+    (propertyId: string): boolean => {
+      if (pendingDeletes.current.has(propertyId)) {
+        return false;
+      }
 
-    pendingDeletes.current.add(propertyId);
-    mutation.mutate(propertyId);
-    return true;
-  }, [mutation]);
+      pendingDeletes.current.add(propertyId);
+      mutation.mutate(propertyId);
+      return true;
+    },
+    [mutation]
+  );
 
   /**
    * Удалить объявление с подтверждением
    */
-  const deleteWithConfirm = useCallback((propertyId: string, title?: string): boolean => {
-    const message = title 
-      ? `Удалить объявление "${title}"?` 
-      : "Удалить объявление?";
+  const deleteWithConfirm = useCallback(
+    (propertyId: string, title?: string): boolean => {
+      const message = title ? `Удалить объявление "${title}"?` : "Удалить объявление?";
 
-    if (!window.confirm(message)) {
-      return false;
-    }
+      if (!window.confirm(message)) {
+        return false;
+      }
 
-    return deleteProperty(propertyId);
-  }, [deleteProperty]);
+      return deleteProperty(propertyId);
+    },
+    [deleteProperty]
+  );
 
   return {
     deleteProperty,
@@ -161,26 +171,32 @@ export function useRemoveFavoriteOptimistic() {
   const queryClient = useQueryClient();
   const pendingRemoves = useRef<Set<string>>(new Set());
 
-  const mutation = useMutation<void, Error, string, { previousFavorites: Property[] | undefined }>({
-    mutationFn: async (propertyId: string) => {
+  const mutation = useMutation<
+    void,
+    Error,
+    string,
+    { previousFavorites: FavoriteItem[] | undefined }
+  >({
+    mutationFn: async (listingId: string) => {
       const { favoritesService } = await import("@/services/favorites.service");
-      return favoritesService.removeFavorite(propertyId);
+      return favoritesService.removeFavorite(listingId);
     },
 
-    onMutate: async (propertyId) => {
+    onMutate: async (listingId) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.favorites.all });
 
-      const previousFavorites = queryClient.getQueryData<Property[]>(queryKeys.favorites.all);
+      const previousFavorites = queryClient.getQueryData<FavoriteItem[]>(
+        queryKeys.favorites.all
+      );
 
-      // Optimistic: мгновенно убираем из списка
-      queryClient.setQueryData<Property[]>(queryKeys.favorites.all, (old = []) => {
-        return old.filter(p => p.id !== propertyId);
-      });
+      queryClient.setQueryData<FavoriteItem[]>(queryKeys.favorites.all, (old = []) =>
+        old.filter((item) => item.data.id !== listingId)
+      );
 
       return { previousFavorites };
     },
 
-    onError: (error, propertyId, context) => {
+    onError: (_error, _listingId, context) => {
       if (context?.previousFavorites) {
         queryClient.setQueryData(queryKeys.favorites.all, context.previousFavorites);
       }
@@ -191,26 +207,34 @@ export function useRemoveFavoriteOptimistic() {
       toast.success("Удалено из избранного");
     },
 
-    onSettled: (_, __, propertyId) => {
-      pendingRemoves.current.delete(propertyId);
+    onSettled: (_, __, listingId) => {
+      pendingRemoves.current.delete(listingId);
       queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
     },
   });
 
-  const isRemoving = useCallback((propertyId: string): boolean => {
-    return pendingRemoves.current.has(propertyId) ||
-           (mutation.isPending && mutation.variables === propertyId);
-  }, [mutation.isPending, mutation.variables]);
+  const isRemoving = useCallback(
+    (listingId: string): boolean => {
+      return (
+        pendingRemoves.current.has(listingId) ||
+        (mutation.isPending && mutation.variables === listingId)
+      );
+    },
+    [mutation.isPending, mutation.variables]
+  );
 
-  const remove = useCallback((propertyId: string): boolean => {
-    if (pendingRemoves.current.has(propertyId)) {
-      return false;
-    }
+  const remove = useCallback(
+    (listingId: string): boolean => {
+      if (pendingRemoves.current.has(listingId)) {
+        return false;
+      }
 
-    pendingRemoves.current.add(propertyId);
-    mutation.mutate(propertyId);
-    return true;
-  }, [mutation]);
+      pendingRemoves.current.add(listingId);
+      mutation.mutate(listingId);
+      return true;
+    },
+    [mutation]
+  );
 
   return {
     remove,

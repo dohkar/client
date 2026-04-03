@@ -128,6 +128,9 @@ export interface Listing {
   longitude?: number | null;
 }
 
+/** Значение query `propertyType` для Listings API (как в Prisma PropertyType). */
+export type ListingPropertyTypeParam = "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+
 export interface ListingSearchParams {
   query?: string;
   my?: boolean;
@@ -137,7 +140,7 @@ export interface ListingSearchParams {
   priceMax?: number;
   regionId?: string;
   cityId?: string;
-  propertyType?: string;
+  propertyType?: ListingPropertyTypeParam;
   rooms?: number;
   areaMin?: number;
   floorMin?: number;
@@ -148,7 +151,13 @@ export interface ListingSearchParams {
   yearMax?: number;
   mileageMax?: number;
   productType?: string;
-  sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance" | "area-asc" | "area-desc";
+  sortBy?:
+    | "price-asc"
+    | "price-desc"
+    | "date-desc"
+    | "relevance"
+    | "area-asc"
+    | "area-desc";
   page?: number;
   limit?: number;
 }

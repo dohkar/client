@@ -22,13 +22,15 @@ export function PropertyCard({
 }: PropertyCardProps) {
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
 
-  const favorite = isFavorite(property.id);
-  const isPending = isMutating(property.id);
+  const listingId = property.listingId ?? null;
+  const favorite = listingId ? isFavorite(listingId) : false;
+  const isPending = listingId ? isMutating(listingId) : false;
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleFavorite(property.id, property);
+    if (!listingId) return;
+    toggleFavorite(listingId);
   };
   const pricePerMeter = Math.round(property.price / property.area);
 
@@ -68,7 +70,8 @@ export function PropertyCard({
                   : "bg-background/90 hover:bg-background"
               } ${isPending ? "opacity-70" : ""}`}
               onClick={handleFavoriteClick}
-              disabled={isPending}
+              disabled={isPending || !listingId}
+              title={listingId ? undefined : "Избранное через каталог листингов"}
               aria-label={favorite ? "Удалить из избранного" : "Добавить в избранное"}
             >
               <Heart

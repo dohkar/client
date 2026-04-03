@@ -53,7 +53,7 @@ import {
 import { useProperty, useRelatedProperties } from "@/hooks/use-properties";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useViewHistory } from "@/hooks/use-view-history";
-import { useCreatePropertyChat } from "@/hooks/use-chats";
+import { useCreateListingChat } from "@/hooks/use-chats";
 import { useAuthStore } from "@/stores";
 import { ROUTES } from "@/constants";
 import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
@@ -126,7 +126,7 @@ export default function PropertyPage() {
       href: ROUTES.property(property.id, property.slug),
     });
   }, [property?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  const createChatMutation = useCreatePropertyChat();
+  const createChatMutation = useCreateListingChat();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
 
@@ -140,9 +140,11 @@ export default function PropertyPage() {
   const [complaintComment, setComplaintComment] = useState<string>("");
   const [complaintSubmitting, setComplaintSubmitting] = useState(false);
 
-  // SELECTORS
-  const favorite = property ? isFavorite(property.id) : false;
-  const isPending = property ? isMutating(property.id) : false;
+  const listingIdForFav = property?.listingId ?? null;
+
+  // SELECTORS (избранное только по Listing)
+  const favorite = listingIdForFav ? isFavorite(listingIdForFav) : false;
+  const isPending = listingIdForFav ? isMutating(listingIdForFav) : false;
 
   // MEMOIZED
   const images = useMemo(() => {
@@ -153,8 +155,11 @@ export default function PropertyPage() {
 
   // HANDLERS
   const handleFavoriteClick = () => {
-    if (!property) return;
-    toggleFavorite(property.id, property);
+    if (!property?.listingId) {
+      toast.error("Избранное доступно для объявлений в каталоге листингов");
+      return;
+    }
+    toggleFavorite(property.listingId);
   };
 
   const handleShowPhone = () => setShowPhone(true);
@@ -184,8 +189,14 @@ export default function PropertyPage() {
       return;
     }
     if (!property || user?.id === property.userId) return;
+    if (!property.listingId) {
+      toast.error(
+        "Чат доступен для объявлений, синхронизированных с каталогом листингов"
+      );
+      return;
+    }
     try {
-      const chat = await createChatMutation.mutateAsync(property.id);
+      const chat = await createChatMutation.mutateAsync(property.listingId);
       if (chat?.id) {
         router.push(`${ROUTES.messages}?chatId=${chat.id}`);
       } else {
@@ -420,9 +431,13 @@ export default function PropertyPage() {
                     <Button
                       variant='outline'
                       size='icon'
-                      title='В избранное'
+                      title={
+                        listingIdForFav
+                          ? "В избранное"
+                          : "Избранное через каталог листингов"
+                      }
                       onClick={handleFavoriteClick}
-                      disabled={isPending}
+                      disabled={isPending || !listingIdForFav}
                       aria-label={
                         favorite ? "Удалить из избранного" : "Добавить в избранное"
                       }
@@ -574,7 +589,12 @@ export default function PropertyPage() {
                         <Button
                           className='w-full min-h-[44px]'
                           onClick={handleWriteToOwner}
-                          disabled={createChatMutation.isPending}
+                          disabled={createChatMutation.isPending || !property.listingId}
+                          title={
+                            property.listingId
+                              ? undefined
+                              : "Чат доступен после синхронизации с листингом"
+                          }
                           type='button'
                         >
                           <MessageSquare className='h-4 w-4 mr-2' />
