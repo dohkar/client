@@ -24,6 +24,7 @@ import type {
   ApiPropertyDeleteParams,
   OperationResponse,
 } from "@/lib/api-types";
+import type { PropertyBackend } from "@/types/property";
 
 /**
  * Типизированный сервис для работы с недвижимостью
@@ -54,9 +55,7 @@ export const propertyTypedService = {
    * });
    * ```
    */
-  async getProperties(
-    params?: ApiPropertyListParams
-  ): Promise<ApiPropertyListResponse> {
+  async getProperties(params?: ApiPropertyListParams): Promise<ApiPropertyListResponse> {
     const queryParams = new URLSearchParams();
 
     // TypeScript проверит, что все параметры соответствуют типам из OpenAPI
@@ -72,9 +71,7 @@ export const propertyTypedService = {
     if (params?.limit) queryParams.append("limit", params.limit.toString());
 
     const queryString = queryParams.toString();
-    const endpoint = queryString
-      ? `/api/properties?${queryString}`
-      : "/api/properties";
+    const endpoint = queryString ? `/api/properties?${queryString}` : "/api/properties";
 
     const response = await apiClient.get<ApiPropertyListResponse>(endpoint);
 
@@ -115,6 +112,16 @@ export const propertyTypedService = {
     );
 
     return response;
+  },
+
+  /**
+   * Похожие объявления (тот же контракт, что и property.service).
+   */
+  async getRelatedProperties(propertyId: string, limit = 8): Promise<PropertyBackend[]> {
+    const response = await apiClient.get<PropertyBackend[]>(
+      `/api/properties/${propertyId}/related?limit=${limit}`
+    );
+    return Array.isArray(response) ? response : [];
   },
 
   /**

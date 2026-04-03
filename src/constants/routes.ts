@@ -9,12 +9,10 @@ export const ROUTES = {
   login: "/auth/login",
   register: "/auth/register",
   search: "/search",
-  /**
-   * Алиас на канонический URL листинга (старый код может вызывать ROUTES.property).
-   */
+  /** Недвижимость (legacy Property API) — страница деталей `/property/...`. */
   property: (id: string, slug?: string) =>
-    slug ? `/listing/${id}-${slug}` : `/listing/${id}`,
-  /** Канонический URL объявления: id или id-slug */
+    slug ? `/property/${id}-${slug}` : `/property/${id}`,
+  /** Универсальный листинг (категории) — `/listing/...`. */
   listing: (id: string, slug?: string) =>
     slug ? `/listing/${id}-${slug}` : `/listing/${id}`,
   sell: "/sell",

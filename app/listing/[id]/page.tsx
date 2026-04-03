@@ -31,6 +31,7 @@ import { queryKeys } from "@/lib/react-query/query-keys";
 import { getCategoryConfig } from "@/constants/listing-categories";
 import { useCreateListingChat } from "@/hooks/use-chats";
 import { useFavorites } from "@/hooks/use-favorites";
+import { RealEstateListingDetail } from "@/components/features/listing-detail/real-estate-listing-detail";
 import type { Listing, ListingCategory } from "@/types/listing";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -258,6 +259,11 @@ export default function ListingPage() {
 
   // Ниже listing гарантированно определён (иначе вызван notFound())
   const listingData = listing!;
+
+  if (listingData.category === "REAL_ESTATE" && listingData.realEstate) {
+    return <RealEstateListingDetail listing={listingData} />;
+  }
+
   const DetailsComponent = CATEGORY_DETAILS_COMPONENT[listingData.category];
   const categoryConfig = getCategoryConfig(listingData.category);
 

@@ -7,7 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function extractListingIdFromSegment(segment: string): string {
+function extractPropertyIdFromSegment(segment: string): string {
   const s = segment.trim();
   if (UUID_REGEX.test(s)) return s;
   if (s.length > 36 && s[36] === "-" && UUID_REGEX.test(s.slice(0, 36))) {
@@ -16,7 +16,7 @@ function extractListingIdFromSegment(segment: string): string {
   return s;
 }
 
-interface ListingMetaPayload {
+interface PropertyMetaPayload {
   title: string;
   description?: string | null;
   price: number;
@@ -24,11 +24,11 @@ interface ListingMetaPayload {
   image?: string | null;
 }
 
-const getListingForMeta = cache(
-  async (segment: string): Promise<ListingMetaPayload | null> => {
-    const listingId = extractListingIdFromSegment(segment);
+const getPropertyForMeta = cache(
+  async (segment: string): Promise<PropertyMetaPayload | null> => {
+    const propertyId = extractPropertyIdFromSegment(segment);
     try {
-      const response = await fetch(`${API_URL}/api/listings/${listingId}`, {
+      const response = await fetch(`${API_URL}/api/properties/${propertyId}`, {
         next: { revalidate: 60 },
       });
 
@@ -36,7 +36,7 @@ const getListingForMeta = cache(
         if (response.status === 404) {
           return null;
         }
-        throw new Error("Failed to fetch listing");
+        throw new Error("Failed to fetch property");
       }
 
       const json: unknown = await response.json();
@@ -47,13 +47,13 @@ const getListingForMeta = cache(
         (json as { status: string }).status === "success" &&
         "data" in json &&
         typeof (json as { data: unknown }).data === "object" &&
-        (json as { data: ListingMetaPayload }).data !== null
+        (json as { data: PropertyMetaPayload }).data !== null
       ) {
-        return (json as { data: ListingMetaPayload }).data;
+        return (json as { data: PropertyMetaPayload }).data;
       }
       return null;
     } catch (error) {
-      logger.error("Error fetching listing for legacy /property metadata:", error);
+      logger.error("Error fetching property for metadata:", error);
       return null;
     }
   }
@@ -65,25 +65,26 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const listing = await getListingForMeta(id);
+  const property = await getPropertyForMeta(id);
 
-  if (!listing) {
+  if (!property) {
     return {
       title: "Объявление не найдено",
-      description: "Объявление не найдено или было удалено. Перейдите в каталог Дохкар.",
+      description:
+        "Объявление не найдено или было удалено. Перейдите в каталог недвижимости Дохкар.",
     };
   }
 
-  const title = `${listing.title} — ${listing.price.toLocaleString("ru-RU")} ₽`;
-  const rawDesc = listing.description?.trim() ?? "";
+  const title = `${property.title} — ${property.price.toLocaleString("ru-RU")} ₽`;
+  const rawDesc = property.description?.trim() ?? "";
   const description =
     rawDesc.length > 155
       ? `${rawDesc.slice(0, 152)}...`
-      : rawDesc || "Объявление на Дохкар.";
+      : rawDesc || "Объявление о недвижимости на Дохкар — цены, фото, контакты продавца.";
 
-  const ogImage = listing.images?.[0] ?? listing.image ?? "/og-default.jpg";
+  const ogImage = property.images?.[0] ?? property.image ?? "/og-default.jpg";
   const fullImageUrl = ogImage.startsWith("http") ? ogImage : toAbsoluteUrl(ogImage);
-  const canonicalPath = `/listing/${id}`;
+  const canonicalPath = `/property/${id}`;
   const pageUrl = toAbsoluteUrl(canonicalPath);
 
   return {
@@ -101,7 +102,7 @@ export async function generateMetadata({
           url: fullImageUrl,
           width: 1200,
           height: 630,
-          alt: listing.title,
+          alt: property.title,
         },
       ],
     },
