@@ -1,24 +1,14 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  ArrowLeft,
-  Heart,
-  MapPin,
-  MessageSquare,
-  Phone,
-  Share2,
-} from "lucide-react";
-import type { Swiper as SwiperClass } from "swiper";
+import { ArrowLeft, Heart, MapPin, MessageSquare, Phone, Share2 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { FreeMode, Navigation } from "swiper/modules";
+import { FreeMode } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/free-mode";
-import "swiper/css/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +23,9 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ListingCard } from "@/components/features/listing-card";
+import { MediaGallery } from "@/components/features/property-gallery/MediaGallery";
+import type { MediaItem } from "@/components/features/property-gallery/types";
+import { ListingLocationMap } from "@/components/features/listing-detail/listing-location-map";
 import { formatPrice, formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
 import { useAuthStore, useFavoritesStore } from "@/stores";
@@ -85,6 +78,48 @@ function buildAddressLine(listing: Listing): string {
     listing.region,
   ].filter((p): p is string => Boolean(p && String(p).trim()));
   return parts.length > 0 ? parts.join(" · ") : "Адрес не указан";
+}
+
+/** Фото и видео для полноэкранной галереи (как на странице property). */
+function buildListingMediaItems(listing: Listing): MediaItem[] {
+  const items: MediaItem[] = [];
+  const seen = new Set<string>();
+  const imageSources =
+    listing.images?.length > 0 ? listing.images : listing.image ? [listing.image] : [];
+
+  imageSources.forEach((src, i) => {
+    const url = src?.trim();
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    items.push({
+      id: `img-${i}-${url.slice(-24)}`,
+      type: "image",
+      src: url,
+      alt: `${listing.title} — фото ${items.length + 1}`,
+    });
+  });
+
+  listing.videos?.forEach((src, i) => {
+    const url = src?.trim();
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    items.push({
+      id: `vid-${i}-${url.slice(-24)}`,
+      type: "video",
+      src: url,
+    });
+  });
+
+  if (items.length === 0) {
+    items.push({
+      id: "placeholder",
+      type: "image",
+      src: "/placeholder.svg",
+      alt: listing.title,
+    });
+  }
+
+  return items;
 }
 
 function StickyListingCard({
@@ -173,15 +208,13 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
     return null;
   }
 
-  const [mainSlide, setMainSlide] = useState(0);
-  const mainSwiperRef = useRef<SwiperClass | null>(null);
   const [descExpanded, setDescExpanded] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const images = useMemo(() => {
-    if (listing.images?.length) return listing.images;
-    return [listing.image || "/placeholder.svg"];
-  }, [listing.images, listing.image]);
+  const mediaItems = useMemo(() => buildListingMediaItems(listing), [listing]);
+
+  const mapLatitude = listing.latitude ?? re.latitude ?? null;
+  const mapLongitude = listing.longitude ?? re.longitude ?? null;
 
   const { data: related = [] } = useRelatedListings(listingId, 8);
 
@@ -204,8 +237,7 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
   const isFavoritePending =
     !!listingId && isAuthenticated && isFavoriteMutating(listingId);
 
-  const pricePerMeter =
-    re.area > 0 ? Math.round(listing.price / re.area) : null;
+  const pricePerMeter = re.area > 0 ? Math.round(listing.price / re.area) : null;
 
   const sellerYear = listing.sellerCreatedAt
     ? new Date(listing.sellerCreatedAt).getFullYear()
@@ -286,46 +318,17 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_340px] lg:items-start'>
         {/* Колонка 1 */}
         <div className='order-1 min-w-0 lg:order-none'>
-          <div className='relative aspect-4/3 w-full max-lg:max-h-[min(70vw,420px)] overflow-hidden rounded-xl bg-muted lg:max-h-[min(520px,calc(100dvh-11rem))]'>
-            {images.length > 1 ? (
-              <Swiper
-                modules={[Navigation]}
-                navigation
-                slidesPerView={1}
-                className='h-full w-full'
-                onSwiper={(instance) => {
-                  mainSwiperRef.current = instance;
-                }}
-                onSlideChange={(sw) => setMainSlide(sw.activeIndex)}
-              >
-                {images.map((src, i) => (
-                  <SwiperSlide key={i} className='!h-full'>
-                    <Image
-                      src={src || "/placeholder.svg"}
-                      alt={`${listing.title} — фото ${i + 1}`}
-                      fill
-                      className='object-cover'
-                      sizes='(max-width: 1024px) 100vw, 33vw'
-                      priority={i === 0}
-                    />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            ) : (
-              <Image
-                src={images[0] || "/placeholder.svg"}
-                alt={listing.title}
-                fill
-                className='object-cover'
-                sizes='(max-width: 1024px) 100vw, 33vw'
-                priority
-              />
-            )}
+          <div className='relative min-w-0 max-lg:max-h-[min(70vw,420px)] overflow-hidden rounded-xl lg:max-h-[min(560px,calc(100dvh-10rem))]'>
+            <MediaGallery
+              media={mediaItems}
+              aspectRatio='4/3'
+              className='[&_[role=region]]:rounded-xl'
+            />
             <Button
               type='button'
               size='icon'
               variant='secondary'
-              className={`absolute top-3 right-3 z-10 min-h-11 min-w-11 rounded-full shadow-md backdrop-blur-sm ${
+              className={`pointer-events-auto absolute top-3 right-3 z-30 min-h-11 min-w-11 rounded-full shadow-md backdrop-blur-sm ${
                 isFavorite
                   ? "bg-destructive text-white hover:bg-destructive/90"
                   : "bg-background/90"
@@ -337,43 +340,6 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
               <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
             </Button>
           </div>
-
-          {images.length > 1 && (
-            <div className='mt-3'>
-              <Swiper
-                modules={[FreeMode]}
-                freeMode
-                spaceBetween={8}
-                slidesPerView='auto'
-                className='!overflow-visible'
-              >
-                {images.map((src, i) => (
-                  <SwiperSlide key={i} style={{ width: 72 }} className='!h-auto'>
-                    <button
-                      type='button'
-                      onClick={() => {
-                        setMainSlide(i);
-                        mainSwiperRef.current?.slideTo(i);
-                      }}
-                      className={`relative block h-14 w-full overflow-hidden rounded-lg border-2 transition ${
-                        mainSlide === i
-                          ? "border-primary"
-                          : "border-transparent opacity-80"
-                      }`}
-                    >
-                      <Image
-                        src={src || "/placeholder.svg"}
-                        alt=''
-                        fill
-                        className='object-cover'
-                        sizes='72px'
-                      />
-                    </button>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-          )}
         </div>
 
         {/* Мобильная цена + CTA */}
@@ -405,10 +371,7 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
 
           <div className='grid grid-cols-2 gap-4'>
             <SpecCell label='Тип' value={typeLabel} />
-            <SpecCell
-              label='Комнаты'
-              value={re.rooms != null ? String(re.rooms) : "—"}
-            />
+            <SpecCell label='Комнаты' value={re.rooms != null ? String(re.rooms) : "—"} />
             <SpecCell label='Площадь' value={`${re.area} м²`} />
             <SpecCell
               label='Этаж'
@@ -423,9 +386,7 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
                   {f}
                 </Badge>
               ))}
-              {featureRest > 0 && (
-                <Badge variant='secondary'>+{featureRest} ещё</Badge>
-              )}
+              {featureRest > 0 && <Badge variant='secondary'>+{featureRest} ещё</Badge>}
             </div>
           )}
 
@@ -441,8 +402,8 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
             <div
               className={
                 !needsDescriptionExpand || descExpanded
-                  ? 'whitespace-pre-wrap text-sm text-foreground'
-                  : 'line-clamp-3 text-sm text-foreground'
+                  ? "whitespace-pre-wrap text-sm text-foreground"
+                  : "line-clamp-3 text-sm text-foreground"
               }
             >
               {listing.description}
@@ -514,6 +475,12 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
         </div>
       </div>
 
+      <ListingLocationMap
+        className='mt-10'
+        latitude={mapLatitude}
+        longitude={mapLongitude}
+      />
+
       {relatedFiltered.length > 0 && (
         <section className='mt-12 border-t border-border pt-10'>
           <h2 className='mb-4 text-xl font-semibold'>Похожие объявления</h2>
@@ -546,10 +513,7 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
             <div className='space-y-1 px-4 py-4'>
               <SheetSpecRow label='Тип сделки' value={DEAL_LABELS[listing.dealType]} />
               <SheetSpecRow label='Тип недвижимости' value={typeLabel} />
-              <SheetSpecRow
-                label='Комнаты'
-                value={re.rooms != null ? re.rooms : "—"}
-              />
+              <SheetSpecRow label='Комнаты' value={re.rooms != null ? re.rooms : "—"} />
               <SheetSpecRow label='Площадь' value={`${re.area} м²`} />
               <SheetSpecRow
                 label='Этаж'
@@ -558,8 +522,8 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
               <SheetSpecRow
                 label='Широта / долгота'
                 value={
-                  listing.latitude != null && listing.longitude != null
-                    ? `${listing.latitude.toFixed(5)}, ${listing.longitude.toFixed(5)}`
+                  mapLatitude != null && mapLongitude != null
+                    ? `${mapLatitude.toFixed(5)}, ${mapLongitude.toFixed(5)}`
                     : "—"
                 }
               />
@@ -571,9 +535,7 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
               <SheetSpecRow label='Цена' value={formatPrice(listing.price)} />
               <SheetSpecRow
                 label='Цена за м²'
-                value={
-                  pricePerMeter != null ? `${formatPrice(pricePerMeter)} / м²` : "—"
-                }
+                value={pricePerMeter != null ? `${formatPrice(pricePerMeter)} / м²` : "—"}
               />
               <SheetSpecRow label='Статус' value={listing.status} />
               <SheetSpecRow label='Модерация' value={listing.moderationStatus} />
