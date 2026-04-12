@@ -155,8 +155,9 @@ export function useDeleteWithUndo() {
     [queryClient, restoreCache]
   );
 
-  // Обновляем ref при изменении executeDelete
-  executeDeleteRef.current = executeDelete;
+  useEffect(() => {
+    executeDeleteRef.current = executeDelete;
+  }, [executeDelete]);
 
   // Очистка при unmount
   useEffect(() => {
@@ -364,7 +365,9 @@ export function useRemoveFavoriteWithUndo() {
     [queryClient]
   );
 
-  executeRemoveRef.current = executeRemove;
+  useEffect(() => {
+    executeRemoveRef.current = executeRemove;
+  }, [executeRemove]);
 
   useEffect(() => {
     isMounted.current = true;

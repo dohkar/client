@@ -204,17 +204,14 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
   const createChatMutation = useCreateListingChat();
 
   const re = listing.realEstate;
-  if (!re) {
-    return null;
-  }
 
   const [descExpanded, setDescExpanded] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const mediaItems = useMemo(() => buildListingMediaItems(listing), [listing]);
 
-  const mapLatitude = listing.latitude ?? re.latitude ?? null;
-  const mapLongitude = listing.longitude ?? re.longitude ?? null;
+  const mapLatitude = listing.latitude ?? re?.latitude ?? null;
+  const mapLongitude = listing.longitude ?? re?.longitude ?? null;
 
   const { data: related = [] } = useRelatedListings(listingId, 8);
 
@@ -236,6 +233,20 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
 
   const isFavoritePending =
     !!listingId && isAuthenticated && isFavoriteMutating(listingId);
+
+  const copyLink = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const path = `/listing/${listing.slug ? `${listingId}-${listing.slug}` : listingId}`;
+    const url = `${window.location.origin}${path}`;
+    void navigator.clipboard.writeText(url).then(
+      () => toast.success("Ссылка скопирована"),
+      () => toast.error("Не удалось скопировать")
+    );
+  }, [listing.slug, listingId]);
+
+  if (!re) {
+    return null;
+  }
 
   const pricePerMeter = re.area > 0 ? Math.round(listing.price / re.area) : null;
 
@@ -285,16 +296,6 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
       /* toast в хуке */
     }
   };
-
-  const copyLink = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const path = `/listing/${listing.slug ? `${listingId}-${listing.slug}` : listingId}`;
-    const url = `${window.location.origin}${path}`;
-    void navigator.clipboard.writeText(url).then(
-      () => toast.success("Ссылка скопирована"),
-      () => toast.error("Не удалось скопировать")
-    );
-  }, [listing.slug, listingId]);
 
   return (
     <div className='mx-auto w-full max-w-7xl px-4 py-6'>

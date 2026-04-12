@@ -1,18 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  viewHistoryStorage,
-  type ViewHistoryItem,
-} from "@/lib/history/view-history";
+import { viewHistoryStorage, type ViewHistoryItem } from "@/lib/history/view-history";
 
 export function useViewHistory() {
   const [items, setItems] = useState<ViewHistoryItem[]>([]);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    setItems(viewHistoryStorage.getAll());
-    setIsReady(true);
+    queueMicrotask(() => {
+      setItems(viewHistoryStorage.getAll());
+      setIsReady(true);
+    });
   }, []);
 
   const push = useCallback((item: Omit<ViewHistoryItem, "viewedAt">) => {

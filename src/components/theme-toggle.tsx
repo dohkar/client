@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
+
+function emptySubscribe(): () => void {
+  return () => {};
+}
 
 interface ThemeToggleProps {
   /** Компактная кнопка для хедера */
@@ -21,11 +25,11 @@ interface ThemeToggleProps {
  */
 export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   const isDark = theme === "dark";
   const Icon = isDark ? Moon : Sun;

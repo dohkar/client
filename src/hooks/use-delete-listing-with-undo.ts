@@ -114,7 +114,9 @@ export function useDeleteListingWithUndo() {
     [queryClient, restoreCache]
   );
 
-  executeDeleteRef.current = executeDelete;
+  useEffect(() => {
+    executeDeleteRef.current = executeDelete;
+  }, [executeDelete]);
 
   useEffect(() => {
     isMounted.current = true;

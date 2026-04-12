@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService, type AdminListing } from "@/services/admin.service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,7 +50,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 function RejectDialog({
-  listingId,
+  listingId: _listingId,
   listingTitle,
   onClose,
   onConfirm,
@@ -111,10 +111,6 @@ export default function AdminListingsPage() {
     id: string;
     title: string;
   } | null>(null);
-
-  useEffect(() => {
-    setPage(1);
-  }, [moderationStatus, category]);
 
   const limit = 20;
   const { data, isLoading } = useQuery({
@@ -189,7 +185,13 @@ export default function AdminListingsPage() {
           <div className='flex flex-wrap gap-4'>
             <div className='space-y-2'>
               <Label>Статус модерации</Label>
-              <Select value={moderationStatus} onValueChange={setModerationStatus}>
+              <Select
+                value={moderationStatus}
+                onValueChange={(v) => {
+                  setModerationStatus(v);
+                  setPage(1);
+                }}
+              >
                 <SelectTrigger className='w-[180px]'>
                   <SelectValue />
                 </SelectTrigger>
@@ -205,7 +207,13 @@ export default function AdminListingsPage() {
             </div>
             <div className='space-y-2'>
               <Label>Категория</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select
+                value={category}
+                onValueChange={(v) => {
+                  setCategory(v);
+                  setPage(1);
+                }}
+              >
                 <SelectTrigger className='w-[180px]'>
                   <SelectValue />
                 </SelectTrigger>

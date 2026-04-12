@@ -21,22 +21,23 @@ export interface UseAmenitiesReturn {
 /**
  * Хук для управления удобствами (amenities/features) в форме недвижимости
  */
-export function useAmenities({ initialFeatures = [] }: UseAmenitiesOptions = {}): UseAmenitiesReturn {
+export function useAmenities({
+  initialFeatures = [],
+}: UseAmenitiesOptions = {}): UseAmenitiesReturn {
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [customFeature, setCustomFeature] = useState("");
 
   // Инициализация features при редактировании
   // Преобразуем label -> id для предустановленных features
   useEffect(() => {
-    if (initialFeatures.length > 0) {
-      const mappedFeatures = initialFeatures.map((featureLabel) => {
-        // Ищем по label в предустановленных опциях
-        const option = FEATURE_OPTIONS.find((f) => f.label === featureLabel);
-        // Если найдено - используем id, иначе оставляем как есть (кастомное)
-        return option?.id || featureLabel;
-      });
+    if (initialFeatures.length === 0) return;
+    const mappedFeatures = initialFeatures.map((featureLabel) => {
+      const option = FEATURE_OPTIONS.find((f) => f.label === featureLabel);
+      return option?.id || featureLabel;
+    });
+    queueMicrotask(() => {
       setSelectedFeatures(mappedFeatures);
-    }
+    });
   }, [initialFeatures]);
 
   // Группировка features по категориям (мемоизировано)

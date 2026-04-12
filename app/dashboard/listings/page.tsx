@@ -153,7 +153,9 @@ export default function ListingsPage() {
 
   useEffect(() => {
     if (searchQuery.trim() || typeFilter !== "all" || sortBy !== "date") {
-      setPage(1);
+      queueMicrotask(() => {
+        setPage(1);
+      });
     }
   }, [searchQuery, typeFilter, sortBy]);
 

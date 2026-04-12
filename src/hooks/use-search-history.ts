@@ -11,17 +11,16 @@ export function useSearchHistory() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    setItems(searchHistoryStorage.getAll());
-    setIsReady(true);
+    queueMicrotask(() => {
+      setItems(searchHistoryStorage.getAll());
+      setIsReady(true);
+    });
   }, []);
 
-  const push = useCallback(
-    (item: Omit<SearchHistoryItem, "id" | "searchedAt">) => {
-      searchHistoryStorage.push(item);
-      setItems(searchHistoryStorage.getAll());
-    },
-    []
-  );
+  const push = useCallback((item: Omit<SearchHistoryItem, "id" | "searchedAt">) => {
+    searchHistoryStorage.push(item);
+    setItems(searchHistoryStorage.getAll());
+  }, []);
 
   const remove = useCallback((id: string) => {
     searchHistoryStorage.remove(id);

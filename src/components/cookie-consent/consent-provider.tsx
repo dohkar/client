@@ -32,8 +32,10 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    setConsentState(getConsent());
-    setIsReady(true);
+    queueMicrotask(() => {
+      setConsentState(getConsent());
+      setIsReady(true);
+    });
   }, []);
 
   const accept = useCallback(() => {
@@ -52,9 +54,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <ConsentContext.Provider
-      value={{ consent, isReady, accept, decline, reset }}
-    >
+    <ConsentContext.Provider value={{ consent, isReady, accept, decline, reset }}>
       {children}
     </ConsentContext.Provider>
   );
@@ -62,7 +62,6 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
 
 export function useConsent() {
   const ctx = useContext(ConsentContext);
-  if (!ctx)
-    throw new Error("useConsent: wrap your app in <ConsentProvider>");
+  if (!ctx) throw new Error("useConsent: wrap your app in <ConsentProvider>");
   return ctx;
 }

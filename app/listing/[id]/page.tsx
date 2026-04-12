@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter, notFound } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -13,14 +13,10 @@ import {
   MapPin,
   Calendar,
   Eye,
-  Share2,
   Heart,
   ArrowLeft,
   Phone,
   MessageSquare,
-  Car,
-  Smartphone,
-  Building2,
 } from "lucide-react";
 import { useAuthStore, useFavoritesStore } from "@/stores";
 import { ROUTES } from "@/constants";
@@ -60,12 +56,14 @@ function CategoryBadge({ category }: { category: ListingCategory }) {
 function RealEstateDetailsBlock({ listing }: { listing: Listing }) {
   const re = listing.realEstate;
   if (!re) return null;
+
   const typeLabels: Record<string, string> = {
     APARTMENT: "Квартира",
     HOUSE: "Дом",
     LAND: "Участок",
     COMMERCIAL: "Коммерция",
   };
+
   return (
     <div className='grid grid-cols-2 gap-4 sm:grid-cols-3'>
       <div>

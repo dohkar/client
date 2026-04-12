@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { REGION_MAP } from "@/lib/url/segments";
 
@@ -25,7 +26,10 @@ function regionNameToSlug(regionName: string | null | undefined): string | null 
   if (slug) return slug;
   for (const [slugKey, entry] of Object.entries(REGION_MAP)) {
     if (slugKey === "all") continue;
-    if (entry.label.toLowerCase().includes(normalized) || normalized.includes(entry.label.toLowerCase())) {
+    if (
+      entry.label.toLowerCase().includes(normalized) ||
+      normalized.includes(entry.label.toLowerCase())
+    ) {
       return slugKey;
     }
   }
@@ -34,10 +38,9 @@ function regionNameToSlug(regionName: string | null | undefined): string | null 
 
 async function detectRegionByIp(ip: string): Promise<string> {
   try {
-    const res = await fetch(
-      `http://ip-api.com/json/${ip}?fields=regionName&lang=ru`,
-      { next: { revalidate: 3600 } }
-    );
+    const res = await fetch(`http://ip-api.com/json/${ip}?fields=regionName&lang=ru`, {
+      next: { revalidate: 3600 },
+    });
     const data = (await res.json()) as { regionName?: string };
     return regionNameToSlug(data.regionName) ?? DEFAULT_SEARCH_REGION;
   } catch {
@@ -67,12 +70,15 @@ export async function middleware(request: NextRequest) {
   let userRegion = getValidUserRegion(request.cookies.get(USER_REGION_COOKIE)?.value);
 
   if (!userRegion) {
-    const geo = (request as NextRequest & { geo?: { region?: string; city?: string } }).geo;
+    const geo = (request as NextRequest & { geo?: { region?: string; city?: string } })
+      .geo;
     const vercelRegion =
       geo?.region ?? request.headers.get("x-vercel-ip-country-region") ?? null;
-    userRegion = regionNameToSlug(vercelRegion) ?? (await detectRegionByIp(
-      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-    ));
+    userRegion =
+      regionNameToSlug(vercelRegion) ??
+      (await detectRegionByIp(
+        request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
+      ));
 
     response.cookies.set(USER_REGION_COOKIE, userRegion, {
       maxAge: 60 * 60 * 24 * 30,

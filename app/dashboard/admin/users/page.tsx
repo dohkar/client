@@ -100,8 +100,10 @@ export default function AdminUsersPage() {
   const debouncedUsersSearch = useDebounce(usersSearch, 400);
 
   useEffect(() => {
-    setUsersPage(1);
-  }, [debouncedUsersSearch, usersRole, usersStatus]);
+    queueMicrotask(() => {
+      setUsersPage(1);
+    });
+  }, [debouncedUsersSearch]);
 
   const ADMIN_PAGE_LIMIT = 100;
   const { data: usersData, isLoading: usersLoading } = useQuery({
@@ -197,7 +199,13 @@ export default function AdminUsersPage() {
                   className='pl-8 min-h-[44px]'
                 />
               </div>
-              <Select value={usersRole} onValueChange={setUsersRole}>
+              <Select
+                value={usersRole}
+                onValueChange={(v) => {
+                  setUsersRole(v);
+                  setUsersPage(1);
+                }}
+              >
                 <SelectTrigger className='w-full sm:w-40 min-h-[44px]'>
                   <SelectValue placeholder='Роль' />
                 </SelectTrigger>
@@ -208,7 +216,13 @@ export default function AdminUsersPage() {
                   <SelectItem value='ADMIN'>ADMIN</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={usersStatus} onValueChange={setUsersStatus}>
+              <Select
+                value={usersStatus}
+                onValueChange={(v) => {
+                  setUsersStatus(v);
+                  setUsersPage(1);
+                }}
+              >
                 <SelectTrigger className='w-full sm:w-40 min-h-[44px]'>
                   <SelectValue placeholder='Статус' />
                 </SelectTrigger>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { AvitoCategory, CATEGORIES_AVITO as CATEGORIES } from "@/constants/categories";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,12 +10,16 @@ import "swiper/css";
 import "swiper/css/free-mode";
 import { cn } from "@/lib/utils";
 
-export function Categories() {
-  const [mounted, setMounted] = useState(false);
+function emptySubscribe(): () => void {
+  return () => {};
+}
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+export function Categories() {
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   return (
     <section
