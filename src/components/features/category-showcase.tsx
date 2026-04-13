@@ -7,6 +7,7 @@ import { Building2, Car, Smartphone, RefreshCw, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useListingCategoryStats } from "@/hooks/use-listings";
+import { REAL_ESTATE_ONLY_LAUNCH } from "@/constants/config";
 import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { buildSearchUrl } from "@/lib/url/segments";
 
@@ -262,6 +263,10 @@ export function CategoryShowcase() {
   const sortedCategories = useMemo<CategoryWithCount[]>(() => {
     return [...categoriesWithStats].sort((a, b) => b.count - a.count);
   }, [categoriesWithStats]);
+
+  if (REAL_ESTATE_ONLY_LAUNCH) {
+    return null;
+  }
 
   return (
     <section

@@ -19,6 +19,7 @@ import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { listingsService } from "@/services/listings.service";
+import { REAL_ESTATE_ONLY_LAUNCH } from "@/constants/config";
 import { LISTING_CATEGORIES } from "@/constants/listing-categories";
 import type { ListingCategory } from "@/types/listing";
 import type { Listing } from "@/types/listing";
@@ -83,6 +84,12 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
       reset(buildListingFormDefaults(initialListing));
     }
   }, [initialListing, reset]);
+
+  useEffect(() => {
+    if (REAL_ESTATE_ONLY_LAUNCH && !isEdit) {
+      setValue("category", "REAL_ESTATE");
+    }
+  }, [isEdit, setValue]);
 
   const category = watch("category");
   const CategoryBlock = CATEGORY_FORM_BLOCKS[category];
@@ -150,41 +157,43 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
       onSubmit={handleSubmit(onSubmit)}
       className='max-w-4xl w-full mx-auto space-y-5 pb-24 md:pb-8'
     >
-      {/* Category selector */}
-      <div className='space-y-2'>
-        <Label className='text-base font-semibold'>Категория</Label>
-        {isEdit && (
-          <p className='text-sm text-muted-foreground'>
-            Категорию нельзя сменить после публикации. Создайте новое объявление для
-            другой категории.
-          </p>
-        )}
-        <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-          {LISTING_CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const isSelected = category === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type='button'
-                disabled={isEdit}
-                onClick={() => !isEdit && setValue("category", cat.id)}
-                className={`flex items-center gap-3 rounded-lg border p-4 transition-colors ${
-                  isSelected
-                    ? "border-primary bg-primary/5 ring-1 ring-primary"
-                    : "border-border hover:border-primary/50"
-                } ${isEdit ? "opacity-60 cursor-not-allowed" : ""}`}
-              >
-                <Icon className='h-6 w-6 shrink-0' />
-                <div className='text-left'>
-                  <p className='font-medium'>{cat.name}</p>
-                  <p className='text-xs text-muted-foreground'>{cat.description}</p>
-                </div>
-              </button>
-            );
-          })}
+      {/* Category selector (при запуске только НД — скрыт при создании) */}
+      {!(REAL_ESTATE_ONLY_LAUNCH && !isEdit) && (
+        <div className='space-y-2'>
+          <Label className='text-base font-semibold'>Категория</Label>
+          {isEdit && (
+            <p className='text-sm text-muted-foreground'>
+              Категорию нельзя сменить после публикации. Создайте новое объявление для
+              другой категории.
+            </p>
+          )}
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+            {LISTING_CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              const isSelected = category === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type='button'
+                  disabled={isEdit}
+                  onClick={() => !isEdit && setValue("category", cat.id)}
+                  className={`flex items-center gap-3 rounded-lg border p-4 transition-colors ${
+                    isSelected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "border-border hover:border-primary/50"
+                  } ${isEdit ? "opacity-60 cursor-not-allowed" : ""}`}
+                >
+                  <Icon className='h-6 w-6 shrink-0' />
+                  <div className='text-left'>
+                    <p className='font-medium'>{cat.name}</p>
+                    <p className='text-xs text-muted-foreground'>{cat.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Base fields */}
       <div className='space-y-4 rounded-lg border p-4'>

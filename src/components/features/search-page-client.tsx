@@ -14,7 +14,11 @@ import {
   getRegionIdByName,
   ensureRegionCacheInitialized,
 } from "@/services/region.service";
-import { SEARCH_CONSTANTS, PROPERTY_TYPE_LABELS, REGION_OPTIONS } from "@/lib/search-constants";
+import {
+  SEARCH_CONSTANTS,
+  PROPERTY_TYPE_LABELS,
+  REGION_OPTIONS,
+} from "@/lib/search-constants";
 import { useSortedRegionOptions } from "@/hooks/use-user-region";
 import type { RegionOption } from "@/hooks/use-user-region";
 import { ROUTES } from "@/constants";
@@ -27,8 +31,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { ActiveFilters, HorizontalFilters, ListingsSearchResults } from "@/components/search";
+import {
+  ActiveFilters,
+  HorizontalFilters,
+  ListingsSearchResults,
+} from "@/components/search";
 import { MobileFilterDrawer } from "@/components/features/MobileFilterDrawer";
+import { REAL_ESTATE_ONLY_LAUNCH } from "@/constants/config";
 import type { ListingCategory } from "@/types/listing";
 
 export interface SegmentRouteParams {
@@ -59,7 +68,10 @@ function mapCategorySlugToListingCategory(slug: string): ListingCategory {
   }
 }
 
-export function SearchPageClient({ params: paramsProp, searchParams: searchParamsProp }: SearchPageClientProps) {
+export function SearchPageClient({
+  params: paramsProp,
+  searchParams: searchParamsProp,
+}: SearchPageClientProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const pathParams = useParams();
@@ -68,14 +80,24 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
   // не показывать старые данные из кэша/пропсов
   const params = useMemo<SegmentRouteParams>(
     () => ({
-      region: typeof pathParams.region === "string" ? pathParams.region : paramsProp.region,
-      category: typeof pathParams.category === "string" ? pathParams.category : paramsProp.category,
+      region:
+        typeof pathParams.region === "string" ? pathParams.region : paramsProp.region,
+      category:
+        typeof pathParams.category === "string"
+          ? pathParams.category
+          : paramsProp.category,
       dealType:
         typeof pathParams.dealType === "string" && pathParams.dealType
           ? pathParams.dealType
           : undefined,
     }),
-    [pathParams.region, pathParams.category, pathParams.dealType, paramsProp.region, paramsProp.category]
+    [
+      pathParams.region,
+      pathParams.category,
+      pathParams.dealType,
+      paramsProp.region,
+      paramsProp.category,
+    ]
   );
 
   const searchParams = searchParamsProp;
@@ -147,10 +169,10 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
       ? (cities.find((city) => city.id === appliedFilters.cityId)?.name ?? null)
       : null;
 
-  const listingCategory = useMemo(
-    () => mapCategorySlugToListingCategory(params.category),
-    [params.category]
-  );
+  const listingCategory = useMemo((): ListingCategory => {
+    if (REAL_ESTATE_ONLY_LAUNCH) return "REAL_ESTATE";
+    return mapCategorySlugToListingCategory(params.category);
+  }, [params.category]);
 
   const baseApiParams = useMemo(
     () =>
@@ -224,24 +246,24 @@ export function SearchPageClient({ params: paramsProp, searchParams: searchParam
             <div className='flex-1 relative'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none' />
               <Input
-              placeholder='Город, район, ключевые слова...'
-              value={draftQuery}
-              onChange={(event) => setDraftQuery(event.target.value)}
-              className='pl-9 h-12 text-base'
-              aria-label='Поиск по объявлениям'
-              autoComplete='off'
-            />
-            {draftQuery && (
-              <button
-                onClick={() => {
-                  setDraftQuery("");
-                  handleQueryReset();
-                }}
-                className='absolute right-4 top-1/2 -translate-y-1/2 size-5 cursor-pointer text-muted-foreground'
-              >
-                <XIcon className='size-5' />
-              </button>
-            )}
+                placeholder='Город, район, ключевые слова...'
+                value={draftQuery}
+                onChange={(event) => setDraftQuery(event.target.value)}
+                className='pl-9 h-12 text-base'
+                aria-label='Поиск по объявлениям'
+                autoComplete='off'
+              />
+              {draftQuery && (
+                <button
+                  onClick={() => {
+                    setDraftQuery("");
+                    handleQueryReset();
+                  }}
+                  className='absolute right-4 top-1/2 -translate-y-1/2 size-5 cursor-pointer text-muted-foreground'
+                >
+                  <XIcon className='size-5' />
+                </button>
+              )}
             </div>
             <div className='md:hidden shrink-0'>
               <MobileFilterDrawer

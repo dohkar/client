@@ -1,7 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { REAL_ESTATE_ONLY_LAUNCH } from "@/constants/config";
 import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { REGION_MAP } from "@/lib/url/segments";
+
+const NON_REAL_ESTATE_CATEGORY_SLUGS = new Set(["transport", "elektronika"]);
 
 const USER_REGION_COOKIE = "user_region";
 
@@ -63,6 +66,19 @@ export async function middleware(request: NextRequest) {
     pathname.includes(".")
   ) {
     return NextResponse.next();
+  }
+
+  if (REAL_ESTATE_ONLY_LAUNCH) {
+    const segments = pathname.split("/").filter(Boolean);
+    if (segments.length >= 2) {
+      const [regionSlug, categorySlug, ...rest] = segments;
+      if (regionSlug in REGION_MAP && NON_REAL_ESTATE_CATEGORY_SLUGS.has(categorySlug)) {
+        const url = request.nextUrl.clone();
+        const tail = rest.length > 0 ? `/${rest.join("/")}` : "";
+        url.pathname = `/${regionSlug}/nedvizhimost${tail}`;
+        return NextResponse.redirect(url, 307);
+      }
+    }
   }
 
   const response = NextResponse.next();

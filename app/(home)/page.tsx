@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { REAL_ESTATE_ONLY_LAUNCH } from "@/constants/config";
 import { HeroSearch } from "@/components/features/hero-search";
 import { ListingGrid } from "@/components/features/listing-grid";
 import { PropertyGridSkeleton } from "@/components/features/property-grid-skeleton";
@@ -10,7 +11,13 @@ import { SearchHistorySection } from "@/components/features/search-history/searc
 import { ViewHistorySection } from "@/components/features/view-history/view-history-section";
 
 export default function HomePage() {
-  const homeListParams = useMemo(() => ({ limit: 12, sortBy: "date-desc" as const }), []);
+  const homeListParams = useMemo(
+    () =>
+      REAL_ESTATE_ONLY_LAUNCH
+        ? { limit: 12, sortBy: "date-desc" as const, category: "REAL_ESTATE" as const }
+        : { limit: 12, sortBy: "date-desc" as const },
+    []
+  );
   const { data, isLoading } = useListings(homeListParams);
 
   return (
