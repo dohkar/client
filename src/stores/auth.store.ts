@@ -159,6 +159,19 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     set({ isLoading: true });
 
     try {
+      if (!accessTokenStorage.hasAccessToken()) {
+        const refreshed = await authService.silentRefresh();
+        if (!refreshed) {
+          set({
+            user: null,
+            isAuthenticated: false,
+            isInitialized: true,
+            isLoading: false,
+          });
+          return;
+        }
+      }
+
       const userResponse = await authService.getCurrentUser();
       if (userResponse) {
         const user = mapUserResponseToUser(userResponse);
