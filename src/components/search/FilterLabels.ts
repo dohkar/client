@@ -49,6 +49,15 @@ export function getRoomsLabel(roomsMin: number | null | undefined): string {
   return `${roomsMin} комн.`;
 }
 
+/**
+ * Текст для карточки / страницы объявления (фактическое число комнат, не фильтр «4+»).
+ */
+export function formatListingRoomsForSpec(rooms: number): string {
+  if (rooms === 0) return "Студия";
+  if (rooms === 1) return "1";
+  return String(rooms);
+}
+
 export function getAreaLabel(areaMin: number | null | undefined): string {
   if (areaMin) return `от ${areaMin} м²`; // ² вместо 2
   return "Площадь";

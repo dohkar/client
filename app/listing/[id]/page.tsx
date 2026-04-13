@@ -28,6 +28,7 @@ import { getCategoryConfig } from "@/constants/listing-categories";
 import { useCreateListingChat } from "@/hooks/use-chats";
 import { useFavorites } from "@/hooks/use-favorites";
 import { RealEstateListingDetail } from "@/components/features/listing-detail/real-estate-listing-detail";
+import { formatListingRoomsForSpec } from "@/components/search/FilterLabels";
 import type { Listing, ListingCategory } from "@/types/listing";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -73,7 +74,7 @@ function RealEstateDetailsBlock({ listing }: { listing: Listing }) {
       {re.rooms != null && (
         <div>
           <span className='text-muted-foreground text-sm'>Комнат</span>
-          <p className='font-medium'>{re.rooms}</p>
+          <p className='font-medium'>{formatListingRoomsForSpec(re.rooms)}</p>
         </div>
       )}
       <div>

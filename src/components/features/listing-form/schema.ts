@@ -2,7 +2,11 @@ import * as z from "zod";
 
 const realEstateSchema = z.object({
   type: z.enum(["APARTMENT", "HOUSE", "LAND", "COMMERCIAL"]),
-  rooms: z.number().optional(),
+  rooms: z.preprocess((val) => {
+    if (val === "" || val === null || val === undefined) return undefined;
+    if (typeof val === "number" && Number.isNaN(val)) return undefined;
+    return val;
+  }, z.number().min(0, "Не меньше 0 (студия)").max(50).optional()),
   area: z.number().min(1, "Площадь должна быть больше 0"),
   features: z.array(z.string()).optional(),
   latitude: z.number().optional(),
@@ -39,7 +43,10 @@ export const listingSchema = z
     street: z.string().optional(),
     house: z.string().optional(),
     floor: z.number().min(0).optional().nullable(),
-    description: z.string().min(50, "Минимум 50 символов").max(2000, "Максимум 2000 символов"),
+    description: z
+      .string()
+      .min(50, "Минимум 50 символов")
+      .max(2000, "Максимум 2000 символов"),
     realEstate: realEstateSchema.optional(),
     vehicle: vehicleSchema.optional(),
     electronics: electronicsSchema.optional(),

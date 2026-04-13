@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { Property } from "@/types/property";
+import { formatListingRoomsForSpec } from "@/components/search/FilterLabels";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -43,7 +44,9 @@ export function PropertySpecs({
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-y-3 sm:gap-y-4 gap-x-4 sm:gap-x-8'>
           <InfoRow label='Тип' value={TYPE_LABELS[property.type] || "Коммерческая"} />
           <InfoRow label='Площадь' value={`${property.area} м²`} />
-          {property.rooms != null && <InfoRow label='Комнат' value={property.rooms} />}
+          {property.rooms != null && (
+            <InfoRow label='Комнат' value={formatListingRoomsForSpec(property.rooms)} />
+          )}
           {property.floor != null && <InfoRow label='Этаж' value={property.floor} />}
           <InfoRow label='Регион' value={regionCyrillic} />
         </div>

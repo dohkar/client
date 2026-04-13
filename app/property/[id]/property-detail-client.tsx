@@ -33,6 +33,7 @@ import { adaptProperty } from "@/lib/property-adapter";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { formatPrice } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
+import { formatListingRoomsForSpec } from "@/components/search/FilterLabels";
 import { useAuthStore } from "@/stores";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useCreateListingChat } from "@/hooks/use-chats";
@@ -465,7 +466,10 @@ export function PropertyDetailClient() {
 
           <div className='grid grid-cols-2 gap-4'>
             <SpecCell label='Тип' value={TYPE_LABELS[p.type]} />
-            <SpecCell label='Комнаты' value={p.rooms != null ? String(p.rooms) : "—"} />
+            <SpecCell
+              label='Комнаты'
+              value={p.rooms != null ? formatListingRoomsForSpec(p.rooms) : "—"}
+            />
             <SpecCell label='Площадь' value={`${p.area} м²`} />
             <SpecCell label='Этаж' value={p.floor != null ? String(p.floor) : "—"} />
           </div>
@@ -592,7 +596,10 @@ export function PropertyDetailClient() {
             <div className='space-y-1 px-4 py-4'>
               <SheetSpecRow label='Тип сделки' value={DEAL_LABELS[p.dealType]} />
               <SheetSpecRow label='Тип недвижимости' value={TYPE_LABELS[p.type]} />
-              <SheetSpecRow label='Комнаты' value={p.rooms != null ? p.rooms : "—"} />
+              <SheetSpecRow
+                label='Комнаты'
+                value={p.rooms != null ? formatListingRoomsForSpec(p.rooms) : "—"}
+              />
               <SheetSpecRow label='Площадь' value={`${p.area} м²`} />
               <SheetSpecRow label='Этаж' value={p.floor != null ? p.floor : "—"} />
               <SheetSpecRow

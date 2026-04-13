@@ -106,10 +106,12 @@ export function PropertyCard({
 
           {/* Features */}
           <div className='flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground pt-3 border-t border-border mt-auto'>
-            {property.rooms && (
-              <span className='font-medium'>{property.rooms} комн.</span>
+            {property.rooms != null && (
+              <span className='font-medium'>
+                {property.rooms === 0 ? "Студия" : `${property.rooms} комн.`}
+              </span>
             )}
-            {property.rooms && <span className='text-border'>•</span>}
+            {property.rooms != null && <span className='text-border'>•</span>}
             <span className='font-medium'>{property.area} м²</span>
             {property.floor && (
               <>

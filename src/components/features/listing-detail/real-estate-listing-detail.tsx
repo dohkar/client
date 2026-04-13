@@ -28,6 +28,7 @@ import type { MediaItem } from "@/components/features/property-gallery/types";
 import { ListingLocationMap } from "@/components/features/listing-detail/listing-location-map";
 import { formatPrice, formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
+import { formatListingRoomsForSpec } from "@/components/search/FilterLabels";
 import { useAuthStore, useFavoritesStore } from "@/stores";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useCreateListingChat } from "@/hooks/use-chats";
@@ -372,7 +373,10 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
 
           <div className='grid grid-cols-2 gap-4'>
             <SpecCell label='Тип' value={typeLabel} />
-            <SpecCell label='Комнаты' value={re.rooms != null ? String(re.rooms) : "—"} />
+            <SpecCell
+              label='Комнаты'
+              value={re.rooms != null ? formatListingRoomsForSpec(re.rooms) : "—"}
+            />
             <SpecCell label='Площадь' value={`${re.area} м²`} />
             <SpecCell
               label='Этаж'
@@ -514,7 +518,10 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
             <div className='space-y-1 px-4 py-4'>
               <SheetSpecRow label='Тип сделки' value={DEAL_LABELS[listing.dealType]} />
               <SheetSpecRow label='Тип недвижимости' value={typeLabel} />
-              <SheetSpecRow label='Комнаты' value={re.rooms != null ? re.rooms : "—"} />
+              <SheetSpecRow
+                label='Комнаты'
+                value={re.rooms != null ? formatListingRoomsForSpec(re.rooms) : "—"}
+              />
               <SheetSpecRow label='Площадь' value={`${re.area} м²`} />
               <SheetSpecRow
                 label='Этаж'
