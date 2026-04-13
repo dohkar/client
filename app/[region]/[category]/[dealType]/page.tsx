@@ -10,6 +10,7 @@ import {
   REGION_MAP,
 } from "@/lib/url/segments";
 import { Suspense } from "react";
+import { SearchRouteSkeleton } from "@/components/features/search-route-skeleton";
 
 interface SegmentDealPageProps {
   params: Promise<{
@@ -61,7 +62,7 @@ export default async function RegionCategoryDealPage({
   }
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<SearchRouteSkeleton />}>
       <>
         <SearchParamsDebug />
         <SearchPageClient

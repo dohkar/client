@@ -24,7 +24,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ListingCard } from "@/components/features/listing-card";
 import { MediaGallery } from "@/components/features/property-gallery/MediaGallery";
-import type { MediaItem } from "@/components/features/property-gallery/types";
+import { buildListingMediaItems } from "@/lib/listing-media";
 import { ListingLocationMap } from "@/components/features/listing-detail/listing-location-map";
 import { formatPrice, formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
@@ -79,48 +79,6 @@ function buildAddressLine(listing: Listing): string {
     listing.region,
   ].filter((p): p is string => Boolean(p && String(p).trim()));
   return parts.length > 0 ? parts.join(" · ") : "Адрес не указан";
-}
-
-/** Фото и видео для полноэкранной галереи (как на странице property). */
-function buildListingMediaItems(listing: Listing): MediaItem[] {
-  const items: MediaItem[] = [];
-  const seen = new Set<string>();
-  const imageSources =
-    listing.images?.length > 0 ? listing.images : listing.image ? [listing.image] : [];
-
-  imageSources.forEach((src, i) => {
-    const url = src?.trim();
-    if (!url || seen.has(url)) return;
-    seen.add(url);
-    items.push({
-      id: `img-${i}-${url.slice(-24)}`,
-      type: "image",
-      src: url,
-      alt: `${listing.title} — фото ${items.length + 1}`,
-    });
-  });
-
-  listing.videos?.forEach((src, i) => {
-    const url = src?.trim();
-    if (!url || seen.has(url)) return;
-    seen.add(url);
-    items.push({
-      id: `vid-${i}-${url.slice(-24)}`,
-      type: "video",
-      src: url,
-    });
-  });
-
-  if (items.length === 0) {
-    items.push({
-      id: "placeholder",
-      type: "image",
-      src: "/placeholder.svg",
-      alt: listing.title,
-    });
-  }
-
-  return items;
 }
 
 function StickyListingCard({
@@ -305,16 +263,31 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
           <ArrowLeft className='mr-1.5 h-4 w-4' />
           Назад
         </Button>
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='min-h-11 min-w-11'
-          onClick={copyLink}
-          aria-label='Скопировать ссылку'
-        >
-          <Share2 className='h-5 w-5' />
-        </Button>
+        <div className='flex items-center gap-1'>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='min-h-11 min-w-11'
+            onClick={copyLink}
+            aria-label='Скопировать ссылку'
+          >
+            <Share2 className='h-5 w-5' />
+          </Button>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className={`min-h-11 min-w-11 ${
+              isFavorite ? "text-destructive hover:text-destructive" : ""
+            }`}
+            onClick={handleFavorite}
+            disabled={isFavoritePending}
+            aria-label={isFavorite ? "Убрать из избранного" : "В избранное"}
+          >
+            <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+          </Button>
+        </div>
       </div>
 
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_340px] lg:items-start'>
@@ -326,21 +299,6 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
               aspectRatio='4/3'
               className='[&_[role=region]]:rounded-xl'
             />
-            <Button
-              type='button'
-              size='icon'
-              variant='secondary'
-              className={`pointer-events-auto absolute top-3 right-3 z-30 min-h-11 min-w-11 rounded-full shadow-md backdrop-blur-sm ${
-                isFavorite
-                  ? "bg-destructive text-white hover:bg-destructive/90"
-                  : "bg-background/90"
-              }`}
-              onClick={handleFavorite}
-              disabled={isFavoritePending}
-              aria-label={isFavorite ? "Убрать из избранного" : "В избранное"}
-            >
-              <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
-            </Button>
           </div>
         </div>
 

@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter, notFound } from "next/navigation";
-import Image from "next/image";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   MapPin,
   Calendar,
@@ -17,6 +15,7 @@ import {
   ArrowLeft,
   Phone,
   MessageSquare,
+  Share2,
 } from "lucide-react";
 import { useAuthStore, useFavoritesStore } from "@/stores";
 import { ROUTES } from "@/constants";
@@ -28,6 +27,9 @@ import { getCategoryConfig } from "@/constants/listing-categories";
 import { useCreateListingChat } from "@/hooks/use-chats";
 import { useFavorites } from "@/hooks/use-favorites";
 import { RealEstateListingDetail } from "@/components/features/listing-detail/real-estate-listing-detail";
+import { ListingPageSkeleton } from "@/components/features/listing-detail/listing-page-skeleton";
+import { MediaGallery } from "@/components/features/property-gallery/MediaGallery";
+import { buildListingMediaItems } from "@/lib/listing-media";
 import { formatListingRoomsForSpec } from "@/components/search/FilterLabels";
 import type { Listing, ListingCategory } from "@/types/listing";
 
@@ -241,15 +243,25 @@ export default function ListingPage() {
     analyticsService.recordView(listingId);
   }, [listingId, listing]);
 
-  if (isLoading) {
-    return (
-      <div className='container max-w-5xl mx-auto py-8 px-4 space-y-6'>
-        <Skeleton className='h-8 w-48' />
-        <Skeleton className='h-96 w-full rounded-xl' />
-        <Skeleton className='h-6 w-64' />
-        <Skeleton className='h-40 w-full' />
-      </div>
+  const mediaItems = useMemo(
+    () => (listing ? buildListingMediaItems(listing) : []),
+    [listing]
+  );
+
+  const copyListingLink = useCallback(() => {
+    if (typeof window === "undefined" || !listing) return;
+    const path = listing.slug
+      ? `/listing/${listing.id}-${listing.slug}`
+      : `/listing/${listing.id}`;
+    const url = `${window.location.origin}${path}`;
+    void navigator.clipboard.writeText(url).then(
+      () => toast.success("Ссылка скопирована"),
+      () => toast.error("Не удалось скопировать")
     );
+  }, [listing]);
+
+  if (isLoading) {
+    return <ListingPageSkeleton />;
   }
 
   if (!isLoading && (error || !listing)) {
@@ -298,40 +310,51 @@ export default function ListingPage() {
   };
 
   return (
-    <div className='container max-w-5xl mx-auto py-6 px-4 space-y-6'>
-      <Button variant='ghost' size='sm' onClick={() => router.back()}>
-        <ArrowLeft className='mr-1.5 h-4 w-4' />
-        Назад
-      </Button>
-
-      {/* Gallery */}
-      {listingData.images.length > 0 && (
-        <div className='relative w-full aspect-video rounded-xl overflow-hidden bg-muted'>
-          <Image
-            src={listingData.images[0]}
-            alt={listingData.title}
-            fill
-            className='object-cover'
-            priority
-          />
+    <div className='container mx-auto max-w-7xl space-y-6 px-4 py-6'>
+      <div className='flex flex-wrap items-center justify-between gap-2'>
+        <Button variant='ghost' size='sm' onClick={() => router.back()} className='-ml-1'>
+          <ArrowLeft className='mr-1.5 h-4 w-4' />
+          Назад
+        </Button>
+        <div className='flex items-center gap-1'>
           <Button
+            type='button'
+            variant='ghost'
             size='icon'
-            variant='secondary'
-            className={`absolute top-4 right-4 rounded-full backdrop-blur shadow-md ${
-              isFavorite ? "bg-destructive text-white" : "bg-background/90"
+            className='min-h-11 min-w-11'
+            onClick={copyListingLink}
+            aria-label='Скопировать ссылку'
+          >
+            <Share2 className='h-5 w-5' />
+          </Button>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className={`min-h-11 min-w-11 ${
+              isFavorite ? "text-destructive hover:text-destructive" : ""
             }`}
             aria-label={isFavorite ? "Удалить из избранного" : "Добавить в избранное"}
             onClick={handleToggleFavorite}
             disabled={isFavoritePending}
           >
             <Heart
-              className={`h-5 w-5 ${
-                isFavorite ? "fill-current" : ""
-              } ${isFavoritePending ? "opacity-70" : ""}`}
+              className={`h-5 w-5 ${isFavorite ? "fill-current" : ""} ${
+                isFavoritePending ? "opacity-70" : ""
+              }`}
             />
           </Button>
         </div>
-      )}
+      </div>
+
+      {/* Галерея: полноэкран — кнопка на самом снимке (справа сверху) */}
+      <div className='relative w-full max-lg:max-h-[min(70vw,420px)] overflow-hidden rounded-xl lg:max-h-[min(560px,calc(100dvh-10rem))]'>
+        <MediaGallery
+          media={mediaItems}
+          aspectRatio='16/9'
+          className='[&_[role=region]]:rounded-xl'
+        />
+      </div>
 
       {/* Header */}
       <div className='space-y-3'>

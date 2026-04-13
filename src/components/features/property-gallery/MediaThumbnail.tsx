@@ -101,6 +101,7 @@ export const MediaThumbnail = memo(function MediaThumbnail({
   };
 
   if (hasError) {
+    const isStrip = size === "strip";
     return (
       <div
         role='button'
@@ -109,7 +110,7 @@ export const MediaThumbnail = memo(function MediaThumbnail({
         onClick={onClick}
         onKeyDown={handleKeyDown}
         className={cn(
-          "relative group overflow-hidden flex items-center justify-center bg-neutral-100 cursor-pointer select-none focus:outline-none",
+          "group relative flex cursor-pointer select-none items-center justify-center overflow-hidden bg-muted focus:outline-none",
           sizeProps.rounded,
           sizeProps.shadow,
           "aspect-4/3",
@@ -118,13 +119,26 @@ export const MediaThumbnail = memo(function MediaThumbnail({
         )}
         data-testid={`media-thumbnail-${index}`}
       >
-        <div className='flex flex-col items-center justify-center w-full h-full gap-1'>
+        <div
+          className={cn(
+            "flex flex-col items-center justify-center gap-0.5 px-1 text-center",
+            isStrip && "gap-0"
+          )}
+        >
           <ImageOff
-            className='w-8 h-8 text-neutral-400 mx-auto mb-1'
+            className={cn(
+              "text-muted-foreground/80",
+              isStrip ? "size-5" : "mx-auto mb-1 size-8"
+            )}
             aria-hidden='true'
           />
-          <span className='text-xs text-neutral-500 text-center'>
-            Не удалось загрузить
+          <span
+            className={cn(
+              "text-muted-foreground",
+              isStrip ? "text-[10px] leading-tight" : "text-xs"
+            )}
+          >
+            {isStrip ? "Нет фото" : "Не удалось загрузить"}
           </span>
         </div>
         <span
@@ -208,13 +222,6 @@ export const MediaThumbnail = memo(function MediaThumbnail({
           sizeProps.outline
         )}
       />
-
-      {/* Индикатор позиции для strip */}
-      {size === "strip" && (
-        <div className='absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded z-30 pointer-events-none select-none'>
-          {index + 1}
-        </div>
-      )}
     </div>
   );
 });

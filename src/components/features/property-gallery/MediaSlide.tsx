@@ -318,52 +318,65 @@ export function MediaSlide({
     onLoadingChangeRef.current?.(true, index);
   }, [index]);
 
-  // Toolbar для zoom (image only)
+  // Панель масштаба: слева, на десктопе — по hover/focus; на мобильных — только при увеличении (двойной тап)
   const Toolbar = useMemo(() => {
     if (!isImageItem) return null;
     return (
-      <div className='absolute top-5 right-20 z-30 flex gap-2 bg-transparent'>
+      <div
+        className={cn(
+          "absolute left-2 top-2 z-30 flex gap-0.5 rounded-full border border-white/15 bg-black/55 p-0.5 shadow-lg backdrop-blur-md transition-opacity duration-200 md:left-3 md:top-3 md:gap-1 md:p-1",
+          zoom > MIN_ZOOM
+            ? "opacity-100"
+            : "opacity-0 max-md:pointer-events-none md:pointer-events-none md:group-hover/slide:pointer-events-auto md:group-focus-within/slide:pointer-events-auto",
+          zoom === MIN_ZOOM &&
+            "md:group-hover/slide:opacity-100 md:group-focus-within/slide:opacity-100"
+        )}
+      >
         <button
           type='button'
           className={cn(
-            "rounded-full p-2 bg-white/90 hover:bg-white transition-all shadow-lg border border-gray-200 focus:outline-none",
-            zoom === MIN_ZOOM ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+            "rounded-full p-1.5 text-white transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 md:p-2",
+            zoom === MIN_ZOOM ? "cursor-not-allowed opacity-40" : "cursor-pointer"
           )}
           onClick={handleZoomOut}
           tabIndex={0}
           aria-label='Уменьшить'
           disabled={zoom === MIN_ZOOM}
         >
-          <ZoomOut className='text-gray-700' />
+          <ZoomOut className='size-4 md:size-[18px]' />
         </button>
         <button
           type='button'
           className={cn(
-            "rounded-full p-2 bg-white/90 hover:bg-white transition-all shadow-lg border border-gray-200 focus:outline-none",
-            zoom === MAX_ZOOM ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+            "rounded-full p-1.5 text-white transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 md:p-2",
+            zoom === MAX_ZOOM ? "cursor-not-allowed opacity-40" : "cursor-pointer"
           )}
           onClick={handleZoomIn}
           tabIndex={0}
           aria-label='Увеличить'
           disabled={zoom === MAX_ZOOM}
         >
-          <ZoomIn className='text-gray-700' />
+          <ZoomIn className='size-4 md:size-[18px]' />
         </button>
       </div>
     );
   }, [isImageItem, zoom, handleZoomIn, handleZoomOut]);
 
-  // overlay hint
+  // Подсказка только в режиме панорамы (после зума), не перекрывает миниатюры снизу
   const OverlayHint = useMemo(() => {
     if (!(canZoom && !isDragging)) return null;
     return (
       <div
-        className='absolute bottom-4 inset-x-0 flex justify-center pointer-events-none z-20'
+        className='pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center px-2 md:bottom-4'
         aria-hidden
       >
-        <div className='rounded-lg bg-black/75 text-sm text-white px-4 py-1.5 shadow-lg font-medium backdrop-blur'>
-          Перетащите для панорамирования. Двойной клик/тап — сброс.
-          <span className='hidden md:inline'> Колесо мыши — масштаб.</span>
+        <div className='max-w-[min(100%,20rem)] rounded-md bg-black/70 px-2.5 py-1 text-center text-[11px] font-medium text-white shadow-md backdrop-blur-sm md:max-w-none md:px-4 md:py-1.5 md:text-sm'>
+          <span className='md:hidden'>
+            Перемещайте фото пальцем. Двойной тап — уменьшить.
+          </span>
+          <span className='hidden md:inline'>
+            Перетащите для панорамы. Двойной клик — сброс. Колесо мыши — масштаб.
+          </span>
         </div>
       </div>
     );
@@ -374,7 +387,7 @@ export function MediaSlide({
     <div
       ref={containerRef}
       className={cn(
-        "w-full h-full bg-black relative overflow-hidden select-none transition-[background-color] duration-200",
+        "group/slide relative h-full w-full overflow-hidden bg-black select-none transition-[background-color] duration-200",
         canZoom && isDragging
           ? "cursor-grabbing"
           : canZoom

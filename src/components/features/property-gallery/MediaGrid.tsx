@@ -3,6 +3,12 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, X as CloseIcon, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import type { MediaItem, GalleryZoomLevel } from "./types";
 import { GALLERY_CONFIG } from "./constants";
@@ -49,10 +55,11 @@ export function MediaGrid({
   const [fullscreen, setFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [thumbsApi, setThumbsApi] = useState<CarouselApi>();
 
   // REFS
   const mainSlideRef = useRef<HTMLDivElement | null>(null);
-  const thumbsRef = useRef<HTMLDivElement>(null);
+  const thumbsStripRef = useRef<HTMLDivElement | null>(null);
   const slideWrapperRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const swipeOffsetX = useRef(0);
@@ -106,7 +113,7 @@ export function MediaGrid({
   );
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (thumbsRef.current?.contains(e.target as Node)) return;
+    if (thumbsStripRef.current?.contains(e.target as Node)) return;
     touchStartX.current = e.touches[0].clientX;
     swipeOffsetX.current = 0;
     if (slideWrapperRef.current) slideWrapperRef.current.style.transform = "";
@@ -115,7 +122,7 @@ export function MediaGrid({
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
       if (zoom !== 1 || !hasMore) return;
-      if (thumbsRef.current?.contains(e.target as Node)) return;
+      if (thumbsStripRef.current?.contains(e.target as Node)) return;
       const w = slideWrapperRef.current;
       if (!w) return;
       const diff = touchStartX.current - e.touches[0].clientX;
@@ -131,7 +138,7 @@ export function MediaGrid({
 
   const handleTouchEnd = useCallback(
     (e: React.TouchEvent) => {
-      if (thumbsRef.current?.contains(e.target as Node)) return;
+      if (thumbsStripRef.current?.contains(e.target as Node)) return;
       if (slideWrapperRef.current) slideWrapperRef.current.style.transform = "";
       swipeOffsetX.current = 0;
       if (zoom !== 1 || !hasMore) return;
@@ -181,20 +188,11 @@ export function MediaGrid({
     return () => clearTimeout(t);
   }, [media]);
 
-  // Scroll to active thumbnail
+  // Прокрутка полосы миниатюр (Embla / shadcn Carousel)
   useEffect(() => {
-    if (!thumbsRef.current) return;
-    const activeThumb = thumbsRef.current.children[currentIndex] as
-      | HTMLElement
-      | undefined;
-    if (activeThumb) {
-      activeThumb.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-    }
-  }, [currentIndex]);
+    if (!thumbsApi || !hasMore) return;
+    thumbsApi.scrollTo(currentIndex);
+  }, [thumbsApi, currentIndex, hasMore]);
 
   // Preload соседние изображения
   useEffect(() => {
@@ -280,10 +278,10 @@ export function MediaGrid({
         aria-roledescription='Галерея с миниатюрами'
         tabIndex={0}
         className={cn(
-          "relative rounded-2xl overflow-hidden bg-neutral-900 outline-none transition-shadow",
+          "group/gallery relative overflow-hidden rounded-2xl bg-neutral-900 outline-none transition-shadow",
           containerAspect,
           fullscreen &&
-            "fixed z-9999 inset-0 rounded-none flex items-center justify-center bg-black min-h-0 aspect-auto"
+            "fixed z-9999 inset-0 flex aspect-auto min-h-0 max-h-none items-center justify-center rounded-none bg-black"
         )}
         style={fullscreen ? { aspectRatio: undefined } : {}}
         onKeyDown={(e) => {
@@ -333,14 +331,16 @@ export function MediaGrid({
           />
         </div>
 
-        {/* Кнопка полноэкранного режима */}
+        {/* Полноэкран: справа сверху на снимке */}
         <Button
           type='button'
           variant='ghost'
           size='icon'
           className={cn(
-            "absolute top-4 right-4 z-20 h-11 w-11 rounded-full bg-white/60 text-black hover:bg-white/80 border border-white/70 shadow-xl transition-all backdrop-blur-sm focus:outline-none group",
-            fullscreen && "top-6 right-6 h-13 w-13"
+            "absolute right-2 top-2 z-20 size-10 rounded-full border border-white/20 bg-black/50 text-white shadow-lg backdrop-blur-md transition-all hover:bg-black/65 focus-visible:ring-2 focus-visible:ring-white/40 md:right-3 md:top-3 md:size-11",
+            fullscreen && "right-6 top-6 size-12 opacity-100",
+            !fullscreen &&
+              "max-md:opacity-100 md:opacity-0 md:pointer-events-none md:transition-opacity md:duration-200 md:group-hover/gallery:opacity-100 md:group-hover/gallery:pointer-events-auto md:group-focus-within/gallery:opacity-100 md:group-focus-within/gallery:pointer-events-auto"
           )}
           aria-label={
             fullscreen ? "Выйти из полноэкранного режима" : "Открыть на весь экран"
@@ -348,13 +348,13 @@ export function MediaGrid({
           onClick={handleToggleFullscreen}
         >
           {fullscreen ? (
-            <CloseIcon className='h-6 w-6 group-hover:scale-110 transition-transform' />
+            <CloseIcon className='size-5 md:size-6' />
           ) : (
-            <Maximize2 className='h-6 w-6 group-hover:scale-110 transition-transform' />
+            <Maximize2 className='size-5 md:size-6' />
           )}
         </Button>
 
-        {/* Стрелки навигации улучшенные */}
+        {/* Стрелки: только десктоп — на мобильных свайп и миниатюры */}
         {hasMore && (
           <>
             <Button
@@ -362,104 +362,122 @@ export function MediaGrid({
               variant='ghost'
               size='icon'
               className={cn(
-                "absolute left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 rounded-full bg-white/60 text-black hover:bg-white/80 border border-white/70 shadow-xl transition-all backdrop-blur-sm focus:outline-none group opacity-90 hover:opacity-100",
-                fullscreen && "left-6 h-13 w-13"
+                "absolute left-2 top-1/2 z-20 hidden size-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/45 text-white shadow-lg backdrop-blur-md hover:bg-black/60 md:flex md:size-11",
+                fullscreen && "left-5 size-12 opacity-100 pointer-events-auto",
+                !fullscreen &&
+                  "opacity-0 pointer-events-none transition-opacity duration-200 group-hover/gallery:opacity-100 group-hover/gallery:pointer-events-auto group-focus-within/gallery:opacity-100 group-focus-within/gallery:pointer-events-auto"
               )}
               aria-label='Предыдущее фото'
               onClick={handlePrev}
               tabIndex={-1}
             >
-              <ChevronLeft
-                className={cn(
-                  "h-6 w-6 group-hover:scale-110 transition-transform",
-                  fullscreen && "h-7 w-7"
-                )}
-              />
+              <ChevronLeft className={cn("size-5", fullscreen && "size-6")} />
             </Button>
             <Button
               type='button'
               variant='ghost'
               size='icon'
               className={cn(
-                "absolute right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 rounded-full bg-white/60 text-black hover:bg-white/80 border border-white/70 shadow-xl transition-all backdrop-blur-sm focus:outline-none group opacity-90 hover:opacity-100",
-                fullscreen && "right-6 h-13 w-13"
+                "absolute right-2 top-1/2 z-20 hidden size-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/45 text-white shadow-lg backdrop-blur-md hover:bg-black/60 md:flex md:size-11",
+                fullscreen && "right-5 size-12 opacity-100 pointer-events-auto",
+                !fullscreen &&
+                  "opacity-0 pointer-events-none transition-opacity duration-200 group-hover/gallery:opacity-100 group-hover/gallery:pointer-events-auto group-focus-within/gallery:opacity-100 group-focus-within/gallery:pointer-events-auto"
               )}
               aria-label='Следующее фото'
               onClick={handleNext}
               tabIndex={-1}
             >
-              <ChevronRight
-                className={cn(
-                  "h-6 w-6 group-hover:scale-110 transition-transform",
-                  fullscreen && "h-7 w-7"
-                )}
-              />
+              <ChevronRight className={cn("size-5", fullscreen && "size-6")} />
             </Button>
           </>
         )}
 
-        {/* Индикатор текущей позиции */}
+        {/* Мобильные точки — компактно; на md+ счётчик 1/n по hover (в полноэкране всегда видно) */}
         {hasMore && (
-          <div
-            className={cn(
-              "absolute bottom-3 left-1/2 -translate-x-1/2 z-20 rounded-lg bg-black/70 text-white text-base font-semibold px-5 py-2 shadow-lg backdrop-blur-lg border border-white/15 flex items-center gap-1.5",
-              fullscreen && "bottom-7 px-7 py-3 text-lg"
-            )}
-            aria-live='polite'
-            aria-atomic='true'
-            style={{
-              letterSpacing: ".02em",
-              minWidth: 68,
-              justifyContent: "center",
-            }}
-          >
-            <span className='tabular-nums'>{currentIndex + 1}</span>
-            <span className='mx-1 text-white/80 select-none'>/</span>
-            <span className='tabular-nums'>{media.length}</span>
-          </div>
+          <>
+            <div
+              className={cn(
+                "absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 gap-1.5 md:hidden",
+                "px-2 py-1"
+              )}
+              aria-hidden
+            >
+              {media.map((item, i) => (
+                <span
+                  key={item.id}
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full transition-transform",
+                    i === currentIndex ? "scale-110 bg-white shadow-sm" : "bg-white/45"
+                  )}
+                />
+              ))}
+            </div>
+            <div
+              className={cn(
+                "absolute bottom-3 left-1/2 z-20 hidden min-w-[4.25rem] -translate-x-1/2 items-center justify-center gap-0.5 rounded-full border border-white/15 bg-black/60 px-3 py-1 text-xs font-semibold text-white shadow-md backdrop-blur-md tabular-nums md:flex",
+                fullscreen && "bottom-7 px-5 py-1.5 text-sm opacity-100",
+                !fullscreen &&
+                  "pointer-events-none opacity-0 transition-opacity duration-200 group-hover/gallery:opacity-100 group-focus-within/gallery:opacity-100"
+              )}
+              aria-live='polite'
+              aria-atomic='true'
+            >
+              <span>{currentIndex + 1}</span>
+              <span className='text-white/70'>/</span>
+              <span>{media.length}</span>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Галерея превьюшек */}
+      {/* Полоса миниатюр: shadcn Carousel (Embla) — свайп и snap на мобильных */}
       {hasMore && (
         <div
-          ref={thumbsRef}
-          className='flex gap-2 overflow-x-auto pb-3 pt-1 px-2 scrollbar-hide scroll-smooth touch-pan-x w-full justify-center bg-gradient-to-t from-black/10 via-black/5 to-transparent rounded-b-lg shadow-inner'
-          style={{ WebkitOverflowScrolling: "touch" }}
+          ref={thumbsStripRef}
+          className='w-full rounded-b-xl bg-gradient-to-t from-muted/30 to-transparent pb-2 pt-2'
         >
-          {media.map((item, idx) => {
-            const isActive = idx === currentIndex;
-            return (
-              <button
-                key={item.id}
-                type='button'
-                tabIndex={0}
-                aria-label={`Фото ${idx + 1} из ${media.length}`}
-                aria-current={isActive || undefined}
-                onClick={() => handleThumbnailClick(idx)}
-                className={cn(
-                  "shrink-0 rounded-xl overflow-hidden transition-all duration-200 outline-none border-2 focus:outline-none",
-                  isActive
-                    ? "border-primary-500 opacity-100 scale-110 shadow-lg"
-                    : "border-transparent opacity-70 hover:opacity-100 hover:scale-105"
-                )}
-                style={{
-                  boxShadow: isActive ? "0 0 1.5rem 0 rgba(53,122,255,0.10)" : undefined,
-                  transition: "all 0.18s cubic-bezier(.4,0,.2,1)",
-                }}
-              >
-                <MediaThumbnail
-                  item={item}
-                  index={idx}
-                  onClick={() => {}}
-                  size='strip'
-                  className='h-16 w-24 sm:h-18 sm:w-28 md:h-20 md:w-32 aspect-4/3 bg-neutral-100 object-cover'
-                  lazy
-                  placeholder='empty'
-                />
-              </button>
-            );
-          })}
+          <Carousel
+            opts={{
+              align: "center",
+              containScroll: "trimSnaps",
+              dragFree: true,
+            }}
+            setApi={setThumbsApi}
+            className='w-full'
+          >
+            <CarouselContent className='-ml-2 justify-center sm:justify-start'>
+              {media.map((item, idx) => {
+                const isActive = idx === currentIndex;
+                return (
+                  <CarouselItem key={item.id} className='basis-auto pl-2'>
+                    <button
+                      type='button'
+                      tabIndex={0}
+                      aria-label={`Фото ${idx + 1} из ${media.length}`}
+                      aria-current={isActive || undefined}
+                      onClick={() => handleThumbnailClick(idx)}
+                      className={cn(
+                        "overflow-hidden rounded-xl border-2 outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        isActive
+                          ? "scale-105 border-primary opacity-100 shadow-lg ring-1 ring-primary/20"
+                          : "scale-100 border-transparent opacity-70 hover:scale-[1.02] hover:opacity-100"
+                      )}
+                    >
+                      <MediaThumbnail
+                        item={item}
+                        index={idx}
+                        onClick={() => {}}
+                        size='strip'
+                        className='aspect-4/3 h-14 w-[4.5rem] bg-neutral-100 object-cover sm:h-16 sm:w-24 md:h-[4.5rem] md:w-28'
+                        lazy
+                        placeholder='empty'
+                      />
+                    </button>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+          </Carousel>
         </div>
       )}
     </div>
