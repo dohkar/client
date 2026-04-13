@@ -10,7 +10,7 @@ import type {
 
 /**
  * Сервис для работы с авторизацией.
- * Access token — только в памяти; refresh — в HttpOnly cookie (управляется сервером).
+ * Access token — только в памяти (после F5 — silent refresh по HttpOnly cookie).
  */
 export const authService = {
   /**
@@ -68,10 +68,7 @@ export const authService = {
   /**
    * Подтвердить код и войти/зарегистрироваться по SMS
    */
-  async verifyCode(
-    phone: string,
-    code: string
-  ): Promise<UserGetMeResponse> {
+  async verifyCode(phone: string, code: string): Promise<UserGetMeResponse> {
     const response = await apiClient.post<{
       accessToken: string;
       user: UserGetMeResponse;

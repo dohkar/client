@@ -13,7 +13,7 @@ interface ApiResponse<T> {
 
 /**
  * Базовый класс для работы с API.
- * Access token — в памяти; refresh — в HttpOnly cookie (отправляется с credentials: 'include').
+ * Access token — в памяти; refresh — HttpOnly cookie (credentials: 'include').
  */
 class ApiClient {
   private baseUrl: string;
