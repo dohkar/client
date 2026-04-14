@@ -2,7 +2,8 @@
  * Константы галереи медиа (слайды, зум, панорамирование).
  */
 export const GALLERY_CONFIG = {
-  SLIDE_CHANGE_DELAY_MS: 120,
+  /** Искусственная задержка смены слайда отключена — переключение сразу после предзагрузки. */
+  SLIDE_CHANGE_DELAY_MS: 0,
   DOUBLE_TAP_DELAY_MS: 300,
   ZOOM_STEP: 0.35,
   MIN_ZOOM: 1,

@@ -448,7 +448,8 @@ export function MediaSlide({
               fill
               draggable={false}
               className={cn("object-contain select-none pointer-events-auto")}
-              priority={index < 3}
+              priority
+              loading='eager'
               sizes='(max-width: 1280px) 100vw, 1280px'
               onLoad={handleImageLoad}
               onError={handleImageError}
