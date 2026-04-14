@@ -4,7 +4,20 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Heart, MapPin, MessageSquare, Phone, Share2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  CheckCircle2,
+  Heart,
+  Home,
+  Layers,
+  MapPin,
+  Maximize2,
+  MessageSquare,
+  Phone,
+  Share2,
+  Sparkles,
+} from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode } from "swiper/modules";
 import "swiper/css";
@@ -14,14 +27,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ListingCard } from "@/components/features/listing-card";
 import { MediaGallery } from "@/components/features/property-gallery/MediaGallery";
 import { buildListingMediaItems } from "@/lib/listing-media";
@@ -36,6 +41,7 @@ import { useRelatedListings } from "@/hooks/use-listings";
 import { analyticsService } from "@/services/analytics.service";
 import type { Listing } from "@/types/listing";
 import type { PropertyDealType } from "@/types/property";
+import type { LucideIcon } from "lucide-react";
 
 const DEAL_LABELS: Record<PropertyDealType, string> = {
   SALE: "Продам",
@@ -52,20 +58,22 @@ const RE_TYPE_LABELS: Record<string, string> = {
   COMMERCIAL: "Коммерция",
 };
 
-function SpecCell({ label, value }: { label: string; value: React.ReactNode }) {
+function SpecCell({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: React.ReactNode;
+  icon?: LucideIcon;
+}) {
   return (
-    <div className='min-w-0 space-y-1'>
-      <p className='text-xs text-muted-foreground'>{label}</p>
-      <p className='text-sm font-semibold text-foreground'>{value}</p>
-    </div>
-  );
-}
-
-function SheetSpecRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className='flex justify-between gap-4 border-b border-border/70 py-2.5 text-sm last:border-0'>
-      <span className='shrink-0 text-muted-foreground'>{label}</span>
-      <span className='text-right font-medium'>{value}</span>
+    <div className='min-w-0 space-y-2 rounded-xl border border-border/70 bg-gradient-to-br from-muted/35 via-background to-background px-3 py-3 shadow-sm sm:px-4 sm:py-3.5'>
+      <div className='flex items-center gap-2'>
+        {Icon ? <Icon className='size-4 shrink-0 text-primary' aria-hidden /> : null}
+        <p className='text-xs font-medium text-muted-foreground'>{label}</p>
+      </div>
+      <p className='text-sm font-semibold tracking-tight text-foreground'>{value}</p>
     </div>
   );
 }
@@ -79,6 +87,18 @@ function buildAddressLine(listing: Listing): string {
     listing.region,
   ].filter((p): p is string => Boolean(p && String(p).trim()));
   return parts.length > 0 ? parts.join(" · ") : "Адрес не указан";
+}
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  if (value === null || value === undefined || value === "" || value === "—") return null;
+  return (
+    <div className='flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4'>
+      <dt className='shrink-0 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+        {label}
+      </dt>
+      <dd className='min-w-0 text-sm font-medium text-foreground sm:text-right'>{value}</dd>
+    </div>
+  );
 }
 
 function StickyListingCard({
@@ -165,7 +185,6 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
   const re = listing.realEstate;
 
   const [descExpanded, setDescExpanded] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   const mediaItems = useMemo(() => buildListingMediaItems(listing), [listing]);
 
@@ -213,8 +232,6 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
     ? new Date(listing.sellerCreatedAt).getFullYear()
     : null;
 
-  const featurePreview = re.features.slice(0, 3);
-  const featureRest = Math.max(0, re.features.length - 3);
   const descriptionLines = listing.description.split("\n");
   const needsDescriptionExpand =
     listing.description.length > 160 || descriptionLines.length > 3;
@@ -329,37 +346,20 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
             <span className='text-sm'>{buildAddressLine(listing)}</span>
           </div>
 
-          <div className='grid grid-cols-2 gap-4'>
-            <SpecCell label='Тип' value={typeLabel} />
+          <div className='grid grid-cols-2 gap-3 sm:gap-4'>
+            <SpecCell label='Тип' value={typeLabel} icon={Building2} />
             <SpecCell
               label='Комнаты'
               value={re.rooms != null ? formatListingRoomsForSpec(re.rooms) : "—"}
+              icon={Home}
             />
-            <SpecCell label='Площадь' value={`${re.area} м²`} />
+            <SpecCell label='Площадь' value={`${re.area} м²`} icon={Maximize2} />
             <SpecCell
               label='Этаж'
               value={listing.floor != null ? String(listing.floor) : "—"}
+              icon={Layers}
             />
           </div>
-
-          {re.features.length > 0 && (
-            <div className='flex flex-wrap gap-2'>
-              {featurePreview.map((f) => (
-                <Badge key={f} variant='outline'>
-                  {f}
-                </Badge>
-              ))}
-              {featureRest > 0 && <Badge variant='secondary'>+{featureRest} ещё</Badge>}
-            </div>
-          )}
-
-          <Button
-            variant='outline'
-            className='w-full sm:w-auto'
-            onClick={() => setSheetOpen(true)}
-          >
-            Все характеристики →
-          </Button>
 
           <div>
             <div
@@ -438,6 +438,94 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
         </div>
       </div>
 
+      <section className='mt-10 scroll-mt-4' aria-labelledby='listing-details-heading'>
+        <div className='overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm'>
+          <div className='border-b border-border/60 bg-gradient-to-r from-muted/40 via-muted/25 to-background px-5 py-4 sm:px-6'>
+            <h2
+              id='listing-details-heading'
+              className='flex flex-wrap items-center gap-2 text-lg font-semibold tracking-tight text-foreground'
+            >
+              <Sparkles className='size-5 shrink-0 text-primary' aria-hidden />
+              Характеристики и удобства
+            </h2>
+            <p className='mt-1 text-sm text-muted-foreground'>
+              Полный список параметров и удобств — без скрытых блоков
+            </p>
+          </div>
+          <div className='grid gap-0 lg:grid-cols-2'>
+            <div className='space-y-4 p-5 sm:p-6 lg:border-r lg:border-border/60'>
+              <h3 className='flex items-center gap-2 text-sm font-semibold text-foreground'>
+                <MapPin className='size-4 shrink-0 text-primary' aria-hidden />
+                Адрес и параметры
+              </h3>
+              <dl className='space-y-3'>
+                <DetailRow label='Тип сделки' value={DEAL_LABELS[listing.dealType]} />
+                <DetailRow label='Тип жилья' value={typeLabel} />
+                <DetailRow
+                  label='Комнаты'
+                  value={
+                    re.rooms != null ? formatListingRoomsForSpec(re.rooms) : undefined
+                  }
+                />
+                <DetailRow label='Площадь' value={`${re.area} м²`} />
+                <DetailRow
+                  label='Этаж'
+                  value={listing.floor != null ? String(listing.floor) : undefined}
+                />
+                <DetailRow
+                  label='Цена за м²'
+                  value={
+                    pricePerMeter != null ? `${formatPrice(pricePerMeter)} / м²` : undefined
+                  }
+                />
+                <DetailRow label='Регион' value={listing.region} />
+                <DetailRow label='Город' value={listing.city} />
+                <DetailRow label='Улица' value={listing.street} />
+                <DetailRow label='Дом' value={listing.house} />
+                <DetailRow label='Ориентир' value={listing.location} />
+                <DetailRow
+                  label='Координаты'
+                  value={
+                    mapLatitude != null && mapLongitude != null
+                      ? `${mapLatitude.toFixed(5)}, ${mapLongitude.toFixed(5)}`
+                      : undefined
+                  }
+                />
+              </dl>
+            </div>
+            <div className='bg-muted/20 p-5 sm:p-6 lg:bg-gradient-to-br lg:from-muted/25 lg:to-background'>
+              <h3 className='flex items-center gap-2 text-sm font-semibold text-foreground'>
+                <CheckCircle2 className='size-4 shrink-0 text-primary' aria-hidden />
+                Удобства и оснащение
+              </h3>
+              {re.features.length === 0 ? (
+                <p className='mt-4 text-sm text-muted-foreground'>
+                  Список удобств не указан — уточните у продавца.
+                </p>
+              ) : (
+                <ul
+                  className='mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3'
+                  role='list'
+                >
+                  {re.features.map((feature, index) => (
+                    <li
+                      key={`${index}-${feature}`}
+                      className='flex items-start gap-2.5 rounded-xl border border-border/70 bg-background px-3 py-2.5 text-sm shadow-sm'
+                    >
+                      <CheckCircle2
+                        className='mt-0.5 size-4 shrink-0 text-primary'
+                        aria-hidden
+                      />
+                      <span className='leading-snug text-foreground'>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <ListingLocationMap
         className='mt-10'
         latitude={mapLatitude}
@@ -465,77 +553,6 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
           </Swiper>
         </section>
       )}
-
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side='right' className='flex w-full flex-col p-0 sm:max-w-[480px]'>
-          <SheetHeader className='shrink-0 border-b px-4 py-4 pr-12'>
-            <SheetTitle>Все характеристики</SheetTitle>
-            <SheetDescription>{listing.title}</SheetDescription>
-          </SheetHeader>
-          <ScrollArea className='h-[calc(100dvh-5.5rem)]'>
-            <div className='space-y-1 px-4 py-4'>
-              <SheetSpecRow label='Тип сделки' value={DEAL_LABELS[listing.dealType]} />
-              <SheetSpecRow label='Тип недвижимости' value={typeLabel} />
-              <SheetSpecRow
-                label='Комнаты'
-                value={re.rooms != null ? formatListingRoomsForSpec(re.rooms) : "—"}
-              />
-              <SheetSpecRow label='Площадь' value={`${re.area} м²`} />
-              <SheetSpecRow
-                label='Этаж'
-                value={listing.floor != null ? listing.floor : "—"}
-              />
-              <SheetSpecRow
-                label='Широта / долгота'
-                value={
-                  mapLatitude != null && mapLongitude != null
-                    ? `${mapLatitude.toFixed(5)}, ${mapLongitude.toFixed(5)}`
-                    : "—"
-                }
-              />
-              <SheetSpecRow label='Регион' value={listing.region ?? "—"} />
-              <SheetSpecRow label='Город' value={listing.city ?? "—"} />
-              <SheetSpecRow label='Улица' value={listing.street ?? "—"} />
-              <SheetSpecRow label='Дом' value={listing.house ?? "—"} />
-              <SheetSpecRow label='Адрес (строка)' value={listing.location ?? "—"} />
-              <SheetSpecRow label='Цена' value={formatPrice(listing.price)} />
-              <SheetSpecRow
-                label='Цена за м²'
-                value={pricePerMeter != null ? `${formatPrice(pricePerMeter)} / м²` : "—"}
-              />
-              <SheetSpecRow label='Статус' value={listing.status} />
-              <SheetSpecRow label='Модерация' value={listing.moderationStatus} />
-              <SheetSpecRow label='Просмотры' value={listing.views} />
-              <SheetSpecRow
-                label='Опубликовано'
-                value={new Date(listing.createdAt).toLocaleString("ru-RU")}
-              />
-              <SheetSpecRow
-                label='Обновлено'
-                value={new Date(listing.updatedAt).toLocaleString("ru-RU")}
-              />
-            </div>
-            <div className='border-t px-4 py-4'>
-              <p className='mb-2 text-sm font-medium'>Удобства</p>
-              {re.features.length === 0 ? (
-                <p className='text-sm text-muted-foreground'>Не указаны</p>
-              ) : (
-                <ul className='list-inside list-disc space-y-1 text-sm'>
-                  {re.features.map((f) => (
-                    <li key={f}>{f}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <div className='border-t px-4 py-6'>
-              <p className='mb-2 text-sm font-medium'>Описание</p>
-              <p className='whitespace-pre-wrap text-sm leading-relaxed'>
-                {listing.description}
-              </p>
-            </div>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
