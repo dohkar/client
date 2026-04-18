@@ -1,5 +1,20 @@
 import type { Listing } from "@/types/listing";
 import type { ListingFormData } from "./schema";
+import { getRegionNameById } from "@/lib/regions";
+
+function listingRegionToForm(listing: Listing): ListingFormData["region"] {
+  if (
+    listing.region === "Chechnya" ||
+    listing.region === "Ingushetia" ||
+    listing.region === "Other"
+  ) {
+    return listing.region;
+  }
+  if (listing.regionId) {
+    return getRegionNameById(listing.regionId);
+  }
+  return "Other";
+}
 
 export const EMPTY_LISTING_FORM_DEFAULTS: ListingFormData = {
   title: "",
@@ -8,7 +23,7 @@ export const EMPTY_LISTING_FORM_DEFAULTS: ListingFormData = {
   price: 0,
   description: "",
   location: "",
-  regionId: "",
+  region: "Other",
   cityId: "",
   street: "",
   house: "",
@@ -43,7 +58,7 @@ export function buildListingFormDefaults(listing: Listing): ListingFormData {
     price: listing.price,
     description: listing.description,
     location: listing.location ?? "",
-    regionId: listing.regionId ?? "",
+    region: listingRegionToForm(listing),
     cityId: listing.cityId ?? "",
     street: listing.street ?? "",
     house: listing.house ?? "",

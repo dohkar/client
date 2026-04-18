@@ -112,7 +112,7 @@ export function SellLandingSection() {
         <div
           className='mt-8 text-center text-sm sm:text-base text-muted-foreground/90 max-w-xl mx-auto px-2 space-y-3'
           style={{
-            animation: "fadeIn 0.8s cubic-bezier(.19,1,.22,1) 0.6s both",
+            animation: "fadeIn 0.4s cubic-bezier(.19,1,.22,1) 0.3s both",
           }}
         >
           <p className='leading-relaxed font-medium'>

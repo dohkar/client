@@ -38,7 +38,8 @@ export const listingSchema = z
     dealType: z.enum(["SALE", "BUY", "RENT_OUT", "RENT_IN", "EXCHANGE"]).default("SALE"),
     price: z.number().min(0).optional().nullable(),
     location: z.string().optional(),
-    regionId: z.string().uuid().optional().or(z.literal("")),
+    /** Регион (как в форме недвижимости); regionId вычисляется при отправке */
+    region: z.enum(["Chechnya", "Ingushetia", "Other"]),
     cityId: z.string().uuid().optional().or(z.literal("")),
     street: z.string().optional(),
     house: z.string().optional(),

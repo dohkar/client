@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
+import path from "path";
+import { fileURLToPath } from "url";
+
+/** Каталог приложения (рядом с `app/`), чтобы Turbopack не брал родительский `package-lock.json` как корень. */
+const turbopackRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: turbopackRoot,
+  },
   output: "standalone",
   images: {
     formats: ["image/avif", "image/webp"],
