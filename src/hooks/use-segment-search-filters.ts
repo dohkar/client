@@ -8,7 +8,7 @@ import {
   useRef,
   useSyncExternalStore,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useTransition } from "react";
 import type { SearchFiltersDisplay } from "@/lib/search-params";
 import { SEARCH_CONSTANTS } from "@/lib/search-constants";
@@ -114,6 +114,12 @@ function regionDisplayToSlug(
   return API_REGION_TO_SLUG[region] ?? fallbackRegionSlug;
 }
 
+/** Полный URL браузера (путь + query) для сравнения при сбросе фильтров. */
+function browserUrlKeyFrom(pathname: string, params: { toString(): string }): string {
+  const q = params.toString();
+  return q ? `${pathname}?${q}` : pathname;
+}
+
 function validatePrices(min: string, max: string): PriceValidationErrors {
   const errors: PriceValidationErrors = {};
   const minNum = min.trim() ? Number(min.trim()) : null;
@@ -137,6 +143,7 @@ export function useSegmentSearchFilters(
   searchParamsInput?: Record<string, string | string[] | undefined> | URLSearchParams
 ): SegmentSearchFiltersReturn {
   const router = useRouter();
+  const pathname = usePathname();
   const liveSearchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const userRegionSlug = useUserRegion();
@@ -165,6 +172,31 @@ export function useSegmentSearchFilters(
 
   // До гидрации — fallback из серверных пропсов (избегаем mismatch). После гидрации — всегда liveSearchParams.
   const activeSearchParams = isHydrated ? liveSearchParams : fallbackSearchParams;
+
+  const browserUrlKey = useMemo(
+    () => browserUrlKeyFrom(pathname, activeSearchParams),
+    [pathname, activeSearchParams]
+  );
+
+  /**
+   * После «Сбросить все» сохраняем полный URL (path + query); пока он совпадает с текущим — debounce не пишет.
+   * Только query недостаточно: при пустом search сброс меняет pathname — иначе "" === "" и блокировка не снимется.
+   */
+  const [debouncedWriteBlockSnapshot, setDebouncedWriteBlockSnapshot] = useState<
+    string | null
+  >(null);
+  const allowDebouncedUrlWrites =
+    debouncedWriteBlockSnapshot === null || browserUrlKey !== debouncedWriteBlockSnapshot;
+
+  /* Сбрасываем снимок после смены URL, чтобы не оставался «залипший» блок на редких совпадениях. */
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (debouncedWriteBlockSnapshot == null) return;
+    if (browserUrlKey !== debouncedWriteBlockSnapshot) {
+      setDebouncedWriteBlockSnapshot(null);
+    }
+  }, [browserUrlKey, debouncedWriteBlockSnapshot]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const appliedFilters = useMemo<SearchFiltersDisplay>(() => {
     const dealType: SearchFiltersDisplay["dealType"] =
@@ -218,7 +250,7 @@ export function useSegmentSearchFilters(
   const [priceErrors, setPriceErrors] = useState<PriceValidationErrors>({});
 
   /** Синхронизация draft с URL при навигации назад/вперёд — по одному эффекту на поле. */
-
+  /* eslint-disable react-hooks/set-state-in-effect -- Sync draft from URL on back/forward; one render per field is acceptable. */
   useEffect(() => {
     setDraftQueryState(appliedFilters.query ?? "");
   }, [appliedFilters.query]);
@@ -237,6 +269,7 @@ export function useSegmentSearchFilters(
       appliedFilters.areaMin != null ? String(appliedFilters.areaMin) : ""
     );
   }, [appliedFilters.areaMin]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const buildUrlFromFilters = useCallback(
     (filters: SearchFiltersDisplay): string => {
@@ -315,32 +348,19 @@ export function useSegmentSearchFilters(
       region: userRegionSlug,
       category: DEFAULT_SEARCH_CATEGORY,
     });
-    if (typeof window !== "undefined") {
-      const currentFull = `${window.location.pathname}${window.location.search}`;
-      if (currentFull !== cleanUrl) {
-        suppressDebouncedUrlWritesRef.current = true;
-      }
+    const currentFull = browserUrlKeyFrom(pathname, activeSearchParams);
+    if (currentFull !== cleanUrl) {
+      setDebouncedWriteBlockSnapshot(currentFull);
     }
     startTransition(() => {
       router.replace(cleanUrl, { scroll: false });
     });
-  }, [userRegionSlug, router]);
+  }, [userRegionSlug, router, pathname, activeSearchParams]);
 
   const queryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const priceMinDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const priceMaxDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const areaMinDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  /**
-   * После «Сбросить все» черновики обнуляются раньше, чем URL обновится.
-   * Debounce-эффекты иначе вызывают updateFilters со старым appliedFilters — фильтры сбрасываются лишь частично.
-   */
-  const suppressDebouncedUrlWritesRef = useRef(false);
-
-  const activeSearchParamsKey = useMemo(
-    () => activeSearchParams.toString(),
-    [activeSearchParams]
-  );
 
   const clearAllDebounces = useCallback(() => {
     const refs = [
@@ -359,18 +379,18 @@ export function useSegmentSearchFilters(
 
   const applyDraftQuery = useCallback(
     (query: string) => {
-      if (suppressDebouncedUrlWritesRef.current) return;
+      if (!allowDebouncedUrlWrites) return;
       const trimmed = query.trim();
       if (trimmed !== appliedFilters.query) {
         updateFilters({ query: trimmed });
       }
     },
-    [appliedFilters.query, updateFilters]
+    [allowDebouncedUrlWrites, appliedFilters.query, updateFilters]
   );
 
   const applyDraftPriceMin = useCallback(
     (value: string) => {
-      if (suppressDebouncedUrlWritesRef.current) return;
+      if (!allowDebouncedUrlWrites) return;
       const trimmed = value.trim();
       const errs = validatePrices(trimmed, draftPriceMax);
       if (Object.keys(errs).length > 0) {
@@ -393,12 +413,18 @@ export function useSegmentSearchFilters(
         updateFilters({ priceMin: num });
       }
     },
-    [appliedFilters.priceMax, appliedFilters.priceMin, draftPriceMax, updateFilters]
+    [
+      allowDebouncedUrlWrites,
+      appliedFilters.priceMax,
+      appliedFilters.priceMin,
+      draftPriceMax,
+      updateFilters,
+    ]
   );
 
   const applyDraftPriceMax = useCallback(
     (value: string) => {
-      if (suppressDebouncedUrlWritesRef.current) return;
+      if (!allowDebouncedUrlWrites) return;
       const trimmed = value.trim();
       const errs = validatePrices(draftPriceMin, trimmed);
       if (Object.keys(errs).length > 0) {
@@ -421,12 +447,18 @@ export function useSegmentSearchFilters(
         updateFilters({ priceMax: num });
       }
     },
-    [appliedFilters.priceMax, appliedFilters.priceMin, draftPriceMin, updateFilters]
+    [
+      allowDebouncedUrlWrites,
+      appliedFilters.priceMax,
+      appliedFilters.priceMin,
+      draftPriceMin,
+      updateFilters,
+    ]
   );
 
   const applyDraftAreaMin = useCallback(
     (value: string) => {
-      if (suppressDebouncedUrlWritesRef.current) return;
+      if (!allowDebouncedUrlWrites) return;
       const trimmed = value.trim();
       const num = trimmed ? Number(trimmed) || null : null;
       if (num !== null && num < 0) return;
@@ -434,11 +466,11 @@ export function useSegmentSearchFilters(
         updateFilters({ areaMin: num }, { resetPage: false });
       }
     },
-    [appliedFilters.areaMin, updateFilters]
+    [allowDebouncedUrlWrites, appliedFilters.areaMin, updateFilters]
   );
 
   useEffect(() => {
-    if (suppressDebouncedUrlWritesRef.current) return;
+    if (!allowDebouncedUrlWrites) return;
     if (queryDebounceRef.current) clearTimeout(queryDebounceRef.current);
     const trimmed = draftQuery.trim();
     if (trimmed === (appliedFilters.query ?? "")) return;
@@ -448,10 +480,10 @@ export function useSegmentSearchFilters(
     return () => {
       if (queryDebounceRef.current) clearTimeout(queryDebounceRef.current);
     };
-  }, [draftQuery, appliedFilters.query, applyDraftQuery]);
+  }, [allowDebouncedUrlWrites, draftQuery, appliedFilters.query, applyDraftQuery]);
 
   useEffect(() => {
-    if (suppressDebouncedUrlWritesRef.current) return;
+    if (!allowDebouncedUrlWrites) return;
     if (priceMinDebounceRef.current) clearTimeout(priceMinDebounceRef.current);
     if (draftPriceMin === "" && appliedFilters.priceMin === null) return;
     if (draftPriceMin !== "" && Number(draftPriceMin) === appliedFilters.priceMin) return;
@@ -465,10 +497,16 @@ export function useSegmentSearchFilters(
     return () => {
       if (priceMinDebounceRef.current) clearTimeout(priceMinDebounceRef.current);
     };
-  }, [draftPriceMin, appliedFilters.priceMin, applyDraftPriceMin, updateFilters]);
+  }, [
+    allowDebouncedUrlWrites,
+    draftPriceMin,
+    appliedFilters.priceMin,
+    applyDraftPriceMin,
+    updateFilters,
+  ]);
 
   useEffect(() => {
-    if (suppressDebouncedUrlWritesRef.current) return;
+    if (!allowDebouncedUrlWrites) return;
     if (priceMaxDebounceRef.current) clearTimeout(priceMaxDebounceRef.current);
     if (draftPriceMax === "" && appliedFilters.priceMax === null) return;
     if (draftPriceMax !== "" && Number(draftPriceMax) === appliedFilters.priceMax) return;
@@ -482,10 +520,16 @@ export function useSegmentSearchFilters(
     return () => {
       if (priceMaxDebounceRef.current) clearTimeout(priceMaxDebounceRef.current);
     };
-  }, [draftPriceMax, appliedFilters.priceMax, applyDraftPriceMax, updateFilters]);
+  }, [
+    allowDebouncedUrlWrites,
+    draftPriceMax,
+    appliedFilters.priceMax,
+    applyDraftPriceMax,
+    updateFilters,
+  ]);
 
   useEffect(() => {
-    if (suppressDebouncedUrlWritesRef.current) return;
+    if (!allowDebouncedUrlWrites) return;
     if (areaMinDebounceRef.current) clearTimeout(areaMinDebounceRef.current);
     if (draftAreaMin === "" && appliedFilters.areaMin === null) return;
     if (draftAreaMin !== "" && Number(draftAreaMin) === appliedFilters.areaMin) return;
@@ -499,40 +543,40 @@ export function useSegmentSearchFilters(
     return () => {
       if (areaMinDebounceRef.current) clearTimeout(areaMinDebounceRef.current);
     };
-  }, [draftAreaMin, appliedFilters.areaMin, applyDraftAreaMin, updateFilters]);
-
-  /** После debounce-эффектов: снимаем подавление, когда URL уже отражает новое состояние. */
-  useEffect(() => {
-    if (!isHydrated) return;
-    suppressDebouncedUrlWritesRef.current = false;
-  }, [isHydrated, activeSearchParamsKey]);
+  }, [
+    allowDebouncedUrlWrites,
+    draftAreaMin,
+    appliedFilters.areaMin,
+    applyDraftAreaMin,
+    updateFilters,
+  ]);
 
   const handleAreaMinBlur = useCallback(() => {
-    if (suppressDebouncedUrlWritesRef.current) return;
+    if (!allowDebouncedUrlWrites) return;
     if (areaMinDebounceRef.current) {
       clearTimeout(areaMinDebounceRef.current);
       areaMinDebounceRef.current = null;
     }
     applyDraftAreaMin(draftAreaMin);
-  }, [applyDraftAreaMin, draftAreaMin]);
+  }, [allowDebouncedUrlWrites, applyDraftAreaMin, draftAreaMin]);
 
   const handlePriceMinBlur = useCallback(() => {
-    if (suppressDebouncedUrlWritesRef.current) return;
+    if (!allowDebouncedUrlWrites) return;
     if (priceMinDebounceRef.current) {
       clearTimeout(priceMinDebounceRef.current);
       priceMinDebounceRef.current = null;
     }
     applyDraftPriceMin(draftPriceMin);
-  }, [applyDraftPriceMin, draftPriceMin]);
+  }, [allowDebouncedUrlWrites, applyDraftPriceMin, draftPriceMin]);
 
   const handlePriceMaxBlur = useCallback(() => {
-    if (suppressDebouncedUrlWritesRef.current) return;
+    if (!allowDebouncedUrlWrites) return;
     if (priceMaxDebounceRef.current) {
       clearTimeout(priceMaxDebounceRef.current);
       priceMaxDebounceRef.current = null;
     }
     applyDraftPriceMax(draftPriceMax);
-  }, [applyDraftPriceMax, draftPriceMax]);
+  }, [allowDebouncedUrlWrites, applyDraftPriceMax, draftPriceMax]);
 
   const handleResetAll = useCallback(() => {
     clearAllDebounces();
