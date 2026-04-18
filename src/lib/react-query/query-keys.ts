@@ -215,6 +215,9 @@ export const queryKeys = {
   favorites: {
     all: ["favorites"] as const,
     list: () => ["favorites", "list"] as const,
+    /** Гостевое избранное: стабильный ключ по отсортированным listingId */
+    guest: (ids: readonly string[]) =>
+      ["favorites", "guest", [...ids].sort().join("\0")] as const,
   },
 
   // User

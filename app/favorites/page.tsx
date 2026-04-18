@@ -15,8 +15,9 @@ import { Heart, Trash2, Search, SlidersHorizontal, X } from "lucide-react";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useRemoveFavoriteWithUndo } from "@/hooks/use-undo-delete";
 import { useAuthStore } from "@/stores";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { ROUTES } from "@/constants";
 import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import type { PropertyType } from "@/types/property";
@@ -49,11 +50,18 @@ export default function FavoritesPage() {
   const [sortBy, setSortBy] = useState<SortOption>("date");
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    if (isInitialized && !isAuthenticated) {
-      router.replace(ROUTES.login);
-    }
-  }, [isAuthenticated, isInitialized, router]);
+  const guestHint = !isAuthenticated ? (
+    <p className='text-center text-sm text-muted-foreground max-w-xl mx-auto mb-6 px-2'>
+      Избранное хранится в этом браузере.{" "}
+      <Link
+        href={ROUTES.login}
+        className='text-primary underline-offset-4 hover:underline font-medium'
+      >
+        Войдите
+      </Link>
+      , чтобы не потерять список при смене устройства.
+    </p>
+  ) : null;
 
   const filteredData = useMemo((): FavoriteItem[] => {
     if (!data?.length) return [];
@@ -128,11 +136,6 @@ export default function FavoritesPage() {
     );
   }
 
-  // Если пользователь не авторизован, ничего не показываем (или перенаправит useEffect)
-  if (!isAuthenticated) {
-    return null;
-  }
-
   // Скелетоны при загрузке
   if (isLoading) {
     return (
@@ -142,6 +145,7 @@ export default function FavoritesPage() {
             <h1 className='text-3xl sm:text-4xl font-bold mb-2 text-foreground'>
               Избранное
             </h1>
+            {guestHint}
           </div>
           <div className='flex flex-col gap-6 max-w-4xl mx-auto'>
             {/* Фильтры */}
@@ -185,6 +189,7 @@ export default function FavoritesPage() {
     return (
       <div className='container mx-auto px-4 py-8 sm:py-20 min-h-[70vh] flex flex-col justify-center'>
         <div className='max-w-xl mx-auto text-center'>
+          {guestHint}
           <Card className='border-primary/20 shadow-md bg-card'>
             <CardContent className='p-6 sm:p-12 flex flex-col items-center justify-center'>
               <Heart className='w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6 text-muted-foreground' />
@@ -238,6 +243,7 @@ export default function FavoritesPage() {
             {declOfNum(data?.length ?? 0, ["объявление", "объявления", "объявлений"])}{" "}
             в&nbsp;избранном
           </p>
+          {guestHint}
         </div>
 
         {/* Панель поиска и фильтров */}

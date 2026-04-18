@@ -460,6 +460,17 @@ export function Header() {
                   </div>
                 ) : (
                   <div className='space-y-4'>
+                    <div className='space-y-2 border-b pb-5'>
+                      <p className='px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                        Сохранённое
+                      </p>
+                      <Link href={ROUTES.favorites} onClick={closeMobileMenu}>
+                        <div className='flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-accent/70 transition-colors min-h-[48px]'>
+                          <Heart className='h-5 w-5' />
+                          Избранное
+                        </div>
+                      </Link>
+                    </div>
                     <div>
                       <p className='px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2'>
                         Тема

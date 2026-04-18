@@ -3,6 +3,7 @@ import { useCallback, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { propertyService } from "@/services/property.service";
+import { useAuthStore, useFavoritesStore } from "@/stores";
 import type { Property } from "@/types/property";
 import type { FavoriteItem } from "@/types/favorites";
 import type { PaginatedResponse } from "@/types";
@@ -339,6 +340,11 @@ export function useRemoveFavoriteWithUndo() {
 
       pending.status = "executing";
 
+      if (!useAuthStore.getState().isAuthenticated) {
+        pendingRemoves.current.delete(id);
+        return true;
+      }
+
       try {
         const { favoritesService } = await import("@/services/favorites.service");
         await favoritesService.removeFavorite(id);
@@ -395,9 +401,15 @@ export function useRemoveFavoriteWithUndo() {
       pending.status = "cancelled";
       toast.dismiss(pending.toastId);
 
-      const previousFavorites = pending.previousData.get("favorites");
-      if (previousFavorites) {
-        queryClient.setQueryData(queryKeys.favorites.all, previousFavorites);
+      const guestRemove = pending.previousData.get("guestRemove") === true;
+      if (guestRemove) {
+        useFavoritesStore.getState().addFavorite(id);
+        void queryClient.invalidateQueries({ queryKey: ["favorites", "guest"] });
+      } else {
+        const previousFavorites = pending.previousData.get("favorites");
+        if (previousFavorites) {
+          queryClient.setQueryData(queryKeys.favorites.all, previousFavorites);
+        }
       }
 
       toast.success("Удаление отменено");
@@ -410,6 +422,44 @@ export function useRemoveFavoriteWithUndo() {
     async (id: string, title?: string): Promise<boolean> => {
       if (pendingRemoves.current.has(id)) {
         return false;
+      }
+
+      if (!useAuthStore.getState().isAuthenticated) {
+        useFavoritesStore.getState().removeFavorite(id);
+        void queryClient.invalidateQueries({ queryKey: ["favorites", "guest"] });
+
+        const previousData = new Map<string, unknown>();
+        previousData.set("guestRemove", true);
+
+        const toastId = toast.success(
+          title ? `"${title}" удалено из избранного` : "Удалено из избранного",
+          {
+            duration: UNDO_TIMEOUT_MS,
+            action: {
+              label: "Отменить",
+              onClick: () => undoRemove(id),
+            },
+          }
+        );
+
+        const timeoutId = setTimeout(() => {
+          const pending = pendingRemoves.current.get(id);
+          if (pending?.status === "pending") {
+            toast.dismiss(toastId);
+            void executeRemove(id);
+          }
+        }, UNDO_TIMEOUT_MS);
+
+        pendingRemoves.current.set(id, {
+          targetId: id,
+          targetTitle: title,
+          previousData,
+          timeoutId,
+          toastId,
+          status: "pending",
+        });
+
+        return true;
       }
 
       await queryClient.cancelQueries({ queryKey: queryKeys.favorites.all });

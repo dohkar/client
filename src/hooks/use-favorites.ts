@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef } from "react";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { favoritesService } from "@/services/favorites.service";
+import { listingsService } from "@/services/listings.service";
 import { useAuthStore } from "@/stores";
 import { useFavoritesStore } from "@/stores";
 import { toast } from "sonner";
@@ -22,8 +23,10 @@ export function useFavorites() {
   const queryClient = useQueryClient();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const { isFavorite: isLocalFavorite, toggleFavorite: toggleLocalFavorite } =
-    useFavoritesStore();
+  const localFavoriteIds = useFavoritesStore((s) => s.favorites);
+  const toggleLocalFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const addLocalFavorite = useFavoritesStore((s) => s.addFavorite);
+  const removeLocalFavorite = useFavoritesStore((s) => s.removeFavorite);
 
   const pendingMutations = useRef<Set<string>>(new Set());
 
@@ -36,6 +39,48 @@ export function useFavorites() {
     enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000,
   });
+
+  const { data: guestFavoriteItems = [], isPending: isGuestFavoritesPending } = useQuery({
+    queryKey: queryKeys.favorites.guest(localFavoriteIds),
+    queryFn: async (): Promise<FavoriteItem[]> => {
+      const ids = [...useFavoritesStore.getState().favorites];
+      if (ids.length === 0) return [];
+
+      const settled = await Promise.allSettled(
+        ids.map((listingId) => listingsService.getListingById(listingId))
+      );
+
+      const items: FavoriteItem[] = [];
+      const notFoundIds: string[] = [];
+
+      settled.forEach((result, index) => {
+        const listingId = ids[index];
+        if (result.status === "fulfilled") {
+          items.push({ type: "listing", data: result.value });
+        } else {
+          const status = (result.reason as ExtendedError)?.status;
+          if (status === 404) {
+            notFoundIds.push(listingId);
+          }
+        }
+      });
+
+      if (notFoundIds.length > 0) {
+        const { removeFavorite } = useFavoritesStore.getState();
+        notFoundIds.forEach((id) => removeFavorite(id));
+      }
+
+      return items;
+    },
+    enabled: !isAuthenticated && localFavoriteIds.length > 0,
+    staleTime: 60 * 1000,
+  });
+
+  const favoritesList: FavoriteItem[] = isAuthenticated ? favorites : guestFavoriteItems;
+
+  const isFavoritesListLoading = isAuthenticated
+    ? isLoading
+    : localFavoriteIds.length > 0 && isGuestFavoritesPending;
 
   const addMutation = useMutation<void, Error, AddFavoriteVariables, OptimisticContext>({
     mutationFn: ({ listingId }) => favoritesService.addFavorite(listingId),
@@ -94,11 +139,11 @@ export function useFavorites() {
   const isFavorite = useCallback(
     (id: string): boolean => {
       if (!isAuthenticated) {
-        return isLocalFavorite(id);
+        return localFavoriteIds.includes(id);
       }
       return favorites.some((item) => item.data.id === id);
     },
-    [isAuthenticated, favorites, isLocalFavorite]
+    [isAuthenticated, favorites, localFavoriteIds]
   );
 
   const isMutating = useCallback((id: string): boolean => {
@@ -109,6 +154,7 @@ export function useFavorites() {
     (listingId: string, listing?: Listing): boolean => {
       if (!isAuthenticated) {
         toggleLocalFavorite(listingId);
+        void queryClient.invalidateQueries({ queryKey: ["favorites", "guest"] });
         return true;
       }
       if (pendingMutations.current.has(listingId)) return false;
@@ -121,13 +167,22 @@ export function useFavorites() {
       }
       return true;
     },
-    [isAuthenticated, favorites, toggleLocalFavorite, addMutation, removeMutation]
+    [
+      isAuthenticated,
+      favorites,
+      toggleLocalFavorite,
+      addMutation,
+      removeMutation,
+      queryClient,
+    ]
   );
 
   const addToFavorites = useCallback(
     (listingId: string, listing?: Listing): boolean => {
       if (!isAuthenticated) {
-        toggleLocalFavorite(listingId);
+        if (localFavoriteIds.includes(listingId)) return false;
+        addLocalFavorite(listingId);
+        void queryClient.invalidateQueries({ queryKey: ["favorites", "guest"] });
         return true;
       }
       if (pendingMutations.current.has(listingId)) return false;
@@ -136,13 +191,22 @@ export function useFavorites() {
       addMutation.mutate({ listingId, listing });
       return true;
     },
-    [isAuthenticated, favorites, toggleLocalFavorite, addMutation]
+    [
+      isAuthenticated,
+      favorites,
+      localFavoriteIds,
+      addLocalFavorite,
+      addMutation,
+      queryClient,
+    ]
   );
 
   const removeFromFavorites = useCallback(
     (listingId: string): boolean => {
       if (!isAuthenticated) {
-        toggleLocalFavorite(listingId);
+        if (!localFavoriteIds.includes(listingId)) return false;
+        removeLocalFavorite(listingId);
+        void queryClient.invalidateQueries({ queryKey: ["favorites", "guest"] });
         return true;
       }
       if (pendingMutations.current.has(listingId)) return false;
@@ -151,12 +215,19 @@ export function useFavorites() {
       removeMutation.mutate(listingId);
       return true;
     },
-    [isAuthenticated, favorites, toggleLocalFavorite, removeMutation]
+    [
+      isAuthenticated,
+      favorites,
+      localFavoriteIds,
+      removeLocalFavorite,
+      removeMutation,
+      queryClient,
+    ]
   );
 
   return {
-    favorites,
-    isLoading,
+    favorites: favoritesList,
+    isLoading: isFavoritesListLoading,
     isFavorite,
     isMutating,
     toggleFavorite,
