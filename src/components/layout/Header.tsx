@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, Fragment } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -18,7 +18,6 @@ import {
   Shield,
   MessageSquare,
   UserIcon,
-  ArrowsUpFromLine,
   ChevronsUpDown,
 } from "lucide-react";
 import {
@@ -26,53 +25,12 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { useAuthModal } from "@/components/features/auth-modal"; // временно: редирект на /auth/login
 import { useAuthStore, useUIStore } from "@/stores";
 import { ROUTES } from "@/constants";
-import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
-import { formatUserName } from "@/lib/utils/format-name";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/types";
-import type { PropertyType } from "@/types/property";
 import { ThemeToggle } from "@/components/theme-toggle";
-import {
-  buildSearchUrl,
-  categorySlugFromType,
-  isSearchPathname,
-  parseSearchPathname,
-} from "@/lib/url/segments";
-
-const CATEGORIES: Array<{
-  name: string;
-  href: string;
-  type: PropertyType;
-}> = [
-  {
-    name: "Квартиры",
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "kvartiry", dealType: "prodam" }),
-    type: "apartment",
-  },
-  {
-    name: "Дома",
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "doma", dealType: "prodam" }),
-    type: "house",
-  },
-  {
-    name: "Участки",
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "uchastki", dealType: "prodam" }),
-    type: "land",
-  },
-  {
-    name: "Коммерция",
-    href: buildSearchUrl({
-      region: DEFAULT_SEARCH_REGION,
-      category: "kommercheskaya_nedvizhimost",
-      dealType: "prodam",
-    }),
-    type: "commercial",
-  },
-];
+import { CATEGORIES } from "@/constants/categories";
 
 const USER_MENU_ITEMS = [
   { href: ROUTES.dashboard, icon: LayoutDashboard, label: "Кабинет" },
@@ -82,44 +40,17 @@ const USER_MENU_ITEMS = [
   { href: `${ROUTES.dashboard}/listings`, icon: List, label: "Мои объявления" },
 ] as const;
 
-function CategoryLinks({
-  categories,
-}: {
-  categories: { name: string; href: string; isActive: boolean }[];
-}) {
-  return (
-    <>
-      {categories.map((cat) => (
-        <Link
-          key={cat.name}
-          href={cat.href}
-          className={cn(
-            "relative py-1 transition-colors hover:text-primary",
-            cat.isActive && "text-primary font-semibold",
-            "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-primary after:transition-all after:duration-300",
-            cat.isActive ? "after:w-full" : "after:w-0 hover:after:w-full"
-          )}
-          aria-current={cat.isActive ? "page" : undefined}
-        >
-          {cat.name}
-        </Link>
-      ))}
-    </>
-  );
-}
-
 function UserMenuLinks({ isAdmin }: { isAdmin: boolean }) {
   return (
     <>
-      {isAdmin && (
+      {isAdmin ? (
         <Link href={`${ROUTES.dashboard}/admin`}>
           <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-red-600'>
             <Shield className='h-4 w-4 shrink-0' />
             Админ-панель
           </div>
         </Link>
-      )}
-      {!isAdmin && (
+      ) : (
         <Link href={`${ROUTES.dashboard}/support`}>
           <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-green-600'>
             <UserIcon className='h-4 w-4 shrink-0' />
@@ -145,7 +76,6 @@ export function Header() {
 
   const { isAuthenticated, user, logout } = useAuthStore();
   const { isMobileMenuOpen, toggleMobileMenu, setMobileMenuOpen } = useUIStore();
-  // const { openAuthModal } = useAuthModal(); // временно: редирект на /auth/login
 
   const [showMenu, setShowMenu] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -157,29 +87,13 @@ export function Header() {
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAdmin = user?.role === UserRole.ADMIN;
-  const userName = formatUserName(user?.name);
-  const userInitial = userName.charAt(0).toUpperCase();
 
-  const parsedSearchPath = useMemo(() => parseSearchPathname(pathname), [pathname]);
-  const isSearchRoute = useMemo(() => isSearchPathname(pathname), [pathname]);
-
-  // Категории с подсветкой активного типа из сегментного URL
-  const categories = useMemo(
-    () =>
-      CATEGORIES.map((cat) => ({
-        ...cat,
-        isActive:
-          isSearchRoute && parsedSearchPath?.category === categorySlugFromType(cat.type),
-      })),
-    [isSearchRoute, parsedSearchPath?.category]
-  );
-
-  // Управление анимацией мобильного меню
+  // Управление появлением mobile menu с анимацией
   useEffect(() => {
     if (isMobileMenuOpen) {
       setShowMenu(true);
       setIsAnimating(false);
-      if (timeoutId.current) clearTimeout(timeoutId.current);
+      timeoutId.current && clearTimeout(timeoutId.current);
       timeoutId.current = setTimeout(() => {
         setIsAnimating(true);
         timeoutId.current = null;
@@ -188,9 +102,10 @@ export function Header() {
         if (timeoutId.current) clearTimeout(timeoutId.current);
       };
     }
+
     if (showMenu) {
       setIsAnimating(false);
-      if (timeoutId.current) clearTimeout(timeoutId.current);
+      timeoutId.current && clearTimeout(timeoutId.current);
       timeoutId.current = setTimeout(() => {
         setShowMenu(false);
         timeoutId.current = null;
@@ -217,21 +132,18 @@ export function Header() {
     };
   }, [showMenu]);
 
-  // Закрытие меню при смене route
+  // Закрытие мобильного меню при смене route
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname, setMobileMenuOpen]);
 
-  // Закрыть мобильное меню
   const closeMobileMenu = useCallback(
     () => setMobileMenuOpen(false),
     [setMobileMenuOpen]
   );
-
-  // Закрытие меню overlay-кликом
   const handleOverlayClick = closeMobileMenu;
 
-  // Возврат фокуса на меню-кнопку
+  // Возврат фокуса на меню-кнопку после закрытия мобильного меню
   useEffect(() => {
     if (!showMenu && menuBtnRef.current && document.activeElement === document.body) {
       menuBtnRef.current.focus({ preventScroll: true });
@@ -255,7 +167,7 @@ export function Header() {
     const panel = mobileMenuPanelRef.current;
     const selector =
       'button:not([disabled]):not([tabindex="-1"]), [href]:not([tabindex="-1"]), input:not([tabindex="-1"]), select:not([tabindex="-1"]), textarea:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
-    function onKeyDown(e: KeyboardEvent) {
+    const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Tab" || !panel) return;
       const focusables = Array.from(panel.querySelectorAll<HTMLElement>(selector)).filter(
         (el) => el.offsetParent !== null && !el.hasAttribute("disabled")
@@ -273,12 +185,12 @@ export function Header() {
         e.preventDefault();
         first.focus();
       }
-    }
+    };
     panel.addEventListener("keydown", onKeyDown);
     return () => panel.removeEventListener("keydown", onKeyDown);
   }, [showMenu, isAnimating]);
 
-  // Logout (PC version)
+  // Обработка выхода (logout)
   const handleLogout = useCallback(async () => {
     setIsLoggingOut(true);
     try {
@@ -289,7 +201,7 @@ export function Header() {
     }
   }, [logout, router]);
 
-  // Logout (Mobile menu)
+  // Обработка выхода (мобильное меню)
   const handleMobileLogout = useCallback(() => {
     if (isLoggingOut) return;
     closeMobileMenu();
@@ -298,68 +210,74 @@ export function Header() {
 
   // ──────────────────────────────────────────────────────────────────────────────
 
+  // Раздел навигационных категорий (для DRY/удобства)
+  const renderCategories = (opts?: {
+    onClick?: () => void;
+    className?: string;
+    itemClassName?: string;
+  }) =>
+    CATEGORIES.map((cat) => (
+      <Link
+        key={cat.name}
+        href={cat.href}
+        className={cn(
+          "px-2.5 py-1.5 text-base rounded-lg font-medium transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+          opts?.itemClassName
+        )}
+        onClick={opts?.onClick}
+      >
+        {cat.name}
+      </Link>
+    ));
+
   return (
     <header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/75 transition-shadow'>
       <span role='status' aria-live='polite' className='sr-only'>
         {isMobileMenuOpen ? "Меню открыто" : "Меню закрыто"}
       </span>
-      <div className='container mx-auto px-4 h-14 flex items-center justify-between gap-4'>
-        {/* Branding */}
+      <div className='max-w-7xl mx-auto px-8 h-16 flex items-center justify-between gap-4'>
+        {/* Лого */}
         <Link
           href={ROUTES.home}
           className='flex items-center group shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md'
           aria-label='Дохкар — на главную'
         >
-          <span className='text-xl md:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 bg-clip-text text-transparent transition-all duration-200 group-hover:opacity-90'>
-            Дохкар
-          </span>
+          <img src='/images/logo2.png' alt='Дохкар' width={180} height={64} />
         </Link>
-        {/* Desktop Nav */}
-        <nav
-          className='hidden md:flex items-center gap-10 text-sm font-medium'
-          aria-label='Категории'
-        >
-          <CategoryLinks categories={categories} />
-        </nav>
+
         {/* Actions */}
-        <div className='flex items-center gap-2 md:gap-3'>
-          <div className='hidden md:flex items-center gap-2'>
+        <div className='flex items-center gap-2 md:gap-4'>
+          {/* Desktop категории */}
+          {/*<div className='hidden md:flex items-center gap-2'>{renderCategories()}</div>*/}
+
+          <div className='hidden md:flex items-center gap-1.5'>
             {isAuthenticated ? (
               <>
+                <ThemeToggle variant='icon' />
                 <Link href={ROUTES.favorites} aria-label='Избранное'>
-                  <Button variant='ghost' size='icon-sm' className='shrink-0'>
+                  <Button variant='clear' size='default' className='shrink-0 text-base'>
                     <Heart className='h-5 w-5' />
+                    Избранное
                   </Button>
                 </Link>
-                <ThemeToggle variant='icon' />
-                <HoverCard openDelay={100} closeDelay={150}>
+                <HoverCard openDelay={50} closeDelay={100}>
                   <HoverCardTrigger asChild>
-                    <Link
-                      href={`${ROUTES.dashboard}/profile`}
-                      className='flex items-center gap-2 hover:opacity-90 transition shrink-0'
-                      aria-label='Профиль'
-                    >
-                      <Avatar className='h-8 w-8 border border-border/60 shadow-sm shrink-0'>
-                        <AvatarImage src={user?.avatar} alt={userName} />
-                        <AvatarFallback className='bg-primary/10 text-primary text-sm font-medium'>
-                          {userInitial}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className='hidden lg:inline font-medium text-sm text-foreground/90 truncate max-w-[120px]'>
-                        {userName}
-                      </span>
-                      <ChevronsUpDown className='shrink-0 size-4' />
+                    <Link href={`${ROUTES.dashboard}/profile`} aria-label='Профиль'>
+                      {/* <Avatar .../> */}
+                      <Button variant='clear' className='gap-1.5 shrink-0 text-base'>
+                        <ChevronsUpDown />
+                        Профиль
+                      </Button>
                     </Link>
                   </HoverCardTrigger>
                   <HoverCardContent
-                    align='end'
+                    align='center'
                     sideOffset={8}
                     className='w-56 p-1.5 shadow-xl rounded-xl'
                   >
                     <div className='space-y-0.5'>
                       <UserMenuLinks isAdmin={isAdmin} />
                     </div>
-                    {/* Тема в пользовательском меню — UX-корректное место для настроек отображения */}
                     <div className='mt-1.5 pt-1.5 border-t'>
                       <ThemeToggle variant='embed' />
                     </div>
@@ -379,33 +297,46 @@ export function Header() {
               </>
             ) : (
               <>
-                {/* Компактная иконка темы в хедере для неавторизованных пользователей */}
+                {/* Компактная иконка темы для неавторизованных */}
                 <ThemeToggle variant='icon' />
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='gap-1.5 shrink-0'
-                  onClick={() => router.push(ROUTES.login)}
-                >
-                  <User className='h-4 w-4' />
-                  Войти
-                </Button>
+                <Link href={ROUTES.favorites}>
+                  <Button
+                    variant='clear'
+                    size='default'
+                    className='gap-1.5 shrink-0 text-base'
+                  >
+                    <Heart className='h-5 w-5' />
+                    Избранное
+                  </Button>
+                </Link>
+                <Link href={ROUTES.login}>
+                  <Button
+                    variant='clear'
+                    size='default'
+                    className='gap-1.5 shrink-0 text-base'
+                  >
+                    <User className='h-5 w-5' />
+                    Войти
+                  </Button>
+                </Link>
               </>
             )}
           </div>
+
           <Link
             href={ROUTES.sell}
             className='shrink-0'
             aria-label='Разместить объявление'
           >
             <Button
-              size='sm'
+              size='default'
               className='bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all h-9 md:h-10 px-3 md:px-5 gap-1.5'
             >
               <PlusCircle className='size-5' aria-hidden />
               <span className='hidden sm:inline'>Разместить</span>
             </Button>
           </Link>
+
           <button
             ref={menuBtnRef}
             type='button'
@@ -421,11 +352,13 @@ export function Header() {
           </button>
         </div>
       </div>
+
       {/* Мобильное меню */}
       {typeof document !== "undefined" &&
         showMenu &&
         createPortal(
-          <div className='fixed inset-0 z-[100] md:hidden'>
+          <div className='fixed inset-0 z-100 md:hidden'>
+            {/* Overlay */}
             <div
               className={cn(
                 "absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300",
@@ -434,6 +367,7 @@ export function Header() {
               aria-hidden={!isAnimating}
               onClick={handleOverlayClick}
             />
+            {/* Mobile Panel */}
             <div
               ref={mobileMenuPanelRef}
               role='dialog'
@@ -448,14 +382,16 @@ export function Header() {
               )}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Mobile Header */}
               <div className='sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-background/95 backdrop-blur-md border-b border-border/40 shrink-0'>
                 <Link
                   href={ROUTES.home}
                   onClick={closeMobileMenu}
-                  className='text-xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent'
+                  className='text-xl font-extrabold overflow-hidden bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent flex items-center'
                   tabIndex={0}
                 >
-                  <span id='header-mobile-menu-title'>Дохкар</span>
+                  <img src='/images/logo2.png' alt='Дохкар' width={120} height={44} />
+                  {/* <span id="header-mobile-menu-title">Дохкар</span> */}
                 </Link>
                 <button
                   ref={closeBtnRef}
@@ -467,20 +403,18 @@ export function Header() {
                   <X className='h-6 w-6' />
                 </button>
               </div>
+              {/* Mobile body */}
               <div className='flex-1 overflow-y-auto px-4 py-6 space-y-8'>
+                {/* Категории */}
                 <div className='space-y-2'>
                   <p className='px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
                     Категории
                   </p>
-                  {categories.map((cat) => (
+                  {CATEGORIES.map((cat) => (
                     <Link
                       key={cat.name}
                       href={cat.href}
-                      className={cn(
-                        "flex items-center px-4 py-3.5 text-base font-medium rounded-xl hover:bg-accent/70 active:bg-accent transition-colors min-h-[48px]",
-                        cat.isActive && "text-primary font-semibold"
-                      )}
-                      aria-current={cat.isActive ? "page" : undefined}
+                      className='flex items-center px-4 py-3.5 text-base font-medium rounded-xl hover:bg-accent/70 active:bg-accent transition-colors min-h-[48px]'
                       onClick={closeMobileMenu}
                     >
                       {cat.name}
@@ -508,7 +442,6 @@ export function Header() {
                         </div>
                       </Link>
                     ))}
-                    {/* Тема в мобильном меню (авторизованный пользователь) */}
                     <div className='border-t pt-4 mt-2'>
                       <p className='px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2'>
                         Тема
@@ -527,7 +460,6 @@ export function Header() {
                   </div>
                 ) : (
                   <div className='space-y-4'>
-                    {/* Тема в мобильном меню (неавторизованный пользователь) */}
                     <div>
                       <p className='px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2'>
                         Тема

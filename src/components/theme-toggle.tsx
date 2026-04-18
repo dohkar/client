@@ -39,7 +39,7 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
   if (!mounted) {
     return (
       <Button
-        variant='ghost'
+        variant='clear'
         size='icon-sm'
         className={cn("shrink-0", className)}
         aria-label='Переключить тему'
@@ -72,7 +72,7 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
 
   return (
     <Button
-      variant='ghost'
+      variant='clear'
       size='icon-sm'
       className={cn("shrink-0", className)}
       onClick={toggleTheme}

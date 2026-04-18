@@ -86,16 +86,15 @@ export function MobileFilterDrawer({
   return (
     <>
       <Button
-        variant="outline"
-        className="md:hidden gap-2 shadow-sm hover:shadow-md transition-shadow"
+        variant='outline'
+        className='md:hidden gap-2 shadow-sm hover:shadow-md transition-shadow'
         onClick={openFilterModal}
-        aria-label="Открыть фильтры"
+        aria-label='Открыть фильтры'
       >
-        <Filter className="h-4 w-4" />
-        <span>Фильтры</span>
+        <Filter className='h-4 w-4' />
         {hasActiveFilters && (
           <span
-            className="ml-1 h-2 w-2 rounded-full bg-primary animate-pulse"
+            className='ml-1 h-2 w-2 rounded-full bg-primary animate-pulse'
             aria-hidden
           />
         )}
@@ -111,26 +110,26 @@ export function MobileFilterDrawer({
           }
         }}
       >
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className='max-w-md max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-primary/10">
-                <Filter className="h-5 w-5 text-primary" />
+            <DialogTitle className='flex items-center gap-2'>
+              <div className='p-1.5 rounded-lg bg-primary/10'>
+                <Filter className='h-5 w-5 text-primary' />
               </div>
               Фильтры поиска
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6 py-4">
+          <div className='space-y-6 py-4'>
             {/* Тип недвижимости */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
-                <Building2 className="w-4 h-4 text-muted-foreground" />
+              <label className='flex items-center gap-2 text-sm font-semibold text-foreground mb-3'>
+                <Building2 className='w-4 h-4 text-muted-foreground' />
                 Тип недвижимости
               </label>
               <Select value={filters.type} onValueChange={handleTypeChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Выберите тип" />
+                <SelectTrigger className='w-full'>
+                  <SelectValue placeholder='Выберите тип' />
                 </SelectTrigger>
                 <SelectContent>
                   {PROPERTY_TYPE_OPTIONS.map((option) => (
@@ -144,15 +143,15 @@ export function MobileFilterDrawer({
 
             {/* Цена */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
-                <DollarSign className="w-4 h-4 text-muted-foreground" />
+              <label className='flex items-center gap-2 text-sm font-semibold text-foreground mb-3'>
+                <DollarSign className='w-4 h-4 text-muted-foreground' />
                 Цена (₽)
               </label>
-              <div className="space-y-2">
-                <div className="relative">
+              <div className='space-y-2'>
+                <div className='relative'>
                   <Input
-                    type="number"
-                    placeholder="От"
+                    type='number'
+                    placeholder='От'
                     min={0}
                     value={localPriceMin}
                     onChange={(e) => {
@@ -161,17 +160,17 @@ export function MobileFilterDrawer({
                     }}
                     onBlur={handlePriceMinBlur}
                     className={`pl-9 ${priceErrors.priceMin ? "border-destructive" : ""}`}
-                    autoComplete="off"
-                    inputMode="numeric"
+                    autoComplete='off'
+                    inputMode='numeric'
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                  <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm'>
                     от
                   </span>
                 </div>
-                <div className="relative">
+                <div className='relative'>
                   <Input
-                    type="number"
-                    placeholder="До"
+                    type='number'
+                    placeholder='До'
                     min={0}
                     value={localPriceMax}
                     onChange={(e) => {
@@ -180,15 +179,15 @@ export function MobileFilterDrawer({
                     }}
                     onBlur={handlePriceMaxBlur}
                     className={`pl-9 ${priceErrors.priceMax ? "border-destructive" : ""}`}
-                    autoComplete="off"
-                    inputMode="numeric"
+                    autoComplete='off'
+                    inputMode='numeric'
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                  <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm'>
                     до
                   </span>
                 </div>
                 {(priceErrors.priceMin || priceErrors.priceMax) && (
-                  <div className="text-xs text-destructive space-y-1">
+                  <div className='text-xs text-destructive space-y-1'>
                     {priceErrors.priceMin && <p>{priceErrors.priceMin}</p>}
                     {priceErrors.priceMax && <p>{priceErrors.priceMax}</p>}
                   </div>
@@ -198,23 +197,22 @@ export function MobileFilterDrawer({
 
             {/* Комнаты */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
-                <Building2 className="w-4 h-4 text-muted-foreground" />
+              <label className='flex items-center gap-2 text-sm font-semibold text-foreground mb-3'>
+                <Building2 className='w-4 h-4 text-muted-foreground' />
                 Комнат минимум
               </label>
-              <div className="flex gap-2 flex-wrap">
+              <div className='flex gap-2 flex-wrap'>
                 {["0", "1", "2", "3", "4+"].map((option) => {
                   const optionValue = option === "4+" ? 4 : Number(option);
                   const isSelected =
-                    filters.roomsMin !== null &&
-                    filters.roomsMin === optionValue;
+                    filters.roomsMin !== null && filters.roomsMin === optionValue;
                   return (
                     <Button
                       key={option}
                       variant={isSelected ? "default" : "outline"}
-                      size="sm"
+                      size='sm'
                       onClick={() => handleRoomsChange(optionValue)}
-                      className="flex-1 min-w-[60px] min-h-[44px] transition-all hover:scale-105"
+                      className='flex-1 min-w-[60px] min-h-[44px] transition-all hover:scale-105'
                     >
                       {option}
                     </Button>
@@ -225,14 +223,14 @@ export function MobileFilterDrawer({
 
             {/* Площадь */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
-                <Ruler className="w-4 h-4 text-muted-foreground" />
+              <label className='flex items-center gap-2 text-sm font-semibold text-foreground mb-3'>
+                <Ruler className='w-4 h-4 text-muted-foreground' />
                 Площадь (м²) минимум
               </label>
-              <div className="relative">
+              <div className='relative'>
                 <Input
-                  type="number"
-                  placeholder="От"
+                  type='number'
+                  placeholder='От'
                   min={0}
                   value={filters.areaMin ?? ""}
                   onChange={(e) =>
@@ -242,10 +240,10 @@ export function MobileFilterDrawer({
                         : null
                     )
                   }
-                  className="pl-9"
-                  autoComplete="off"
+                  className='pl-9'
+                  autoComplete='off'
                 />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm'>
                   от
                 </span>
               </div>
@@ -253,13 +251,13 @@ export function MobileFilterDrawer({
 
             {/* Регион */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
+              <label className='flex items-center gap-2 text-sm font-semibold text-foreground mb-3'>
+                <MapPin className='w-4 h-4 text-muted-foreground' />
                 Регион
               </label>
               <Select value={filters.region} onValueChange={handleRegionChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Выберите регион" />
+                <SelectTrigger className='w-full'>
+                  <SelectValue placeholder='Выберите регион' />
                 </SelectTrigger>
                 <SelectContent>
                   {regionOptions.map((option) => (
@@ -274,22 +272,20 @@ export function MobileFilterDrawer({
             {/* Город */}
             <div>
               <CitySearchSelect
-                label="Город"
+                label='Город'
                 value={filters.cityId ?? ""}
                 onValueChange={(value) => handleCityChange(value || null)}
                 cities={cities}
-                placeholder={
-                  cities.length === 0 ? "Загрузка городов…" : "Все города"
-                }
+                placeholder={cities.length === 0 ? "Загрузка городов…" : "Все города"}
               />
             </div>
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
+          <DialogFooter className='flex-col sm:flex-row gap-2'>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={handleResetAll}
-              className="w-full sm:w-auto"
+              className='w-full sm:w-auto'
             >
               Сбросить
             </Button>
@@ -300,7 +296,7 @@ export function MobileFilterDrawer({
                 closeFilterModal();
               }}
               disabled={isPending}
-              className="w-full sm:w-auto"
+              className='w-full sm:w-auto'
             >
               {isPending ? "Применяем…" : "Применить"}
             </Button>

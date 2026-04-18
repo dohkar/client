@@ -3,28 +3,28 @@
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+  // CardDescription,
+  // CardHeader,
+  // CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/constants";
-import { FeatureCard } from "./feature-card";
+// import { FeatureCard } from "./feature-card";
 
-const FEATURES = [
-  "Размещение объявления за 5 минут",
-  "Загрузка до 20 фотографий",
-  "Статистика просмотров",
-  "Премиум-продвижение",
-  "Безопасная сделка",
-  "Поддержка 24/7",
-] as const;
+// const FEATURES = [
+//   "Размещение объявления за 5 минут",
+//   "Загрузка до 20 фотографий",
+//   "Статистика просмотров",
+//   "Премиум-продвижение",
+//   "Безопасная сделка",
+//   "Поддержка 24/7",
+// ] as const;
 
 export function SellLandingSection() {
   return (
-    <section className='min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/10 flex flex-col justify-center py-14 px-2'>
+    <section className='min-h-screen flex flex-col justify-center py-14 px-2'>
       <div className='container max-w-3xl mx-auto space-y-10'>
         {/* Hero */}
         <div
@@ -44,7 +44,7 @@ export function SellLandingSection() {
         </div>
 
         {/* Why choose us */}
-        <Card
+        {/* <Card
           className='mx-auto border-0 shadow-xl bg-background/80 backdrop-blur-lg transition hover:shadow-2xl'
           style={{
             animation: "fadeIn 0.8s cubic-bezier(.19,1,.22,1) 0.2s both",
@@ -67,7 +67,7 @@ export function SellLandingSection() {
               ))}
             </ul>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Call to Action Gradient Card */}
         <Card className='relative overflow-hidden border-0 shadow-2xl rounded-2xl'>
