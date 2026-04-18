@@ -338,7 +338,7 @@ export function SearchPageClient({
 
           <ListingsSearchResults
             listings={listings}
-            isLoading={isLoading || isPending}
+            isLoading={isLoading}
             error={error}
             currentPage={currentPage}
             totalPages={totalPages}

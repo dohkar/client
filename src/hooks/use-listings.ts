@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { listingsService } from "@/services/listings.service";
 import type { ListingSearchParams } from "@/types/listing";
@@ -10,6 +15,7 @@ export function useListings(params?: ListingSearchParams) {
     queryFn: () => listingsService.getListings(params),
     staleTime: 60 * 1000,
     retry: 2,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -46,7 +52,9 @@ export function useUpdateListing() {
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
       listingsService.updateListing(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.listings.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.listings.detail(variables.id),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
       toast.success("Объявление обновлено");
     },
