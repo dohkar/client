@@ -12,10 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import type { SearchFiltersDisplay } from "@/lib/search-params";
 import { SEARCH_CONSTANTS } from "@/lib/search-constants";
-import {
-  DEFAULT_SEARCH_REGION,
-  DEFAULT_SEARCH_CATEGORY,
-} from "@/constants/defaults";
+import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import {
   API_REGION_TO_SLUG,
   buildSearchUrl,
@@ -221,7 +218,7 @@ export function useSegmentSearchFilters(
   const [priceErrors, setPriceErrors] = useState<PriceValidationErrors>({});
 
   /** Синхронизация draft с URL при навигации назад/вперёд — по одному эффекту на поле. */
-  /* eslint-disable react-hooks/set-state-in-effect -- Sync draft from URL on back/forward; one render per field is acceptable. */
+
   useEffect(() => {
     setDraftQueryState(appliedFilters.query ?? "");
   }, [appliedFilters.query]);
@@ -240,7 +237,6 @@ export function useSegmentSearchFilters(
       appliedFilters.areaMin != null ? String(appliedFilters.areaMin) : ""
     );
   }, [appliedFilters.areaMin]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const buildUrlFromFilters = useCallback(
     (filters: SearchFiltersDisplay): string => {
@@ -250,7 +246,9 @@ export function useSegmentSearchFilters(
           ? "all"
           : regionDisplayToSlug(filters.region, currentRegionSlug);
       const nextCategorySlug =
-        filters.type === "all" ? DEFAULT_SEARCH_CATEGORY : categorySlugFromType(filters.type);
+        filters.type === "all"
+          ? DEFAULT_SEARCH_CATEGORY
+          : categorySlugFromType(filters.type);
       const nextDealTypeSlug =
         filters.dealType && filters.dealType !== "all"
           ? dealTypeSlugFromApi(filters.dealType)
@@ -317,8 +315,14 @@ export function useSegmentSearchFilters(
       region: userRegionSlug,
       category: DEFAULT_SEARCH_CATEGORY,
     });
+    if (typeof window !== "undefined") {
+      const currentFull = `${window.location.pathname}${window.location.search}`;
+      if (currentFull !== cleanUrl) {
+        suppressDebouncedUrlWritesRef.current = true;
+      }
+    }
     startTransition(() => {
-      router.push(cleanUrl, { scroll: false });
+      router.replace(cleanUrl, { scroll: false });
     });
   }, [userRegionSlug, router]);
 
@@ -326,6 +330,17 @@ export function useSegmentSearchFilters(
   const priceMinDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const priceMaxDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const areaMinDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /**
+   * После «Сбросить все» черновики обнуляются раньше, чем URL обновится.
+   * Debounce-эффекты иначе вызывают updateFilters со старым appliedFilters — фильтры сбрасываются лишь частично.
+   */
+  const suppressDebouncedUrlWritesRef = useRef(false);
+
+  const activeSearchParamsKey = useMemo(
+    () => activeSearchParams.toString(),
+    [activeSearchParams]
+  );
 
   const clearAllDebounces = useCallback(() => {
     const refs = [
@@ -344,6 +359,7 @@ export function useSegmentSearchFilters(
 
   const applyDraftQuery = useCallback(
     (query: string) => {
+      if (suppressDebouncedUrlWritesRef.current) return;
       const trimmed = query.trim();
       if (trimmed !== appliedFilters.query) {
         updateFilters({ query: trimmed });
@@ -354,6 +370,7 @@ export function useSegmentSearchFilters(
 
   const applyDraftPriceMin = useCallback(
     (value: string) => {
+      if (suppressDebouncedUrlWritesRef.current) return;
       const trimmed = value.trim();
       const errs = validatePrices(trimmed, draftPriceMax);
       if (Object.keys(errs).length > 0) {
@@ -381,6 +398,7 @@ export function useSegmentSearchFilters(
 
   const applyDraftPriceMax = useCallback(
     (value: string) => {
+      if (suppressDebouncedUrlWritesRef.current) return;
       const trimmed = value.trim();
       const errs = validatePrices(draftPriceMin, trimmed);
       if (Object.keys(errs).length > 0) {
@@ -408,6 +426,7 @@ export function useSegmentSearchFilters(
 
   const applyDraftAreaMin = useCallback(
     (value: string) => {
+      if (suppressDebouncedUrlWritesRef.current) return;
       const trimmed = value.trim();
       const num = trimmed ? Number(trimmed) || null : null;
       if (num !== null && num < 0) return;
@@ -419,6 +438,7 @@ export function useSegmentSearchFilters(
   );
 
   useEffect(() => {
+    if (suppressDebouncedUrlWritesRef.current) return;
     if (queryDebounceRef.current) clearTimeout(queryDebounceRef.current);
     const trimmed = draftQuery.trim();
     if (trimmed === (appliedFilters.query ?? "")) return;
@@ -431,6 +451,7 @@ export function useSegmentSearchFilters(
   }, [draftQuery, appliedFilters.query, applyDraftQuery]);
 
   useEffect(() => {
+    if (suppressDebouncedUrlWritesRef.current) return;
     if (priceMinDebounceRef.current) clearTimeout(priceMinDebounceRef.current);
     if (draftPriceMin === "" && appliedFilters.priceMin === null) return;
     if (draftPriceMin !== "" && Number(draftPriceMin) === appliedFilters.priceMin) return;
@@ -447,6 +468,7 @@ export function useSegmentSearchFilters(
   }, [draftPriceMin, appliedFilters.priceMin, applyDraftPriceMin, updateFilters]);
 
   useEffect(() => {
+    if (suppressDebouncedUrlWritesRef.current) return;
     if (priceMaxDebounceRef.current) clearTimeout(priceMaxDebounceRef.current);
     if (draftPriceMax === "" && appliedFilters.priceMax === null) return;
     if (draftPriceMax !== "" && Number(draftPriceMax) === appliedFilters.priceMax) return;
@@ -463,6 +485,7 @@ export function useSegmentSearchFilters(
   }, [draftPriceMax, appliedFilters.priceMax, applyDraftPriceMax, updateFilters]);
 
   useEffect(() => {
+    if (suppressDebouncedUrlWritesRef.current) return;
     if (areaMinDebounceRef.current) clearTimeout(areaMinDebounceRef.current);
     if (draftAreaMin === "" && appliedFilters.areaMin === null) return;
     if (draftAreaMin !== "" && Number(draftAreaMin) === appliedFilters.areaMin) return;
@@ -478,7 +501,14 @@ export function useSegmentSearchFilters(
     };
   }, [draftAreaMin, appliedFilters.areaMin, applyDraftAreaMin, updateFilters]);
 
+  /** После debounce-эффектов: снимаем подавление, когда URL уже отражает новое состояние. */
+  useEffect(() => {
+    if (!isHydrated) return;
+    suppressDebouncedUrlWritesRef.current = false;
+  }, [isHydrated, activeSearchParamsKey]);
+
   const handleAreaMinBlur = useCallback(() => {
+    if (suppressDebouncedUrlWritesRef.current) return;
     if (areaMinDebounceRef.current) {
       clearTimeout(areaMinDebounceRef.current);
       areaMinDebounceRef.current = null;
@@ -487,6 +517,7 @@ export function useSegmentSearchFilters(
   }, [applyDraftAreaMin, draftAreaMin]);
 
   const handlePriceMinBlur = useCallback(() => {
+    if (suppressDebouncedUrlWritesRef.current) return;
     if (priceMinDebounceRef.current) {
       clearTimeout(priceMinDebounceRef.current);
       priceMinDebounceRef.current = null;
@@ -495,6 +526,7 @@ export function useSegmentSearchFilters(
   }, [applyDraftPriceMin, draftPriceMin]);
 
   const handlePriceMaxBlur = useCallback(() => {
+    if (suppressDebouncedUrlWritesRef.current) return;
     if (priceMaxDebounceRef.current) {
       clearTimeout(priceMaxDebounceRef.current);
       priceMaxDebounceRef.current = null;
