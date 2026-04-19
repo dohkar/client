@@ -261,7 +261,7 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
       }
 
       const payload: Record<string, unknown> = {
-        category: "REAL_ESTATE",
+        ...(listingId ? {} : { category: "REAL_ESTATE" }),
         title: data.title.trim(),
         dealType: data.dealType,
         price: data.dealType === "BUY" ? 0 : (data.price ?? 0),
