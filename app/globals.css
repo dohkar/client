@@ -770,6 +770,15 @@
 }
 
 @layer utilities {
+  /**
+   * Единая верхняя граница ширины для `container` + `mx-auto`
+   * (по умолчанию Tailwind растягивает container по breakpoint’ам шире 7xl).
+   */
+  .container {
+    width: 100%;
+    max-width: var(--container-7xl, 80rem);
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */

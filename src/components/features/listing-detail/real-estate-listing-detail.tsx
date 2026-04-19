@@ -170,9 +170,6 @@ function StickyListingCard({
           Написать
         </Button>
       </div>
-      <p className='mt-3 text-center text-xs text-muted-foreground'>
-        Безопасная сделка через Dohkar
-      </p>
     </div>
   );
 }
