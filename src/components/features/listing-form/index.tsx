@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -59,6 +59,7 @@ interface ListingFormProps {
 export function ListingForm({ onSuccess, listingId, initialListing }: ListingFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(0);
+  const isFirstStepEffect = useRef(true);
   const [priceDisplay, setPriceDisplay] = useState("");
   const [areaDisplay, setAreaDisplay] = useState("");
   const isEdit = Boolean(listingId);
@@ -105,6 +106,10 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
   }, [initialListing, reset]);
 
   useEffect(() => {
+    if (isFirstStepEffect.current) {
+      isFirstStepEffect.current = false;
+      return;
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
@@ -152,7 +157,7 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
       if (!okLoc) return;
       let lat = getValues("realEstate.latitude");
       const loc = getValues("location")?.trim() ?? "";
-      if (lat == null && loc.length >= 6) {
+      if (lat == null && loc.length >= 5) {
         const r = await geocodeAddress({
           country: "Россия",
           region: "",
@@ -332,7 +337,7 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
     >
       <div className='rounded-xl border border-border bg-card/50 p-4'>
         <p className='mb-3 text-sm font-medium text-muted-foreground'>
-          Шаг {step + 1} из 4
+          Шаг {step + 1} из {STEPS.length}
         </p>
         <div className='flex flex-wrap gap-2'>
           {STEPS.map((s, i) => (
