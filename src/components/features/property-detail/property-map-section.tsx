@@ -1,49 +1,50 @@
 "use client";
 
-import { YandexMap } from "@/components/features/yandex-map";
 import type { Property } from "@/types/property";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, MapPin } from "lucide-react";
+
+import { yandexMapsPointUrl } from "@/lib/maps-external-link";
 
 interface PropertyMapSectionProps {
   property: Property;
 }
 
-function yandexMapsUrl(lng: number, lat: number, z = 17): string {
-  return `https://yandex.ru/maps/?pt=${lng},${lat}&z=${z}`;
-}
-
 export function PropertyMapSection({ property }: PropertyMapSectionProps) {
   if (property.latitude != null && property.longitude != null) {
-    const center: [number, number] = [property.longitude, property.latitude];
+    const lng = property.longitude;
+    const lat = property.latitude;
     return (
       <div className='bg-card rounded-xl border border-border p-6'>
-        <div className='flex items-center justify-between mb-4'>
-          <h2 className='text-xl font-semibold'>Расположение на карте</h2>
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+          <div>
+            <h2 className='text-xl font-semibold'>Расположение</h2>
+            <p className='mt-2 flex items-start gap-2 text-sm text-muted-foreground'>
+              <MapPin className='mt-0.5 h-4 w-4 shrink-0' aria-hidden />
+              <span className='font-mono text-foreground/90'>
+                {lat.toFixed(5)}, {lng.toFixed(5)}
+              </span>
+            </p>
+          </div>
           <a
-            href={yandexMapsUrl(center[0], center[1])}
+            href={yandexMapsPointUrl(lng, lat)}
             target='_blank'
             rel='noopener noreferrer'
-            className='text-sm text-primary hover:underline inline-flex items-center gap-1'
+            className='inline-flex shrink-0 items-center gap-1.5 text-sm text-primary hover:underline'
           >
-            <ExternalLink className='w-4 h-4' aria-hidden />
-            Открыть в Яндекс.Картах
+            <ExternalLink className='h-4 w-4' aria-hidden />
+            Открыть на карте
           </a>
         </div>
-        <YandexMap
-          center={center}
-          markerPosition={center}
-          zoom={17}
-          height={400}
-        />
       </div>
     );
   }
 
   return (
     <div className='bg-card rounded-xl border border-border p-6'>
-      <h2 className='text-xl font-semibold mb-4'>Расположение на карте</h2>
+      <h2 className='text-xl font-semibold mb-2'>Расположение</h2>
       <p className='text-muted-foreground text-sm'>
-        Координаты не указаны. Для отображения карты необходимо указать широту и долготу.
+        Координаты не указаны. После указания адреса в объявлении здесь появятся точка на
+        карте и координаты.
       </p>
     </div>
   );

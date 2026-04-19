@@ -430,6 +430,7 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
             isGeocoding={isGeocoding}
             onMapCoordinatesChange={handleMapCoordinatesChange}
             coordsSourceRef={coordsSourceRef}
+            geolocationEnabled={category === "REAL_ESTATE"}
           />
           <ListingRealEstateParamsSection
             register={register}

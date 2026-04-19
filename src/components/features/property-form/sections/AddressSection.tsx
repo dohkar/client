@@ -1,19 +1,26 @@
 "use client";
 
-import { useCallback, type MutableRefObject, type ChangeEvent, type FC } from "react";
+import {
+  useCallback,
+  useState,
+  type MutableRefObject,
+  type ChangeEvent,
+  type FC,
+} from "react";
 import { UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { CitySearchSelect } from "@/components/features/CitySearchSelect";
-import { YandexMap } from "@/components/features/yandex-map";
 import { SectionCard } from "../SectionCard";
-import { MapPin } from "lucide-react";
+import { ExternalLink, LocateFixed, MapPin } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import type { PropertyFormData } from "../schema";
 import type { CityDto } from "@/types";
+import { yandexMapsPointUrl } from "@/lib/maps-external-link";
+import { toast } from "sonner";
 
-// Региональные опции вынесены в константу для удобства масштабирования
 const REGION_OPTIONS: Array<{ value: PropertyFormData["region"]; label: string }> = [
   { value: "Chechnya", label: "Чечня" },
   { value: "Ingushetia", label: "Ингушетия" },
@@ -44,6 +51,7 @@ export const AddressSection: FC<AddressSectionProps> = ({
   onMapCoordinatesChange,
   coordsSourceRef,
 }) => {
+  const [isLocating, setIsLocating] = useState(false);
   const latitude = watch("latitude");
   const longitude = watch("longitude");
   const hasCoords = typeof latitude === "number" && typeof longitude === "number";
@@ -53,6 +61,25 @@ export const AddressSection: FC<AddressSectionProps> = ({
   const cityId = watch("cityId") ?? "";
   const street = watch("street") ?? "";
   const house = watch("house") ?? "";
+
+  const handleGeolocation = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast.error("Геолокация недоступна в этом браузере.");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        onMapCoordinatesChange(pos.coords.latitude, pos.coords.longitude);
+        setIsLocating(false);
+      },
+      () => {
+        toast.error("Не удалось получить координаты. Разрешите доступ к геолокации.");
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 20_000, maximumAge: 60_000 }
+    );
+  }, [onMapCoordinatesChange]);
 
   const updateField =
     (field: keyof PropertyFormData) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -90,7 +117,6 @@ export const AddressSection: FC<AddressSectionProps> = ({
       </div>
 
       <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-        {/* Регион */}
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium'>
             Регион <span className='text-destructive'>*</span>
@@ -109,7 +135,6 @@ export const AddressSection: FC<AddressSectionProps> = ({
           </Select>
         </div>
 
-        {/* Город */}
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium'>
             Город <span className='text-destructive'>*</span>
@@ -126,7 +151,6 @@ export const AddressSection: FC<AddressSectionProps> = ({
           />
         </div>
 
-        {/* Улица */}
         <div className='space-y-1.5'>
           <Label htmlFor='street' className='text-sm font-medium'>
             Улица
@@ -140,7 +164,6 @@ export const AddressSection: FC<AddressSectionProps> = ({
           />
         </div>
 
-        {/* Дом */}
         <div className='space-y-1.5'>
           <Label htmlFor='house' className='text-sm font-medium'>
             Дом
@@ -155,27 +178,44 @@ export const AddressSection: FC<AddressSectionProps> = ({
         </div>
       </div>
 
-      {hasCoords && (
-        <div className='mt-4 space-y-1.5'>
-          <Label className='text-sm font-medium flex items-center gap-1.5'>
-            <MapPin className='h-3.5 w-3.5 text-muted-foreground' />
-            Уточните на карте
-          </Label>
+      <div className='mt-4 flex flex-col gap-2'>
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          className='w-fit'
+          disabled={isLocating}
+          onClick={handleGeolocation}
+        >
+          {isLocating ? (
+            <Spinner className='mr-2 h-4 w-4' />
+          ) : (
+            <LocateFixed className='mr-2 h-4 w-4' aria-hidden />
+          )}
+          Определить по геолокации
+        </Button>
+        <p className='text-xs text-muted-foreground'>
+          Координаты и адрес подставляются через DaData по полям адреса или по GPS.
+        </p>
+        {hasCoords && (
           <p className='text-xs text-muted-foreground'>
-            Перетащите маркер или кликните по карте
+            Координаты:{" "}
+            <span className='font-mono text-foreground/90'>
+              {latitude.toFixed(5)}, {longitude.toFixed(5)}
+            </span>
+            {" · "}
+            <a
+              href={yandexMapsPointUrl(longitude, latitude)}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='inline-flex items-center gap-0.5 text-primary hover:underline'
+            >
+              <ExternalLink className='h-3 w-3' aria-hidden />
+              На карте
+            </a>
           </p>
-          <div className='rounded-lg overflow-hidden border border-border/50 bg-muted/10'>
-            <YandexMap
-              center={[longitude, latitude]}
-              markerPosition={[longitude, latitude]}
-              zoom={16}
-              height={220}
-              onMarkerMove={(lng, lat) => onMapCoordinatesChange(lat, lng)}
-              onMapClick={(lng, lat) => onMapCoordinatesChange(lat, lng)}
-            />
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </SectionCard>
   );
 };

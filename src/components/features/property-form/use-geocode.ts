@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { UseFormSetValue } from "react-hook-form";
-import { geocodeAddress, reverseGeocode } from "@/lib/yandex-geocoder";
+import { geocodeAddress, reverseGeocode } from "@/lib/dadata-geocoder";
 import { buildLocationFromComponents } from "./schema";
 import { REGION_LABELS } from "@/lib/search-constants";
 import type { PropertyFormData } from "./schema";
@@ -82,7 +82,8 @@ export function usePropertyFormGeocode(
           setValue("longitude", undefined);
           if (result.reason === "key") {
             toast.error(
-              result.message ?? "Сервис геокодирования не настроен. Обратитесь к администратору.",
+              result.message ??
+                "Сервис геокодирования не настроен. Обратитесь к администратору.",
               { duration: 5000 }
             );
           } else {
@@ -128,7 +129,7 @@ export function usePropertyFormGeocode(
             setValue("location", result.formattedAddress);
             if (result.components.street) setValue("street", result.components.street);
             if (result.components.house) setValue("house", result.components.house);
-            toast.success("Адрес обновлён по карте", { duration: 1200 });
+            toast.success("Адрес обновлён по геолокации", { duration: 1200 });
           }
         } finally {
           // Оставляем "map", чтобы следующий эффект геокодирования (от setValue street/house/location)

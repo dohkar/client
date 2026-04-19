@@ -2,7 +2,7 @@
 
 import { ListingCard } from "./listing-card";
 import { Empty } from "@/components/ui/empty";
-import { ArrowRight, Home } from "lucide-react";
+import { Home } from "lucide-react";
 import type { Listing } from "@/types/listing";
 import Link from "next/link";
 import { Button } from "../ui";

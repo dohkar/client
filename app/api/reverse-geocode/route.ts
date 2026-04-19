@@ -6,12 +6,11 @@ import {
   getReverseGeocodeCached,
   setReverseGeocodeCached,
 } from "../_lib/geocode-utils";
-
-const YANDEX_GEOCODER_URL = "https://geocode-maps.yandex.ru/1.x/";
+import { dadataGeolocateAddress, firstSuggestionWithGeo } from "../_lib/dadata-address";
 
 /**
  * POST /api/reverse-geocode
- * Прокси к Yandex Geocoder API: координаты → адрес.
+ * Прокси к DaData Geolocate: координаты → адрес.
  * Тело: { latitude: number, longitude: number }.
  * Кэш: 5 мин по округлённым координатам. Rate limit: 60 запросов/мин на IP.
  */
@@ -41,60 +40,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(cached);
     }
 
-    const apiKey =
-      process.env.YANDEX_GEOCODER_API_KEY || process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY;
-    if (!apiKey) {
+    if (!process.env.DADATA_API_TOKEN?.trim()) {
       return NextResponse.json(
-        { error: "Не настроен API ключ геокодера" },
-        { status: 500 }
+        {
+          error:
+            "Не настроен DaData: задайте DADATA_API_TOKEN (и при необходимости DADATA_SECRET_KEY).",
+          code: "GEOCODER_FORBIDDEN",
+        },
+        { status: 503 }
       );
     }
 
-    const geocode = `${lon},${lat}`;
-    const params = new URLSearchParams({
-      apikey: apiKey,
-      geocode,
-      format: "json",
-      lang: "ru_RU",
-      results: "1",
-    });
-    const url = `${YANDEX_GEOCODER_URL}?${params.toString()}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      next: { revalidate: 0 },
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error("[reverse-geocode] Yandex error:", response.status, text);
-
-      if (response.status === 403) {
+    let json;
+    try {
+      json = await dadataGeolocateAddress(lat, lon);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      if (msg === "DADATA_AUTH_MISSING" || msg === "DADATA_AUTH_FORBIDDEN") {
         return NextResponse.json(
           {
             error:
-              "Ключ API не разрешён для Геокодера или неверен. Проверьте YANDEX_GEOCODER_API_KEY и права ключа в кабинете Яндекса.",
+              "DaData отклонил запрос: проверьте DADATA_API_TOKEN и DADATA_SECRET_KEY.",
             code: "GEOCODER_FORBIDDEN",
-            details: response.status,
           },
           { status: 503 }
         );
       }
+      throw e;
+    }
 
+    const geo = firstSuggestionWithGeo(json);
+    if (!geo) {
       return NextResponse.json(
-        {
-          error: "Ошибка обратного геокодера",
-          code: "GEOCODER_ERROR",
-          details: response.status,
-        },
-        { status: 502 }
+        { error: "Не удалось определить адрес по координатам." },
+        { status: 404 }
       );
     }
 
-    const data = await response.json();
+    const payload = {
+      formattedAddress: geo.formattedAddress,
+      components: geo.components,
+    };
+
     recordGeocodeRequest(ip);
-    setReverseGeocodeCached(lat, lon, data);
-    return NextResponse.json(data);
+    setReverseGeocodeCached(lat, lon, payload);
+    return NextResponse.json(payload);
   } catch (e) {
     console.error("[reverse-geocode]", e);
     return NextResponse.json(

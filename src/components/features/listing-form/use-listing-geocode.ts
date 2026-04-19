@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { UseFormSetValue } from "react-hook-form";
-import { geocodeAddress, reverseGeocode } from "@/lib/yandex-geocoder";
+import { geocodeAddress, reverseGeocode } from "@/lib/dadata-geocoder";
 import { buildLocationFromComponents } from "@/components/features/property-form/schema";
 import { REGION_LABELS } from "@/lib/search-constants";
 import type { ListingFormData } from "./schema";
@@ -136,7 +136,7 @@ export function useListingFormGeocode(
             setValue("location", result.formattedAddress);
             if (result.components.street) setValue("street", result.components.street);
             if (result.components.house) setValue("house", result.components.house);
-            toast.success("Адрес обновлён по карте", { duration: 1200 });
+            toast.success("Адрес обновлён по геолокации", { duration: 1200 });
           }
         } finally {
           coordsSourceRef.current = "map";

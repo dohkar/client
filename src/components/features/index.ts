@@ -13,6 +13,5 @@ export * from "./property-grid";
 export * from "./property-grid-skeleton";
 export * from "./statistics-section";
 export * from "./testimonials";
-export * from "./yandex-map";
 export * from "./profile";
 export * from "./sell";
