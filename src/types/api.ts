@@ -4,4197 +4,4209 @@
  */
 
 export interface paths {
-    "/api/auth/send-code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Отправить SMS-код на номер телефона */
-        post: operations["AuthController_sendPhoneCode"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/phone/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Подтвердить код и залогиниться/зарегистрироваться */
-        post: operations["AuthController_verifyPhoneCode"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/register/phone-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Регистрация по номеру телефона и паролю */
-        post: operations["AuthController_registerWithPhoneAndPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/login/phone-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Вход по номеру телефона и паролю */
-        post: operations["AuthController_loginWithPhoneAndPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/google": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Google OAuth */
-        get: operations["AuthController_googleAuth"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/google/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Google OAuth callback */
-        get: operations["AuthController_googleCallback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/yandex": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Yandex OAuth */
-        get: operations["AuthController_yandexAuth"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/yandex/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Yandex OAuth callback */
-        get: operations["AuthController_yandexCallback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/finalize-oauth": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Финализация OAuth: установка refresh в HttpOnly cookie, возврат accessToken для памяти */
-        post: operations["AuthController_finalizeOAuth"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Обновление access token */
-        post: operations["AuthController_refresh"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Выход из системы */
-        post: operations["AuthController_logout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить текущего пользователя */
-        get: operations["AuthController_getMe"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/users/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить профиль текущего пользователя */
-        get: operations["UsersController_getMe"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Обновить профиль текущего пользователя */
-        patch: operations["UsersController_updateMe"];
-        trace?: never;
-    };
-    "/api/users/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить пользователя по ID */
-        get: operations["UsersController_getUserById"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/properties": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить список объявлений с фильтрами */
-        get: operations["PropertiesController_findAll"];
-        put?: never;
-        /** Создать объявление */
-        post: operations["PropertiesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/properties/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Поиск объявлений */
-        get: operations["PropertiesController_search"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/properties/stats/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить статистику по категориям недвижимости */
-        get: operations["PropertiesController_getCategoryStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/properties/limits": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Лимиты объявлений для текущего пользователя (скользящие 30 дней) + счётчик моих объявлений */
-        get: operations["PropertiesController_getMyLimits"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/properties/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить объявление по ID */
-        get: operations["PropertiesController_findOne"];
-        put?: never;
-        post?: never;
-        /** Удалить объявление */
-        delete: operations["PropertiesController_remove"];
-        options?: never;
-        head?: never;
-        /** Обновить объявление */
-        patch: operations["PropertiesController_update"];
-        trace?: never;
-    };
-    "/api/properties/{id}/related": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить похожие объявления */
-        get: operations["PropertiesController_findRelated"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/favorites": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить список избранного */
-        get: operations["FavoritesController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/favorites/{listingId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Добавить листинг в избранное */
-        post: operations["FavoritesController_add"];
-        /** Удалить листинг из избранного */
-        delete: operations["FavoritesController_remove"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/statistics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить статистику */
-        get: operations["AdminController_getStatistics"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить список пользователей */
-        get: operations["AdminController_getUsers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/users/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить пользователя по ID (карточка) */
-        get: operations["AdminController_getUserById"];
-        put?: never;
-        post?: never;
-        /** Удалить пользователя (soft delete) */
-        delete: operations["AdminController_deleteUser"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/users/{id}/ban": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Заблокировать пользователя */
-        post: operations["AdminController_banUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/users/{id}/unban": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Разблокировать пользователя */
-        patch: operations["AdminController_unbanUser"];
-        trace?: never;
-    };
-    "/api/admin/users/{id}/role": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Изменить роль пользователя */
-        patch: operations["AdminController_updateUserRole"];
-        trace?: never;
-    };
-    "/api/admin/properties": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить список объявлений */
-        get: operations["AdminController_getProperties"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/properties/{id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Изменить статус объявления */
-        patch: operations["AdminController_updatePropertyStatus"];
-        trace?: never;
-    };
-    "/api/admin/properties/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Удалить объявление */
-        delete: operations["AdminController_deleteProperty"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/audit-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить логи действий */
-        get: operations["AdminController_getAuditLogs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/chats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить список чатов */
-        get: operations["AdminController_getChats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/chats/{id}/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Закрыть чат (архивировать) */
-        patch: operations["AdminController_closeChat"];
-        trace?: never;
-    };
-    "/api/admin/listings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить объявления (Listing) для модерации */
-        get: operations["AdminController_getListings"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/listings/{id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Одобрить объявление (Listing) */
-        patch: operations["AdminController_approveListing"];
-        trace?: never;
-    };
-    "/api/admin/listings/{id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Отклонить объявление (Listing) */
-        patch: operations["AdminController_rejectListing"];
-        trace?: never;
-    };
-    "/api/admin/listings/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Удалить (архивировать) объявление (Listing) */
-        delete: operations["AdminController_deleteListingAdmin"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/upload/avatar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Загрузить аватар пользователя */
-        post: operations["UploadController_uploadAvatar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/upload/images": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Загрузить изображения для объявления */
-        post: operations["UploadController_uploadImages"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/upload/videos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Загрузить видео для объявления */
-        post: operations["UploadController_uploadVideos"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health check endpoint */
-        get: operations["HealthController_check"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/health/sync": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Subscription sync status (cron health) */
-        get: operations["HealthController_getSyncStatus"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/subscriptions/plans": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Список активных тарифов (публичный) */
-        get: operations["SubscriptionsController_getPlans"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/subscriptions/create-payment": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["SubscriptionsController_createPayment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/subscriptions/payments/{paymentId}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["SubscriptionsController_getPaymentStatus"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/subscriptions/webhooks/yookassa": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["SubscriptionsController_handleYooKassaWebhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chats/property": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Создать или получить чат по объявлению */
-        post: operations["ChatsController_createPropertyChat"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chats/listing": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Создать или получить чат по листингу (Listing) */
-        post: operations["ChatsController_createListingChat"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chats/support": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Создать или получить чат поддержки */
-        post: operations["ChatsController_createSupportChat"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить список чатов пользователя */
-        get: operations["ChatsController_getUserChats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chats/{chatId}/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить сообщения чата с cursor pagination */
-        get: operations["ChatsController_getChatMessages"];
-        put?: never;
-        /** Отправить сообщение */
-        post: operations["ChatsController_sendMessage"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chats/{chatId}/read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Пометить все сообщения как прочитанные */
-        post: operations["ChatsController_markMessagesAsRead"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chats/support/all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить все чаты поддержки (только для админов/поддержки) */
-        get: operations["ChatsController_getSupportChats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chats/{chatId}/assign-support": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Назначить сотрудника поддержки в чат */
-        post: operations["ChatsController_assignSupportAgent"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/regions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить список регионов */
-        get: operations["RegionsController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/regions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить регион по ID с городами */
-        get: operations["RegionsController_findOne"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/cities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить список городов */
-        get: operations["CitiesController_findCities"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/inbox": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить все заявки (только админ/поддержка) */
-        get: operations["InboxController_getAllRequests"];
-        put?: never;
-        /** Создать заявку (контакт или жалобу) */
-        post: operations["InboxController_createRequest"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/inbox/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить заявку по ID */
-        get: operations["InboxController_getRequestById"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/inbox/{id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Обновить статус заявки (с комментарием администратора) */
-        patch: operations["InboxController_updateStatus"];
-        trace?: never;
-    };
-    "/api/listings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Список объявлений с фильтрами по категории */
-        get: operations["ListingsController_findAll"];
-        put?: never;
-        /** Создать объявление (любая категория) */
-        post: operations["ListingsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/listings/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Быстрый поиск объявлений */
-        get: operations["ListingsController_search"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/listings/stats/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Статистика по категориям объявлений */
-        get: operations["ListingsController_getCategoryStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/listings/limits": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Лимиты объявлений текущего пользователя */
-        get: operations["ListingsController_getMyLimits"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/listings/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить объявление по ID или slug */
-        get: operations["ListingsController_findOne"];
-        put?: never;
-        post?: never;
-        /** Удалить (архивировать) объявление */
-        delete: operations["ListingsController_remove"];
-        options?: never;
-        head?: never;
-        /** Обновить объявление */
-        patch: operations["ListingsController_update"];
-        trace?: never;
-    };
-    "/api/listings/{id}/related": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Похожие объявления */
-        get: operations["ListingsController_findRelated"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/listings/{id}/view": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Записать просмотр объявления */
-        post: operations["AnalyticsController_recordView"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/listings/{id}/contact": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Записать контакт-попытку */
-        post: operations["AnalyticsController_recordContact"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/listings/{id}/views": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Статистика просмотров объявления */
-        get: operations["AnalyticsController_getViewStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/listings/{id}/contacts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Статистика контактов объявления */
-        get: operations["AnalyticsController_getContactStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/listings/{id}/price-history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** История цен объявления */
-        get: operations["AnalyticsController_getPriceHistory"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/sellers/{userId}/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Статистика продавца */
-        get: operations["AnalyticsController_getSellerStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/brands": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Список брендов (с фильтром по категории) */
-        get: operations["BrandsController_findAll"];
-        put?: never;
-        /** Создать бренд (только админ) */
-        post: operations["BrandsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/brands/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить бренд по ID */
-        get: operations["BrandsController_findOne"];
-        put?: never;
-        post?: never;
-        /** Удалить бренд (только админ) */
-        delete: operations["BrandsController_remove"];
-        options?: never;
-        head?: never;
-        /** Обновить бренд (только админ) */
-        patch: operations["BrandsController_update"];
-        trace?: never;
-    };
+  "/api/auth/send-code": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Отправить SMS-код на номер телефона */
+    post: operations["AuthController_sendPhoneCode"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/phone/verify": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Подтвердить код и залогиниться/зарегистрироваться */
+    post: operations["AuthController_verifyPhoneCode"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/register/phone-password": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Регистрация по номеру телефона и паролю */
+    post: operations["AuthController_registerWithPhoneAndPassword"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/login/phone-password": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Вход по номеру телефона и паролю */
+    post: operations["AuthController_loginWithPhoneAndPassword"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/google": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Google OAuth */
+    get: operations["AuthController_googleAuth"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/google/callback": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Google OAuth callback */
+    get: operations["AuthController_googleCallback"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/yandex": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Yandex OAuth */
+    get: operations["AuthController_yandexAuth"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/yandex/callback": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Yandex OAuth callback */
+    get: operations["AuthController_yandexCallback"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/finalize-oauth": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Финализация OAuth: установка refresh в HttpOnly cookie, возврат accessToken для памяти */
+    post: operations["AuthController_finalizeOAuth"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/refresh": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Обновление access token */
+    post: operations["AuthController_refresh"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/logout": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Выход из системы */
+    post: operations["AuthController_logout"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/auth/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить текущего пользователя */
+    get: operations["AuthController_getMe"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/users/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить профиль текущего пользователя */
+    get: operations["UsersController_getMe"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Обновить профиль текущего пользователя */
+    patch: operations["UsersController_updateMe"];
+    trace?: never;
+  };
+  "/api/users/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить пользователя по ID */
+    get: operations["UsersController_getUserById"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/properties": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить список объявлений с фильтрами */
+    get: operations["PropertiesController_findAll"];
+    put?: never;
+    /** Создать объявление */
+    post: operations["PropertiesController_create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/properties/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Поиск объявлений */
+    get: operations["PropertiesController_search"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/properties/stats/categories": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить статистику по категориям недвижимости */
+    get: operations["PropertiesController_getCategoryStats"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/properties/limits": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Лимиты объявлений для текущего пользователя (скользящие 30 дней) + счётчик моих объявлений */
+    get: operations["PropertiesController_getMyLimits"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/properties/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить объявление по ID */
+    get: operations["PropertiesController_findOne"];
+    put?: never;
+    post?: never;
+    /** Удалить объявление */
+    delete: operations["PropertiesController_remove"];
+    options?: never;
+    head?: never;
+    /** Обновить объявление */
+    patch: operations["PropertiesController_update"];
+    trace?: never;
+  };
+  "/api/properties/{id}/related": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить похожие объявления */
+    get: operations["PropertiesController_findRelated"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/favorites": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить список избранного */
+    get: operations["FavoritesController_findAll"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/favorites/{listingId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Добавить листинг в избранное */
+    post: operations["FavoritesController_add"];
+    /** Удалить листинг из избранного */
+    delete: operations["FavoritesController_remove"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/statistics": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить статистику */
+    get: operations["AdminController_getStatistics"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить список пользователей */
+    get: operations["AdminController_getUsers"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/users/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить пользователя по ID (карточка) */
+    get: operations["AdminController_getUserById"];
+    put?: never;
+    post?: never;
+    /** Удалить пользователя (soft delete) */
+    delete: operations["AdminController_deleteUser"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/users/{id}/ban": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Заблокировать пользователя */
+    post: operations["AdminController_banUser"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/users/{id}/unban": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Разблокировать пользователя */
+    patch: operations["AdminController_unbanUser"];
+    trace?: never;
+  };
+  "/api/admin/users/{id}/role": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Изменить роль пользователя */
+    patch: operations["AdminController_updateUserRole"];
+    trace?: never;
+  };
+  "/api/admin/properties": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить список объявлений */
+    get: operations["AdminController_getProperties"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/properties/{id}/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Изменить статус объявления */
+    patch: operations["AdminController_updatePropertyStatus"];
+    trace?: never;
+  };
+  "/api/admin/properties/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Удалить объявление */
+    delete: operations["AdminController_deleteProperty"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/audit-logs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить логи действий */
+    get: operations["AdminController_getAuditLogs"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/chats": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить список чатов */
+    get: operations["AdminController_getChats"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/chats/{id}/close": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Закрыть чат (архивировать) */
+    patch: operations["AdminController_closeChat"];
+    trace?: never;
+  };
+  "/api/admin/listings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить объявления (Listing) для модерации */
+    get: operations["AdminController_getListings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/listings/{id}/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Одобрить объявление (Listing) */
+    patch: operations["AdminController_approveListing"];
+    trace?: never;
+  };
+  "/api/admin/listings/{id}/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Отклонить объявление (Listing) */
+    patch: operations["AdminController_rejectListing"];
+    trace?: never;
+  };
+  "/api/admin/listings/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Удалить (архивировать) объявление (Listing) */
+    delete: operations["AdminController_deleteListingAdmin"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/upload/avatar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Загрузить аватар пользователя */
+    post: operations["UploadController_uploadAvatar"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/upload/images": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Загрузить изображения для объявления */
+    post: operations["UploadController_uploadImages"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/upload/videos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Загрузить видео для объявления */
+    post: operations["UploadController_uploadVideos"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/health": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Health check endpoint */
+    get: operations["HealthController_check"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/health/sync": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Subscription sync status (cron health) */
+    get: operations["HealthController_getSyncStatus"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/subscriptions/plans": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Список активных тарифов (публичный) */
+    get: operations["SubscriptionsController_getPlans"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/subscriptions/create-payment": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["SubscriptionsController_createPayment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/subscriptions/payments/{paymentId}/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["SubscriptionsController_getPaymentStatus"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/subscriptions/webhooks/yookassa": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["SubscriptionsController_handleYooKassaWebhook"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chats/property": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Создать или получить чат по объявлению */
+    post: operations["ChatsController_createPropertyChat"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chats/listing": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Создать или получить чат по листингу (Listing) */
+    post: operations["ChatsController_createListingChat"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chats/support": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Создать или получить чат поддержки */
+    post: operations["ChatsController_createSupportChat"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chats": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить список чатов пользователя */
+    get: operations["ChatsController_getUserChats"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chats/{chatId}/messages": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить сообщения чата с cursor pagination */
+    get: operations["ChatsController_getChatMessages"];
+    put?: never;
+    /** Отправить сообщение */
+    post: operations["ChatsController_sendMessage"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chats/{chatId}/read": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Пометить все сообщения как прочитанные */
+    post: operations["ChatsController_markMessagesAsRead"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chats/support/all": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить все чаты поддержки (только для админов/поддержки) */
+    get: operations["ChatsController_getSupportChats"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chats/{chatId}/assign-support": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Назначить сотрудника поддержки в чат */
+    post: operations["ChatsController_assignSupportAgent"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/regions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить список регионов */
+    get: operations["RegionsController_findAll"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/regions/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить регион по ID с городами */
+    get: operations["RegionsController_findOne"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/cities": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить список городов */
+    get: operations["CitiesController_findCities"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/inbox": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить все заявки (только админ/поддержка) */
+    get: operations["InboxController_getAllRequests"];
+    put?: never;
+    /** Создать заявку (контакт или жалобу) */
+    post: operations["InboxController_createRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/inbox/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить заявку по ID */
+    get: operations["InboxController_getRequestById"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/inbox/{id}/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Обновить статус заявки (с комментарием администратора) */
+    patch: operations["InboxController_updateStatus"];
+    trace?: never;
+  };
+  "/api/listings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Список объявлений с фильтрами по категории */
+    get: operations["ListingsController_findAll"];
+    put?: never;
+    /** Создать объявление (любая категория) */
+    post: operations["ListingsController_create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/listings/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Быстрый поиск объявлений */
+    get: operations["ListingsController_search"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/listings/stats/categories": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Статистика по категориям объявлений */
+    get: operations["ListingsController_getCategoryStats"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/listings/limits": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Лимиты объявлений текущего пользователя */
+    get: operations["ListingsController_getMyLimits"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/listings/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить объявление по ID или slug */
+    get: operations["ListingsController_findOne"];
+    put?: never;
+    post?: never;
+    /** Удалить (архивировать) объявление */
+    delete: operations["ListingsController_remove"];
+    options?: never;
+    head?: never;
+    /** Обновить объявление */
+    patch: operations["ListingsController_update"];
+    trace?: never;
+  };
+  "/api/listings/{id}/related": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Похожие объявления */
+    get: operations["ListingsController_findRelated"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/analytics/listings/{id}/view": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Записать просмотр объявления */
+    post: operations["AnalyticsController_recordView"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/analytics/listings/{id}/contact": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Записать контакт-попытку */
+    post: operations["AnalyticsController_recordContact"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/analytics/listings/{id}/views": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Статистика просмотров объявления */
+    get: operations["AnalyticsController_getViewStats"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/analytics/listings/{id}/contacts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Статистика контактов объявления */
+    get: operations["AnalyticsController_getContactStats"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/analytics/listings/{id}/price-history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** История цен объявления */
+    get: operations["AnalyticsController_getPriceHistory"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/analytics/sellers/{userId}/stats": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Статистика продавца */
+    get: operations["AnalyticsController_getSellerStats"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/brands": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Список брендов (с фильтром по категории) */
+    get: operations["BrandsController_findAll"];
+    put?: never;
+    /** Создать бренд (только админ) */
+    post: operations["BrandsController_create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/brands/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить бренд по ID */
+    get: operations["BrandsController_findOne"];
+    put?: never;
+    post?: never;
+    /** Удалить бренд (только админ) */
+    delete: operations["BrandsController_remove"];
+    options?: never;
+    head?: never;
+    /** Обновить бренд (только админ) */
+    patch: operations["BrandsController_update"];
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        SendPhoneCodeDto: {
-            /**
-             * @description Номер телефона в формате E.164
-             * @example +79626404047
-             */
-            phone: string;
-        };
-        VerifyPhoneCodeDto: {
-            /**
-             * @description Номер телефона в формате E.164
-             * @example +79626404047
-             */
-            phone: string;
-            /**
-             * @description Код из SMS
-             * @example 379840
-             */
-            code: string;
-        };
-        RegisterPhonePasswordDto: {
-            /**
-             * @description Номер телефона в формате E.164
-             * @example +79626404047
-             */
-            phone: string;
-            /**
-             * @description Пароль пользователя (минимум 8 символов)
-             * @example StrongP@ssw0rd
-             */
-            password: string;
-        };
-        FinalizeOAuthDto: {
-            /** @description Refresh token из URL (одноразовый обмен) */
-            refreshToken: string;
-            /** @description Access token из URL (для совместимости) */
-            accessToken?: string;
-        };
-        RefreshTokenDto: {
-            /** @description Передавать только если refresh не в cookie */
-            refreshToken?: string;
-        };
-        UserResponseDto: {
-            id: string;
-            email: string;
-            name: string;
-            phone?: string;
-            avatar?: string;
-            isPremium: boolean;
-            role: string;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        UpdateUserDto: {
-            /** @example John Doe */
-            name?: string;
-            /** @example +7 (928) 000-00-00 */
-            phone?: string;
-            /** @example user@example.com */
-            email?: string | null;
-        };
-        CreatePropertyDto: {
-            /** @example Квартира в центре Грозного */
-            title: string;
-            /**
-             * @description Тип сделки
-             * @enum {string}
-             */
-            dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-            /**
-             * @description Цена в рублях; при BUY опционально
-             * @example 5000000
-             */
-            price?: number;
-            /**
-             * @default RUB
-             * @enum {string}
-             */
-            currency: "RUB";
-            /** @example г. Грозный, ул. Ленина, д. 10 */
-            location: string;
-            /** @example 550e8400-e29b-41d4-a716-446655440000 */
-            regionId: string;
-            /**
-             * @description ID города (опционально)
-             * @example 660e8400-e29b-41d4-a716-446655440001
-             */
-            cityId?: string;
-            /** @enum {string} */
-            type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-            /** @example 3 */
-            rooms?: number;
-            /** @example 75.5 */
-            area: number;
-            /**
-             * @description Этаж
-             * @example 2
-             */
-            floor?: number;
-            /** @example Отличная квартира в центре города */
-            description: string;
-            /**
-             * @example [
-             *       "https://example.com/image1.jpg"
-             *     ]
-             */
-            images?: string[];
-            /**
-             * @example [
-             *       "Балкон",
-             *       "Лоджия",
-             *       "Парковка"
-             *     ]
-             */
-            features?: string[];
-            /**
-             * @example [
-             *       "https://example.com/video1.mp4"
-             *     ]
-             */
-            videos?: string[];
-            /** @example ул. Ленина */
-            street?: string;
-            /** @example 10 */
-            house?: string;
-            /**
-             * @description Широта
-             * @example 43.3156
-             */
-            latitude?: number;
-            /**
-             * @description Долгота
-             * @example 45.6949
-             */
-            longitude?: number;
-        };
-        PropertyResponseDto: {
-            id: string;
-            /** @description SEO slug (не меняется при редактировании) */
-            slug: string;
-            title: string;
-            /** @description Цена в рублях */
-            price: number;
-            /** @enum {string} */
-            dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-            /** @enum {string} */
-            currency: "RUB";
-            location: string;
-            regionId: string;
-            /** @description Region relation (optional, may be included in response) */
-            region?: Record<string, never>;
-            /** @description ID города */
-            cityId?: string;
-            /** @description Город (если указан) */
-            city?: Record<string, never>;
-            /** @enum {string} */
-            type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-            rooms?: number;
-            area: number;
-            description: string;
-            images: string[];
-            videos?: string[];
-            features: string[];
-            /** @enum {string} */
-            status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
-            views: number;
-            favoritesCount: number;
-            userId: string;
-            /** Format: date-time */
-            archivedAt?: string;
-            /** @description Причина отклонения (при status REJECTED) */
-            rejectionReason?: string;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** @description Широта */
-            latitude?: number;
-            /** @description Долгота */
-            longitude?: number;
-            /** @description ID связанного Listing с тем же slug (после миграции property→listing) */
-            listingId?: string | null;
-        };
-        UpdatePropertyDto: {
-            /** @example Квартира в центре Грозного */
-            title?: string;
-            /** @enum {string} */
-            dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-            /**
-             * @description Цена в рублях
-             * @example 5000000
-             */
-            price?: number;
-            /** @enum {string} */
-            currency?: "RUB";
-            /** @example г. Грозный, ул. Ленина, д. 10 */
-            location?: string;
-            /** @example 550e8400-e29b-41d4-a716-446655440000 */
-            regionId?: string;
-            /** @example 660e8400-e29b-41d4-a716-446655440001 */
-            cityId?: string;
-            /** @enum {string} */
-            type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-            /** @example 3 */
-            rooms?: number;
-            /** @example 75.5 */
-            area?: number;
-            /** @example 2 */
-            floor?: number;
-            /** @example Отличная квартира */
-            description?: string;
-            /**
-             * @example [
-             *       "https://example.com/image1.jpg"
-             *     ]
-             */
-            images?: string[];
-            /**
-             * @example [
-             *       "Балкон",
-             *       "Лоджия"
-             *     ]
-             */
-            features?: string[];
-            /**
-             * @example [
-             *       "https://example.com/video1.mp4"
-             *     ]
-             */
-            videos?: string[];
-            /** @example ул. Ленина */
-            street?: string;
-            /** @example 10 */
-            house?: string;
-            /** @example 43.3156 */
-            latitude?: number;
-            /** @example 45.6949 */
-            longitude?: number;
-        };
-        RealEstateDetailsResponseDto: {
-            /** @enum {string} */
-            type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-            rooms?: number;
-            area: number;
-            features: string[];
-            latitude?: number;
-            longitude?: number;
-        };
-        VehicleDetailsResponseDto: {
-            brandId: string;
-            brand?: Record<string, never>;
-            model: string;
-            year: number;
-            mileage?: number;
-            bodyType?: string;
-            engine?: string;
-            transmission?: string;
-        };
-        ElectronicsDetailsResponseDto: {
-            brandId: string;
-            brand?: Record<string, never>;
-            productType: string;
-            model: string;
-            storage?: string;
-            condition?: string;
-        };
-        ListingResponseDto: {
-            id: string;
-            slug: string;
-            title: string;
-            /** @description Цена в рублях */
-            price: number;
-            /** @enum {string} */
-            currency: "RUB";
-            /** @enum {string} */
-            category: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-            /** @enum {string} */
-            status: "ACTIVE" | "SOLD" | "ARCHIVED";
-            /** @enum {string} */
-            moderationStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
-            /** @enum {string} */
-            dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-            description: string;
-            images: string[];
-            videos?: string[];
-            location?: string;
-            regionId?: string;
-            region?: Record<string, never>;
-            cityId?: string;
-            city?: Record<string, never>;
-            userId: string;
-            user?: Record<string, never>;
-            views: number;
-            favoritesCount: number;
-            rejectionReason?: string;
-            /** Format: date-time */
-            archivedAt?: string;
-            previewAttributes: string[];
-            allowPhone: boolean;
-            allowChat: boolean;
-            /** @enum {string} */
-            promotionTier: "NONE" | "ELIGIBLE" | "BOOSTED";
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            realEstate?: components["schemas"]["RealEstateDetailsResponseDto"];
-            vehicle?: components["schemas"]["VehicleDetailsResponseDto"];
-            electronics?: components["schemas"]["ElectronicsDetailsResponseDto"];
-        };
-        FavoriteResponseDto: {
-            id: string;
-            userId: string;
-            /** @description Legacy: избранное по Property */
-            propertyId?: string | null;
-            /** @description Избранное по Listing */
-            listingId?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            property?: components["schemas"]["PropertyResponseDto"] | null;
-            listing?: components["schemas"]["ListingResponseDto"] | null;
-        };
-        BanUserDto: {
-            /** @description Причина бана */
-            reason?: string;
-            /** @description Дата окончания бана (ISO 8601) */
-            bannedUntil?: string;
-        };
-        UpdateUserRoleDto: {
-            /** @enum {string} */
-            role: "USER" | "PREMIUM" | "ADMIN";
-        };
-        UpdatePropertyStatusDto: {
-            /** @enum {string} */
-            status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
-            /** @description Причина отклонения (при смене на PENDING или отклонении) */
-            rejectionReason?: string;
-        };
-        CreateSubscriptionPaymentDto: {
-            /**
-             * @description Код подписки (тариф)
-             * @example premium_month
-             */
-            code: string;
-        };
-        CreatePropertyChatDto: {
-            /**
-             * @description ID объявления недвижимости
-             * @example 550e8400-e29b-41d4-a716-446655440000
-             */
-            propertyId: string;
-        };
-        ChatParticipantResponseDto: {
-            /** @example 550e8400-e29b-41d4-a716-446655440000 */
-            id: string;
-            /** @example 550e8400-e29b-41d4-a716-446655440001 */
-            userId: string;
-            /**
-             * @example BUYER
-             * @enum {string}
-             */
-            role: "BUYER" | "SELLER" | "ADMIN";
-        };
-        ChatResponseDto: {
-            /** @example 550e8400-e29b-41d4-a716-446655440000 */
-            id: string;
-            /**
-             * @example PROPERTY
-             * @enum {string}
-             */
-            type: "PROPERTY" | "SUPPORT";
-            /** @example 550e8400-e29b-41d4-a716-446655440001 */
-            propertyId: string | null;
-            /** @example 550e8400-e29b-41d4-a716-446655440002 */
-            listingId: string | null;
-            /** @example false */
-            isArchived: boolean;
-            /**
-             * Format: date-time
-             * @example 2024-01-20T10:30:00Z
-             */
-            lastMessageAt: string | null;
-            /** @example Здравствуйте, интересует ваше объявление */
-            lastMessageText: string | null;
-            /**
-             * Format: date-time
-             * @example 2024-01-20T10:00:00Z
-             */
-            createdAt: string;
-            participants: components["schemas"]["ChatParticipantResponseDto"][];
-            /**
-             * @description Количество непрочитанных сообщений
-             * @example 0
-             */
-            unreadCount: number;
-            /** @description Информация об объявлении (если тип PROPERTY) */
-            property?: Record<string, never>;
-        };
-        CreateListingChatDto: {
-            /**
-             * @description ID объявления (Listing)
-             * @example 550e8400-e29b-41d4-a716-446655440000
-             */
-            listingId: string;
-        };
-        MessageResponseDto: {
-            /** @example 550e8400-e29b-41d4-a716-446655440000 */
-            id: string;
-            /** @example 550e8400-e29b-41d4-a716-446655440001 */
-            chatId: string;
-            /** @example 550e8400-e29b-41d4-a716-446655440002 */
-            senderId: string;
-            /** @example Здравствуйте, интересует ваше объявление */
-            text: string;
-            /** @example false */
-            isRead: boolean;
-            /**
-             * Format: date-time
-             * @example null
-             */
-            readAt: string | null;
-            /**
-             * Format: date-time
-             * @example 2024-01-20T10:30:00Z
-             */
-            createdAt: string;
-        };
-        MessagesResponseDto: {
-            messages: components["schemas"]["MessageResponseDto"][];
-            /**
-             * @description ID следующего сообщения для cursor pagination (null если это последняя страница)
-             * @example 550e8400-e29b-41d4-a716-446655440000
-             */
-            nextCursor: string | null;
-            /**
-             * @description Есть ли еще сообщения для загрузки
-             * @example true
-             */
-            hasMore: boolean;
-        };
-        SendMessageDto: {
-            /**
-             * @description Текст сообщения
-             * @example Здравствуйте, интересует ваше объявление
-             */
-            text: string;
-        };
-        AssignSupportDto: {
-            /**
-             * @description ID сотрудника поддержки для назначения
-             * @example 550e8400-e29b-41d4-a716-446655440000
-             */
-            supportUserId: string;
-        };
-        CreateInboxRequestDto: {
-            /**
-             * @example CONTACT
-             * @enum {string}
-             */
-            category: "CONTACT" | "COMPLAINT";
-            /**
-             * @example MEDIUM
-             * @enum {string}
-             */
-            severity?: "LOW" | "MEDIUM" | "HIGH";
-            /** @example Иван Петров */
-            name: string;
-            /** @example ivan@example.com */
-            email?: string;
-            /** @example +79123456789 */
-            phone?: string;
-            /** @example Здравствуйте, хочу уточнить... */
-            message: string;
-            /** @example uuid */
-            propertyId?: string;
-        };
-        UpdateInboxStatusDto: {
-            /**
-             * @description Новый статус заявки
-             * @enum {string}
-             */
-            status: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
-            /** @description Комментарий администратора */
-            adminComment?: string;
-        };
-        CreateRealEstateDetailsDto: {
-            /** @enum {string} */
-            type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-            /** @example 3 */
-            rooms?: number;
-            /** @example 75.5 */
-            area: number;
-            /**
-             * @example [
-             *       "Балкон",
-             *       "Парковка"
-             *     ]
-             */
-            features?: string[];
-            /** @example 43.3156 */
-            latitude?: number;
-            /** @example 45.6949 */
-            longitude?: number;
-        };
-        CreateVehicleDetailsDto: {
-            /** @description ID бренда (марки) */
-            brandId: string;
-            /** @example Camry */
-            model: string;
-            /** @example 2020 */
-            year: number;
-            /**
-             * @description Пробег, км
-             * @example 85000
-             */
-            mileage?: number;
-            /** @example Седан */
-            bodyType?: string;
-            /** @example 2.5L Бензин */
-            engine?: string;
-            /** @example Автомат */
-            transmission?: string;
-        };
-        CreateElectronicsDetailsDto: {
-            /** @description ID бренда (производителя) */
-            brandId: string;
-            /**
-             * @description PHONE, TABLET, LAPTOP и т.д.
-             * @example PHONE
-             */
-            productType: string;
-            /** @example iPhone 15 Pro */
-            model: string;
-            /** @example 256 GB */
-            storage?: string;
-            /**
-             * @description Состояние товара
-             * @example Б/у, отличное
-             */
-            condition?: string;
-        };
-        CreateListingDto: {
-            /** @enum {string} */
-            category: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-            /** @example Toyota Camry 2020 */
-            title: string;
-            /** @enum {string} */
-            dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-            /**
-             * @description Цена в рублях
-             * @example 5000000
-             */
-            price?: number;
-            /**
-             * @default RUB
-             * @enum {string}
-             */
-            currency: "RUB";
-            description: string;
-            images?: string[];
-            videos?: string[];
-            /** @example г. Грозный, ул. Ленина, д. 10 */
-            location?: string;
-            regionId?: string;
-            cityId?: string;
-            street?: string;
-            house?: string;
-            /**
-             * @description Этаж
-             * @example 2
-             */
-            floor?: number;
-            realEstate?: components["schemas"]["CreateRealEstateDetailsDto"];
-            vehicle?: components["schemas"]["CreateVehicleDetailsDto"];
-            electronics?: components["schemas"]["CreateElectronicsDetailsDto"];
-        };
-        UpdateListingDto: {
-            title?: string;
-            price?: number;
-            /** @enum {string} */
-            currency?: "RUB";
-            /** @enum {string} */
-            dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-            description?: string;
-            images?: string[];
-            videos?: string[];
-            location?: string;
-            regionId?: string;
-            cityId?: string;
-            street?: string;
-            house?: string;
-            floor?: number;
-            realEstate?: components["schemas"]["CreateRealEstateDetailsDto"];
-            vehicle?: components["schemas"]["CreateVehicleDetailsDto"];
-            electronics?: components["schemas"]["CreateElectronicsDetailsDto"];
-        };
-        CreateBrandDto: {
-            /** @example Toyota */
-            name: string;
-            /** @example toyota */
-            slug: string;
-            /**
-             * @description Категория (null = все)
-             * @enum {string}
-             */
-            category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-            isVerified?: boolean;
-            logoUrl?: string;
-            /** @example 0 */
-            sortOrder?: number;
-        };
-        UpdateBrandDto: {
-            name?: string;
-            slug?: string;
-            /** @enum {string} */
-            category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-            isVerified?: boolean;
-            logoUrl?: string;
-            sortOrder?: number;
-        };
+  schemas: {
+    SendPhoneCodeDto: {
+      /**
+       * @description Номер телефона в формате E.164
+       * @example +79626404047
+       */
+      phone: string;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    VerifyPhoneCodeDto: {
+      /**
+       * @description Номер телефона в формате E.164
+       * @example +79626404047
+       */
+      phone: string;
+      /**
+       * @description Код из SMS
+       * @example 379840
+       */
+      code: string;
+    };
+    RegisterPhonePasswordDto: {
+      /**
+       * @description Номер телефона в формате E.164
+       * @example +79626404047
+       */
+      phone: string;
+      /**
+       * @description Пароль пользователя (минимум 8 символов)
+       * @example StrongP@ssw0rd
+       */
+      password: string;
+    };
+    FinalizeOAuthDto: {
+      /** @description Refresh token из URL (одноразовый обмен) */
+      refreshToken: string;
+      /** @description Access token из URL (для совместимости) */
+      accessToken?: string;
+    };
+    RefreshTokenDto: {
+      /** @description Передавать только если refresh не в cookie */
+      refreshToken?: string;
+    };
+    UserResponseDto: {
+      id: string;
+      email: string;
+      name: string;
+      phone?: string;
+      avatar?: string;
+      isPremium: boolean;
+      role: string;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    UpdateUserDto: {
+      /** @example John Doe */
+      name?: string;
+      /** @example +7 (928) 000-00-00 */
+      phone?: string;
+      /** @example user@example.com */
+      email?: string | null;
+    };
+    CreatePropertyDto: {
+      /** @example Квартира в центре Грозного */
+      title: string;
+      /**
+       * @description Тип сделки
+       * @enum {string}
+       */
+      dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+      /**
+       * @description Цена в рублях; при BUY опционально
+       * @example 5000000
+       */
+      price?: number;
+      /**
+       * @default RUB
+       * @enum {string}
+       */
+      currency: "RUB";
+      /** @example г. Грозный, ул. Ленина, д. 10 */
+      location: string;
+      /** @example 550e8400-e29b-41d4-a716-446655440000 */
+      regionId: string;
+      /**
+       * @description ID города (опционально)
+       * @example 660e8400-e29b-41d4-a716-446655440001
+       */
+      cityId?: string;
+      /** @enum {string} */
+      type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+      /** @example 3 */
+      rooms?: number;
+      /** @example 75.5 */
+      area: number;
+      /**
+       * @description Этаж
+       * @example 2
+       */
+      floor?: number;
+      /** @example Отличная квартира в центре города */
+      description: string;
+      /**
+       * @example [
+       *       "https://example.com/image1.jpg"
+       *     ]
+       */
+      images?: string[];
+      /**
+       * @example [
+       *       "Балкон",
+       *       "Лоджия",
+       *       "Парковка"
+       *     ]
+       */
+      features?: string[];
+      /**
+       * @example [
+       *       "https://example.com/video1.mp4"
+       *     ]
+       */
+      videos?: string[];
+      /** @example ул. Ленина */
+      street?: string;
+      /** @example 10 */
+      house?: string;
+      /**
+       * @description Широта
+       * @example 43.3156
+       */
+      latitude?: number;
+      /**
+       * @description Долгота
+       * @example 45.6949
+       */
+      longitude?: number;
+    };
+    PropertyResponseDto: {
+      id: string;
+      /** @description SEO slug (не меняется при редактировании) */
+      slug: string;
+      title: string;
+      /** @description Цена в рублях */
+      price: number;
+      /** @enum {string} */
+      dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+      /** @enum {string} */
+      currency: "RUB";
+      location: string;
+      regionId: string;
+      /** @description Region relation (optional, may be included in response) */
+      region?: Record<string, never>;
+      /** @description ID города */
+      cityId?: string;
+      /** @description Город (если указан) */
+      city?: Record<string, never>;
+      /** @enum {string} */
+      type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+      rooms?: number;
+      area: number;
+      description: string;
+      images: string[];
+      videos?: string[];
+      features: string[];
+      /** @enum {string} */
+      status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
+      views: number;
+      favoritesCount: number;
+      userId: string;
+      /** Format: date-time */
+      archivedAt?: string;
+      /** @description Причина отклонения (при status REJECTED) */
+      rejectionReason?: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** @description Широта */
+      latitude?: number;
+      /** @description Долгота */
+      longitude?: number;
+      /** @description ID связанного Listing с тем же slug (после миграции property→listing) */
+      listingId?: string | null;
+    };
+    UpdatePropertyDto: {
+      /** @example Квартира в центре Грозного */
+      title?: string;
+      /** @enum {string} */
+      dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+      /**
+       * @description Цена в рублях
+       * @example 5000000
+       */
+      price?: number;
+      /** @enum {string} */
+      currency?: "RUB";
+      /** @example г. Грозный, ул. Ленина, д. 10 */
+      location?: string;
+      /** @example 550e8400-e29b-41d4-a716-446655440000 */
+      regionId?: string;
+      /** @example 660e8400-e29b-41d4-a716-446655440001 */
+      cityId?: string;
+      /** @enum {string} */
+      type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+      /** @example 3 */
+      rooms?: number;
+      /** @example 75.5 */
+      area?: number;
+      /** @example 2 */
+      floor?: number;
+      /** @example Отличная квартира */
+      description?: string;
+      /**
+       * @example [
+       *       "https://example.com/image1.jpg"
+       *     ]
+       */
+      images?: string[];
+      /**
+       * @example [
+       *       "Балкон",
+       *       "Лоджия"
+       *     ]
+       */
+      features?: string[];
+      /**
+       * @example [
+       *       "https://example.com/video1.mp4"
+       *     ]
+       */
+      videos?: string[];
+      /** @example ул. Ленина */
+      street?: string;
+      /** @example 10 */
+      house?: string;
+      /** @example 43.3156 */
+      latitude?: number;
+      /** @example 45.6949 */
+      longitude?: number;
+    };
+    RealEstateDetailsResponseDto: {
+      /** @enum {string} */
+      type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+      rooms?: number;
+      area: number;
+      features: string[];
+      latitude?: number;
+      longitude?: number;
+    };
+    VehicleDetailsResponseDto: {
+      brandId: string;
+      brand?: Record<string, never>;
+      model: string;
+      year: number;
+      mileage?: number;
+      bodyType?: string;
+      engine?: string;
+      transmission?: string;
+    };
+    ElectronicsDetailsResponseDto: {
+      brandId: string;
+      brand?: Record<string, never>;
+      productType: string;
+      model: string;
+      storage?: string;
+      condition?: string;
+    };
+    ListingResponseDto: {
+      id: string;
+      slug: string;
+      title: string;
+      /** @description Цена в рублях */
+      price: number;
+      /** @enum {string} */
+      currency: "RUB";
+      /** @enum {string} */
+      category: "REAL_ESTATE";
+      /** @enum {string} */
+      status: "ACTIVE" | "SOLD" | "ARCHIVED";
+      /** @enum {string} */
+      moderationStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+      /** @enum {string} */
+      dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+      description: string;
+      images: string[];
+      videos?: string[];
+      location?: string;
+      regionId?: string;
+      region?: Record<string, never>;
+      cityId?: string;
+      city?: Record<string, never>;
+      userId: string;
+      user?: Record<string, never>;
+      views: number;
+      favoritesCount: number;
+      rejectionReason?: string;
+      /** Format: date-time */
+      archivedAt?: string;
+      previewAttributes: string[];
+      allowPhone: boolean;
+      allowChat: boolean;
+      /** @enum {string} */
+      promotionTier: "NONE" | "ELIGIBLE" | "BOOSTED";
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      realEstate?: components["schemas"]["RealEstateDetailsResponseDto"];
+      vehicle?: components["schemas"]["VehicleDetailsResponseDto"];
+      electronics?: components["schemas"]["ElectronicsDetailsResponseDto"];
+    };
+    FavoriteResponseDto: {
+      id: string;
+      userId: string;
+      /** @description Legacy: избранное по Property */
+      propertyId?: string | null;
+      /** @description Избранное по Listing */
+      listingId?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      property?: components["schemas"]["PropertyResponseDto"] | null;
+      listing?: components["schemas"]["ListingResponseDto"] | null;
+    };
+    BanUserDto: {
+      /** @description Причина бана */
+      reason?: string;
+      /** @description Дата окончания бана (ISO 8601) */
+      bannedUntil?: string;
+    };
+    UpdateUserRoleDto: {
+      /** @enum {string} */
+      role: "USER" | "PREMIUM" | "ADMIN";
+    };
+    UpdatePropertyStatusDto: {
+      /** @enum {string} */
+      status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
+      /** @description Причина отклонения (при смене на PENDING или отклонении) */
+      rejectionReason?: string;
+    };
+    CreateSubscriptionPaymentDto: {
+      /**
+       * @description Код подписки (тариф)
+       * @example premium_month
+       */
+      code: string;
+    };
+    CreatePropertyChatDto: {
+      /**
+       * @description ID объявления недвижимости
+       * @example 550e8400-e29b-41d4-a716-446655440000
+       */
+      propertyId: string;
+    };
+    ChatParticipantResponseDto: {
+      /** @example 550e8400-e29b-41d4-a716-446655440000 */
+      id: string;
+      /** @example 550e8400-e29b-41d4-a716-446655440001 */
+      userId: string;
+      /**
+       * @example BUYER
+       * @enum {string}
+       */
+      role: "BUYER" | "SELLER" | "ADMIN";
+    };
+    ChatResponseDto: {
+      /** @example 550e8400-e29b-41d4-a716-446655440000 */
+      id: string;
+      /**
+       * @example PROPERTY
+       * @enum {string}
+       */
+      type: "PROPERTY" | "SUPPORT";
+      /** @example 550e8400-e29b-41d4-a716-446655440001 */
+      propertyId: string | null;
+      /** @example 550e8400-e29b-41d4-a716-446655440002 */
+      listingId: string | null;
+      /** @example false */
+      isArchived: boolean;
+      /**
+       * Format: date-time
+       * @example 2024-01-20T10:30:00Z
+       */
+      lastMessageAt: string | null;
+      /** @example Здравствуйте, интересует ваше объявление */
+      lastMessageText: string | null;
+      /**
+       * Format: date-time
+       * @example 2024-01-20T10:00:00Z
+       */
+      createdAt: string;
+      participants: components["schemas"]["ChatParticipantResponseDto"][];
+      /**
+       * @description Количество непрочитанных сообщений
+       * @example 0
+       */
+      unreadCount: number;
+      /** @description Информация об объявлении (если тип PROPERTY) */
+      property?: Record<string, never>;
+    };
+    CreateListingChatDto: {
+      /**
+       * @description ID объявления (Listing)
+       * @example 550e8400-e29b-41d4-a716-446655440000
+       */
+      listingId: string;
+    };
+    MessageResponseDto: {
+      /** @example 550e8400-e29b-41d4-a716-446655440000 */
+      id: string;
+      /** @example 550e8400-e29b-41d4-a716-446655440001 */
+      chatId: string;
+      /** @example 550e8400-e29b-41d4-a716-446655440002 */
+      senderId: string;
+      /** @example Здравствуйте, интересует ваше объявление */
+      text: string;
+      /** @example false */
+      isRead: boolean;
+      /**
+       * Format: date-time
+       * @example null
+       */
+      readAt: string | null;
+      /**
+       * Format: date-time
+       * @example 2024-01-20T10:30:00Z
+       */
+      createdAt: string;
+    };
+    MessagesResponseDto: {
+      messages: components["schemas"]["MessageResponseDto"][];
+      /**
+       * @description ID следующего сообщения для cursor pagination (null если это последняя страница)
+       * @example 550e8400-e29b-41d4-a716-446655440000
+       */
+      nextCursor: string | null;
+      /**
+       * @description Есть ли еще сообщения для загрузки
+       * @example true
+       */
+      hasMore: boolean;
+    };
+    SendMessageDto: {
+      /**
+       * @description Текст сообщения
+       * @example Здравствуйте, интересует ваше объявление
+       */
+      text: string;
+    };
+    AssignSupportDto: {
+      /**
+       * @description ID сотрудника поддержки для назначения
+       * @example 550e8400-e29b-41d4-a716-446655440000
+       */
+      supportUserId: string;
+    };
+    CreateInboxRequestDto: {
+      /**
+       * @example CONTACT
+       * @enum {string}
+       */
+      category: "CONTACT" | "COMPLAINT";
+      /**
+       * @example MEDIUM
+       * @enum {string}
+       */
+      severity?: "LOW" | "MEDIUM" | "HIGH";
+      /** @example Иван Петров */
+      name: string;
+      /** @example ivan@example.com */
+      email?: string;
+      /** @example +79123456789 */
+      phone?: string;
+      /** @example Здравствуйте, хочу уточнить... */
+      message: string;
+      /** @example uuid */
+      propertyId?: string;
+    };
+    UpdateInboxStatusDto: {
+      /**
+       * @description Новый статус заявки
+       * @enum {string}
+       */
+      status: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+      /** @description Комментарий администратора */
+      adminComment?: string;
+    };
+    CreateRealEstateDetailsDto: {
+      /** @enum {string} */
+      type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+      /** @example 3 */
+      rooms?: number;
+      /** @example 75.5 */
+      area: number;
+      /**
+       * @example [
+       *       "Балкон",
+       *       "Парковка"
+       *     ]
+       */
+      features?: string[];
+      /** @example 43.3156 */
+      latitude?: number;
+      /** @example 45.6949 */
+      longitude?: number;
+    };
+    CreateVehicleDetailsDto: {
+      /** @description ID бренда (марки) */
+      brandId: string;
+      /** @example Camry */
+      model: string;
+      /** @example 2020 */
+      year: number;
+      /**
+       * @description Пробег, км
+       * @example 85000
+       */
+      mileage?: number;
+      /** @example Седан */
+      bodyType?: string;
+      /** @example 2.5L Бензин */
+      engine?: string;
+      /** @example Автомат */
+      transmission?: string;
+    };
+    CreateElectronicsDetailsDto: {
+      /** @description ID бренда (производителя) */
+      brandId: string;
+      /**
+       * @description PHONE, TABLET, LAPTOP и т.д.
+       * @example PHONE
+       */
+      productType: string;
+      /** @example iPhone 15 Pro */
+      model: string;
+      /** @example 256 GB */
+      storage?: string;
+      /**
+       * @description Состояние товара
+       * @example Б/у, отличное
+       */
+      condition?: string;
+    };
+    CreateListingDto: {
+      /** @enum {string} */
+      category: "REAL_ESTATE";
+      /** @example Toyota Camry 2020 */
+      title: string;
+      /** @enum {string} */
+      dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+      /**
+       * @description Цена в рублях
+       * @example 5000000
+       */
+      price?: number;
+      /**
+       * @default RUB
+       * @enum {string}
+       */
+      currency: "RUB";
+      description: string;
+      images?: string[];
+      videos?: string[];
+      /** @example г. Грозный, ул. Ленина, д. 10 */
+      location?: string;
+      regionId?: string;
+      cityId?: string;
+      street?: string;
+      house?: string;
+      /**
+       * @description Этаж
+       * @example 2
+       */
+      floor?: number;
+      realEstate?: components["schemas"]["CreateRealEstateDetailsDto"];
+      vehicle?: components["schemas"]["CreateVehicleDetailsDto"];
+      electronics?: components["schemas"]["CreateElectronicsDetailsDto"];
+    };
+    UpdateListingDto: {
+      title?: string;
+      price?: number;
+      /** @enum {string} */
+      currency?: "RUB";
+      /** @enum {string} */
+      dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+      description?: string;
+      images?: string[];
+      videos?: string[];
+      location?: string;
+      regionId?: string;
+      cityId?: string;
+      street?: string;
+      house?: string;
+      floor?: number;
+      realEstate?: components["schemas"]["CreateRealEstateDetailsDto"];
+      vehicle?: components["schemas"]["CreateVehicleDetailsDto"];
+      electronics?: components["schemas"]["CreateElectronicsDetailsDto"];
+    };
+    CreateBrandDto: {
+      /** @example Toyota */
+      name: string;
+      /** @example toyota */
+      slug: string;
+      /**
+       * @description Категория (null = все)
+       * @enum {string}
+       */
+      category?: "REAL_ESTATE";
+      isVerified?: boolean;
+      logoUrl?: string;
+      /** @example 0 */
+      sortOrder?: number;
+    };
+    UpdateBrandDto: {
+      name?: string;
+      slug?: string;
+      /** @enum {string} */
+      category?: "REAL_ESTATE";
+      isVerified?: boolean;
+      logoUrl?: string;
+      sortOrder?: number;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    AuthController_sendPhoneCode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendPhoneCodeDto"];
-            };
-        };
-        responses: {
-            /** @description Код отправлен */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Невалидный номер телефона */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Слишком много попыток */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_verifyPhoneCode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VerifyPhoneCodeDto"];
-            };
-        };
-        responses: {
-            /** @description Успешная аутентификация */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Неверный или истёкший код */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_registerWithPhoneAndPassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterPhonePasswordDto"];
-            };
-        };
-        responses: {
-            /** @description Пользователь зарегистрирован */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_loginWithPhoneAndPassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Успешная аутентификация */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_googleAuth: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_googleCallback: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_yandexAuth: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_yandexCallback: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_finalizeOAuth: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FinalizeOAuthDto"];
-            };
-        };
-        responses: {
-            /** @description accessToken для хранения в памяти */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Refresh token недействителен */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_refresh: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RefreshTokenDto"];
-            };
-        };
-        responses: {
-            /** @description Токен обновлен */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Refresh token недействителен */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_logout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Выход выполнен */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_getMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Информация о пользователе */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UsersController_getMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Профиль пользователя */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponseDto"];
-                };
-            };
-        };
-    };
-    UsersController_updateMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateUserDto"];
-            };
-        };
-        responses: {
-            /** @description Профиль обновлен */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponseDto"];
-                };
-            };
-        };
-    };
-    UsersController_getUserById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Информация о пользователе */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponseDto"];
-                };
-            };
-            /** @description Пользователь не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_findAll: {
-        parameters: {
-            query?: {
-                query?: string;
-                /** @description Только мои объявления (все статусы) */
-                my?: boolean;
-                type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-                dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-                /** @description Цена мин. (рубли) */
-                priceMin?: number;
-                /** @description Цена макс. (рубли) */
-                priceMax?: number;
-                rooms?: number;
-                areaMin?: number;
-                /** @description Этаж мин. */
-                floorMin?: number;
-                /** @description Этаж макс. */
-                floorMax?: number;
-                /** @description Исключить первый этаж */
-                floorNotFirst?: boolean;
-                /** @description Исключить последний этаж (при наличии totalFloors) */
-                floorNotLast?: boolean;
-                regionId?: string;
-                cityId?: string;
-                sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance" | "area-asc" | "area-desc";
-                page?: number;
-                /** @description Фактически сервер ограничивает максимумом 50 (см. MAX_PAGE_LIMIT). */
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список объявлений */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePropertyDto"];
-            };
-        };
-        responses: {
-            /** @description Объявление создано */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyResponseDto"];
-                };
-            };
-        };
-    };
-    PropertiesController_search: {
-        parameters: {
-            query: {
-                /** @description Поисковый запрос */
-                q: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Результаты поиска */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyResponseDto"][];
-                };
-            };
-        };
-    };
-    PropertiesController_getCategoryStats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Статистика по категориям */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_getMyLimits: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description monthlyLimit, createdInMonth, remaining, myPropertiesCount */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Информация об объявлении */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyResponseDto"];
-                };
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Объявление удалено */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Нет доступа */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePropertyDto"];
-            };
-        };
-        responses: {
-            /** @description Объявление обновлено */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyResponseDto"];
-                };
-            };
-            /** @description Нет доступа */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_findRelated: {
-        parameters: {
-            query: {
-                limit: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список похожих объявлений */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FavoritesController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список избранного */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FavoriteResponseDto"][];
-                };
-            };
-        };
-    };
-    FavoritesController_add: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                listingId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Листинг добавлен в избранное */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FavoriteResponseDto"];
-                };
-            };
-            /** @description Листинг не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Уже в избранном */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FavoritesController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                listingId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Удалено из избранного */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Не найдено в избранном */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_getStatistics: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Статистика получена */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_getUsers: {
-        parameters: {
-            query?: {
-                page?: number;
-                limit?: number;
-                search?: string;
-                role?: "USER" | "PREMIUM" | "ADMIN";
-                status?: "active" | "banned";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список пользователей */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_getUserById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Пользователь найден */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Пользователь не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_deleteUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Пользователь удален */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Пользователь не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_banUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BanUserDto"];
-            };
-        };
-        responses: {
-            /** @description Пользователь заблокирован */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Пользователь не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_unbanUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Пользователь разблокирован */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Пользователь не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_updateUserRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateUserRoleDto"];
-            };
-        };
-        responses: {
-            /** @description Роль изменена */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_getProperties: {
-        parameters: {
-            query?: {
-                page?: number;
-                limit?: number;
-                search?: string;
-                status?: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
-                type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-                regionId?: string;
-                sortBy?: "date-desc" | "date-asc" | "views-desc";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список объявлений */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_updatePropertyStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePropertyStatusDto"];
-            };
-        };
-        responses: {
-            /** @description Статус изменен */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_deleteProperty: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Объявление удалено */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_getAuditLogs: {
-        parameters: {
-            query?: {
-                page?: number;
-                limit?: number;
-                entityType?: string;
-                userId?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список логов */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_getChats: {
-        parameters: {
-            query?: {
-                page?: number;
-                limit?: number;
-                type?: "PROPERTY" | "SUPPORT";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список чатов */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_closeChat: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Чат закрыт */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Чат не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_getListings: {
-        parameters: {
-            query?: {
-                page?: number;
-                limit?: number;
-                moderationStatus?: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
-                category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список объявлений */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_approveListing: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Объявление одобрено */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_rejectListing: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Объявление отклонено */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_deleteListingAdmin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Объявление архивировано */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UploadController_uploadAvatar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    /**
-                     * Format: binary
-                     * @description Изображение (jpg, png, webp), max 5MB
-                     */
-                    file: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Аватар успешно загружен */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example https://res.cloudinary.com/... */
-                        avatar?: string;
-                    };
-                };
-            };
-            /** @description Некорректный запрос */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Файл слишком большой */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Неподдерживаемый формат */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UploadController_uploadImages: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    /** @description Изображения (jpg, png, webp), max 20 файлов, каждый max 5MB */
-                    files: string[];
-                };
-            };
-        };
-        responses: {
-            /** @description Изображения успешно загружены */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        images?: {
-                            /** @example https://res.cloudinary.com/... */
-                            url?: string;
-                            /** @example dohkar/properties/abc123 */
-                            publicId?: string;
-                        }[];
-                    };
-                };
-            };
-            /** @description Некорректный запрос */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Файл слишком большой */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Неподдерживаемый формат */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UploadController_uploadVideos: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    /** @description Видео (mp4, webm), max 3 файлов, каждый max 50MB */
-                    files: string[];
-                };
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    HealthController_check: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Service is healthy */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    HealthController_getSyncStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sync status */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SubscriptionsController_getPlans: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Массив тарифов с ценой в рублях */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SubscriptionsController_createPayment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateSubscriptionPaymentDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SubscriptionsController_getPaymentStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                paymentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SubscriptionsController_handleYooKassaWebhook: {
-        parameters: {
-            query?: never;
-            header: {
-                "x-yookassa-signature": string;
-                "idempotence-key": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChatsController_createPropertyChat: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePropertyChatDto"];
-            };
-        };
-        responses: {
-            /** @description Чат создан или получен */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatResponseDto"];
-                };
-            };
-            /** @description Нельзя создать чат со своим объявлением */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChatsController_createListingChat: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateListingChatDto"];
-            };
-        };
-        responses: {
-            /** @description Чат создан или получен */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatResponseDto"];
-                };
-            };
-            /** @description Нельзя создать чат со своим объявлением */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChatsController_createSupportChat: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Чат поддержки создан или получен */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatResponseDto"];
-                };
-            };
-        };
-    };
-    ChatsController_getUserChats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список чатов */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatResponseDto"][];
-                };
-            };
-        };
-    };
-    ChatsController_getChatMessages: {
-        parameters: {
-            query?: {
-                /** @description Cursor для пагинации (ID последнего загруженного сообщения) */
-                cursor?: string;
-                /** @description Количество сообщений для загрузки */
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                chatId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список сообщений */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MessagesResponseDto"];
-                };
-            };
-            /** @description Нет доступа к чату */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Чат не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChatsController_sendMessage: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                chatId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendMessageDto"];
-            };
-        };
-        responses: {
-            /** @description Сообщение отправлено */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MessageResponseDto"];
-                };
-            };
-            /** @description Запрещенный контент в первых двух сообщениях */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Нет доступа к чату */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Чат не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Превышен лимит запросов */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChatsController_markMessagesAsRead: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                chatId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Сообщения помечены как прочитанные */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Нет доступа к чату */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Чат не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChatsController_getSupportChats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список всех чатов поддержки */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatResponseDto"][];
-                };
-            };
-            /** @description Нет прав доступа */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChatsController_assignSupportAgent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                chatId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AssignSupportDto"];
-            };
-        };
-        responses: {
-            /** @description Сотрудник поддержки назначен */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Некорректные данные */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Нет прав доступа */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Чат не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RegionsController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список регионов */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RegionsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Регион с городами */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Регион не найден */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CitiesController_findCities: {
-        parameters: {
-            query?: {
-                /** @description Фильтр по региону (UUID) */
-                regionId?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список городов */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    InboxController_getAllRequests: {
-        parameters: {
-            query: {
-                category: string;
-                severity: string;
-                status: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список заявок */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    InboxController_createRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateInboxRequestDto"];
-            };
-        };
-        responses: {
-            /** @description Заявка создана */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Некорректные данные */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    InboxController_getRequestById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    InboxController_updateStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateInboxStatusDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ListingsController_findAll: {
-        parameters: {
-            query?: {
-                query?: string;
-                /** @description Только мои объявления (все статусы) */
-                my?: boolean;
-                category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-                dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-                /** @description Цена мин. (рубли) */
-                priceMin?: number;
-                /** @description Цена макс. (рубли) */
-                priceMax?: number;
-                regionId?: string;
-                cityId?: string;
-                /** @description Тип недвижимости (REAL_ESTATE). Допустимо: APARTMENT | HOUSE | … или apartment | house | … */
-                propertyType?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-                rooms?: number;
-                areaMin?: number;
-                floorMin?: number;
-                floorMax?: number;
-                /** @description Исключить первый этаж */
-                floorNotFirst?: boolean;
-                /** @description ID бренда (марки/производителя) */
-                brandId?: string;
-                yearMin?: number;
-                yearMax?: number;
-                /** @description Макс. пробег, км */
-                mileageMax?: number;
-                /** @description Тип электроники */
-                productType?: string;
-                sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance" | "area-asc" | "area-desc";
-                page?: number;
-                /** @description Макс. 50 */
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список объявлений */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ListingsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateListingDto"];
-            };
-        };
-        responses: {
-            /** @description Объявление создано */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListingResponseDto"];
-                };
-            };
-        };
-    };
-    ListingsController_search: {
-        parameters: {
-            query: {
-                q: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListingResponseDto"][];
-                };
-            };
-        };
-    };
-    ListingsController_getCategoryStats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ListingsController_getMyLimits: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ListingsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListingResponseDto"];
-                };
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ListingsController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ListingsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateListingDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListingResponseDto"];
-                };
-            };
-        };
-    };
-    ListingsController_findRelated: {
-        parameters: {
-            query: {
-                limit: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_recordView: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Просмотр записан */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_recordContact: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Контакт записан */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getViewStats: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getContactStats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getPriceHistory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getSellerStats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BrandsController_findAll: {
-        parameters: {
-            query?: {
-                category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-                /** @description Поиск по названию */
-                search?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список брендов */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BrandsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateBrandDto"];
-            };
-        };
-        responses: {
-            /** @description Бренд создан */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BrandsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BrandsController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BrandsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateBrandDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
+  AuthController_sendPhoneCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SendPhoneCodeDto"];
+      };
+    };
+    responses: {
+      /** @description Код отправлен */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Невалидный номер телефона */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Слишком много попыток */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_verifyPhoneCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["VerifyPhoneCodeDto"];
+      };
+    };
+    responses: {
+      /** @description Успешная аутентификация */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Неверный или истёкший код */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_registerWithPhoneAndPassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RegisterPhonePasswordDto"];
+      };
+    };
+    responses: {
+      /** @description Пользователь зарегистрирован */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_loginWithPhoneAndPassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Успешная аутентификация */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_googleAuth: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_googleCallback: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_yandexAuth: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_yandexCallback: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_finalizeOAuth: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FinalizeOAuthDto"];
+      };
+    };
+    responses: {
+      /** @description accessToken для хранения в памяти */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Refresh token недействителен */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_refresh: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RefreshTokenDto"];
+      };
+    };
+    responses: {
+      /** @description Токен обновлен */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Refresh token недействителен */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_logout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Выход выполнен */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_getMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Информация о пользователе */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UsersController_getMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Профиль пользователя */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponseDto"];
+        };
+      };
+    };
+  };
+  UsersController_updateMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateUserDto"];
+      };
+    };
+    responses: {
+      /** @description Профиль обновлен */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponseDto"];
+        };
+      };
+    };
+  };
+  UsersController_getUserById: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Информация о пользователе */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponseDto"];
+        };
+      };
+      /** @description Пользователь не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PropertiesController_findAll: {
+    parameters: {
+      query?: {
+        query?: string;
+        /** @description Только мои объявления (все статусы) */
+        my?: boolean;
+        type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+        dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+        /** @description Цена мин. (рубли) */
+        priceMin?: number;
+        /** @description Цена макс. (рубли) */
+        priceMax?: number;
+        rooms?: number;
+        areaMin?: number;
+        /** @description Этаж мин. */
+        floorMin?: number;
+        /** @description Этаж макс. */
+        floorMax?: number;
+        /** @description Исключить первый этаж */
+        floorNotFirst?: boolean;
+        /** @description Исключить последний этаж (при наличии totalFloors) */
+        floorNotLast?: boolean;
+        regionId?: string;
+        cityId?: string;
+        sortBy?:
+          | "price-asc"
+          | "price-desc"
+          | "date-desc"
+          | "relevance"
+          | "area-asc"
+          | "area-desc";
+        page?: number;
+        /** @description Фактически сервер ограничивает максимумом 50 (см. MAX_PAGE_LIMIT). */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список объявлений */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PropertiesController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreatePropertyDto"];
+      };
+    };
+    responses: {
+      /** @description Объявление создано */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyResponseDto"];
+        };
+      };
+    };
+  };
+  PropertiesController_search: {
+    parameters: {
+      query: {
+        /** @description Поисковый запрос */
+        q: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Результаты поиска */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyResponseDto"][];
+        };
+      };
+    };
+  };
+  PropertiesController_getCategoryStats: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Статистика по категориям */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PropertiesController_getMyLimits: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description monthlyLimit, createdInMonth, remaining, myPropertiesCount */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PropertiesController_findOne: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Информация об объявлении */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyResponseDto"];
+        };
+      };
+      /** @description Объявление не найдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PropertiesController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Объявление удалено */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Нет доступа */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Объявление не найдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PropertiesController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdatePropertyDto"];
+      };
+    };
+    responses: {
+      /** @description Объявление обновлено */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyResponseDto"];
+        };
+      };
+      /** @description Нет доступа */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Объявление не найдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PropertiesController_findRelated: {
+    parameters: {
+      query: {
+        limit: number;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список похожих объявлений */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FavoritesController_findAll: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список избранного */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FavoriteResponseDto"][];
+        };
+      };
+    };
+  };
+  FavoritesController_add: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        listingId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Листинг добавлен в избранное */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FavoriteResponseDto"];
+        };
+      };
+      /** @description Листинг не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Уже в избранном */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FavoritesController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        listingId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Удалено из избранного */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Не найдено в избранном */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getStatistics: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Статистика получена */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getUsers: {
+    parameters: {
+      query?: {
+        page?: number;
+        limit?: number;
+        search?: string;
+        role?: "USER" | "PREMIUM" | "ADMIN";
+        status?: "active" | "banned";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список пользователей */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getUserById: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Пользователь найден */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Пользователь не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_deleteUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Пользователь удален */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Пользователь не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_banUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BanUserDto"];
+      };
+    };
+    responses: {
+      /** @description Пользователь заблокирован */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Пользователь не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_unbanUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Пользователь разблокирован */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Пользователь не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_updateUserRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateUserRoleDto"];
+      };
+    };
+    responses: {
+      /** @description Роль изменена */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getProperties: {
+    parameters: {
+      query?: {
+        page?: number;
+        limit?: number;
+        search?: string;
+        status?: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
+        type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+        regionId?: string;
+        sortBy?: "date-desc" | "date-asc" | "views-desc";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список объявлений */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_updatePropertyStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdatePropertyStatusDto"];
+      };
+    };
+    responses: {
+      /** @description Статус изменен */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_deleteProperty: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Объявление удалено */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Объявление не найдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getAuditLogs: {
+    parameters: {
+      query?: {
+        page?: number;
+        limit?: number;
+        entityType?: string;
+        userId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список логов */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getChats: {
+    parameters: {
+      query?: {
+        page?: number;
+        limit?: number;
+        type?: "PROPERTY" | "SUPPORT";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список чатов */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_closeChat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Чат закрыт */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Чат не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getListings: {
+    parameters: {
+      query?: {
+        page?: number;
+        limit?: number;
+        moderationStatus?: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+        category?: "REAL_ESTATE";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список объявлений */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_approveListing: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Объявление одобрено */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Объявление не найдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_rejectListing: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Объявление отклонено */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Объявление не найдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_deleteListingAdmin: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Объявление архивировано */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Объявление не найдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UploadController_uploadAvatar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /**
+           * Format: binary
+           * @description Изображение (jpg, png, webp), max 5MB
+           */
+          file: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Аватар успешно загружен */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @example https://res.cloudinary.com/... */
+            avatar?: string;
+          };
+        };
+      };
+      /** @description Некорректный запрос */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Файл слишком большой */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Неподдерживаемый формат */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UploadController_uploadImages: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /** @description Изображения (jpg, png, webp), max 20 файлов, каждый max 5MB */
+          files: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Изображения успешно загружены */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            images?: {
+              /** @example https://res.cloudinary.com/... */
+              url?: string;
+              /** @example dohkar/properties/abc123 */
+              publicId?: string;
+            }[];
+          };
+        };
+      };
+      /** @description Некорректный запрос */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Файл слишком большой */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Неподдерживаемый формат */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UploadController_uploadVideos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /** @description Видео (mp4, webm), max 3 файлов, каждый max 50MB */
+          files: string[];
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  HealthController_check: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Service is healthy */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  HealthController_getSyncStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Sync status */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SubscriptionsController_getPlans: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Массив тарифов с ценой в рублях */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SubscriptionsController_createPayment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateSubscriptionPaymentDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SubscriptionsController_getPaymentStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        paymentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SubscriptionsController_handleYooKassaWebhook: {
+    parameters: {
+      query?: never;
+      header: {
+        "x-yookassa-signature": string;
+        "idempotence-key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ChatsController_createPropertyChat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreatePropertyChatDto"];
+      };
+    };
+    responses: {
+      /** @description Чат создан или получен */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChatResponseDto"];
+        };
+      };
+      /** @description Нельзя создать чат со своим объявлением */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Объявление не найдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ChatsController_createListingChat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateListingChatDto"];
+      };
+    };
+    responses: {
+      /** @description Чат создан или получен */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChatResponseDto"];
+        };
+      };
+      /** @description Нельзя создать чат со своим объявлением */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Объявление не найдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ChatsController_createSupportChat: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Чат поддержки создан или получен */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChatResponseDto"];
+        };
+      };
+    };
+  };
+  ChatsController_getUserChats: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список чатов */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChatResponseDto"][];
+        };
+      };
+    };
+  };
+  ChatsController_getChatMessages: {
+    parameters: {
+      query?: {
+        /** @description Cursor для пагинации (ID последнего загруженного сообщения) */
+        cursor?: string;
+        /** @description Количество сообщений для загрузки */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        chatId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список сообщений */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MessagesResponseDto"];
+        };
+      };
+      /** @description Нет доступа к чату */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Чат не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ChatsController_sendMessage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        chatId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SendMessageDto"];
+      };
+    };
+    responses: {
+      /** @description Сообщение отправлено */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MessageResponseDto"];
+        };
+      };
+      /** @description Запрещенный контент в первых двух сообщениях */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Нет доступа к чату */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Чат не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Превышен лимит запросов */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ChatsController_markMessagesAsRead: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        chatId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Сообщения помечены как прочитанные */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Нет доступа к чату */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Чат не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ChatsController_getSupportChats: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список всех чатов поддержки */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChatResponseDto"][];
+        };
+      };
+      /** @description Нет прав доступа */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ChatsController_assignSupportAgent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        chatId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssignSupportDto"];
+      };
+    };
+    responses: {
+      /** @description Сотрудник поддержки назначен */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Некорректные данные */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Нет прав доступа */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Чат не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  RegionsController_findAll: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список регионов */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  RegionsController_findOne: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Регион с городами */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Регион не найден */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CitiesController_findCities: {
+    parameters: {
+      query?: {
+        /** @description Фильтр по региону (UUID) */
+        regionId?: unknown;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список городов */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  InboxController_getAllRequests: {
+    parameters: {
+      query: {
+        category: string;
+        severity: string;
+        status: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список заявок */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  InboxController_createRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateInboxRequestDto"];
+      };
+    };
+    responses: {
+      /** @description Заявка создана */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Некорректные данные */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  InboxController_getRequestById: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  InboxController_updateStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateInboxStatusDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ListingsController_findAll: {
+    parameters: {
+      query?: {
+        query?: string;
+        /** @description Только мои объявления (все статусы) */
+        my?: boolean;
+        category?: "REAL_ESTATE";
+        dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
+        /** @description Цена мин. (рубли) */
+        priceMin?: number;
+        /** @description Цена макс. (рубли) */
+        priceMax?: number;
+        regionId?: string;
+        cityId?: string;
+        /** @description Тип недвижимости (REAL_ESTATE). Допустимо: APARTMENT | HOUSE | … или apartment | house | … */
+        propertyType?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+        rooms?: number;
+        areaMin?: number;
+        floorMin?: number;
+        floorMax?: number;
+        /** @description Исключить первый этаж */
+        floorNotFirst?: boolean;
+        /** @description ID бренда (марки/производителя) */
+        brandId?: string;
+        yearMin?: number;
+        yearMax?: number;
+        /** @description Макс. пробег, км */
+        mileageMax?: number;
+        /** @description Тип электроники */
+        productType?: string;
+        sortBy?:
+          | "price-asc"
+          | "price-desc"
+          | "date-desc"
+          | "relevance"
+          | "area-asc"
+          | "area-desc";
+        page?: number;
+        /** @description Макс. 50 */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список объявлений */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ListingsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateListingDto"];
+      };
+    };
+    responses: {
+      /** @description Объявление создано */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListingResponseDto"];
+        };
+      };
+    };
+  };
+  ListingsController_search: {
+    parameters: {
+      query: {
+        q: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListingResponseDto"][];
+        };
+      };
+    };
+  };
+  ListingsController_getCategoryStats: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ListingsController_getMyLimits: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ListingsController_findOne: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListingResponseDto"];
+        };
+      };
+      /** @description Объявление не найдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ListingsController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ListingsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateListingDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListingResponseDto"];
+        };
+      };
+    };
+  };
+  ListingsController_findRelated: {
+    parameters: {
+      query: {
+        limit: number;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AnalyticsController_recordView: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Просмотр записан */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AnalyticsController_recordContact: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Контакт записан */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AnalyticsController_getViewStats: {
+    parameters: {
+      query: {
+        dateFrom: string;
+        dateTo: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AnalyticsController_getContactStats: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AnalyticsController_getPriceHistory: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AnalyticsController_getSellerStats: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BrandsController_findAll: {
+    parameters: {
+      query?: {
+        category?: "REAL_ESTATE";
+        /** @description Поиск по названию */
+        search?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Список брендов */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BrandsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateBrandDto"];
+      };
+    };
+    responses: {
+      /** @description Бренд создан */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BrandsController_findOne: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BrandsController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BrandsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
 }

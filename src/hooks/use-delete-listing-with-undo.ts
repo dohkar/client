@@ -28,7 +28,7 @@ function isPaginatedListingResponse(data: unknown): data is PaginatedResponse<Li
 }
 
 /**
- * Удаление листинга с optimistic update и отменой (как useDeleteWithUndo для Property).
+ * Удаление листинга с optimistic update и отменой (через listings API).
  */
 export function useDeleteListingWithUndo() {
   const queryClient = useQueryClient();

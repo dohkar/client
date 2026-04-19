@@ -35,7 +35,7 @@ export type AdminListing = {
   title: string;
   price: number;
   currency: string;
-  category: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+  category: "REAL_ESTATE";
   status: string;
   moderationStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
   rejectionReason?: string | null;
@@ -43,8 +43,6 @@ export type AdminListing = {
   updatedAt: string;
   user?: { id: string; name: string | null; email: string | null };
   realEstate?: unknown;
-  vehicle?: unknown;
-  electronics?: unknown;
 };
 
 export type AdminStatistics = AdminStatisticsResponse;
@@ -54,9 +52,7 @@ export const adminService = {
     return apiClient.get<AdminStatistics>(API_ENDPOINTS.admin.statistics);
   },
 
-  async getUsers(
-    params?: AdminUsersParams
-  ): Promise<PaginatedResponse<AdminUser>> {
+  async getUsers(params?: AdminUsersParams): Promise<PaginatedResponse<AdminUser>> {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -85,9 +81,7 @@ export const adminService = {
   },
 
   async unbanUser(userId: string): Promise<{ success?: boolean }> {
-    return apiClient.patch<{ success?: boolean }>(
-      API_ENDPOINTS.admin.unbanUser(userId)
-    );
+    return apiClient.patch<{ success?: boolean }>(API_ENDPOINTS.admin.unbanUser(userId));
   },
 
   async getProperties(
@@ -113,10 +107,7 @@ export const adminService = {
     role: AdminUpdateUserRoleRequest["role"]
   ): Promise<AdminUser> {
     const data: AdminUpdateUserRoleRequest = { role };
-    return apiClient.patch<AdminUser>(
-      API_ENDPOINTS.admin.updateUserRole(userId),
-      data
-    );
+    return apiClient.patch<AdminUser>(API_ENDPOINTS.admin.updateUserRole(userId), data);
   },
 
   async updatePropertyStatus(
@@ -163,21 +154,20 @@ export const adminService = {
   },
 
   async closeChat(chatId: string): Promise<{ success?: boolean }> {
-    return apiClient.patch<{ success?: boolean }>(
-      API_ENDPOINTS.admin.closeChat(chatId)
-    );
+    return apiClient.patch<{ success?: boolean }>(API_ENDPOINTS.admin.closeChat(chatId));
   },
 
   async getListings(params?: {
     page?: number;
     limit?: number;
     moderationStatus?: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
-    category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+    category?: "REAL_ESTATE";
   }): Promise<PaginatedResponse<AdminListing>> {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
-    if (params?.moderationStatus) queryParams.append("moderationStatus", params.moderationStatus);
+    if (params?.moderationStatus)
+      queryParams.append("moderationStatus", params.moderationStatus);
     if (params?.category) queryParams.append("category", params.category);
     const queryString = queryParams.toString();
     const endpoint = queryString
@@ -226,7 +216,10 @@ export const adminService = {
 
   async updateInboxStatus(
     id: string,
-    payload: { status: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED"; adminComment?: string }
+    payload: {
+      status: "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+      adminComment?: string;
+    }
   ) {
     return apiClient.patch<InboxRequestItem>(
       API_ENDPOINTS.inbox.updateStatus(id),

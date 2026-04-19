@@ -1,6 +1,5 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { REAL_ESTATE_ONLY_LAUNCH } from "@/constants/config";
 import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { REGION_MAP } from "@/lib/url/segments";
 
@@ -68,16 +67,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (REAL_ESTATE_ONLY_LAUNCH) {
-    const segments = pathname.split("/").filter(Boolean);
-    if (segments.length >= 2) {
-      const [regionSlug, categorySlug, ...rest] = segments;
-      if (regionSlug in REGION_MAP && NON_REAL_ESTATE_CATEGORY_SLUGS.has(categorySlug)) {
-        const url = request.nextUrl.clone();
-        const tail = rest.length > 0 ? `/${rest.join("/")}` : "";
-        url.pathname = `/${regionSlug}/nedvizhimost${tail}`;
-        return NextResponse.redirect(url, 307);
-      }
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length >= 2) {
+    const [regionSlug, categorySlug, ...rest] = segments;
+    if (regionSlug in REGION_MAP && NON_REAL_ESTATE_CATEGORY_SLUGS.has(categorySlug)) {
+      const url = request.nextUrl.clone();
+      const tail = rest.length > 0 ? `/${rest.join("/")}` : "";
+      url.pathname = `/${regionSlug}/nedvizhimost${tail}`;
+      return NextResponse.redirect(url, 307);
     }
   }
 

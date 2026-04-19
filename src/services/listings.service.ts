@@ -20,12 +20,8 @@ function buildListingsQuery(params?: ListingSearchParams): string {
   if (params.areaMin != null) q.append("areaMin", params.areaMin.toString());
   if (params.floorMin != null) q.append("floorMin", params.floorMin.toString());
   if (params.floorMax != null) q.append("floorMax", params.floorMax.toString());
-  if (params.floorNotFirst !== undefined) q.append("floorNotFirst", String(params.floorNotFirst));
-  if (params.brandId) q.append("brandId", params.brandId);
-  if (params.yearMin != null) q.append("yearMin", params.yearMin.toString());
-  if (params.yearMax != null) q.append("yearMax", params.yearMax.toString());
-  if (params.mileageMax != null) q.append("mileageMax", params.mileageMax.toString());
-  if (params.productType) q.append("productType", params.productType);
+  if (params.floorNotFirst !== undefined)
+    q.append("floorNotFirst", String(params.floorNotFirst));
   if (params.sortBy) q.append("sortBy", params.sortBy);
   if (params.page) q.append("page", params.page.toString());
   if (params.limit) q.append("limit", params.limit.toString());

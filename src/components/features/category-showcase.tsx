@@ -3,16 +3,15 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { useMemo, useCallback } from "react";
-import { Building2, Car, Smartphone, RefreshCw, Loader2 } from "lucide-react";
+import { Building2, RefreshCw, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useListingCategoryStats } from "@/hooks/use-listings";
-import { REAL_ESTATE_ONLY_LAUNCH } from "@/constants/config";
 import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { buildSearchUrl } from "@/lib/url/segments";
 
 interface ListingCategoryShowcaseConfig {
-  apiKey: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+  apiKey: "REAL_ESTATE";
   name: string;
   description: string;
   icon: LucideIcon;
@@ -32,30 +31,6 @@ const LISTING_SHOWCASE_CATEGORIES: ListingCategoryShowcaseConfig[] = [
       dealType: "prodam",
     }),
     color: "from-blue-500/10 to-cyan-500/10",
-  },
-  {
-    apiKey: "VEHICLE",
-    name: "Транспорт",
-    description: "Легковые и спецтехника",
-    icon: Car,
-    href: buildSearchUrl({
-      region: DEFAULT_SEARCH_REGION,
-      category: "transport",
-      dealType: "prodam",
-    }),
-    color: "from-green-500/10 to-emerald-500/10",
-  },
-  {
-    apiKey: "ELECTRONICS",
-    name: "Электроника",
-    description: "Телефоны, ноутбуки, техника",
-    icon: Smartphone,
-    href: buildSearchUrl({
-      region: DEFAULT_SEARCH_REGION,
-      category: "elektronika",
-      dealType: "prodam",
-    }),
-    color: "from-amber-500/10 to-orange-500/10",
   },
 ];
 
@@ -263,10 +238,6 @@ export function CategoryShowcase() {
   const sortedCategories = useMemo<CategoryWithCount[]>(() => {
     return [...categoriesWithStats].sort((a, b) => b.count - a.count);
   }, [categoriesWithStats]);
-
-  if (REAL_ESTATE_ONLY_LAUNCH) {
-    return null;
-  }
 
   return (
     <section

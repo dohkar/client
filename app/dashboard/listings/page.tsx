@@ -77,8 +77,6 @@ function ListingStatusBadge({ listing }: { listing: Listing }) {
 
 const CATEGORY_SHORT: Record<string, string> = {
   REAL_ESTATE: "Недвижимость",
-  VEHICLE: "Транспорт",
-  ELECTRONICS: "Электроника",
 };
 
 function declOfNum(n: number, forms: [string, string, string]) {

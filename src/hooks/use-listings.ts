@@ -64,21 +64,6 @@ export function useUpdateListing() {
   });
 }
 
-export function useDeleteListing() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => listingsService.deleteListing(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
-      toast.success("Объявление удалено");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Ошибка при удалении объявления");
-    },
-  });
-}
-
 export function useListingCategoryStats() {
   return useQuery({
     queryKey: queryKeys.listings.categoryStats,

@@ -95,12 +95,6 @@ export const API_ENDPOINTS = {
     categoryStats: "/api/listings/stats/categories",
   },
 
-  // Brands
-  brands: {
-    list: "/api/brands",
-    getById: (id: string) => `/api/brands/${id}`,
-  },
-
   // Analytics
   analytics: {
     recordView: (listingId: string) => `/api/analytics/listings/${listingId}/view`,

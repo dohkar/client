@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Building2, Car, Smartphone } from "lucide-react";
+import { Building2 } from "lucide-react";
 import type { ListingCategory } from "@/types/listing";
 
 export interface ListingCategoryConfig {
@@ -21,24 +21,6 @@ export const LISTING_CATEGORIES: ListingCategoryConfig[] = [
     slug: "nedvizhimost",
     color: "from-blue-500/10 to-cyan-500/10",
     previewFields: ["rooms", "area"],
-  },
-  {
-    id: "VEHICLE",
-    name: "Транспорт",
-    description: "Легковые, мото, грузовики",
-    icon: Car,
-    slug: "transport",
-    color: "from-green-500/10 to-emerald-500/10",
-    previewFields: ["year", "mileage"],
-  },
-  {
-    id: "ELECTRONICS",
-    name: "Электроника",
-    description: "Телефоны, планшеты, ноутбуки",
-    icon: Smartphone,
-    slug: "elektronika",
-    color: "from-purple-500/10 to-pink-500/10",
-    previewFields: ["productType", "storage"],
   },
 ];
 

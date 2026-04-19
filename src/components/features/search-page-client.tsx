@@ -37,7 +37,6 @@ import {
   ListingsSearchResults,
 } from "@/components/search";
 import { MobileFilterDrawer } from "@/components/features/MobileFilterDrawer";
-import { REAL_ESTATE_ONLY_LAUNCH } from "@/constants/config";
 import type { ListingCategory } from "@/types/listing";
 
 export interface SegmentRouteParams {
@@ -51,21 +50,8 @@ interface SearchPageClientProps {
   searchParams?: Record<string, string | string[] | undefined>;
 }
 
-function mapCategorySlugToListingCategory(slug: string): ListingCategory {
-  switch (slug) {
-    case "nedvizhimost":
-    case "kvartiry":
-    case "doma":
-    case "uchastki":
-    case "kommercheskaya_nedvizhimost":
-      return "REAL_ESTATE";
-    case "transport":
-      return "VEHICLE";
-    case "elektronika":
-      return "ELECTRONICS";
-    default:
-      return "REAL_ESTATE";
-  }
+function mapCategorySlugToListingCategory(_slug: string): ListingCategory {
+  return "REAL_ESTATE";
 }
 
 export function SearchPageClient({
@@ -152,7 +138,6 @@ export function SearchPageClient({
     ensureRegionCacheInitialized()
       .then(() => {
         forceRender();
-        queryClient.invalidateQueries({ queryKey: queryKeys.properties.all });
         queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
       })
       .catch(() => {});
@@ -169,10 +154,10 @@ export function SearchPageClient({
       ? (cities.find((city) => city.id === appliedFilters.cityId)?.name ?? null)
       : null;
 
-  const listingCategory = useMemo((): ListingCategory => {
-    if (REAL_ESTATE_ONLY_LAUNCH) return "REAL_ESTATE";
-    return mapCategorySlugToListingCategory(params.category);
-  }, [params.category]);
+  const listingCategory = useMemo(
+    (): ListingCategory => mapCategorySlugToListingCategory(params.category),
+    [params.category]
+  );
 
   const baseApiParams = useMemo(
     () =>

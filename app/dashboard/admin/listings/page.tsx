@@ -45,8 +45,6 @@ const MODERATION_LABELS: Record<string, string> = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   REAL_ESTATE: "Недвижимость",
-  VEHICLE: "Транспорт",
-  ELECTRONICS: "Электроника",
 };
 
 function RejectDialog({
@@ -123,10 +121,7 @@ export default function AdminListingsPage() {
           moderationStatus === "all"
             ? undefined
             : (moderationStatus as "DRAFT" | "PENDING" | "APPROVED" | "REJECTED"),
-        category:
-          category === "all"
-            ? undefined
-            : (category as "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS"),
+        category: category === "all" ? undefined : (category as "REAL_ESTATE"),
       }),
   });
 

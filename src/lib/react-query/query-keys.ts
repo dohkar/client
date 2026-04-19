@@ -123,21 +123,6 @@ function normalizeListingSearchParams(
   if (params.floorNotFirst !== undefined && params.floorNotFirst !== null) {
     normalized.floorNotFirst = params.floorNotFirst;
   }
-  if (params.brandId !== undefined && params.brandId.trim().length > 0) {
-    normalized.brandId = params.brandId.trim();
-  }
-  if (params.yearMin !== undefined && params.yearMin !== null) {
-    normalized.yearMin = params.yearMin;
-  }
-  if (params.yearMax !== undefined && params.yearMax !== null) {
-    normalized.yearMax = params.yearMax;
-  }
-  if (params.mileageMax !== undefined && params.mileageMax !== null) {
-    normalized.mileageMax = params.mileageMax;
-  }
-  if (params.productType !== undefined && params.productType.trim().length > 0) {
-    normalized.productType = params.productType.trim();
-  }
   if (params.sortBy !== undefined) {
     normalized.sortBy = params.sortBy;
   }
@@ -195,13 +180,6 @@ export const queryKeys = {
     detail: (id: string) => ["listings", "detail", id] as const,
     categoryStats: ["listings", "categoryStats"] as const,
     limits: ["listings", "limits"] as const,
-  },
-
-  // Brands
-  brands: {
-    all: ["brands"] as const,
-    list: (category?: string) =>
-      category ? (["brands", "list", category] as const) : (["brands", "list"] as const),
   },
 
   // Auth
