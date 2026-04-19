@@ -13,32 +13,14 @@ const realEstateSchema = z.object({
   longitude: z.number().optional(),
 });
 
-const vehicleSchema = z.object({
-  brandId: z.string().uuid("Выберите марку"),
-  model: z.string().min(1, "Укажите модель"),
-  year: z.number().min(1900).max(2100),
-  mileage: z.number().min(0).optional(),
-  bodyType: z.string().optional(),
-  engine: z.string().optional(),
-  transmission: z.string().optional(),
-});
-
-const electronicsSchema = z.object({
-  brandId: z.string().uuid("Выберите бренд"),
-  productType: z.string().min(1, "Укажите тип"),
-  model: z.string().min(1, "Укажите модель"),
-  storage: z.string().optional(),
-  condition: z.string().optional(),
-});
-
-export const listingSchema = z
+/** Форма создания/редактирования объявления: только недвижимость. */
+export const listingRealEstateFormSchema = z
   .object({
-    category: z.enum(["REAL_ESTATE", "VEHICLE", "ELECTRONICS"]),
+    category: z.literal("REAL_ESTATE"),
     title: z.string().min(10, "Минимум 10 символов").max(200, "Максимум 200 символов"),
     dealType: z.enum(["SALE", "BUY", "RENT_OUT", "RENT_IN", "EXCHANGE"]).default("SALE"),
     price: z.number().min(0).optional().nullable(),
-    location: z.string().optional(),
-    /** Регион (как в форме недвижимости); regionId вычисляется при отправке */
+    location: z.string().min(5, "Укажите адрес"),
     region: z.enum(["Chechnya", "Ingushetia", "Other"]),
     cityId: z.string().uuid().optional().or(z.literal("")),
     street: z.string().optional(),
@@ -48,9 +30,7 @@ export const listingSchema = z
       .string()
       .min(50, "Минимум 50 символов")
       .max(2000, "Максимум 2000 символов"),
-    realEstate: realEstateSchema.optional(),
-    vehicle: vehicleSchema.optional(),
-    electronics: electronicsSchema.optional(),
+    realEstate: realEstateSchema,
   })
   .refine(
     (data) => {
@@ -58,27 +38,6 @@ export const listingSchema = z
       return true;
     },
     { message: "Укажите цену", path: ["price"] }
-  )
-  .refine(
-    (data) => {
-      if (data.category === "REAL_ESTATE") return !!data.realEstate;
-      return true;
-    },
-    { message: "Заполните характеристики недвижимости", path: ["realEstate"] }
-  )
-  .refine(
-    (data) => {
-      if (data.category === "VEHICLE") return !!data.vehicle;
-      return true;
-    },
-    { message: "Заполните характеристики транспорта", path: ["vehicle"] }
-  )
-  .refine(
-    (data) => {
-      if (data.category === "ELECTRONICS") return !!data.electronics;
-      return true;
-    },
-    { message: "Заполните характеристики электроники", path: ["electronics"] }
   );
 
-export type ListingFormData = z.infer<typeof listingSchema>;
+export type ListingFormData = z.infer<typeof listingRealEstateFormSchema>;

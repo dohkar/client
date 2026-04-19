@@ -10,6 +10,16 @@ export const SEARCH_CONSTANTS = {
 } as const;
 
 /**
+ * Подсказки адреса (DaData): снижение числа запросов и гонок ответов.
+ * — debounce: запрос только после паузы в наборе;
+ * — min length: не дергать API на 1–2 символах;
+ * — suppress: после выбора подсказки не дублировать запрос на полный адрес.
+ */
+export const ADDRESS_SUGGEST_DEBOUNCE_MS = 550;
+export const ADDRESS_SUGGEST_MIN_QUERY_CHARS = 3;
+export const ADDRESS_SUGGEST_SUPPRESS_AFTER_PICK_MS = 1200;
+
+/**
  * Лейблы для типов недвижимости
  */
 export const PROPERTY_TYPE_LABELS: Record<string, string> = {

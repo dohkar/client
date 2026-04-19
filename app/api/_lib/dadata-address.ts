@@ -102,6 +102,20 @@ export function firstSuggestionWithGeo(
   return null;
 }
 
+/** Все подсказки с координатами (для автодополнения адреса). */
+export function allSuggestionsWithGeo(
+  json: DadataSuggestResponse
+): GeocodeSuccessPayload[] {
+  const list = json.suggestions;
+  if (!Array.isArray(list)) return [];
+  const out: GeocodeSuccessPayload[] = [];
+  for (const item of list) {
+    const parsed = parseGeo(item);
+    if (parsed) out.push(parsed);
+  }
+  return out;
+}
+
 export async function dadataSuggestAddress(
   query: string,
   count = 7

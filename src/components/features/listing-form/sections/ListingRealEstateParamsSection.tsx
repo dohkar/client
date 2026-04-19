@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { SectionCard } from "@/components/features/property-form/SectionCard";
 import type { ListingFormData } from "../schema";
-import { Ruler, DoorOpen, AlertCircle } from "lucide-react";
+import { Ruler, DoorOpen, AlertCircle, Building2 } from "lucide-react";
 
 /** Комнаты: 0 = студия; unset = не указано. */
 const ROOMS_UNSET = "unset";
@@ -57,6 +57,32 @@ export function ListingRealEstateParamsSection({
       title='Параметры объекта'
       icon={<Ruler className='h-4 w-4 text-primary' />}
     >
+      <div className='mb-4 space-y-1.5'>
+        <Label className='text-sm font-medium'>
+          <Building2 className='mr-1.5 inline h-3.5 w-3.5 text-muted-foreground' />
+          Тип недвижимости <span className='text-destructive'>*</span>
+        </Label>
+        <Select
+          value={watch("realEstate.type")}
+          onValueChange={(v) =>
+            setValue(
+              "realEstate.type",
+              v as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"
+            )
+          }
+        >
+          <SelectTrigger className='h-10 w-full max-w-md' aria-label='Тип недвижимости'>
+            <SelectValue placeholder='Тип' />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='APARTMENT'>Квартира</SelectItem>
+            <SelectItem value='HOUSE'>Дом</SelectItem>
+            <SelectItem value='LAND'>Земельный участок</SelectItem>
+            <SelectItem value='COMMERCIAL'>Коммерческая</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
         {showRooms && (
           <>

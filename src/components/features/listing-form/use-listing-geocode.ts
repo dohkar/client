@@ -1,150 +1,52 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import type { UseFormSetValue } from "react-hook-form";
-import { geocodeAddress, reverseGeocode } from "@/lib/dadata-geocoder";
-import { buildLocationFromComponents } from "@/components/features/property-form/schema";
-import { REGION_LABELS } from "@/lib/search-constants";
+import { reverseGeocode } from "@/lib/dadata-geocoder";
+import type { GeocodeResult } from "@/lib/dadata-geocoder";
+import type { RegionDto } from "@/types/property";
 import type { ListingFormData } from "./schema";
+import { applyGeocodeResultToListingForm } from "./apply-address-from-dadata";
 import { toast } from "sonner";
 
-const GEOCODE_DELAY_MS = 400;
-const REVERSE_GEOCODE_DELAY_MS = 400;
-
-export function useListingFormGeocode(
+/**
+ * Геолокация → координаты и разбор адреса через DaData (обратное геокодирование).
+ */
+export function useListingFormLocation(
   setValue: UseFormSetValue<ListingFormData>,
-  options: {
-    enabled: boolean;
-    selectedRegion: string;
-    cityId: string;
-    cityName: string;
-    street: string | undefined;
-    house: string | undefined;
-  }
+  options: { enabled: boolean; regions: RegionDto[] }
 ) {
-  const [isGeocoding, setIsGeocoding] = useState(false);
-  const geocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reverseGeocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const coordsSourceRef = useRef<"geocode" | "map" | null>(null);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
 
-  useEffect(
-    () => () => {
-      if (reverseGeocodeTimeoutRef.current) {
-        clearTimeout(reverseGeocodeTimeoutRef.current);
-      }
-    },
-    []
-  );
-
-  useEffect(() => {
-    if (!options.enabled) {
-      return;
-    }
-
-    if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
-
-    const regionRu =
-      REGION_LABELS[options.selectedRegion as keyof typeof REGION_LABELS] ??
-      (options.selectedRegion === "Other" ? "Россия" : "");
-    const query = buildLocationFromComponents({
-      region: regionRu,
-      city: options.cityName,
-      street: options.street?.trim(),
-      house: options.house?.trim(),
-    });
-
-    const hasAddressSignal = Boolean(options.cityName || options.street?.trim());
-    if (!hasAddressSignal || !query || query.length < 5) {
-      setValue("realEstate.latitude", undefined);
-      setValue("realEstate.longitude", undefined);
-      return;
-    }
-
-    if (coordsSourceRef.current === "map") return;
-
-    coordsSourceRef.current = "geocode";
-    setIsGeocoding(true);
-    geocodeTimeoutRef.current = setTimeout(async () => {
-      try {
-        const result = await geocodeAddress({
-          region: regionRu,
-          city: options.cityName,
-          street: options.street?.trim(),
-          house: options.house?.trim(),
-        });
-
-        if (result.ok) {
-          const { data } = result;
-          if (coordsSourceRef.current === "map") return;
-          setValue("realEstate.latitude", data.latitude);
-          setValue("realEstate.longitude", data.longitude);
-          setValue("location", data.formattedAddress);
-          if (data.components.street) setValue("street", data.components.street);
-          if (data.components.house) setValue("house", data.components.house);
-          toast.success("Координаты определены", { duration: 1200 });
-        } else {
-          setValue("realEstate.latitude", undefined);
-          setValue("realEstate.longitude", undefined);
-          if (result.reason === "key") {
-            toast.error(
-              result.message ??
-                "Сервис геокодирования не настроен. Обратитесь к администратору.",
-              { duration: 5000 }
-            );
-          } else {
-            toast.warning("Не удалось определить координаты. Проверьте адрес.", {
-              duration: 2500,
-            });
-          }
-        }
-      } catch {
-        setValue("realEstate.latitude", undefined);
-        setValue("realEstate.longitude", undefined);
-      } finally {
-        setIsGeocoding(false);
-      }
-    }, GEOCODE_DELAY_MS);
-
-    return () => {
-      if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
-    };
-  }, [
-    options.enabled,
-    options.selectedRegion,
-    options.cityId,
-    options.cityName,
-    options.street,
-    options.house,
-    setValue,
-  ]);
-
-  const handleMapCoordinatesChange = useCallback(
+  const handleGeolocationPosition = useCallback(
     async (lat: number, lon: number) => {
       if (!options.enabled) return;
-      coordsSourceRef.current = "map";
-      setValue("realEstate.latitude", lat);
-      setValue("realEstate.longitude", lon);
-
-      if (reverseGeocodeTimeoutRef.current) {
-        clearTimeout(reverseGeocodeTimeoutRef.current);
-      }
-
-      reverseGeocodeTimeoutRef.current = setTimeout(async () => {
-        try {
-          const result = await reverseGeocode(lat, lon);
-          if (result) {
-            setValue("location", result.formattedAddress);
-            if (result.components.street) setValue("street", result.components.street);
-            if (result.components.house) setValue("house", result.components.house);
-            toast.success("Адрес обновлён по геолокации", { duration: 1200 });
-          }
-        } finally {
-          coordsSourceRef.current = "map";
+      setIsResolvingLocation(true);
+      try {
+        const rev = await reverseGeocode(lat, lon);
+        if (rev) {
+          const full: GeocodeResult = {
+            latitude: lat,
+            longitude: lon,
+            formattedAddress: rev.formattedAddress,
+            components: rev.components,
+          };
+          await applyGeocodeResultToListingForm(full, setValue, options.regions);
+          toast.success("Адрес обновлён по геолокации", { duration: 1200 });
+        } else {
+          setValue("realEstate.latitude", lat);
+          setValue("realEstate.longitude", lon);
+          setValue("location", `${lat.toFixed(5)}, ${lon.toFixed(5)}`);
+          toast.warning("Координаты сохранены, адрес уточните вручную.", {
+            duration: 2500,
+          });
         }
-      }, REVERSE_GEOCODE_DELAY_MS);
+      } finally {
+        setIsResolvingLocation(false);
+      }
     },
-    [setValue, options.enabled]
+    [options.enabled, options.regions, setValue]
   );
 
-  return { isGeocoding, handleMapCoordinatesChange, coordsSourceRef };
+  return { handleGeolocationPosition, isResolvingLocation };
 }

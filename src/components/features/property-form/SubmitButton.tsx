@@ -9,6 +9,8 @@ interface SubmitButtonProps {
   isUploadingMedia: boolean;
   isEdit: boolean;
   disabled?: boolean;
+  /** Если задано — кнопка не отправляет форму нативно (многошаговые формы). */
+  onPressSubmit?: () => void;
 }
 
 export function SubmitButton({
@@ -16,16 +18,18 @@ export function SubmitButton({
   isUploadingMedia,
   isEdit,
   disabled,
+  onPressSubmit,
 }: SubmitButtonProps) {
   const isDisabled = disabled ?? (isLoading || isUploadingMedia);
 
   return (
     <div className='sticky bottom-0 left-0 right-0 z-10 pt-1 pb-2 px-2 md:pt-2 md:pb-3 md:px-0 bg-background/95 backdrop-blur-[2px] supports-[backdrop-filter]:bg-background/80 border-t border-border md:border-0 md:bg-transparent md:shadow-none flex justify-end'>
       <Button
-        type='submit'
+        type={onPressSubmit ? "button" : "submit"}
         size='lg'
         className='w-full md:w-auto md:min-w-[220px] h-12 font-semibold text-base'
         disabled={isDisabled}
+        onClick={onPressSubmit}
       >
         {isLoading ? (
           <>

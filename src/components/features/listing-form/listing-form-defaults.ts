@@ -29,30 +29,26 @@ export const EMPTY_LISTING_FORM_DEFAULTS: ListingFormData = {
   house: "",
   floor: null,
   realEstate: { type: "APARTMENT", area: 1, features: [] },
-  vehicle: {
-    brandId: "",
-    model: "",
-    year: new Date().getFullYear(),
-    mileage: undefined,
-    bodyType: "",
-    engine: "",
-    transmission: "",
-  },
-  electronics: {
-    brandId: "",
-    productType: "",
-    model: "",
-    storage: "",
-    condition: "",
-  },
 };
 
 /**
- * Значения формы из листинга (редактирование).
+ * Значения формы из листинга (редактирование). Только REAL_ESTATE; иначе — пустые defaults.
  */
 export function buildListingFormDefaults(listing: Listing): ListingFormData {
-  const base = {
-    category: listing.category,
+  if (listing.category !== "REAL_ESTATE") {
+    return {
+      ...EMPTY_LISTING_FORM_DEFAULTS,
+      title: listing.title,
+      description: listing.description,
+      dealType: listing.dealType,
+      price: listing.price,
+      location: listing.location ?? "",
+    };
+  }
+
+  const re = listing.realEstate;
+  return {
+    category: "REAL_ESTATE",
     title: listing.title,
     dealType: listing.dealType,
     price: listing.price,
@@ -63,63 +59,15 @@ export function buildListingFormDefaults(listing: Listing): ListingFormData {
     street: listing.street ?? "",
     house: listing.house ?? "",
     floor: listing.floor ?? null,
-  };
-
-  if (listing.category === "REAL_ESTATE") {
-    const re = listing.realEstate;
-    return {
-      ...base,
-      category: "REAL_ESTATE",
-      realEstate: re
-        ? {
-            type: re.type,
-            rooms: re.rooms ?? undefined,
-            area: re.area,
-            features: re.features ?? [],
-            latitude: re.latitude ?? undefined,
-            longitude: re.longitude ?? undefined,
-          }
-        : { type: "APARTMENT", area: 1, features: [] },
-      vehicle: EMPTY_LISTING_FORM_DEFAULTS.vehicle,
-      electronics: EMPTY_LISTING_FORM_DEFAULTS.electronics,
-    };
-  }
-
-  if (listing.category === "VEHICLE") {
-    const v = listing.vehicle;
-    return {
-      ...base,
-      category: "VEHICLE",
-      realEstate: EMPTY_LISTING_FORM_DEFAULTS.realEstate,
-      vehicle: v
-        ? {
-            brandId: v.brandId,
-            model: v.model,
-            year: v.year,
-            mileage: v.mileage ?? undefined,
-            bodyType: v.bodyType ?? "",
-            engine: v.engine ?? "",
-            transmission: v.transmission ?? "",
-          }
-        : EMPTY_LISTING_FORM_DEFAULTS.vehicle,
-      electronics: EMPTY_LISTING_FORM_DEFAULTS.electronics,
-    };
-  }
-
-  const e = listing.electronics;
-  return {
-    ...base,
-    category: "ELECTRONICS",
-    realEstate: EMPTY_LISTING_FORM_DEFAULTS.realEstate,
-    vehicle: EMPTY_LISTING_FORM_DEFAULTS.vehicle,
-    electronics: e
+    realEstate: re
       ? {
-          brandId: e.brandId,
-          productType: e.productType,
-          model: e.model,
-          storage: e.storage ?? "",
-          condition: e.condition ?? "",
+          type: re.type,
+          rooms: re.rooms ?? undefined,
+          area: re.area,
+          features: re.features ?? [],
+          latitude: re.latitude ?? undefined,
+          longitude: re.longitude ?? undefined,
         }
-      : EMPTY_LISTING_FORM_DEFAULTS.electronics,
+      : { type: "APARTMENT", area: 1, features: [] },
   };
 }

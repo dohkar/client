@@ -17,7 +17,7 @@ import {
   formatNumberWithSpaces,
   parseFormattedNumber,
 } from "@/components/features/property-form/schema";
-import { Home, FileText, DollarSign, Building2, AlertCircle } from "lucide-react";
+import { Home, FileText, DollarSign, AlertCircle } from "lucide-react";
 
 interface ListingRealEstateBasicSectionProps {
   register: UseFormRegister<ListingFormData>;
@@ -91,32 +91,6 @@ export function ListingRealEstateBasicSection({
               <SelectItem value='RENT_OUT'>Сдаю</SelectItem>
               <SelectItem value='RENT_IN'>Сниму</SelectItem>
               <SelectItem value='EXCHANGE'>Обмен</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className='space-y-1 flex-1 min-w-[180px]'>
-          <Label className='text-sm font-medium'>
-            <Building2 className='h-3.5 w-3.5 text-muted-foreground inline mr-1.5' />
-            Тип недвижимости <span className='text-destructive'>*</span>
-          </Label>
-          <Select
-            value={watch("realEstate.type")}
-            onValueChange={(v) =>
-              setValue(
-                "realEstate.type",
-                v as "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL"
-              )
-            }
-          >
-            <SelectTrigger className='h-10 w-full' aria-label='Тип недвижимости'>
-              <SelectValue placeholder='Тип' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='APARTMENT'>Квартира</SelectItem>
-              <SelectItem value='HOUSE'>Дом</SelectItem>
-              <SelectItem value='LAND'>Земельный участок</SelectItem>
-              <SelectItem value='COMMERCIAL'>Коммерческая</SelectItem>
             </SelectContent>
           </Select>
         </div>
