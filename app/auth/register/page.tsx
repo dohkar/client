@@ -71,7 +71,7 @@ export default function RegisterPage() {
       toast.success("Регистрация успешна", {
         description: "Перенаправление в личный кабинет",
       });
-      router.push(ROUTES.dashboard);
+      router.push(ROUTES.accountListings);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Ошибка регистрации";
       toast.error(errorMessage, { description: "Попробуйте еще раз" });
@@ -119,7 +119,7 @@ export default function RegisterPage() {
                 provider='google'
                 label='Google'
                 icon={<GoogleIcon />}
-                onSuccessRedirect={ROUTES.dashboard}
+                onSuccessRedirect={ROUTES.accountListings}
               />
             </Button>
             <Button variant='outline' className={oauthBtnClass} asChild>
@@ -135,7 +135,7 @@ export default function RegisterPage() {
                     className='shrink-0'
                   />
                 }
-                onSuccessRedirect={ROUTES.dashboard}
+                onSuccessRedirect={ROUTES.accountListings}
               />
             </Button>
             <Button variant='outline' className={oauthBtnClass} asChild>
@@ -151,7 +151,7 @@ export default function RegisterPage() {
                     className='shrink-0'
                   />
                 }
-                onSuccessRedirect={ROUTES.dashboard}
+                onSuccessRedirect={ROUTES.accountListings}
               />
             </Button>
           </div>
@@ -182,7 +182,11 @@ export default function RegisterPage() {
                 }}
                 required
                 autoComplete='username'
-                className={cn(INPUT_BASE, "tracking-wider", error && "border-destructive")}
+                className={cn(
+                  INPUT_BASE,
+                  "tracking-wider",
+                  error && "border-destructive"
+                )}
                 aria-describedby={error ? "form-error" : undefined}
                 aria-invalid={!!error}
               />

@@ -40,7 +40,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
 
   if (listing.userId !== user?.id) {
     toast.error("У вас нет прав для редактирования этого объявления");
-    router.push(`${ROUTES.dashboard}/listings`);
+    router.push(ROUTES.accountListings);
     return null;
   }
 

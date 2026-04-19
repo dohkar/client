@@ -4,7 +4,7 @@ import type {
   UserGetMeResponse,
   UserUpdateMeRequest,
   UserUpdateMeResponse,
-  UserGetByIdResponse,
+  PublicUserProfile,
 } from "@/lib/api-types";
 
 /**
@@ -27,9 +27,9 @@ export const usersService = {
   },
 
   /**
-   * Получить пользователя по ID
+   * Публичная карточка пользователя (без email и телефона)
    */
-  async getUserById(id: string): Promise<UserGetByIdResponse> {
-    return apiClient.get<UserGetByIdResponse>(API_ENDPOINTS.users.getById(id));
+  async getPublicProfile(id: string): Promise<PublicUserProfile> {
+    return apiClient.get<PublicUserProfile>(API_ENDPOINTS.users.publicProfile(id));
   },
 };

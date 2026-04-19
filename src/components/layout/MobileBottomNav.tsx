@@ -33,7 +33,7 @@ const navItems = [
   },
   {
     label: "Кабинет",
-    href: ROUTES.dashboard,
+    href: ROUTES.account,
     icon: LayoutDashboard,
     requireAuth: true,
   },
@@ -49,17 +49,15 @@ export function MobileBottomNav() {
   const { isAuthenticated } = useAuthStore();
 
   // Фильтруем элементы, требующие авторизации
-  const visibleItems = navItems.filter(
-    (item) => !item.requireAuth || isAuthenticated
-  );
+  const visibleItems = navItems.filter((item) => !item.requireAuth || isAuthenticated);
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden pb-safe"
-      aria-label="Мобильная навигация"
+      className='fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden pb-safe'
+      aria-label='Мобильная навигация'
     >
-      <div className="container mx-auto px-2">
-        <div className="flex items-center justify-around h-16">
+      <div className='container mx-auto px-2'>
+        <div className='flex items-center justify-around h-16'>
           {visibleItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -87,9 +85,9 @@ export function MobileBottomNav() {
                     isActive && "scale-110"
                   )}
                 >
-                  <Icon className="size-5" />
+                  <Icon className='size-5' />
                   {isActive && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                    <span className='absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary' />
                   )}
                 </div>
                 <span

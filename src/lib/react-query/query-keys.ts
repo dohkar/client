@@ -87,6 +87,12 @@ function normalizeListingSearchParams(
   if (params.my !== undefined) {
     normalized.my = params.my;
   }
+  if (params.cabinetTab !== undefined) {
+    normalized.cabinetTab = params.cabinetTab;
+  }
+  if (params.sellerId !== undefined && params.sellerId.trim().length > 0) {
+    normalized.sellerId = params.sellerId.trim();
+  }
   if (params.category !== undefined) {
     normalized.category = params.category;
   }
@@ -224,6 +230,7 @@ export const queryKeys = {
   user: {
     all: ["user"] as const,
     profile: (id: string) => ["user", "profile", id] as const,
+    publicProfile: (id: string) => ["user", "publicProfile", id] as const,
     listings: (userId: string) => ["user", "listings", userId] as const,
   },
 

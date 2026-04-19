@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const ADMIN_TABS = [
-  { href: "/dashboard/admin", label: "Обзор", exact: true },
-  { href: "/dashboard/admin/users", label: "Пользователи" },
-  { href: "/dashboard/admin/listings", label: "Объявления" },
-  { href: "/dashboard/admin/inbox", label: "Входящие" },
-  { href: "/dashboard/admin/chats", label: "Чаты" },
-  { href: "/dashboard/admin/logs", label: "Логи" },
+  { href: "/account/admin", label: "Обзор", exact: true },
+  { href: "/account/admin/users", label: "Пользователи" },
+  { href: "/account/admin/listings", label: "Объявления" },
+  { href: "/account/admin/inbox", label: "Входящие" },
+  { href: "/account/admin/chats", label: "Чаты" },
+  { href: "/account/admin/logs", label: "Логи" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +30,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!isAuthenticated) {
       redirect("/auth/login");
     } else if (!isBackoffice) {
-      redirect("/dashboard");
+      redirect("/account");
     }
   }, [isAuthenticated, isBackoffice, isInitialized]);
 

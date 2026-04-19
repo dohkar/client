@@ -93,11 +93,11 @@ export function AuthModalContent() {
           useAuthModalStore.getState().reset();
 
           if (intent.type === "checkout") {
-            router.push(ROUTES.dashboard);
+            router.push(ROUTES.accountListings);
           } else if (intent.type === "profile") {
-            router.push(`${ROUTES.dashboard}/profile`);
+            router.push(ROUTES.accountProfile);
           } else if (intent.type === "orders") {
-            router.push(`${ROUTES.dashboard}/listings`);
+            router.push(ROUTES.accountListings);
           } else if (intent.type === "custom") {
             router.push(intent.url);
           }

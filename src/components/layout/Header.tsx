@@ -12,7 +12,6 @@ import {
   User,
   LogOut,
   LayoutDashboard,
-  List,
   Heart,
   UserCircle,
   Shield,
@@ -33,25 +32,24 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { CATEGORIES } from "@/constants/categories";
 
 const USER_MENU_ITEMS = [
-  { href: ROUTES.dashboard, icon: LayoutDashboard, label: "Кабинет" },
-  { href: `${ROUTES.dashboard}/profile`, icon: UserCircle, label: "Профиль" },
+  { href: ROUTES.accountListings, icon: LayoutDashboard, label: "Кабинет" },
+  { href: ROUTES.accountProfile, icon: UserCircle, label: "Данные профиля" },
   { href: ROUTES.messages, icon: MessageSquare, label: "Сообщения" },
   { href: ROUTES.favorites, icon: Heart, label: "Избранное" },
-  { href: `${ROUTES.dashboard}/listings`, icon: List, label: "Мои объявления" },
 ] as const;
 
 function UserMenuLinks({ isAdmin }: { isAdmin: boolean }) {
   return (
     <>
       {isAdmin ? (
-        <Link href={`${ROUTES.dashboard}/admin`}>
+        <Link href={ROUTES.accountAdmin}>
           <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-red-600'>
             <Shield className='h-4 w-4 shrink-0' />
             Админ-панель
           </div>
         </Link>
       ) : (
-        <Link href={`${ROUTES.dashboard}/support`}>
+        <Link href={ROUTES.accountSupport}>
           <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-green-600'>
             <UserIcon className='h-4 w-4 shrink-0' />
             Поддержка
@@ -262,11 +260,11 @@ export function Header() {
                 </Link>
                 <HoverCard openDelay={50} closeDelay={100}>
                   <HoverCardTrigger asChild>
-                    <Link href={`${ROUTES.dashboard}/profile`} aria-label='Профиль'>
+                    <Link href={ROUTES.accountListings} aria-label='Кабинет'>
                       {/* <Avatar .../> */}
                       <Button variant='clear' className='gap-1.5 shrink-0 text-base'>
                         <ChevronsUpDown />
-                        Профиль
+                        Кабинет
                       </Button>
                     </Link>
                   </HoverCardTrigger>
@@ -427,7 +425,7 @@ export function Header() {
                       Аккаунт
                     </p>
                     {isAdmin && (
-                      <Link href={`${ROUTES.dashboard}/admin`} onClick={closeMobileMenu}>
+                      <Link href={ROUTES.accountAdmin} onClick={closeMobileMenu}>
                         <div className='flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-red-500/10 text-red-600 transition-colors min-h-[48px]'>
                           <Shield className='h-5 w-5' />
                           Админ-панель

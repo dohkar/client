@@ -67,7 +67,7 @@ export default function LoginPage() {
       toast.success("Вы успешно вошли в аккаунт", {
         description: "Перенаправление в личный кабинет",
       });
-      router.push(ROUTES.dashboard);
+      router.push(ROUTES.accountListings);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Неверный логин или пароль";
@@ -116,7 +116,7 @@ export default function LoginPage() {
                 provider='google'
                 label='Google'
                 icon={<GoogleIcon />}
-                onSuccessRedirect={ROUTES.dashboard}
+                onSuccessRedirect={ROUTES.accountListings}
               />
             </Button>
             <Button variant='outline' className={oauthBtnClass} asChild>
@@ -132,7 +132,7 @@ export default function LoginPage() {
                     className='shrink-0'
                   />
                 }
-                onSuccessRedirect={ROUTES.dashboard}
+                onSuccessRedirect={ROUTES.accountListings}
               />
             </Button>
             <Button variant='outline' className={oauthBtnClass} asChild>
@@ -148,7 +148,7 @@ export default function LoginPage() {
                     className='shrink-0'
                   />
                 }
-                onSuccessRedirect={ROUTES.dashboard}
+                onSuccessRedirect={ROUTES.accountListings}
               />
             </Button>
           </div>

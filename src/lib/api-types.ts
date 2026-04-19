@@ -146,8 +146,15 @@ export type AuthRefreshRequest = RequestBody<"/api/auth/refresh", "post">;
 export type UserGetMeResponse = ResponseData<"/api/users/me", "get">;
 export type UserUpdateMeRequest = RequestBody<"/api/users/me", "patch">;
 export type UserUpdateMeResponse = ResponseData<"/api/users/me", "patch">;
-export type UserGetByIdParams = RequestParams<"/api/users/{id}", "get">;
-export type UserGetByIdResponse = ResponseData<"/api/users/{id}", "get">;
+
+/** Ответ GET /api/users/public/:id (не в OpenAPI до пересборки схемы) */
+export type PublicUserProfile = {
+  id: string;
+  name: string | null;
+  avatar: string | null;
+  isPremium: boolean;
+  createdAt: string;
+};
 
 // Property endpoints
 export type ApiPropertyCreateRequest = RequestBody<"/api/properties", "post">;

@@ -133,9 +133,16 @@ export interface Listing {
 /** Значение query `propertyType` для Listings API (как в Prisma PropertyType). */
 export type ListingPropertyTypeParam = "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
 
+/** Сегмент списка «Мои объявления» (query `cabinetTab`, только с `my: true`). */
+export type MyListingsCabinetTab = "active" | "moderation" | "rejected" | "archive";
+
 export interface ListingSearchParams {
   query?: string;
   my?: boolean;
+  /** Сегмент кабинета: активные / модерация / отклонённые / архив */
+  cabinetTab?: MyListingsCabinetTab;
+  /** Публичные объявления продавца (ACTIVE + APPROVED) */
+  sellerId?: string;
   category?: ListingCategory;
   dealType?: PropertyDealType;
   priceMin?: number;

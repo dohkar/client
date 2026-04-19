@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: turbopackRoot,
   },
+  async redirects() {
+    return [
+      { source: "/dashboard", destination: "/account", permanent: true },
+      { source: "/dashboard/:path*", destination: "/account/:path*", permanent: true },
+    ];
+  },
   output: "standalone",
   images: {
     formats: ["image/avif", "image/webp"],

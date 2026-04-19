@@ -40,8 +40,10 @@ function isValidOAuthMessage(data: unknown): data is { type: string } {
   );
 }
 
-export interface OAuthPopupButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
+export interface OAuthPopupButtonProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  "className"
+> {
   provider: OAuthPopupProvider;
   label: string;
   icon?: React.ReactNode;
@@ -58,7 +60,7 @@ export const OAuthPopupButton = forwardRef<HTMLButtonElement, OAuthPopupButtonPr
       label,
       icon,
       className,
-      onSuccessRedirect = ROUTES.dashboard,
+      onSuccessRedirect = ROUTES.accountListings,
       disabled = false,
       oauthState,
       ...rest

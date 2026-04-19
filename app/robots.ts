@@ -14,13 +14,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: [
-          "/dashboard",
-          "/auth",
-          "/favorites",
-          "/messages",
-          "/api",
-        ],
+        disallow: ["/account", "/auth", "/favorites", "/messages", "/api"],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

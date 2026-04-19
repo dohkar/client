@@ -9,6 +9,8 @@ function buildListingsQuery(params?: ListingSearchParams): string {
   const q = new URLSearchParams();
   if (params.query) q.append("query", params.query);
   if (params.my !== undefined) q.append("my", String(params.my));
+  if (params.cabinetTab) q.append("cabinetTab", params.cabinetTab);
+  if (params.sellerId) q.append("sellerId", params.sellerId);
   if (params.category) q.append("category", params.category);
   if (params.dealType) q.append("dealType", params.dealType);
   if (params.priceMin != null) q.append("priceMin", params.priceMin.toString());
@@ -20,7 +22,8 @@ function buildListingsQuery(params?: ListingSearchParams): string {
   if (params.areaMin != null) q.append("areaMin", params.areaMin.toString());
   if (params.floorMin != null) q.append("floorMin", params.floorMin.toString());
   if (params.floorMax != null) q.append("floorMax", params.floorMax.toString());
-  if (params.floorNotFirst !== undefined) q.append("floorNotFirst", String(params.floorNotFirst));
+  if (params.floorNotFirst !== undefined)
+    q.append("floorNotFirst", String(params.floorNotFirst));
   if (params.brandId) q.append("brandId", params.brandId);
   if (params.yearMin != null) q.append("yearMin", params.yearMin.toString());
   if (params.yearMax != null) q.append("yearMax", params.yearMax.toString());

@@ -7,7 +7,7 @@ import { Footer } from "./Footer";
 const HIDE_FOOTER_PATHS = [
   "/messages",
   "/auth",
-  "/dashboard",
+  "/account",
   "/sell",
   "/admin",
   "/favorites",

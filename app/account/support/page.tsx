@@ -131,7 +131,7 @@ export default function SupportPage() {
         <div className='max-w-2xl mx-auto'>
           {/* Back button */}
           <Link
-            href={ROUTES.dashboard}
+            href={ROUTES.accountListings}
             className='inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6'
           >
             <ArrowLeft className='w-4 h-4' />
@@ -161,7 +161,7 @@ export default function SupportPage() {
                   <Button onClick={() => setIsSuccess(false)} variant='outline'>
                     Отправить ещё
                   </Button>
-                  <Link href={ROUTES.dashboard}>
+                  <Link href={ROUTES.accountListings}>
                     <Button>Вернуться в кабинет</Button>
                   </Link>
                 </div>

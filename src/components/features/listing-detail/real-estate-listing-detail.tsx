@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -96,7 +97,9 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
       <dt className='shrink-0 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
         {label}
       </dt>
-      <dd className='min-w-0 text-sm font-medium text-foreground sm:text-right'>{value}</dd>
+      <dd className='min-w-0 text-sm font-medium text-foreground sm:text-right'>
+        {value}
+      </dd>
     </div>
   );
 }
@@ -144,6 +147,12 @@ function StickyListingCard({
           {sellerYear != null && (
             <p className='text-xs text-muted-foreground'>на Dohkar с {sellerYear}</p>
           )}
+          <Link
+            href={ROUTES.profile(listing.userId)}
+            className='text-xs font-medium text-primary hover:underline mt-1 inline-block'
+          >
+            Профиль продавца
+          </Link>
         </div>
       </div>
       <div className='mt-4 flex flex-col gap-2'>
@@ -417,6 +426,12 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
                       `${sellerStats.totalContactAttempts} обращений`}
                   </p>
                 )}
+                <Link
+                  href={ROUTES.profile(listing.userId)}
+                  className='text-xs font-medium text-primary hover:underline mt-1 inline-block'
+                >
+                  Профиль продавца
+                </Link>
               </div>
             </div>
           </div>
@@ -475,7 +490,9 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
                 <DetailRow
                   label='Цена за м²'
                   value={
-                    pricePerMeter != null ? `${formatPrice(pricePerMeter)} / м²` : undefined
+                    pricePerMeter != null
+                      ? `${formatPrice(pricePerMeter)} / м²`
+                      : undefined
                   }
                 />
                 <DetailRow label='Регион' value={listing.region} />

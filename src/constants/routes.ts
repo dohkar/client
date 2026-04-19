@@ -16,11 +16,15 @@ export const ROUTES = {
   listing: (id: string, slug?: string) =>
     slug ? `/listing/${id}-${slug}` : `/listing/${id}`,
   sell: "/sell",
-  // User
-  dashboard: "/dashboard",
-  dashboardSettings: "/dashboard/settings",
-  dashboardSupport: "/dashboard/support",
+  /** Личный кабинет: единый префикс, боковое меню + контент */
+  account: "/account",
+  accountListings: "/account/listings",
+  accountProfile: "/account/profile",
+  accountSettings: "/account/settings",
+  accountSupport: "/account/support",
+  accountAdmin: "/account/admin",
   favorites: "/favorites",
+  /** Публичная витрина пользователя */
   profile: (id: string) => `/profile/${id}`,
   messages: "/messages",
   // Other
@@ -57,7 +61,7 @@ export const API_ENDPOINTS = {
   users: {
     me: "/api/users/me",
     updateMe: "/api/users/me",
-    getById: (id: string) => `/api/users/${id}`,
+    publicProfile: (id: string) => `/api/users/public/${id}`,
   },
 
   // Regions & Cities

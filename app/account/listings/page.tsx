@@ -34,9 +34,17 @@ import { ROUTES, PAGINATION } from "@/constants";
 import { useDeleteListingWithUndo } from "@/hooks/use-delete-listing-with-undo";
 import { useMemo, useState, useEffect } from "react";
 import type { PropertyType } from "@/types/property";
-import type { Listing, ListingSearchParams } from "@/types/listing";
+import type { Listing, ListingSearchParams, MyListingsCabinetTab } from "@/types/listing";
+import { cn } from "@/lib/utils";
 
 type SortOption = "date" | "price-asc" | "price-desc" | "area-asc" | "area-desc";
+
+const CABINET_TABS: { id: MyListingsCabinetTab; label: string }[] = [
+  { id: "active", label: "Активные" },
+  { id: "moderation", label: "На модерации" },
+  { id: "rejected", label: "Отклонённые" },
+  { id: "archive", label: "Архив" },
+];
 
 function ListingStatusBadge({ listing }: { listing: Listing }) {
   const rej = listing.rejectionReason;
@@ -100,6 +108,7 @@ export default function ListingsPage() {
   const [sortBy, setSortBy] = useState<SortOption>("date");
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
+  const [cabinetTab, setCabinetTab] = useState<MyListingsCabinetTab>("active");
 
   const { deleteWithUndo, isDeleting } = useDeleteListingWithUndo();
 
@@ -118,6 +127,7 @@ export default function ListingsPage() {
     const q = searchQuery.trim() || undefined;
     const base = {
       my: true as const,
+      cabinetTab,
       page,
       limit: PAGINATION.propertiesMaxLimit,
       sortBy: sortByApi,
@@ -131,7 +141,7 @@ export default function ListingsPage() {
       category: "REAL_ESTATE" as const,
       propertyType: apiType,
     };
-  }, [page, sortByApi, searchQuery, typeFilter, apiType]);
+  }, [page, sortByApi, searchQuery, typeFilter, apiType, cabinetTab]);
 
   const {
     data: response,
@@ -150,6 +160,12 @@ export default function ListingsPage() {
   const total = response?.total ?? 0;
   const totalPages = response?.totalPages ?? 1;
   const filteredData = data;
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setPage(1);
+    });
+  }, [cabinetTab]);
 
   useEffect(() => {
     if (searchQuery.trim() || typeFilter !== "all" || sortBy !== "date") {
@@ -191,7 +207,7 @@ export default function ListingsPage() {
         <div className='container mx-auto px-2 md:px-4'>
           <div className='max-w-3xl mx-auto mb-8 sm:mb-12 text-center'>
             <h1 className='text-3xl sm:text-4xl font-bold mb-2 text-foreground'>
-              Мои объявления
+              Объявления
             </h1>
             <p className='text-base sm:text-lg text-muted-foreground'>Загрузка...</p>
           </div>
@@ -237,23 +253,50 @@ export default function ListingsPage() {
   return (
     <div className='min-h-[70vh] py-6 sm:py-8 md:py-12'>
       <div className='container mx-auto px-2 md:px-4'>
-        <div className='mb-6 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
-          <div>
-            <h1 className='text-2xl sm:text-3xl font-bold mb-2'>Мои объявления</h1>
-            <p className='text-sm sm:text-base text-muted-foreground'>
+        <div className='mb-6 sm:mb-8'>
+          <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4'>
+            <h1 className='text-2xl sm:text-3xl font-bold'>Объявления</h1>
+            <Link href={ROUTES.sell} className='w-full sm:w-auto shrink-0'>
+              <Button className='btn-caucasus min-h-[44px] w-full sm:w-auto'>
+                <Plus className='w-4 h-4 mr-2' />
+                Создать объявление
+              </Button>
+            </Link>
+          </div>
+
+          <div
+            role='tablist'
+            aria-label='Сегменты объявлений'
+            className='flex gap-0 border-b border-border -mx-1 px-1'
+          >
+            {CABINET_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type='button'
+                role='tab'
+                aria-selected={cabinetTab === tab.id}
+                onClick={() => setCabinetTab(tab.id)}
+                className={cn(
+                  "relative shrink-0 px-3 sm:px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px",
+                  cabinetTab === tab.id
+                    ? "cursor-default border-primary text-primary"
+                    : "cursor-pointer border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {!isLoading && (
+            <p className='text-sm text-muted-foreground mt-3'>
               {total} {declOfNum(total, ["объявление", "объявления", "объявлений"])}
             </p>
-          </div>
-          <Link href={ROUTES.sell}>
-            <Button className='btn-caucasus min-h-[44px] w-full sm:w-auto'>
-              <Plus className='w-4 h-4 mr-2' />
-              Создать объявление
-            </Button>
-          </Link>
+          )}
         </div>
 
-        {/* Панель поиска и фильтров — только если есть объявления */}
-        {data && data.length > 0 && (
+        {/* Панель поиска и фильтров */}
+        {!isLoading && user && !isError && (
           <div className='mx-auto max-w-7xl mb-6'>
             <div className='flex flex-col sm:flex-row gap-3 sm:gap-4'>
               <div className='relative flex-1 max-w-md'>
@@ -403,16 +446,32 @@ export default function ListingsPage() {
         )}
 
         {total === 0 && !hasActiveFilters ? (
-          <Card className='w-full max-w-2xl min-h-[280px] mx-auto border-primary/20 shadow-sm bg-card flex items-center justify-center'>
-            <CardContent className='w-full flex flex-col items-center justify-center gap-6 py-16 sm:py-20 text-center'>
-              <p className='text-lg sm:text-xl text-muted-foreground'>
-                У вас пока нет объявлений
-              </p>
-              <Link href={ROUTES.sell}>
-                <Button className='btn-caucasus min-h-[48px] px-8 text-lg'>
-                  Создать первое объявление
-                </Button>
-              </Link>
+          <Card className='w-full max-w-2xl min-h-[220px] mx-auto border-border shadow-sm bg-card flex items-center justify-center'>
+            <CardContent className='w-full flex flex-col items-center justify-center gap-5 py-14 sm:py-16 text-center px-4'>
+              {cabinetTab === "active" ? (
+                <>
+                  <p className='text-lg sm:text-xl text-muted-foreground'>
+                    Тут объявлений нет
+                  </p>
+                  <Link href={ROUTES.sell}>
+                    <Button className='btn-caucasus min-h-[48px] px-8 text-base'>
+                      Разместить объявление
+                    </Button>
+                  </Link>
+                </>
+              ) : cabinetTab === "moderation" ? (
+                <p className='text-lg text-muted-foreground'>
+                  Нет объявлений на модерации
+                </p>
+              ) : cabinetTab === "rejected" ? (
+                <p className='text-lg text-muted-foreground'>
+                  Нет отклонённых объявлений
+                </p>
+              ) : (
+                <p className='text-lg text-muted-foreground'>
+                  В архиве пока ничего нет (архив, продано, черновики)
+                </p>
+              )}
             </CardContent>
           </Card>
         ) : filteredData.length > 0 ? (
@@ -454,7 +513,7 @@ export default function ListingsPage() {
                           size='sm'
                           variant='secondary'
                           onClick={() =>
-                            router.push(`/dashboard/listings/${listing.id}/edit`)
+                            router.push(`${ROUTES.accountListings}/${listing.id}/edit`)
                           }
                           className='min-h-[36px] min-w-[36px] shadow-md'
                           aria-label='Редактировать'

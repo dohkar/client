@@ -42,7 +42,9 @@ function mapUserResponseToUser(userResponse: {
     isPremium: userResponse.isPremium,
     role: userResponse.role as User["role"],
     createdAt: userResponse.createdAt,
-    ...(userResponse.provider != null && { provider: userResponse.provider as User["provider"] }),
+    ...(userResponse.provider != null && {
+      provider: userResponse.provider as User["provider"],
+    }),
   };
 }
 
@@ -94,7 +96,9 @@ function AuthCallbackHandler() {
                 const providerParam = searchParams.get("linked");
                 if (
                   u &&
-                  (providerParam === "google" || providerParam === "yandex" || providerParam === "vk")
+                  (providerParam === "google" ||
+                    providerParam === "yandex" ||
+                    providerParam === "vk")
                 ) {
                   window.opener.postMessage(
                     {
@@ -107,7 +111,7 @@ function AuthCallbackHandler() {
                 }
                 window.close();
               } else {
-                router.push(ROUTES.dashboardSettings);
+                router.push(ROUTES.accountSettings);
               }
             });
           return;
@@ -120,7 +124,7 @@ function AuthCallbackHandler() {
         }
         if (errorParam === "link_failed") {
           toast.error("Не удалось привязать аккаунт");
-          router.push(ROUTES.dashboardSettings);
+          router.push(ROUTES.accountSettings);
           return;
         }
 
@@ -147,7 +151,8 @@ function AuthCallbackHandler() {
               }
             } else {
               const errMsg =
-                data?.message || (response.ok ? "Нет accessToken в ответе" : "Ошибка финализации OAuth");
+                data?.message ||
+                (response.ok ? "Нет accessToken в ответе" : "Ошибка финализации OAuth");
               if (isPopup) {
                 sendToOpenerAndClose("oauth:error", { error: errMsg });
                 return;
@@ -189,7 +194,7 @@ function AuthCallbackHandler() {
             sendToOpenerAndClose("oauth:success", { user });
             return;
           }
-          router.push(ROUTES.dashboard);
+          router.push(ROUTES.accountListings);
         } else {
           if (isPopup) {
             sendToOpenerAndClose("oauth:error", {
