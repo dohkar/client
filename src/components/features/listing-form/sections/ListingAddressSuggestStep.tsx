@@ -36,11 +36,7 @@ export const ListingAddressSuggestStep: FC<ListingAddressSuggestStepProps> = ({
   isResolvingLocation,
   onGeolocation,
 }) => {
-  const {
-    onBlur: regLocationBlur,
-    onFocus: regLocationFocus,
-    ...locationField
-  } = register("location");
+  const { onBlur: regLocationBlur, ...locationField } = register("location");
 
   const location = watch("location") ?? "";
   const latitude = watch("realEstate.latitude");
@@ -84,7 +80,8 @@ export const ListingAddressSuggestStep: FC<ListingAddressSuggestStepProps> = ({
     );
   }, [onGeolocation]);
 
-  const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** В браузере id таймера — number (не NodeJS.Timeout). */
+  const blurTimerRef = useRef<number | null>(null);
 
   const handleBlurInput = useCallback(() => {
     if (blurTimerRef.current) window.clearTimeout(blurTimerRef.current);
@@ -115,10 +112,7 @@ export const ListingAddressSuggestStep: FC<ListingAddressSuggestStepProps> = ({
           <Input
             id='listing-address-suggest'
             {...locationField}
-            onFocus={(e) => {
-              regLocationFocus(e);
-              handleFocusInput();
-            }}
+            onFocus={handleFocusInput}
             onBlur={(e) => {
               void regLocationBlur(e);
               handleBlurInput();
