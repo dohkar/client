@@ -22,6 +22,7 @@ import { ROUTES } from "@/constants";
 import { formatDate, formatPrice } from "@/lib/utils/format";
 import { listingsService } from "@/services/listings.service";
 import { analyticsService } from "@/services/analytics.service";
+import { pushListingToViewHistory } from "@/lib/history/view-history-helpers";
 import { queryKeys } from "@/lib/react-query/query-keys";
 import { getCategoryConfig } from "@/constants/listing-categories";
 import { useCreateListingChat } from "@/hooks/use-chats";
@@ -235,12 +236,13 @@ export default function ListingPage() {
   const isFavoritePending =
     !!listingId && isAuthenticated && isFavoriteMutating(listingId);
 
-  // Записать просмотр один раз на листинг при успешной загрузке (при смене listingId ref сбрасывается)
+  // Один раз на карточку: счётчик на сервере + блок «Вы смотрели» (localStorage)
   useEffect(() => {
     if (!listingId || !listing) return;
     if (viewRecordedRef.current === listingId) return;
     viewRecordedRef.current = listingId;
-    analyticsService.recordView(listingId);
+    void analyticsService.recordView(listingId);
+    pushListingToViewHistory(listing);
   }, [listingId, listing]);
 
   const mediaItems = useMemo(

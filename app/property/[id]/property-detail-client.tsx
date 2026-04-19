@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter, notFound } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -38,6 +38,7 @@ import { useAuthStore } from "@/stores";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useCreateListingChat } from "@/hooks/use-chats";
 import type { Property, PropertyBackend, PropertyDealType } from "@/types/property";
+import { pushPropertyToViewHistory } from "@/lib/history/view-history-helpers";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -208,6 +209,14 @@ export function PropertyDetailClient() {
     () => (rawBackend ? adaptProperty(rawBackend as PropertyBackend) : null),
     [rawBackend]
   );
+
+  const historyRecordedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!propertyId || !property) return;
+    if (historyRecordedRef.current === propertyId) return;
+    historyRecordedRef.current = propertyId;
+    pushPropertyToViewHistory(property);
+  }, [propertyId, property]);
 
   const { data: relatedRaw = [] } = useQuery({
     queryKey: [...queryKeys.properties.detail(propertyId ?? ""), "related", 8],
