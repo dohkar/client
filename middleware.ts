@@ -90,11 +90,11 @@ export async function middleware(request: NextRequest) {
       .geo;
     const vercelRegion =
       geo?.region ?? request.headers.get("x-vercel-ip-country-region") ?? null;
+    const forwardedFirst = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const realIp = request.headers.get("x-real-ip")?.trim();
+    const clientIp = forwardedFirst || realIp || "127.0.0.1";
     userRegion =
-      regionNameToSlug(vercelRegion) ??
-      (await detectRegionByIp(
-        request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-      ));
+      regionNameToSlug(vercelRegion) ?? (await detectRegionByIp(clientIp));
 
     response.cookies.set(USER_REGION_COOKIE, userRegion, {
       maxAge: 60 * 60 * 24 * 30,

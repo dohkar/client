@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, Fragment } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Menu,
@@ -14,9 +15,9 @@ import {
   LayoutDashboard,
   Heart,
   UserCircle,
+  Settings,
   Shield,
   MessageSquare,
-  UserIcon,
   ChevronsUpDown,
 } from "lucide-react";
 import {
@@ -33,9 +34,9 @@ import { CATEGORIES } from "@/constants/categories";
 
 const USER_MENU_ITEMS = [
   { href: ROUTES.accountListings, icon: LayoutDashboard, label: "Кабинет" },
-  { href: ROUTES.accountProfile, icon: UserCircle, label: "Данные профиля" },
   { href: ROUTES.messages, icon: MessageSquare, label: "Сообщения" },
-  { href: ROUTES.favorites, icon: Heart, label: "Избранное" },
+  { href: ROUTES.accountProfile, icon: UserCircle, label: "Профиль" },
+  { href: ROUTES.accountSettings, icon: Settings, label: "Настройки" },
 ] as const;
 
 function UserMenuLinks({ isAdmin }: { isAdmin: boolean }) {
@@ -48,14 +49,7 @@ function UserMenuLinks({ isAdmin }: { isAdmin: boolean }) {
             Админ-панель
           </div>
         </Link>
-      ) : (
-        <Link href={ROUTES.accountSupport}>
-          <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer text-green-600'>
-            <UserIcon className='h-4 w-4 shrink-0' />
-            Поддержка
-          </div>
-        </Link>
-      )}
+      ) : null}
       {USER_MENU_ITEMS.map(({ href, icon: Icon, label }) => (
         <Link href={href} key={href}>
           <div className='flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg hover:bg-accent/70 cursor-pointer'>
@@ -91,7 +85,7 @@ export function Header() {
     if (isMobileMenuOpen) {
       setShowMenu(true);
       setIsAnimating(false);
-      timeoutId.current && clearTimeout(timeoutId.current);
+      if (timeoutId.current) clearTimeout(timeoutId.current);
       timeoutId.current = setTimeout(() => {
         setIsAnimating(true);
         timeoutId.current = null;
@@ -103,7 +97,7 @@ export function Header() {
 
     if (showMenu) {
       setIsAnimating(false);
-      timeoutId.current && clearTimeout(timeoutId.current);
+      if (timeoutId.current) clearTimeout(timeoutId.current);
       timeoutId.current = setTimeout(() => {
         setShowMenu(false);
         timeoutId.current = null;
@@ -208,26 +202,6 @@ export function Header() {
 
   // ──────────────────────────────────────────────────────────────────────────────
 
-  // Раздел навигационных категорий (для DRY/удобства)
-  const renderCategories = (opts?: {
-    onClick?: () => void;
-    className?: string;
-    itemClassName?: string;
-  }) =>
-    CATEGORIES.map((cat) => (
-      <Link
-        key={cat.name}
-        href={cat.href}
-        className={cn(
-          "px-2.5 py-1.5 text-base rounded-lg font-medium transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-          opts?.itemClassName
-        )}
-        onClick={opts?.onClick}
-      >
-        {cat.name}
-      </Link>
-    ));
-
   return (
     <header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/75 transition-shadow'>
       <span role='status' aria-live='polite' className='sr-only'>
@@ -240,7 +214,7 @@ export function Header() {
           className='flex items-center group shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md'
           aria-label='Дохкар — на главную'
         >
-          <img src='/images/logo2.png' alt='Дохкар' width={180} height={64} />
+          <Image src='/images/logo2.png' alt='Дохкар' width={180} height={64} priority />
         </Link>
 
         {/* Actions */}
@@ -260,11 +234,11 @@ export function Header() {
                 </Link>
                 <HoverCard openDelay={50} closeDelay={100}>
                   <HoverCardTrigger asChild>
-                    <Link href={ROUTES.accountListings} aria-label='Кабинет'>
+                    <Link href={ROUTES.accountListings} aria-label='Аккаунт'>
                       {/* <Avatar .../> */}
                       <Button variant='clear' className='gap-1.5 shrink-0 text-base'>
                         <ChevronsUpDown />
-                        Кабинет
+                        Аккаунт
                       </Button>
                     </Link>
                   </HoverCardTrigger>
@@ -273,13 +247,26 @@ export function Header() {
                     sideOffset={8}
                     className='w-56 p-1.5 shadow-xl rounded-xl'
                   >
-                    <div className='space-y-0.5'>
-                      <UserMenuLinks isAdmin={isAdmin} />
+                    <div className='space-y-1'>
+                      <p className='px-2.5 pt-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide'>
+                        Аккаунт
+                      </p>
+                      <div className='space-y-0.5'>
+                        <UserMenuLinks isAdmin={isAdmin} />
+                      </div>
                     </div>
-                    <div className='mt-1.5 pt-1.5 border-t'>
+
+                    <div className='mt-2 pt-2 border-t space-y-1'>
+                      <p className='px-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide'>
+                        Тема
+                      </p>
                       <ThemeToggle variant='embed' />
                     </div>
-                    <div className='pt-1.5 mt-1 border-t'>
+
+                    <div className='pt-2 mt-2 border-t space-y-1'>
+                      <p className='px-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide'>
+                        Сессия
+                      </p>
                       <button
                         type='button'
                         onClick={handleLogout}
@@ -388,7 +375,7 @@ export function Header() {
                   className='text-xl font-extrabold overflow-hidden bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent flex items-center'
                   tabIndex={0}
                 >
-                  <img src='/images/logo2.png' alt='Дохкар' width={120} height={44} />
+                  <Image src='/images/logo2.png' alt='Дохкар' width={120} height={44} />
                   {/* <span id="header-mobile-menu-title">Дохкар</span> */}
                 </Link>
                 <button
