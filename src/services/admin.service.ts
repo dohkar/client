@@ -4,29 +4,18 @@ import type { PaginatedResponse } from "@/types";
 import type {
   AdminStatisticsResponse,
   AdminUsersParams,
-  AdminPropertiesParams,
-  AdminUpdateUserRoleParams,
   AdminUpdateUserRoleRequest,
-  AdminUpdatePropertyStatusParams,
-  AdminUpdatePropertyStatusRequest,
-  AdminDeleteUserParams,
-  AdminDeletePropertyParams,
   AdminAuditLogsParams,
   AdminChatsParams,
   UserResponseDto,
-  PropertyResponseDto,
 } from "@/lib/api-types";
 
 export type AdminUser = UserResponseDto & {
-  propertiesCount?: number;
+  listingsCount?: number;
   chatsCount?: number;
   bannedAt?: string | null;
   banReason?: string | null;
   bannedUntil?: string | null;
-};
-export type AdminProperty = PropertyResponseDto & {
-  user?: { id: string; name?: string; email?: string };
-  region?: { id: string; name: string };
 };
 
 export type AdminListing = {
@@ -84,24 +73,6 @@ export const adminService = {
     return apiClient.patch<{ success?: boolean }>(API_ENDPOINTS.admin.unbanUser(userId));
   },
 
-  async getProperties(
-    params?: AdminPropertiesParams
-  ): Promise<PaginatedResponse<AdminProperty>> {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append("page", params.page.toString());
-    if (params?.limit) queryParams.append("limit", params.limit.toString());
-    if (params?.search) queryParams.append("search", params.search);
-    if (params?.status) queryParams.append("status", params.status);
-    if (params?.type) queryParams.append("type", params.type);
-    if (params?.regionId) queryParams.append("regionId", params.regionId);
-    if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
-    const queryString = queryParams.toString();
-    const endpoint = queryString
-      ? `${API_ENDPOINTS.admin.properties}?${queryString}`
-      : API_ENDPOINTS.admin.properties;
-    return apiClient.get<PaginatedResponse<AdminProperty>>(endpoint);
-  },
-
   async updateUserRole(
     userId: string,
     role: AdminUpdateUserRoleRequest["role"]
@@ -110,22 +81,8 @@ export const adminService = {
     return apiClient.patch<AdminUser>(API_ENDPOINTS.admin.updateUserRole(userId), data);
   },
 
-  async updatePropertyStatus(
-    propertyId: string,
-    payload: AdminUpdatePropertyStatusRequest
-  ): Promise<AdminProperty> {
-    return apiClient.patch<AdminProperty>(
-      API_ENDPOINTS.admin.updatePropertyStatus(propertyId),
-      payload
-    );
-  },
-
   async deleteUser(userId: string): Promise<void> {
     await apiClient.delete(API_ENDPOINTS.admin.deleteUser(userId));
-  },
-
-  async deleteProperty(propertyId: string): Promise<void> {
-    await apiClient.delete(API_ENDPOINTS.admin.deleteProperty(propertyId));
   },
 
   async getAuditLogs(params?: AdminAuditLogsParams) {
@@ -247,7 +204,6 @@ export type AuditLogEntry = {
 export type AdminChat = {
   id: string;
   type: "PROPERTY" | "SUPPORT";
-  propertyId: string | null;
   listingId?: string | null;
   isArchived: boolean;
   lastMessageAt: string | null;
@@ -259,7 +215,6 @@ export type AdminChat = {
     role: string;
     user?: { id: string; name: string | null; email: string | null };
   }>;
-  property?: { id: string; title: string; status: string } | null;
   listing?: { id: string; title: string } | null;
 };
 
@@ -272,10 +227,10 @@ export type InboxRequestItem = {
   email: string | null;
   phone: string | null;
   message: string;
-  propertyId: string | null;
+  listingId: string | null;
   adminComment?: string | null;
   createdAt: string;
-  property?: { id: string; title: string } | null;
+  listing?: { id: string; title: string } | null;
   user?: { id: string; name: string | null; email: string | null } | null;
   statusHistory?: Array<{
     id: string;

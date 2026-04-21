@@ -15,12 +15,12 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000
 
 /**
  * Лимиты пагинации
- * propertiesMaxLimit должен совпадать с server MAX_PAGE_LIMIT (GET /api/listings и legacy /api/properties).
+ * propertiesMaxLimit должен совпадать с server MAX_PAGE_LIMIT (GET /api/listings).
  */
 export const PAGINATION = {
   defaultLimit: 10,
   maxLimit: 100,
-  /** Максимум записей на страницу для GET /api/properties (сервер ограничивает ответ этим числом). */
+  /** Максимум записей на страницу для GET /api/listings (сервер ограничивает ответ этим числом). */
   propertiesMaxLimit: 50,
 } as const;
 

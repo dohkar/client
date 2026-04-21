@@ -45,7 +45,6 @@ export interface Message {
 export interface Chat {
   id: string;
   type: ChatType;
-  propertyId: string | null;
   /** Для новых чатов по Listing: id листинга (опционально). */
   listingId?: string | null;
   isArchived: boolean;

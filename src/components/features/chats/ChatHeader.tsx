@@ -29,7 +29,6 @@ import type { Chat } from "@/types/chat";
 
 interface ActionMenuButtonProps {
   isPropertyChat: boolean;
-  propertyId?: string | null;
   listingId?: string | null;
   onBlock?: () => void;
   onReport?: () => void;
@@ -37,14 +36,12 @@ interface ActionMenuButtonProps {
 
 function ActionMenuButton({
   isPropertyChat,
-  propertyId,
   listingId,
   onBlock,
   onReport,
 }: ActionMenuButtonProps) {
   const listingHref = listingId ? ROUTES.listing(listingId) : null;
-  const propertyHref = propertyId ? ROUTES.property(propertyId) : null;
-  const openAdHref = listingHref ?? propertyHref;
+  const openAdHref = listingHref;
 
   return (
     <DropdownMenu>
@@ -222,9 +219,7 @@ export function ChatHeader({
             <Button asChild variant='ghost' size='icon'>
               <Link
                 href={
-                  chat.listingId
-                    ? ROUTES.listing(chat.listingId)
-                    : ROUTES.property(chat.property!.id)
+                  ROUTES.listing(chat.listingId ?? chat.property!.id)
                 }
                 target='_blank'
                 tabIndex={-1}
@@ -237,8 +232,7 @@ export function ChatHeader({
           {/* ⋮ меню */}
           <ActionMenuButton
             isPropertyChat={isPropertyChat}
-            propertyId={chat.property?.id}
-            listingId={chat.listingId}
+            listingId={chat.listingId ?? chat.property?.id}
             onBlock={onBlock}
             onReport={onReport}
           />
@@ -247,11 +241,7 @@ export function ChatHeader({
       {/* Кликабельная панель объявления снизу (PROPERTY или LISTING) */}
       {isPropertyChat && chat.property && (
         <Link
-          href={
-            chat.listingId
-              ? ROUTES.listing(chat.listingId)
-              : ROUTES.property(chat.property.id)
-          }
+          href={ROUTES.listing(chat.listingId ?? chat.property.id)}
           target='_blank'
           className='flex items-center gap-2 px-3 sm:px-4 pb-2 sm:pb-3 pt-0.5 group transition hover:bg-muted/40 rounded'
         >

@@ -9,9 +9,6 @@ export const ROUTES = {
   login: "/auth/login",
   register: "/auth/register",
   search: "/search",
-  /** Недвижимость (legacy Property API) — страница деталей `/property/...`. */
-  property: (id: string, slug?: string) =>
-    slug ? `/property/${id}-${slug}` : `/property/${id}`,
   /** Универсальный листинг (категории) — `/listing/...`. */
   listing: (id: string, slug?: string) =>
     slug ? `/listing/${id}-${slug}` : `/listing/${id}`,
@@ -69,19 +66,6 @@ export const API_ENDPOINTS = {
     list: "/api/cities",
   },
 
-  // Properties
-  properties: {
-    list: "/api/properties",
-    search: "/api/properties/search",
-    getById: (id: string) => `/api/properties/${id}`,
-    getRelated: (id: string) => `/api/properties/${id}/related`,
-    getLimits: "/api/properties/limits",
-    create: "/api/properties",
-    update: (id: string) => `/api/properties/${id}`,
-    delete: (id: string) => `/api/properties/${id}`,
-    categoryStats: "/api/properties/stats/categories",
-  },
-
   // Listings (multi-category)
   listings: {
     list: "/api/listings",
@@ -122,9 +106,6 @@ export const API_ENDPOINTS = {
     unbanUser: (id: string) => `/api/admin/users/${id}/unban`,
     updateUserRole: (id: string) => `/api/admin/users/${id}/role`,
     deleteUser: (id: string) => `/api/admin/users/${id}`,
-    properties: "/api/admin/properties",
-    updatePropertyStatus: (id: string) => `/api/admin/properties/${id}/status`,
-    deleteProperty: (id: string) => `/api/admin/properties/${id}`,
     listings: "/api/admin/listings",
     approveListing: (id: string) => `/api/admin/listings/${id}/approve`,
     rejectListing: (id: string) => `/api/admin/listings/${id}/reject`,

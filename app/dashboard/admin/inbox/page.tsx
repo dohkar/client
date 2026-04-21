@@ -41,7 +41,7 @@ function InboxItemRow({
           {item.severity}
         </Badge>
         <Badge variant='outline'>{item.status}</Badge>
-        {item.propertyId && <Badge variant='outline'>property: {item.propertyId}</Badge>}
+        {item.listingId && <Badge variant='outline'>listing: {item.listingId}</Badge>}
       </div>
       <div className='text-sm'>
         <span className='font-medium'>{item.name}</span>
