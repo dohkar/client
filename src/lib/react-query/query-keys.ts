@@ -22,6 +22,9 @@ function normalizeSearchParams(
   if (params.my !== undefined) {
     normalized.my = params.my;
   }
+  if(params.dealType !== undefined && params.dealType !== null) {
+    normalized.dealType = params.dealType;
+  }
   if (params.type !== undefined) {
     normalized.type = params.type;
   }
@@ -68,6 +71,7 @@ export const queryKeys = {
     lists: () => ["properties", "list"] as const,
     list: (filters?: PropertySearchParams) => {
       const normalized = normalizeSearchParams(filters);
+      console.log(normalized, '<<<<<normalized filters') 
       // Используем стабильный ключ - либо нормализованные фильтры, либо пустой массив
       return normalized
         ? (["properties", "list", normalized] as const)
