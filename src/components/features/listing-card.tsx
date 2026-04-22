@@ -3,7 +3,7 @@
 import type React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Heart } from "lucide-react";
+import { MapPin, Heart, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Listing } from "@/types/listing";
@@ -15,9 +15,15 @@ interface ListingCardProps {
   listing: Listing;
   /** Скрыть кнопку избранного (например на странице «Избранное»). */
   hideFavoriteButton?: boolean;
+  /** Вариант отображения: компактный для каруселей/похожих объявлений. */
+  variant?: "default" | "compact";
 }
 
-export function ListingCard({ listing, hideFavoriteButton = false }: ListingCardProps) {
+export function ListingCard({
+  listing,
+  hideFavoriteButton = false,
+  variant = "default",
+}: ListingCardProps) {
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
   const favorite = isFavorite(listing.id);
   const isPending = isMutating(listing.id);
@@ -29,14 +35,24 @@ export function ListingCard({ listing, hideFavoriteButton = false }: ListingCard
   };
 
   const image = listing.image || listing.images[0] || "/placeholder.svg";
+  const isCompact = variant === "compact";
+  const locationText =
+    listing.location || listing.city || listing.region || "Локация не указана";
 
   return (
     <Link
       href={ROUTES.listing(listing.id, listing.slug)}
-      className='group w-full max-w-full mx-auto'
+      className='group block w-full max-w-full mx-auto focus:outline-none'
     >
-      <div className='listing-card h-full min-h-[410px] flex flex-col'>
-        <div className='relative aspect-4/3 overflow-hidden bg-muted'>
+      <div
+        className={[
+          "relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm",
+          "transition-shadow duration-200 hover:shadow-md",
+          "focus-within:ring-2 focus-within:ring-primary/30",
+          isCompact ? "min-h-[320px]" : "min-h-[420px]",
+        ].join(" ")}
+      >
+        <div className='relative aspect-[4/3] overflow-hidden bg-muted'>
           <Image
             src={image}
             alt={listing.title}
@@ -45,11 +61,14 @@ export function ListingCard({ listing, hideFavoriteButton = false }: ListingCard
             sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
           />
 
-          <div className='absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+          <div className='absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent opacity-100' />
 
           <div className='absolute top-3 left-3 flex gap-2 flex-wrap'>
             {listing.promotionTier === "BOOSTED" && (
-              <Badge className='badge-premium shadow-md'>Топ</Badge>
+              <Badge className='shadow-sm bg-primary text-primary-foreground'>
+                <Sparkles className='mr-1 h-3.5 w-3.5' />
+                Топ
+              </Badge>
             )}
           </div>
 
@@ -73,34 +92,68 @@ export function ListingCard({ listing, hideFavoriteButton = false }: ListingCard
           )}
         </div>
 
-        <div className='p-2 sm:p-3 space-y-2 sm:space-y-3 flex-1 flex flex-col'>
-          <div className='space-y-1 flex justify-between items-center'>
-            <p className='text-lg sm:text-xl font-bold text-primary'>
+        <div
+          className={
+            isCompact
+              ? "p-3 space-y-2 flex-1 flex flex-col"
+              : "p-4 sm:p-5 space-y-3 flex-1 flex flex-col"
+          }
+        >
+          <div className='flex items-start justify-between gap-3'>
+            <p
+              className={
+                isCompact
+                  ? "text-[1.05rem] font-extrabold leading-none"
+                  : "text-xl sm:text-2xl font-extrabold leading-none"
+              }
+            >
               {formatPrice(listing.price, listing.currency)}
             </p>
-          </div>
-
-          <h3 className='font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-snug text-sm sm:text-base'>
-            {listing.title}
-          </h3>
-
-          <div className='flex items-start gap-2 text-xs sm:text-sm text-muted-foreground flex-1'>
-            <MapPin className='w-3.5 h-3.5 sm:w-4 sm:h-4 mt-0.5 shrink-0' />
-            <span className='line-clamp-1'>
-              {listing.location || listing.city || listing.region || "Локация не указана"}
+            <span className='text-xs text-muted-foreground shrink-0 pt-0.5'>
+              {formatDate(listing.updatedAt, "ru-RU", { relative: true })}
             </span>
           </div>
 
-          <div className='flex flex-wrap items-center gap-1.5 text-xs sm:text-sm text-muted-foreground pt-3 border-t border-border mt-auto'>
+          <h3
+            className={
+              isCompact
+                ? "font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-snug text-sm"
+                : "font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-snug text-base"
+            }
+          >
+            {listing.title}
+          </h3>
+
+          <div className='flex items-start gap-2 text-xs sm:text-sm text-muted-foreground'>
+            <MapPin
+              className={
+                isCompact ? "w-3.5 h-3.5 mt-0.5 shrink-0" : "w-4 h-4 mt-0.5 shrink-0"
+              }
+            />
+            <span className='line-clamp-1'>{locationText}</span>
+          </div>
+
+          <div
+            className={
+              isCompact
+                ? "mt-auto pt-2.5 border-t border-border/70"
+                : "mt-auto pt-3 border-t border-border/70"
+            }
+          >
             {listing.previewAttributes.length > 0 ? (
-              listing.previewAttributes.slice(0, 3).map((attr) => (
-                <span key={attr} className='inline-flex items-center gap-1'>
-                  {attr}
-                </span>
-              ))
+              <div className='flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground'>
+                {listing.previewAttributes.slice(0, isCompact ? 2 : 3).map((attr) => (
+                  <span
+                    key={attr}
+                    className='inline-flex items-center rounded-full bg-muted px-2 py-0.5'
+                  >
+                    {attr}
+                  </span>
+                ))}
+              </div>
             ) : (
-              <span className='text-muted-foreground'>
-                Обновлено {formatDate(listing.updatedAt, "ru-RU", { relative: true })}
+              <span className='text-xs text-muted-foreground'>
+                Объявление без параметров
               </span>
             )}
           </div>

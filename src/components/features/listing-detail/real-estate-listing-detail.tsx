@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -8,6 +8,8 @@ import {
   ArrowLeft,
   Building2,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Heart,
   Home,
   Layers,
@@ -19,7 +21,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { FreeMode } from "swiper/modules";
+import { FreeMode, Keyboard } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/free-mode";
 
@@ -43,6 +45,22 @@ import type { Listing } from "@/types/listing";
 import type { PropertyDealType } from "@/types/property";
 import type { LucideIcon } from "lucide-react";
 
+const RELATED_SWIPE_HINT_KEY = "dohkar.related.swipeHintSeen.v1";
+function readSwipeHintSeen(): boolean {
+  try {
+    return localStorage.getItem(RELATED_SWIPE_HINT_KEY) === "1";
+  } catch {
+    return true;
+  }
+}
+function writeSwipeHintSeen(): void {
+  try {
+    localStorage.setItem(RELATED_SWIPE_HINT_KEY, "1");
+  } catch {
+    // ignore
+  }
+}
+
 const DEAL_LABELS: Record<PropertyDealType, string> = {
   SALE: "Продам",
   BUY: "Куплю",
@@ -57,6 +75,36 @@ const RE_TYPE_LABELS: Record<string, string> = {
   LAND: "Участок",
   COMMERCIAL: "Коммерция",
 };
+
+function SwipeHint({ hidden, onHide }: { hidden: boolean; onHide: () => void }) {
+  const [visible, setVisible] = useState(() => !readSwipeHintSeen());
+
+  useEffect(() => {
+    if (!visible) return;
+    if (hidden) {
+      writeSwipeHintSeen();
+      setVisible(false);
+      onHide();
+      return;
+    }
+    const t = setTimeout(() => {
+      writeSwipeHintSeen();
+      setVisible(false);
+      onHide();
+    }, 4200);
+    return () => clearTimeout(t);
+  }, [hidden, onHide, visible]);
+
+  if (!visible) return null;
+
+  return (
+    <div className='pointer-events-none absolute right-3 top-0 z-20 sm:hidden'>
+      <div className='mt-1 inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1 text-xs text-muted-foreground shadow-sm backdrop-blur'>
+        <span>Свайпайте →</span>
+      </div>
+    </div>
+  );
+}
 
 function SpecCell({
   label,
@@ -96,7 +144,9 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
       <dt className='shrink-0 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
         {label}
       </dt>
-      <dd className='min-w-0 text-sm font-medium text-foreground sm:text-right'>{value}</dd>
+      <dd className='min-w-0 text-sm font-medium text-foreground sm:text-right'>
+        {value}
+      </dd>
     </div>
   );
 }
@@ -197,6 +247,46 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
     () => related.filter((x) => x.id !== listingId),
     [related, listingId]
   );
+
+  const [relatedHintHidden, setRelatedHintHidden] = useState(false);
+  const [relatedCanPrev, setRelatedCanPrev] = useState(false);
+  const [relatedCanNext, setRelatedCanNext] = useState(true);
+  const [relatedSwiper, setRelatedSwiper] = useState<any>(null);
+
+  const markSwipeHintSeen = useCallback(() => {
+    if (readSwipeHintSeen()) return;
+    writeSwipeHintSeen();
+    setRelatedHintHidden(true);
+  }, []);
+
+  const updateRelatedEdges = useCallback((swiper: any) => {
+    if (!swiper) return;
+    setRelatedCanPrev(!swiper.isBeginning);
+    setRelatedCanNext(!swiper.isEnd);
+  }, []);
+
+  const getJumpStep = useCallback((swiper: any) => {
+    const spv = swiper?.params?.slidesPerView;
+    if (typeof spv === "number") {
+      // 1.15 -> 1, 2.1 -> 2, 2.6 -> 2, 4 -> 3 (чтобы прыгало “2–3 объявления”)
+      return Math.min(3, Math.max(1, Math.floor(spv)));
+    }
+    return 2;
+  }, []);
+
+  const jumpPrev = useCallback(() => {
+    if (!relatedSwiper) return;
+    const step = getJumpStep(relatedSwiper);
+    relatedSwiper.slideTo(Math.max(0, relatedSwiper.activeIndex - step));
+  }, [getJumpStep, relatedSwiper]);
+
+  const jumpNext = useCallback(() => {
+    if (!relatedSwiper) return;
+    const step = getJumpStep(relatedSwiper);
+    relatedSwiper.slideTo(
+      Math.min(relatedSwiper.slides.length - 1, relatedSwiper.activeIndex + step)
+    );
+  }, [getJumpStep, relatedSwiper]);
 
   const { data: sellerStats } = useQuery({
     queryKey: ["analytics", "sellerStats", listing.userId],
@@ -475,7 +565,9 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
                 <DetailRow
                   label='Цена за м²'
                   value={
-                    pricePerMeter != null ? `${formatPrice(pricePerMeter)} / м²` : undefined
+                    pricePerMeter != null
+                      ? `${formatPrice(pricePerMeter)} / м²`
+                      : undefined
                   }
                 />
                 <DetailRow label='Регион' value={listing.region} />
@@ -534,23 +626,74 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
 
       {relatedFiltered.length > 0 && (
         <section className='mt-12 border-t border-border pt-10'>
-          <h2 className='mb-4 text-xl font-semibold'>Похожие объявления</h2>
-          <Swiper
-            modules={[FreeMode]}
-            freeMode
-            spaceBetween={16}
-            slidesPerView={2.5}
-            breakpoints={{
-              1024: { slidesPerView: 4 },
-            }}
-            className='pb-2'
-          >
-            {relatedFiltered.map((item) => (
-              <SwiperSlide key={item.id} className='!h-auto'>
-                <ListingCard listing={item} />
-              </SwiperSlide>
-            ))}
-          </Swiper>
+          <div className='flex items-center justify-between gap-3 mb-4'>
+            <h2 className='text-xl font-semibold'>Похожие объявления</h2>
+            <div className='flex items-center gap-2'>
+              <Button
+                type='button'
+                variant='outline'
+                size='icon'
+                className='h-9 w-9 rounded-full'
+                onClick={jumpPrev}
+                disabled={!relatedCanPrev}
+                aria-label='Похожие объявления: назад'
+              >
+                <ChevronLeft className='h-4 w-4' />
+              </Button>
+              <Button
+                type='button'
+                variant='outline'
+                size='icon'
+                className='h-9 w-9 rounded-full'
+                onClick={jumpNext}
+                disabled={!relatedCanNext}
+                aria-label='Похожие объявления: вперёд'
+              >
+                <ChevronRight className='h-4 w-4' />
+              </Button>
+            </div>
+          </div>
+
+          <div className='relative -mx-4 px-4 sm:mx-0 sm:px-0'>
+            {/* Градиенты только там, где есть продолжение */}
+            {relatedCanPrev && (
+              <div className='pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent z-10' />
+            )}
+            {relatedCanNext && (
+              <div className='pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent z-10' />
+            )}
+
+            <SwipeHint hidden={relatedHintHidden} onHide={() => {}} />
+
+            <Swiper
+              modules={[FreeMode, Keyboard]}
+              freeMode={{ enabled: true, momentum: true, momentumBounce: false }}
+              keyboard={{ enabled: true, onlyInViewport: true }}
+              spaceBetween={12}
+              slidesPerView={1.15}
+              breakpoints={{
+                420: { slidesPerView: 1.35, spaceBetween: 12 },
+                640: { slidesPerView: 2.1, spaceBetween: 14 },
+                768: { slidesPerView: 2.6, spaceBetween: 16 },
+                1024: { slidesPerView: 4, spaceBetween: 16 },
+              }}
+              className='pb-2'
+              onSliderFirstMove={markSwipeHintSeen}
+              onTouchStart={markSwipeHintSeen}
+              onSwiper={(swiper) => {
+                setRelatedSwiper(swiper);
+                updateRelatedEdges(swiper);
+              }}
+              onSlideChange={(swiper) => updateRelatedEdges(swiper)}
+              onResize={(swiper) => updateRelatedEdges(swiper)}
+            >
+              {relatedFiltered.map((item) => (
+                <SwiperSlide key={item.id} className='!h-auto'>
+                  <ListingCard listing={item} variant='compact' />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
         </section>
       )}
     </div>
