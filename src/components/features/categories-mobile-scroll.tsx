@@ -59,7 +59,7 @@ export function CategoriesMobileScroll({ children }: CategoriesMobileScrollProps
       <div
         ref={scrollRef}
         className={cn(
-          "w-full min-w-0 overflow-x-auto overflow-y-visible overscroll-x-contain touch-pan-x",
+          "w-full min-w-0 overflow-x-auto overflow-y-visible overscroll-x-contain",
           "[scrollbar-width:thin] scroll-pl-1 scroll-pr-3 sm:scroll-pr-4"
         )}
       >

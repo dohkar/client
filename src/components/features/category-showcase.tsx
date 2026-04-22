@@ -201,7 +201,7 @@ function CategoryList({ categories, isMobile }: CategoryListProps) {
 
   if (isMobile) {
     return (
-      <div className='flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth touch-pan-x'>
+      <div className='flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth'>
         {categories.map((category) => (
           <CategoryCard key={category.apiKey} category={category} isMobile />
         ))}
