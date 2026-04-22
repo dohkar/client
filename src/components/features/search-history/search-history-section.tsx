@@ -17,10 +17,7 @@ export function SearchHistorySection() {
   if (!hasItems) return null;
 
   return (
-    <section
-      className='w-full overflow-hidden ml-4 sm:ml-2 mb-1 sm:mb-2'
-      aria-label='История поиска'
-    >
+    <section className='w-full overflow-hidden mb-1 sm:mb-2' aria-label='История поиска'>
       <div className='flex items-center justify-between mb-1'>
         <h2 className='text-base font-semibold text-muted-foreground'>Вы искали</h2>
         <Button

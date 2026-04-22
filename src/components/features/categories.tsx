@@ -3,11 +3,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-/** Порядок для 2 рядов + горизонтальный скролл: колонка j = [j, j+3], как в сетке 3×2 (слева направо, сверху вниз). */
+/**
+ * Два ряда + горизонтальный скролл по колонкам: в колонке c сверху categories[c], снизу categories[c + cols].
+ * При чётном раскладе совпадает с привычной сеткой «сверху слева направо, затем нижний ряд».
+ */
 function categoriesForMobileScroll(
   categories: readonly AvitoCategory[]
 ): AvitoCategory[] {
-  return [0, 1, 2].flatMap((j) => [categories[j], categories[j + 3]]);
+  if (categories.length === 0) return [];
+  const cols = Math.ceil(categories.length / 2);
+  return Array.from({ length: cols }, (_, c) => {
+    const top = categories[c];
+    const bottom = categories[c + cols];
+    return [top, bottom].filter((item): item is AvitoCategory => item != null);
+  }).flat();
 }
 
 export function Categories() {
@@ -27,26 +36,40 @@ export function Categories() {
         ))}
       </div>
 
-      {/* Мобильный: 2 ряда, колонки влево-вправо скроллятся; ширина колонки ~42vw — видно чуть больше 2 карточек */}
-      <div className='lg:hidden w-full min-w-0 overflow-x-auto overflow-y-visible overscroll-x-contain touch-pan-x [scrollbar-width:thin]'>
+      <div className='lg:hidden relative w-full min-w-0'>
         <div
           className={cn(
-            "grid w-max grid-flow-col grid-rows-2",
-            "gap-x-2.5 gap-y-2 sm:gap-x-3 sm:gap-y-2.5"
+            "w-full min-w-0 overflow-x-auto overflow-y-visible overscroll-x-contain touch-pan-x",
+            "[scrollbar-width:thin] scroll-pl-1 scroll-pr-3 sm:scroll-pr-4"
           )}
         >
-          {mobileOrder.map((category) => (
-            <div
-              key={`m-${category.id}`}
-              className={cn(
-                "w-[42vw] min-w-[148px] max-w-[200px]",
-                "sm:min-w-[158px] sm:max-w-[210px]"
-              )}
-            >
-              <CategoryCardMobileMosaic category={category} />
-            </div>
-          ))}
+          <div
+            className={cn(
+              "grid w-max grid-flow-col grid-rows-2",
+              "gap-x-2.5 gap-y-2 sm:gap-x-3 sm:gap-y-2.5"
+            )}
+          >
+            {mobileOrder.map((category, index) => (
+              <div
+                key={`m-${category.id}`}
+                className={cn(
+                  "w-[42vw] min-w-[148px] max-w-[200px]",
+                  "sm:min-w-[158px] sm:max-w-[210px]"
+                )}
+              >
+                <CategoryCardMobileMosaic category={category} eagerImage={index < 2} />
+              </div>
+            ))}
+          </div>
         </div>
+        {/* Намёк, что справа есть ещё карточки */}
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 right-0 z-10 w-9 sm:w-11",
+            "bg-linear-to-l from-background to-transparent"
+          )}
+        />
       </div>
     </section>
   );
@@ -65,6 +88,8 @@ function CategoryCardDesktop({ category }: { category: AvitoCategory }) {
       data-category-id={id}
       className={cn(
         "flex flex-col items-center gap-1.5 min-w-0 select-none group",
+        "transition-transform duration-100 ease-out motion-reduce:transition-none",
+        "active:scale-[0.98] motion-reduce:active:scale-100",
         "focus-visible:outline-none focus-visible:ring-2",
         "focus-visible:ring-ring focus-visible:rounded-xl"
       )}
@@ -89,7 +114,7 @@ function CategoryCardDesktop({ category }: { category: AvitoCategory }) {
 
         {meta.tags?.includes("new") && (
           <span className='absolute top-0.5 right-0.5 px-1.5 py-px text-[10px] font-medium bg-primary text-primary-foreground rounded-md'>
-            New
+            Новое
           </span>
         )}
       </div>
@@ -106,7 +131,13 @@ function CategoryCardDesktop({ category }: { category: AvitoCategory }) {
   );
 }
 
-function CategoryCardMobileMosaic({ category }: { category: AvitoCategory }) {
+function CategoryCardMobileMosaic({
+  category,
+  eagerImage,
+}: {
+  category: AvitoCategory;
+  eagerImage: boolean;
+}) {
   const { id, label, description, href, icon, meta } = category;
 
   return (
@@ -120,6 +151,8 @@ function CategoryCardMobileMosaic({ category }: { category: AvitoCategory }) {
       className={cn(
         "relative flex h-[102px] sm:h-[112px] w-full select-none group overflow-hidden",
         "rounded-2xl border border-border/50 bg-card shadow-sm",
+        "transition-transform duration-100 ease-out motion-reduce:transition-none",
+        "active:scale-[0.98] motion-reduce:active:scale-100",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       )}
     >
@@ -135,11 +168,14 @@ function CategoryCardMobileMosaic({ category }: { category: AvitoCategory }) {
 
       {meta.tags?.includes("new") && (
         <span className='absolute top-2 right-2 z-10 px-1.5 py-0.5 text-[9px] font-semibold bg-primary text-primary-foreground rounded-md'>
-          New
+          Новое
         </span>
       )}
 
-      <div className='absolute bottom-0 right-0 h-[78%] w-[58%] pointer-events-none'>
+      <div
+        className='absolute bottom-0 right-0 h-[78%] w-[58%] pointer-events-none'
+        aria-hidden
+      >
         <Image
           src={icon.src.trim()}
           alt=''
@@ -147,8 +183,8 @@ function CategoryCardMobileMosaic({ category }: { category: AvitoCategory }) {
           fill
           draggable={false}
           className='object-contain object-bottom-right'
-          priority={false}
-          loading='lazy'
+          priority={eagerImage}
+          loading={eagerImage ? "eager" : "lazy"}
         />
       </div>
     </Link>
