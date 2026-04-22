@@ -2,6 +2,7 @@ import { AvitoCategory, CATEGORIES_AVITO as CATEGORIES } from "@/constants/categ
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { CategoriesMobileScroll } from "@/components/features/categories-mobile-scroll";
 
 /**
  * Два ряда + горизонтальный скролл по колонкам: в колонке c сверху categories[c], снизу categories[c + cols].
@@ -36,41 +37,26 @@ export function Categories() {
         ))}
       </div>
 
-      <div className='lg:hidden relative w-full min-w-0'>
+      <CategoriesMobileScroll>
         <div
           className={cn(
-            "w-full min-w-0 overflow-x-auto overflow-y-visible overscroll-x-contain touch-pan-x",
-            "[scrollbar-width:thin] scroll-pl-1 scroll-pr-3 sm:scroll-pr-4"
+            "grid w-max grid-flow-col grid-rows-2",
+            "gap-x-2.5 gap-y-2 sm:gap-x-3 sm:gap-y-2.5"
           )}
         >
-          <div
-            className={cn(
-              "grid w-max grid-flow-col grid-rows-2",
-              "gap-x-2.5 gap-y-2 sm:gap-x-3 sm:gap-y-2.5"
-            )}
-          >
-            {mobileOrder.map((category, index) => (
-              <div
-                key={`m-${category.id}`}
-                className={cn(
-                  "w-[42vw] min-w-[148px] max-w-[200px]",
-                  "sm:min-w-[158px] sm:max-w-[210px]"
-                )}
-              >
-                <CategoryCardMobileMosaic category={category} eagerImage={index < 2} />
-              </div>
-            ))}
-          </div>
+          {mobileOrder.map((category, index) => (
+            <div
+              key={`m-${category.id}`}
+              className={cn(
+                "w-[42vw] min-w-[148px] max-w-[200px]",
+                "sm:min-w-[158px] sm:max-w-[210px]"
+              )}
+            >
+              <CategoryCardMobileMosaic category={category} eagerImage={index < 2} />
+            </div>
+          ))}
         </div>
-        {/* Намёк, что справа есть ещё карточки */}
-        <div
-          aria-hidden
-          className={cn(
-            "pointer-events-none absolute inset-y-0 right-0 z-10 w-9 sm:w-11",
-            "bg-linear-to-l from-background to-transparent"
-          )}
-        />
-      </div>
+      </CategoriesMobileScroll>
     </section>
   );
 }
