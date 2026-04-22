@@ -260,7 +260,6 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
       }
 
       const payload: Record<string, unknown> = {
-        category: data.category,
         title: data.title.trim(),
         dealType: data.dealType,
         price: data.dealType === "BUY" ? 0 : (data.price ?? 0),
@@ -283,6 +282,10 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
           longitude: re.longitude,
         },
       };
+
+      if (!listingId) {
+        payload.category = data.category;
+      }
 
       const listing = listingId
         ? await listingsService.updateListing(listingId, payload)
