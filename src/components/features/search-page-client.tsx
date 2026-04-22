@@ -121,6 +121,7 @@ export function SearchPageClient({
     handleDealTypeChange,
     handleDealTypeReset,
     handleFloorReset,
+    handleNewBuildingReset,
     handleResetAll,
     priceErrors,
     currentPage,
@@ -197,6 +198,7 @@ export function SearchPageClient({
     if (showRegionChip && appliedFilters.region && appliedFilters.region !== "all")
       count++;
     if (appliedFilters.cityId && appliedFilters.cityId.trim().length > 0) count++;
+    if (appliedFilters.newBuilding === true) count++;
     return count;
   }, [appliedFilters, showRegionChip]);
 
@@ -311,6 +313,7 @@ export function SearchPageClient({
           onQueryReset={handleQueryReset}
           onDealTypeReset={handleDealTypeReset}
           onFloorReset={handleFloorReset}
+          onNewBuildingReset={handleNewBuildingReset}
           onResetAll={handleResetAll}
         />
 

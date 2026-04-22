@@ -16,6 +16,7 @@ import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defa
 import {
   API_REGION_TO_SLUG,
   buildSearchUrl,
+  CATEGORY_MAP,
   categorySlugFromType,
   dealTypeSlugFromApi,
   categoryPathImpliesNewBuilding,
@@ -79,6 +80,7 @@ interface SegmentSearchFiltersReturn {
   handleDealTypeChange: (dealType: SearchFiltersDisplay["dealType"]) => void;
   handleDealTypeReset: () => void;
   handleFloorReset: () => void;
+  handleNewBuildingReset: () => void;
   handleResetAll: () => void;
   priceErrors: PriceValidationErrors;
   currentPage: number;
@@ -301,6 +303,9 @@ export function useSegmentSearchFilters(
             : NEW_BUILDING_CATEGORY_SLUG;
         }
         if (categoryPathImpliesNewBuilding(params.category)) {
+          return DEFAULT_SEARCH_CATEGORY;
+        }
+        if (params.category in CATEGORY_MAP) {
           return params.category;
         }
         return DEFAULT_SEARCH_CATEGORY;
@@ -662,6 +667,7 @@ export function useSegmentSearchFilters(
         floorMax: null,
         floorNotFirst: null,
       }),
+    handleNewBuildingReset: () => updateFilters({ newBuilding: null }),
     handleResetAll,
     priceErrors,
     currentPage,
