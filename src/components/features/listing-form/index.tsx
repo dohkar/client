@@ -260,6 +260,7 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
       }
 
       const payload: Record<string, unknown> = {
+        category: data.category,
         title: data.title.trim(),
         dealType: data.dealType,
         price: data.dealType === "BUY" ? 0 : (data.price ?? 0),
@@ -287,7 +288,9 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
         ? await listingsService.updateListing(listingId, payload)
         : await listingsService.createListing(payload);
 
-      toast.success(listingId ? "Изменения сохранены" : "Объявление создано");
+      toast.success(
+        listingId ? "Изменения сохранены" : "Объявление создано и отправлено на модерацию"
+      );
       void queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.listings.limits });
       if (listingId) {

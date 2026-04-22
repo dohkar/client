@@ -40,6 +40,13 @@ type SortOption = "date" | "price-asc" | "price-desc" | "area-asc" | "area-desc"
 
 function ListingStatusBadge({ listing }: { listing: Listing }) {
   const rej = listing.rejectionReason;
+  if (listing.moderationStatus === "DRAFT") {
+    return (
+      <Badge variant='secondary' className='text-xs'>
+        Черновик
+      </Badge>
+    );
+  }
   if (listing.moderationStatus === "PENDING") {
     return (
       <Badge variant='secondary' className='text-xs'>
