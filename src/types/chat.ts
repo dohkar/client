@@ -53,7 +53,7 @@ export interface Chat {
   createdAt: Date;
   participants: ChatParticipant[];
   unreadCount: number;
-  property?: {
+  listing?: {
     id: string;
     title: string;
     price: number;

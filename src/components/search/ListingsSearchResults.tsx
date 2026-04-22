@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Empty } from "@/components/ui/empty";
 import { ListingCard } from "@/components/features/listing-card";
 import type { Listing } from "@/types/listing";
-import { PropertyGridSkeleton } from "../features";
+import { ListingGridSkeleton } from "../features";
 import { PaginationBlock } from "./PaginationBlock";
 
 interface ListingsSearchResultsProps {
@@ -32,7 +32,7 @@ export function ListingsSearchResults({
   itemsPerPage = 12,
 }: ListingsSearchResultsProps) {
   if (isLoading) {
-    return <PropertyGridSkeleton count={8} />;
+    return <ListingGridSkeleton count={8} />;
   }
 
   if (error) {

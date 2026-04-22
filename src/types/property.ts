@@ -107,18 +107,6 @@ export interface Property {
   longitude?: number;
 }
 
-// Фильтры для поиска недвижимости
-export interface PropertyFilters {
-  type: PropertyType | "all";
-  priceMin: number | null;
-  priceMax: number | null;
-  roomsMin: number | null;
-  areaMin: number | null;
-  region: "Chechnya" | "Ingushetia" | "Other" | "all";
-  cityId?: string | null;
-  sortBy: "price-asc" | "price-desc" | "date-desc" | "relevance";
-}
-
 // Параметры поиска недвижимости (query string для API)
 export interface PropertySearchParams {
   query?: string;

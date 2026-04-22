@@ -35,7 +35,7 @@ export function ListingCard({ listing, hideFavoriteButton = false }: ListingCard
       href={ROUTES.listing(listing.id, listing.slug)}
       className='group w-full max-w-full mx-auto'
     >
-      <div className='property-card h-full min-h-[410px] flex flex-col'>
+      <div className='listing-card h-full min-h-[410px] flex flex-col'>
         <div className='relative aspect-4/3 overflow-hidden bg-muted'>
           <Image
             src={image}

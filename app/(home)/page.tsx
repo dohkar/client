@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { HeroSearch } from "@/components/features/hero-search";
 import { ListingGrid } from "@/components/features/listing-grid";
-import { PropertyGridSkeleton } from "@/components/features/property-grid-skeleton";
+import { ListingGridSkeleton } from "@/components/features/listing-grid-skeleton";
 import { CTASection } from "@/components/features/cta-section";
 import { useListings } from "@/hooks/use-listings";
 import { SearchHistorySection } from "@/components/features/search-history/search-history-section";
@@ -32,7 +32,7 @@ export default function HomePage() {
           aria-label='Свежие объявления'
         >
           {isLoading ? (
-            <PropertyGridSkeleton count={12} />
+            <ListingGridSkeleton count={12} />
           ) : (
             <ListingGrid listings={data?.data || []} limit={12} />
           )}
