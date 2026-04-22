@@ -247,31 +247,6 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
       analyticsId: "real_estate_land",
     },
   },
-  {
-    id: "garage",
-    label: "Гаражи и машиноместа",
-    description: "Гаражи, парковочные места и боксы в собственности",
-    href: buildSearchUrl({
-      region: DEFAULT_SEARCH_REGION,
-      category: "garazhi_i_mashinomesta",
-      dealType: "prodam",
-    }),
-    icon: {
-      src: "https://avito.st/static/ims/rre_services_web_garage_light_216x116.png",
-      srcSet: [
-        "https://avito.st/static/ims/rre_services_web_garage_light_108x58.png 108w",
-        "https://avito.st/static/ims/rre_services_web_garage_light_216x116.png 216w",
-        "https://avito.st/static/ims/rre_services_web_garage_light_324x174.png 324w",
-        "https://avito.st/static/ims/rre_services_web_garage_light_432x232.png 432w",
-      ],
-      alt: "Купить гараж в Ингушетии",
-      sizes: "(max-width: 768px) 108px, 216px",
-    },
-    meta: {
-      priority: 9,
-      analyticsId: "real_estate_garage",
-    },
-  },
 ];
 
 // utils/category-helpers.ts (опционально)

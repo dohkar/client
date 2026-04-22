@@ -42,7 +42,6 @@ export const CATEGORY_MAP = {
     label: "Коммерческая недвижимость",
     apiType: "commercial",
   },
-  garazhi_i_mashinomesta: { label: "Гаражи и машиноместа", apiType: undefined },
   // Новостройки: отдельный path-сегмент; фильтр newBuilding=true задаётся в query (см. buildSearchUrl).
   novostroyki: { label: "Новостройки", apiType: undefined },
   transport: { label: "Транспорт", apiType: undefined },
