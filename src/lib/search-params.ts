@@ -6,6 +6,7 @@ import type {
   ListingCategory,
   ListingPropertyTypeParam,
 } from "@/types/listing";
+import { categoryPathImpliesNewBuilding } from "@/lib/url/segments";
 
 /** UI / Property search используют нижний регистр; Listings API ожидает Prisma enum. */
 const PROPERTY_TYPE_TO_LISTING_API: Record<PropertyType, ListingPropertyTypeParam> = {
@@ -60,6 +61,10 @@ const SearchParamsSchema = z
       (v) => v === "1" || v === "true",
       z.boolean().optional().nullable().catch(null)
     ),
+    newBuilding: z.preprocess(
+      (v) => v === "1" || v === "true",
+      z.boolean().optional().nullable().catch(null)
+    ),
     region: z
       .enum(["Chechnya", "Ingushetia", "Other"])
       .optional()
@@ -96,6 +101,8 @@ export interface SearchFiltersDisplay {
   floorMin: number | null;
   floorMax: number | null;
   floorNotFirst: boolean | null;
+  /** Только новостройки (через ?newBuilding=true или path /…/novostroyki/…) */
+  newBuilding: boolean | null;
   region: "Chechnya" | "Ingushetia" | "Other" | "all";
   cityId: string | null;
   sortBy: "price-asc" | "price-desc" | "date-desc" | "relevance";
@@ -114,6 +121,7 @@ const DEFAULT_DISPLAY: SearchFiltersDisplay = {
   floorMin: null,
   floorMax: null,
   floorNotFirst: null,
+  newBuilding: null,
   region: "all",
   cityId: null,
   sortBy: "relevance",
@@ -160,6 +168,7 @@ export function parseSearchParams(
     floorMin: d.floorMin ?? null,
     floorMax: d.floorMax ?? null,
     floorNotFirst: d.floorNotFirst ?? null,
+    newBuilding: d.newBuilding ?? null,
     region: (d.region ?? "all") as "Chechnya" | "Ingushetia" | "Other" | "all",
     cityId: d.cityId?.trim() ?? null,
     sortBy: d.sortBy ?? "relevance",
@@ -208,6 +217,9 @@ export function buildSearchParams(
   if (filters.floorNotFirst === true) {
     params.set("floorNotFirst", "1");
   }
+  if (filters.newBuilding === true) {
+    params.set("newBuilding", "true");
+  }
   if (filters.region && filters.region !== "all") {
     params.set("region", filters.region);
   }
@@ -248,6 +260,7 @@ export function mergeSearchParams(
     "floorMin",
     "floorMax",
     "floorNotFirst",
+    "newBuilding",
     "region",
     "cityId",
     "sortBy",
@@ -311,7 +324,8 @@ export function toPropertySearchParams(
 export function toListingSearchParams(
   filters: SearchFiltersDisplay,
   itemsPerPage: number,
-  category?: ListingCategory
+  category?: ListingCategory,
+  pathCategorySlug?: string
 ): ListingSearchParams {
   const params: ListingSearchParams = {
     page: filters.page,
@@ -343,6 +357,12 @@ export function toListingSearchParams(
   if (filters.floorMin != null) params.floorMin = filters.floorMin;
   if (filters.floorMax != null) params.floorMax = filters.floorMax;
   if (filters.floorNotFirst === true) params.floorNotFirst = true;
+
+  const pathNewBuilding =
+    pathCategorySlug !== undefined && categoryPathImpliesNewBuilding(pathCategorySlug);
+  if (filters.newBuilding === true || pathNewBuilding) {
+    params.newBuilding = true;
+  }
 
   // Регион и город пробрасываем отдельно (regionId вычисляется из имени региона в компоненте)
 

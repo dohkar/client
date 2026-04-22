@@ -57,6 +57,9 @@ function normalizeListingSearchParams(
   if (params.floorNotFirst !== undefined && params.floorNotFirst !== null) {
     normalized.floorNotFirst = params.floorNotFirst;
   }
+  if (params.newBuilding !== undefined) {
+    normalized.newBuilding = params.newBuilding;
+  }
   if (params.sortBy !== undefined) {
     normalized.sortBy = params.sortBy;
   }

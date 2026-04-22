@@ -164,9 +164,10 @@ export function SearchPageClient({
       toListingSearchParams(
         appliedFilters,
         SEARCH_CONSTANTS.ITEMS_PER_PAGE,
-        listingCategory
+        listingCategory,
+        params.category
       ),
-    [appliedFilters, listingCategory]
+    [appliedFilters, listingCategory, params.category]
   );
 
   const { data, isLoading, error } = useListings({

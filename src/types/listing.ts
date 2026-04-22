@@ -114,6 +114,8 @@ export interface ListingSearchParams {
   floorMin?: number;
   floorMax?: number;
   floorNotFirst?: boolean;
+  /** Только новостройки (бэкенд: realEstate.features содержит «Новостройка») */
+  newBuilding?: boolean;
   sortBy?:
     | "price-asc"
     | "price-desc"

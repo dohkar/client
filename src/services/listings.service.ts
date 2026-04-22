@@ -22,6 +22,8 @@ function buildListingsQuery(params?: ListingSearchParams): string {
   if (params.floorMax != null) q.append("floorMax", params.floorMax.toString());
   if (params.floorNotFirst !== undefined)
     q.append("floorNotFirst", String(params.floorNotFirst));
+  if (params.newBuilding !== undefined)
+    q.append("newBuilding", String(params.newBuilding));
   if (params.sortBy) q.append("sortBy", params.sortBy);
   if (params.page) q.append("page", params.page.toString());
   if (params.limit) q.append("limit", params.limit.toString());

@@ -19,6 +19,20 @@ export function useListings(params?: ListingSearchParams) {
   });
 }
 
+/** Лёгкий запрос total для кнопки «Показать N…» (limit=1). */
+export function useListingsTotalCount(
+  params: ListingSearchParams | undefined,
+  enabled: boolean
+) {
+  return useQuery({
+    queryKey: queryKeys.listings.list(params),
+    queryFn: () => listingsService.getListings(params),
+    enabled: Boolean(enabled && params),
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+}
+
 export function useListing(id: string) {
   return useQuery({
     queryKey: queryKeys.listings.detail(id),
