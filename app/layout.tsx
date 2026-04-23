@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { Figtree, JetBrains_Mono } from "next/font/google";
@@ -11,10 +11,9 @@ import { SupportButton } from "@/components/features/chats/SupportButton";
 import { APP_CONFIG } from "@/constants";
 import { THEME_COOKIE_NAME } from "@/constants/theme";
 import { DEFAULT_SITE_METADATA } from "@/lib/seo";
-import {
-  DEFAULT_SEARCH_REGION,
-  DEFAULT_SEARCH_CATEGORY,
-} from "@/constants/defaults";
+import { PwaRegister } from "@/components/pwa-register";
+import { PWA_THEME_COLOR } from "@/constants/pwa";
+import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import { buildSearchUrl } from "@/lib/url/segments";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -32,6 +31,22 @@ const fontMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
 export const metadata: Metadata = {
   ...DEFAULT_SITE_METADATA,
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: APP_CONFIG.name,
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: PWA_THEME_COLOR,
 };
 
 export default async function RootLayout({
@@ -78,6 +93,7 @@ export default async function RootLayout({
   return (
     <html lang='ru' className={defaultTheme} suppressHydrationWarning>
       <body className={`${fontSans.variable} ${fontMono.variable} antialiased`}>
+        <PwaRegister />
         <script
           type='application/ld+json'
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

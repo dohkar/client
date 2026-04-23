@@ -15,7 +15,8 @@
     "format:check": "prettier --check .",
     "generate:api-types": "node scripts/sync-api.js --skip-check",
     "sync:api": "node scripts/sync-api.js",
-    "validate:openapi": "node scripts/validate-openapi.js"
+    "validate:openapi": "node scripts/validate-openapi.js",
+    "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs"
   },
   "devDependencies": {
     "baseline-browser-mapping": "^2.8.32",
