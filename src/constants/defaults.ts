@@ -5,5 +5,5 @@
  * favorites, property/[id], cta-section, MobileBottomNav, Footer, Header,
  * categories.ts, popular-locations-section.
  */
-export const DEFAULT_SEARCH_REGION = "ingushetiya";
+export const DEFAULT_SEARCH_REGION = "all";
 export const DEFAULT_SEARCH_CATEGORY = "nedvizhimost";
