@@ -81,7 +81,8 @@ export function MobileFilterDrawer({
     (filters.cityId != null && filters.cityId.trim().length > 0) ||
     filters.floorMin != null ||
     filters.floorMax != null ||
-    filters.floorNotFirst === true;
+    filters.floorNotFirst === true ||
+    filters.newBuilding === true;
 
   return (
     <>

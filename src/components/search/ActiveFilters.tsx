@@ -26,6 +26,7 @@ interface ActiveFiltersProps {
   onQueryReset: () => void;
   onDealTypeReset: () => void;
   onFloorReset: () => void;
+  onNewBuildingReset: () => void;
   onResetAll: () => void;
 }
 
@@ -46,6 +47,7 @@ export function ActiveFilters({
   onQueryReset,
   onDealTypeReset,
   onFloorReset,
+  onNewBuildingReset,
   onResetAll,
 }: ActiveFiltersProps) {
   if (activeFiltersCount === 0) return null;
@@ -53,7 +55,12 @@ export function ActiveFilters({
   return (
     <div className='flex flex-wrap items-center gap-2 my-3'>
       {filters.query?.trim() && (
-        <Button variant='secondary' size='sm' className='h-7 gap-1' onClick={onQueryReset}>
+        <Button
+          variant='secondary'
+          size='sm'
+          className='h-7 gap-1'
+          onClick={onQueryReset}
+        >
           <span className='truncate max-w-[140px]' title={filters.query}>
             {filters.query.trim()}
           </span>
@@ -61,7 +68,12 @@ export function ActiveFilters({
         </Button>
       )}
       {filters.dealType && filters.dealType !== "all" && (
-        <Button variant='secondary' size='sm' className='h-7 gap-1' onClick={onDealTypeReset}>
+        <Button
+          variant='secondary'
+          size='sm'
+          className='h-7 gap-1'
+          onClick={onDealTypeReset}
+        >
           {getDealTypeLabel(filters.dealType)}
           <X className='w-3 h-3' />
         </Button>
@@ -69,6 +81,17 @@ export function ActiveFilters({
       {filters.type !== "all" && (
         <Button variant='secondary' size='sm' className='h-7 gap-1' onClick={onTypeReset}>
           {getTypeLabel(filters.type)}
+          <X className='w-3 h-3' />
+        </Button>
+      )}
+      {filters.newBuilding === true && (
+        <Button
+          variant='secondary'
+          size='sm'
+          className='h-7 gap-1'
+          onClick={onNewBuildingReset}
+        >
+          Новостройки
           <X className='w-3 h-3' />
         </Button>
       )}
@@ -90,22 +113,14 @@ export function ActiveFilters({
           className='h-7 gap-1'
           onClick={onRegionReset}
         >
-          <span
-            className='truncate max-w-[140px]'
-            title={getRegionLabel(filters.region)}
-          >
+          <span className='truncate max-w-[140px]' title={getRegionLabel(filters.region)}>
             {getRegionLabel(filters.region)}
           </span>
           <X className='w-3 h-3 shrink-0' />
         </Button>
       )}
       {filters.cityId && (
-        <Button
-          variant='secondary'
-          size='sm'
-          className='h-7 gap-1'
-          onClick={onCityReset}
-        >
+        <Button variant='secondary' size='sm' className='h-7 gap-1' onClick={onCityReset}>
           <span
             className='truncate max-w-[140px]'
             title={selectedCityName ?? filters.cityId ?? ""}
@@ -133,7 +148,12 @@ export function ActiveFilters({
         </Button>
       )}
       {hasFloorFilter(filters) && (
-        <Button variant='secondary' size='sm' className='h-7 gap-1' onClick={onFloorReset}>
+        <Button
+          variant='secondary'
+          size='sm'
+          className='h-7 gap-1'
+          onClick={onFloorReset}
+        >
           {getFloorLabel(filters)}
           <X className='w-3 h-3' />
         </Button>

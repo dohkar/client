@@ -45,8 +45,6 @@ const MODERATION_LABELS: Record<string, string> = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   REAL_ESTATE: "Недвижимость",
-  VEHICLE: "Транспорт",
-  ELECTRONICS: "Электроника",
 };
 
 function RejectDialog({
@@ -123,10 +121,7 @@ export default function AdminListingsPage() {
           moderationStatus === "all"
             ? undefined
             : (moderationStatus as "DRAFT" | "PENDING" | "APPROVED" | "REJECTED"),
-        category:
-          category === "all"
-            ? undefined
-            : (category as "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS"),
+        category: category === "all" ? undefined : (category as "REAL_ESTATE"),
       }),
   });
 
@@ -178,7 +173,9 @@ export default function AdminListingsPage() {
             Модерация листингов
           </CardTitle>
           <p className='text-sm text-muted-foreground'>
-            Одобрение, отклонение и удаление объявлений (листингов) по категориям.
+            Новые объявления попадают в очередь «На модерации». Здесь можно одобрить,
+            отклонить или архивировать. Старые записи со статусом «Черновик» тоже можно
+            одобрить, чтобы они появились в каталоге.
           </p>
         </CardHeader>
         <CardContent className='space-y-4'>
@@ -271,7 +268,8 @@ export default function AdminListingsPage() {
                         <TableCell>
                           <span
                             className={
-                              row.moderationStatus === "PENDING"
+                              row.moderationStatus === "PENDING" ||
+                              row.moderationStatus === "DRAFT"
                                 ? "text-amber-600"
                                 : row.moderationStatus === "REJECTED"
                                   ? "text-destructive"
@@ -291,7 +289,8 @@ export default function AdminListingsPage() {
                         </TableCell>
                         <TableCell className='text-right'>
                           <div className='flex justify-end gap-2'>
-                            {row.moderationStatus === "PENDING" && (
+                            {(row.moderationStatus === "PENDING" ||
+                              row.moderationStatus === "DRAFT") && (
                               <>
                                 <Button
                                   size='sm'

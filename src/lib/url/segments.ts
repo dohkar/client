@@ -5,6 +5,13 @@ type RegionApiValue = "Chechnya" | "Ingushetia" | "Other";
 type DealApiValue = "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "DAILY" | "EXCHANGE";
 type SearchParamValue = string | number | boolean | null | undefined;
 
+/** Path-сегмент категории «Новостройки» → фильтр newBuilding в API (единый идентификатор сценария). */
+export const NEW_BUILDING_CATEGORY_SLUG = "novostroyki";
+
+export function categoryPathImpliesNewBuilding(categorySlug: string): boolean {
+  return categorySlug === NEW_BUILDING_CATEGORY_SLUG;
+}
+
 export const REGION_MAP = {
   all: { label: "Все регионы", apiValue: undefined },
   ingushetiya: { label: "Ингушетия", apiValue: "Ingushetia" },
@@ -35,8 +42,7 @@ export const CATEGORY_MAP = {
     label: "Коммерческая недвижимость",
     apiType: "commercial",
   },
-  garazhi_i_mashinomesta: { label: "Гаражи и машиноместа", apiType: undefined },
-  // Пока API не поддерживает отдельный type=newbuild, оставляем без type-фильтра.
+  // Новостройки: отдельный path-сегмент; фильтр newBuilding=true задаётся в query (см. buildSearchUrl).
   novostroyki: { label: "Новостройки", apiType: undefined },
   transport: { label: "Транспорт", apiType: undefined },
   elektronika: { label: "Электроника", apiType: undefined },

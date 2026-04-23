@@ -49,9 +49,13 @@ const REGION_LABELS: Record<string, string> = {
 
 type Stats = {
   overview: Record<string, number>;
-  propertiesByType: Array<{ type: string; count: number }>;
-  propertiesByRegion: Array<{ region: string; count: number }>;
-  dailyStats: Array<{ date: string; count: number }>;
+  /** Легаси-имена (старый API properties) */
+  propertiesByType?: Array<{ type: string; count: number }>;
+  propertiesByRegion?: Array<{ region: string; count: number }>;
+  /** Актуальный API (листинги) */
+  listingsByType?: Array<{ type: string; count: number }>;
+  listingsByRegion?: Array<{ region: string; count: number }>;
+  dailyStats?: Array<{ date: string; count: number }>;
   usersDailyStats?: Array<{ date: string; count: number }>;
 };
 
@@ -68,7 +72,7 @@ function getLocalizedChartData<TField extends string>(
   labels: Record<string, string>,
   keyName: TField
 ): Array<LocalizableChartItem<TField>> {
-  return data.map((item) => ({
+  return (data ?? []).map((item) => ({
     ...item,
     [keyName]: labels[item[keyName]] || item[keyName],
   }));
@@ -131,14 +135,12 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
 };
 
 export default function AdminOverviewCharts({ statistics }: { statistics: Stats }) {
-  // локализация данных заранее
-  const localizedPropertiesByType = getLocalizedChartData(
-    statistics.propertiesByType,
-    TYPE_LABELS,
-    "type"
-  );
+  const byType = statistics.listingsByType ?? statistics.propertiesByType ?? [];
+  const byRegion = statistics.listingsByRegion ?? statistics.propertiesByRegion ?? [];
+
+  const localizedPropertiesByType = getLocalizedChartData(byType, TYPE_LABELS, "type");
   const localizedPropertiesByRegion = getLocalizedChartData(
-    statistics.propertiesByRegion,
+    byRegion,
     REGION_LABELS,
     "region"
   );

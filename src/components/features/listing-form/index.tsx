@@ -39,8 +39,7 @@ import { REGION_LABELS } from "@/lib/search-constants";
 import { logger } from "@/lib/utils/logger";
 import { geocodeAddress } from "@/lib/dadata-geocoder";
 import { applyGeocodeResultToListingForm } from "./apply-address-from-dadata";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
@@ -96,7 +95,7 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
         setPriceDisplay("");
       }
       const a = initialListing.realEstate?.area;
-      if (initialListing.category === "REAL_ESTATE" && a != null && a > 0) {
+      if (a != null && a > 0) {
         setAreaDisplay(String(a));
       } else {
         setAreaDisplay("");
@@ -261,7 +260,6 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
       }
 
       const payload: Record<string, unknown> = {
-        ...(listingId ? {} : { category: "REAL_ESTATE" }),
         title: data.title.trim(),
         dealType: data.dealType,
         price: data.dealType === "BUY" ? 0 : (data.price ?? 0),
@@ -285,11 +283,17 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
         },
       };
 
+      if (!listingId) {
+        payload.category = data.category;
+      }
+
       const listing = listingId
         ? await listingsService.updateListing(listingId, payload)
         : await listingsService.createListing(payload);
 
-      toast.success(listingId ? "Изменения сохранены" : "Объявление создано");
+      toast.success(
+        listingId ? "Изменения сохранены" : "Объявление создано и отправлено на модерацию"
+      );
       void queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.listings.limits });
       if (listingId) {
@@ -314,19 +318,6 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
   const hasUploadingMedia =
     media.imagePreviews.some((p) => p.isUploading) ||
     media.videoPreviews.some((v) => v.isUploading);
-
-  if (initialListing && initialListing.category !== "REAL_ESTATE") {
-    return (
-      <Alert className='max-w-2xl'>
-        <Info className='h-4 w-4' />
-        <AlertTitle>Редактирование недоступно</AlertTitle>
-        <AlertDescription>
-          Сейчас форма поддерживает только категорию «Недвижимость». Для этого объявления
-          откройте общий раздел объявлений или обратитесь в поддержку.
-        </AlertDescription>
-      </Alert>
-    );
-  }
 
   return (
     <form

@@ -31,21 +31,8 @@ export const EMPTY_LISTING_FORM_DEFAULTS: ListingFormData = {
   realEstate: { type: "APARTMENT", area: 1, features: [] },
 };
 
-/**
- * Значения формы из листинга (редактирование). Только REAL_ESTATE; иначе — пустые defaults.
- */
+/** Значения формы из листинга (редактирование). */
 export function buildListingFormDefaults(listing: Listing): ListingFormData {
-  if (listing.category !== "REAL_ESTATE") {
-    return {
-      ...EMPTY_LISTING_FORM_DEFAULTS,
-      title: listing.title,
-      description: listing.description,
-      dealType: listing.dealType,
-      price: listing.price,
-      location: listing.location ?? "",
-    };
-  }
-
   const re = listing.realEstate;
   return {
     category: "REAL_ESTATE",

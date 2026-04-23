@@ -48,6 +48,13 @@ const CABINET_TABS: { id: MyListingsCabinetTab; label: string }[] = [
 
 function ListingStatusBadge({ listing }: { listing: Listing }) {
   const rej = listing.rejectionReason;
+  if (listing.moderationStatus === "DRAFT") {
+    return (
+      <Badge variant='secondary' className='text-xs'>
+        Черновик
+      </Badge>
+    );
+  }
   if (listing.moderationStatus === "PENDING") {
     return (
       <Badge variant='secondary' className='text-xs'>
@@ -85,8 +92,6 @@ function ListingStatusBadge({ listing }: { listing: Listing }) {
 
 const CATEGORY_SHORT: Record<string, string> = {
   REAL_ESTATE: "Недвижимость",
-  VEHICLE: "Транспорт",
-  ELECTRONICS: "Электроника",
 };
 
 function declOfNum(n: number, forms: [string, string, string]) {

@@ -49,8 +49,8 @@ export const MAX_VIDEO_FILE_SIZE = 50 * 1024 * 1024;
 /**
  * Максимальное количество изображений для объявления
  */
-export const MAX_IMAGES_PER_PROPERTY = 10;
-export const MAX_VIDEOS_PER_PROPERTY = 3;
+export const MAX_IMAGES_PER_LISTING = 10;
+export const MAX_VIDEOS_PER_LISTING = 3;
 
 /**
  * Валидация файла перед загрузкой
@@ -75,8 +75,8 @@ export function validateImageFiles(files: File[]): string | null {
     return "Файлы не выбраны";
   }
 
-  if (files.length > MAX_IMAGES_PER_PROPERTY) {
-    return `Максимальное количество изображений: ${MAX_IMAGES_PER_PROPERTY}`;
+  if (files.length > MAX_IMAGES_PER_LISTING) {
+    return `Максимальное количество изображений: ${MAX_IMAGES_PER_LISTING}`;
   }
 
   for (const file of files) {
@@ -104,8 +104,8 @@ export function validateVideoFiles(files: File[]): string | null {
     return "Видео не выбраны";
   }
 
-  if (files.length > MAX_VIDEOS_PER_PROPERTY) {
-    return `Максимальное количество видео: ${MAX_VIDEOS_PER_PROPERTY}`;
+  if (files.length > MAX_VIDEOS_PER_LISTING) {
+    return `Максимальное количество видео: ${MAX_VIDEOS_PER_LISTING}`;
   }
 
   for (const file of files) {
@@ -157,11 +157,11 @@ export const uploadService = {
   },
 
   /**
-   * Загрузка изображений для объявления
+   * Загрузка изображений для листинга
    * @param files - массив файлов изображений
    * @returns Массив URL и publicId загруженных изображений
    */
-  async uploadPropertyImages(files: File[]): Promise<ImagesUploadResult> {
+  async uploadListingImages(files: File[]): Promise<ImagesUploadResult> {
     const validationError = validateImageFiles(files);
     if (validationError) {
       throw new Error(validationError);
@@ -193,7 +193,7 @@ export const uploadService = {
     return json.data !== undefined ? json.data : json;
   },
 
-  async uploadPropertyVideos(files: File[]): Promise<VideosUploadResult> {
+  async uploadListingVideos(files: File[]): Promise<VideosUploadResult> {
     const validationError = validateVideoFiles(files);
     if (validationError) {
       throw new Error(validationError);

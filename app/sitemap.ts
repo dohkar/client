@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { REAL_ESTATE_ONLY_LAUNCH } from "@/constants/config";
 import { getSiteUrl } from "@/lib/seo";
 import {
   buildSearchUrl,
@@ -20,7 +19,6 @@ const REAL_ESTATE_SITEMAP_SLUGS = new Set([
 
 function sitemapCategorySlugs(): string[] {
   const all = Object.keys(CATEGORY_MAP);
-  if (!REAL_ESTATE_ONLY_LAUNCH) return all;
   return all.filter((slug) => REAL_ESTATE_SITEMAP_SLUGS.has(slug));
 }
 

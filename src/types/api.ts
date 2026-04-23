@@ -243,111 +243,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/properties": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить список объявлений с фильтрами */
-        get: operations["PropertiesController_findAll"];
-        put?: never;
-        /** Создать объявление */
-        post: operations["PropertiesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/properties/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Поиск объявлений */
-        get: operations["PropertiesController_search"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/properties/stats/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить статистику по категориям недвижимости */
-        get: operations["PropertiesController_getCategoryStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/properties/limits": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Лимиты объявлений для текущего пользователя (скользящие 30 дней) + счётчик моих объявлений */
-        get: operations["PropertiesController_getMyLimits"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/properties/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить объявление по ID */
-        get: operations["PropertiesController_findOne"];
-        put?: never;
-        post?: never;
-        /** Удалить объявление */
-        delete: operations["PropertiesController_remove"];
-        options?: never;
-        head?: never;
-        /** Обновить объявление */
-        patch: operations["PropertiesController_update"];
-        trace?: never;
-    };
-    "/api/properties/{id}/related": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить похожие объявления */
-        get: operations["PropertiesController_findRelated"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/favorites": {
         parameters: {
             query?: never;
@@ -484,57 +379,6 @@ export interface paths {
         head?: never;
         /** Изменить роль пользователя */
         patch: operations["AdminController_updateUserRole"];
-        trace?: never;
-    };
-    "/api/admin/properties": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить список объявлений */
-        get: operations["AdminController_getProperties"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/properties/{id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Изменить статус объявления */
-        patch: operations["AdminController_updatePropertyStatus"];
-        trace?: never;
-    };
-    "/api/admin/properties/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Удалить объявление */
-        delete: operations["AdminController_deleteProperty"];
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/admin/audit-logs": {
@@ -682,7 +526,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Загрузить изображения для объявления */
+        /** Загрузить изображения для листинга */
         post: operations["UploadController_uploadImages"];
         delete?: never;
         options?: never;
@@ -699,7 +543,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Загрузить видео для объявления */
+        /** Загрузить видео для листинга */
         post: operations["UploadController_uploadVideos"];
         delete?: never;
         options?: never;
@@ -800,23 +644,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["SubscriptionsController_handleYooKassaWebhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chats/property": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Создать или получить чат по объявлению */
-        post: operations["ChatsController_createPropertyChat"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1253,43 +1080,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/brands": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Список брендов (с фильтром по категории) */
-        get: operations["BrandsController_findAll"];
-        put?: never;
-        /** Создать бренд (только админ) */
-        post: operations["BrandsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/brands/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Получить бренд по ID */
-        get: operations["BrandsController_findOne"];
-        put?: never;
-        post?: never;
-        /** Удалить бренд (только админ) */
-        delete: operations["BrandsController_remove"];
-        options?: never;
-        head?: never;
-        /** Обновить бренд (только админ) */
-        patch: operations["BrandsController_update"];
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1354,184 +1144,6 @@ export interface components {
             /** @example user@example.com */
             email?: string | null;
         };
-        CreatePropertyDto: {
-            /** @example Квартира в центре Грозного */
-            title: string;
-            /**
-             * @description Тип сделки
-             * @enum {string}
-             */
-            dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-            /**
-             * @description Цена в рублях; при BUY опционально
-             * @example 5000000
-             */
-            price?: number;
-            /**
-             * @default RUB
-             * @enum {string}
-             */
-            currency: "RUB";
-            /** @example г. Грозный, ул. Ленина, д. 10 */
-            location: string;
-            /** @example 550e8400-e29b-41d4-a716-446655440000 */
-            regionId: string;
-            /**
-             * @description ID города (опционально)
-             * @example 660e8400-e29b-41d4-a716-446655440001
-             */
-            cityId?: string;
-            /** @enum {string} */
-            type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-            /** @example 3 */
-            rooms?: number;
-            /** @example 75.5 */
-            area: number;
-            /**
-             * @description Этаж
-             * @example 2
-             */
-            floor?: number;
-            /** @example Отличная квартира в центре города */
-            description: string;
-            /**
-             * @example [
-             *       "https://example.com/image1.jpg"
-             *     ]
-             */
-            images?: string[];
-            /**
-             * @example [
-             *       "Балкон",
-             *       "Лоджия",
-             *       "Парковка"
-             *     ]
-             */
-            features?: string[];
-            /**
-             * @example [
-             *       "https://example.com/video1.mp4"
-             *     ]
-             */
-            videos?: string[];
-            /** @example ул. Ленина */
-            street?: string;
-            /** @example 10 */
-            house?: string;
-            /**
-             * @description Широта
-             * @example 43.3156
-             */
-            latitude?: number;
-            /**
-             * @description Долгота
-             * @example 45.6949
-             */
-            longitude?: number;
-        };
-        PropertyResponseDto: {
-            id: string;
-            /** @description SEO slug (не меняется при редактировании) */
-            slug: string;
-            title: string;
-            /** @description Цена в рублях */
-            price: number;
-            /** @enum {string} */
-            dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-            /** @enum {string} */
-            currency: "RUB";
-            location: string;
-            regionId: string;
-            /** @description Region relation (optional, may be included in response) */
-            region?: Record<string, never>;
-            /** @description ID города */
-            cityId?: string;
-            /** @description Город (если указан) */
-            city?: Record<string, never>;
-            /** @enum {string} */
-            type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-            rooms?: number;
-            area: number;
-            description: string;
-            images: string[];
-            videos?: string[];
-            features: string[];
-            /** @enum {string} */
-            status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
-            views: number;
-            favoritesCount: number;
-            userId: string;
-            /** Format: date-time */
-            archivedAt?: string;
-            /** @description Причина отклонения (при status REJECTED) */
-            rejectionReason?: string;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** @description Широта */
-            latitude?: number;
-            /** @description Долгота */
-            longitude?: number;
-            /** @description ID связанного Listing с тем же slug (после миграции property→listing) */
-            listingId?: string | null;
-        };
-        UpdatePropertyDto: {
-            /** @example Квартира в центре Грозного */
-            title?: string;
-            /** @enum {string} */
-            dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-            /**
-             * @description Цена в рублях
-             * @example 5000000
-             */
-            price?: number;
-            /** @enum {string} */
-            currency?: "RUB";
-            /** @example г. Грозный, ул. Ленина, д. 10 */
-            location?: string;
-            /** @example 550e8400-e29b-41d4-a716-446655440000 */
-            regionId?: string;
-            /** @example 660e8400-e29b-41d4-a716-446655440001 */
-            cityId?: string;
-            /** @enum {string} */
-            type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-            /** @example 3 */
-            rooms?: number;
-            /** @example 75.5 */
-            area?: number;
-            /** @example 2 */
-            floor?: number;
-            /** @example Отличная квартира */
-            description?: string;
-            /**
-             * @example [
-             *       "https://example.com/image1.jpg"
-             *     ]
-             */
-            images?: string[];
-            /**
-             * @example [
-             *       "Балкон",
-             *       "Лоджия"
-             *     ]
-             */
-            features?: string[];
-            /**
-             * @example [
-             *       "https://example.com/video1.mp4"
-             *     ]
-             */
-            videos?: string[];
-            /** @example ул. Ленина */
-            street?: string;
-            /** @example 10 */
-            house?: string;
-            /** @example 43.3156 */
-            latitude?: number;
-            /** @example 45.6949 */
-            longitude?: number;
-        };
         RealEstateDetailsResponseDto: {
             /** @enum {string} */
             type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
@@ -1540,24 +1152,6 @@ export interface components {
             features: string[];
             latitude?: number;
             longitude?: number;
-        };
-        VehicleDetailsResponseDto: {
-            brandId: string;
-            brand?: Record<string, never>;
-            model: string;
-            year: number;
-            mileage?: number;
-            bodyType?: string;
-            engine?: string;
-            transmission?: string;
-        };
-        ElectronicsDetailsResponseDto: {
-            brandId: string;
-            brand?: Record<string, never>;
-            productType: string;
-            model: string;
-            storage?: string;
-            condition?: string;
         };
         ListingResponseDto: {
             id: string;
@@ -1568,7 +1162,7 @@ export interface components {
             /** @enum {string} */
             currency: "RUB";
             /** @enum {string} */
-            category: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+            category: "REAL_ESTATE";
             /** @enum {string} */
             status: "ACTIVE" | "SOLD" | "ARCHIVED";
             /** @enum {string} */
@@ -1600,19 +1194,14 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
             realEstate?: components["schemas"]["RealEstateDetailsResponseDto"];
-            vehicle?: components["schemas"]["VehicleDetailsResponseDto"];
-            electronics?: components["schemas"]["ElectronicsDetailsResponseDto"];
         };
         FavoriteResponseDto: {
             id: string;
             userId: string;
-            /** @description Legacy: избранное по Property */
-            propertyId?: string | null;
             /** @description Избранное по Listing */
             listingId?: string | null;
             /** Format: date-time */
             createdAt: string;
-            property?: components["schemas"]["PropertyResponseDto"] | null;
             listing?: components["schemas"]["ListingResponseDto"] | null;
         };
         BanUserDto: {
@@ -1625,12 +1214,6 @@ export interface components {
             /** @enum {string} */
             role: "USER" | "PREMIUM" | "ADMIN";
         };
-        UpdatePropertyStatusDto: {
-            /** @enum {string} */
-            status: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
-            /** @description Причина отклонения (при смене на PENDING или отклонении) */
-            rejectionReason?: string;
-        };
         CreateSubscriptionPaymentDto: {
             /**
              * @description Код подписки (тариф)
@@ -1638,12 +1221,12 @@ export interface components {
              */
             code: string;
         };
-        CreatePropertyChatDto: {
+        CreateListingChatDto: {
             /**
-             * @description ID объявления недвижимости
+             * @description ID объявления (Listing)
              * @example 550e8400-e29b-41d4-a716-446655440000
              */
-            propertyId: string;
+            listingId: string;
         };
         ChatParticipantResponseDto: {
             /** @example 550e8400-e29b-41d4-a716-446655440000 */
@@ -1664,8 +1247,6 @@ export interface components {
              * @enum {string}
              */
             type: "PROPERTY" | "SUPPORT";
-            /** @example 550e8400-e29b-41d4-a716-446655440001 */
-            propertyId: string | null;
             /** @example 550e8400-e29b-41d4-a716-446655440002 */
             listingId: string | null;
             /** @example false */
@@ -1688,15 +1269,8 @@ export interface components {
              * @example 0
              */
             unreadCount: number;
-            /** @description Информация об объявлении (если тип PROPERTY) */
-            property?: Record<string, never>;
-        };
-        CreateListingChatDto: {
-            /**
-             * @description ID объявления (Listing)
-             * @example 550e8400-e29b-41d4-a716-446655440000
-             */
-            listingId: string;
+            /** @description Информация об объявлении (Listing, если тип PROPERTY) */
+            listing?: Record<string, never>;
         };
         MessageResponseDto: {
             /** @example 550e8400-e29b-41d4-a716-446655440000 */
@@ -1766,8 +1340,11 @@ export interface components {
             phone?: string;
             /** @example Здравствуйте, хочу уточнить... */
             message: string;
-            /** @example uuid */
-            propertyId?: string;
+            /**
+             * @description ID листинга
+             * @example uuid
+             */
+            listingId?: string;
         };
         UpdateInboxStatusDto: {
             /**
@@ -1781,7 +1358,10 @@ export interface components {
         CreateRealEstateDetailsDto: {
             /** @enum {string} */
             type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-            /** @example 3 */
+            /**
+             * @description 0 = студия
+             * @example 3
+             */
             rooms?: number;
             /** @example 75.5 */
             area: number;
@@ -1797,47 +1377,8 @@ export interface components {
             /** @example 45.6949 */
             longitude?: number;
         };
-        CreateVehicleDetailsDto: {
-            /** @description ID бренда (марки) */
-            brandId: string;
-            /** @example Camry */
-            model: string;
-            /** @example 2020 */
-            year: number;
-            /**
-             * @description Пробег, км
-             * @example 85000
-             */
-            mileage?: number;
-            /** @example Седан */
-            bodyType?: string;
-            /** @example 2.5L Бензин */
-            engine?: string;
-            /** @example Автомат */
-            transmission?: string;
-        };
-        CreateElectronicsDetailsDto: {
-            /** @description ID бренда (производителя) */
-            brandId: string;
-            /**
-             * @description PHONE, TABLET, LAPTOP и т.д.
-             * @example PHONE
-             */
-            productType: string;
-            /** @example iPhone 15 Pro */
-            model: string;
-            /** @example 256 GB */
-            storage?: string;
-            /**
-             * @description Состояние товара
-             * @example Б/у, отличное
-             */
-            condition?: string;
-        };
         CreateListingDto: {
-            /** @enum {string} */
-            category: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-            /** @example Toyota Camry 2020 */
+            /** @example Квартира в центре */
             title: string;
             /** @enum {string} */
             dealType: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
@@ -1865,9 +1406,7 @@ export interface components {
              * @example 2
              */
             floor?: number;
-            realEstate?: components["schemas"]["CreateRealEstateDetailsDto"];
-            vehicle?: components["schemas"]["CreateVehicleDetailsDto"];
-            electronics?: components["schemas"]["CreateElectronicsDetailsDto"];
+            realEstate: components["schemas"]["CreateRealEstateDetailsDto"];
         };
         UpdateListingDto: {
             title?: string;
@@ -1886,32 +1425,6 @@ export interface components {
             house?: string;
             floor?: number;
             realEstate?: components["schemas"]["CreateRealEstateDetailsDto"];
-            vehicle?: components["schemas"]["CreateVehicleDetailsDto"];
-            electronics?: components["schemas"]["CreateElectronicsDetailsDto"];
-        };
-        CreateBrandDto: {
-            /** @example Toyota */
-            name: string;
-            /** @example toyota */
-            slug: string;
-            /**
-             * @description Категория (null = все)
-             * @enum {string}
-             */
-            category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-            isVerified?: boolean;
-            logoUrl?: string;
-            /** @example 0 */
-            sortOrder?: number;
-        };
-        UpdateBrandDto: {
-            name?: string;
-            slug?: string;
-            /** @enum {string} */
-            category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-            isVerified?: boolean;
-            logoUrl?: string;
-            sortOrder?: number;
         };
     };
     responses: never;
@@ -2016,7 +1529,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPhonePasswordDto"];
+            };
+        };
         responses: {
             /** @description Успешная аутентификация */
             200: {
@@ -2255,258 +1772,6 @@ export interface operations {
             };
             /** @description Пользователь не найден */
             404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_findAll: {
-        parameters: {
-            query?: {
-                query?: string;
-                /** @description Только мои объявления (все статусы) */
-                my?: boolean;
-                type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-                dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-                /** @description Цена мин. (рубли) */
-                priceMin?: number;
-                /** @description Цена макс. (рубли) */
-                priceMax?: number;
-                rooms?: number;
-                areaMin?: number;
-                /** @description Этаж мин. */
-                floorMin?: number;
-                /** @description Этаж макс. */
-                floorMax?: number;
-                /** @description Исключить первый этаж */
-                floorNotFirst?: boolean;
-                /** @description Исключить последний этаж (при наличии totalFloors) */
-                floorNotLast?: boolean;
-                regionId?: string;
-                cityId?: string;
-                sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance" | "area-asc" | "area-desc";
-                page?: number;
-                /** @description Фактически сервер ограничивает максимумом 50 (см. MAX_PAGE_LIMIT). */
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список объявлений */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePropertyDto"];
-            };
-        };
-        responses: {
-            /** @description Объявление создано */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyResponseDto"];
-                };
-            };
-        };
-    };
-    PropertiesController_search: {
-        parameters: {
-            query: {
-                /** @description Поисковый запрос */
-                q: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Результаты поиска */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyResponseDto"][];
-                };
-            };
-        };
-    };
-    PropertiesController_getCategoryStats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Статистика по категориям */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_getMyLimits: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description monthlyLimit, createdInMonth, remaining, myPropertiesCount */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Информация об объявлении */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyResponseDto"];
-                };
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Объявление удалено */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Нет доступа */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePropertyDto"];
-            };
-        };
-        responses: {
-            /** @description Объявление обновлено */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyResponseDto"];
-                };
-            };
-            /** @description Нет доступа */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PropertiesController_findRelated: {
-        parameters: {
-            query: {
-                limit: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список похожих объявлений */
-            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2775,83 +2040,6 @@ export interface operations {
             };
         };
     };
-    AdminController_getProperties: {
-        parameters: {
-            query?: {
-                page?: number;
-                limit?: number;
-                search?: string;
-                status?: "ACTIVE" | "PENDING" | "REJECTED" | "SOLD" | "ARCHIVED";
-                type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-                regionId?: string;
-                sortBy?: "date-desc" | "date-asc" | "views-desc";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список объявлений */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_updatePropertyStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePropertyStatusDto"];
-            };
-        };
-        responses: {
-            /** @description Статус изменен */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_deleteProperty: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Объявление удалено */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AdminController_getAuditLogs: {
         parameters: {
             query?: {
@@ -2930,7 +2118,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 moderationStatus?: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
-                category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+                category?: "REAL_ESTATE";
             };
             header?: never;
             path?: never;
@@ -3108,7 +2296,7 @@ export interface operations {
                         images?: {
                             /** @example https://res.cloudinary.com/... */
                             url?: string;
-                            /** @example dohkar/properties/abc123 */
+                            /** @example dohkar/listings/abc123 */
                             publicId?: string;
                         }[];
                     };
@@ -3268,44 +2456,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChatsController_createPropertyChat: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePropertyChatDto"];
-            };
-        };
-        responses: {
-            /** @description Чат создан или получен */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatResponseDto"];
-                };
-            };
-            /** @description Нельзя создать чат со своим объявлением */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Объявление не найдено */
-            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3757,7 +2907,7 @@ export interface operations {
                 query?: string;
                 /** @description Только мои объявления (все статусы) */
                 my?: boolean;
-                category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+                category?: "REAL_ESTATE";
                 dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
                 /** @description Цена мин. (рубли) */
                 priceMin?: number;
@@ -3767,20 +2917,15 @@ export interface operations {
                 cityId?: string;
                 /** @description Тип недвижимости (REAL_ESTATE). Допустимо: APARTMENT | HOUSE | … или apartment | house | … */
                 propertyType?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
+                /** @description Комнаты: 0 = студия; 1–3 = точное совпадение; 4+ = «4 и более» (gte4) */
                 rooms?: number;
                 areaMin?: number;
                 floorMin?: number;
                 floorMax?: number;
                 /** @description Исключить первый этаж */
                 floorNotFirst?: boolean;
-                /** @description ID бренда (марки/производителя) */
-                brandId?: string;
-                yearMin?: number;
-                yearMax?: number;
-                /** @description Макс. пробег, км */
-                mileageMax?: number;
-                /** @description Тип электроники */
-                productType?: string;
+                /** @description Только новостройки (REAL_ESTATE): в realEstate.features есть строка «Новостройка» (MVP) */
+                newBuilding?: boolean;
                 sortBy?: "price-asc" | "price-desc" | "date-desc" | "relevance" | "area-asc" | "area-desc";
                 page?: number;
                 /** @description Макс. 50 */
@@ -4083,111 +3228,6 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BrandsController_findAll: {
-        parameters: {
-            query?: {
-                category?: "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
-                /** @description Поиск по названию */
-                search?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Список брендов */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BrandsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateBrandDto"];
-            };
-        };
-        responses: {
-            /** @description Бренд создан */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BrandsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BrandsController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BrandsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateBrandDto"];
-            };
-        };
         responses: {
             200: {
                 headers: {

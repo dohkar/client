@@ -26,12 +26,18 @@ export type LoginPhonePasswordDto = {
 export type RefreshTokenDto = ApiSchemas["RefreshTokenDto"];
 export type UserResponseDto = ApiSchemas["UserResponseDto"];
 export type UpdateUserDto = ApiSchemas["UpdateUserDto"];
-export type CreatePropertyDto = ApiSchemas["CreatePropertyDto"];
-export type PropertyResponseDto = ApiSchemas["PropertyResponseDto"];
-export type UpdatePropertyDto = ApiSchemas["UpdatePropertyDto"];
+export type CreateListingDto = ApiSchemas["CreateListingDto"];
+export type ListingResponseDto = ApiSchemas["ListingResponseDto"];
+export type UpdateListingDto = ApiSchemas["UpdateListingDto"];
 export type FavoriteResponseDto = ApiSchemas["FavoriteResponseDto"];
 export type UpdateUserRoleDto = ApiSchemas["UpdateUserRoleDto"];
-export type UpdatePropertyStatusDto = ApiSchemas["UpdatePropertyStatusDto"];
+
+/** @deprecated Контракт `/api/properties` снят; используйте {@link CreateListingDto} */
+export type CreatePropertyDto = CreateListingDto;
+/** @deprecated Контракт `/api/properties` снят; используйте {@link ListingResponseDto} */
+export type PropertyResponseDto = ListingResponseDto;
+/** @deprecated Контракт `/api/properties` снят; используйте {@link UpdateListingDto} */
+export type UpdatePropertyDto = UpdateListingDto;
 
 /**
  * Утилита для извлечения типа запроса из операции
@@ -156,44 +162,44 @@ export type PublicUserProfile = {
   createdAt: string;
 };
 
-// Property endpoints
-export type ApiPropertyCreateRequest = RequestBody<"/api/properties", "post">;
-export type ApiPropertyCreateResponse = ResponseData<"/api/properties", "post", 201>;
-// Note: OpenAPI spec has content?: never for PropertiesController_findAll, but API returns PaginatedResponse
-export type ApiPropertyListParams = {
-  query?: string;
-  my?: boolean;
-  type?: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
-  dealType?: "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "EXCHANGE";
-  priceMin?: number;
-  priceMax?: number;
-  rooms?: number;
-  areaMin?: number;
-  floorMin?: number;
-  floorMax?: number;
-  floorNotFirst?: boolean;
-  floorNotLast?: boolean;
-  regionId?: string;
-  cityId?: string;
-  sortBy?:
-    | "price-asc"
-    | "price-desc"
-    | "date-desc"
-    | "relevance"
-    | "area-asc"
-    | "area-desc";
-  page?: number;
-  limit?: number;
-};
-export type ApiPropertyListResponse = PaginatedResponse<PropertyResponseDto>; // Using PaginatedResponse since spec doesn't define it
-export type ApiPropertySearchParams = OperationParams<"PropertiesController_search">;
-export type ApiPropertySearchResponse = ResponseData<"/api/properties/search", "get">;
-export type ApiPropertyGetByIdParams = RequestParams<"/api/properties/{id}", "get">;
-export type ApiPropertyGetByIdResponse = ResponseData<"/api/properties/{id}", "get">;
-export type ApiPropertyUpdateParams = RequestParams<"/api/properties/{id}", "patch">;
-export type ApiPropertyUpdateRequest = RequestBody<"/api/properties/{id}", "patch">;
-export type ApiPropertyUpdateResponse = ResponseData<"/api/properties/{id}", "patch">;
-export type ApiPropertyDeleteParams = RequestParams<"/api/properties/{id}", "delete">;
+// Listings endpoints (`/api/listings`)
+export type ApiListingCreateRequest = RequestBody<"/api/listings", "post">;
+export type ApiListingCreateResponse = ResponseData<"/api/listings", "post", 201>;
+export type ApiListingListParams = RequestParams<"/api/listings", "get">;
+export type ApiListingListResponse = PaginatedResponse<ListingResponseDto>;
+export type ApiListingSearchParams = OperationParams<"ListingsController_search">;
+export type ApiListingSearchResponse = ResponseData<"/api/listings/search", "get">;
+export type ApiListingGetByIdParams = RequestParams<"/api/listings/{id}", "get">;
+export type ApiListingGetByIdResponse = ResponseData<"/api/listings/{id}", "get">;
+export type ApiListingUpdateParams = RequestParams<"/api/listings/{id}", "patch">;
+export type ApiListingUpdateRequest = RequestBody<"/api/listings/{id}", "patch">;
+export type ApiListingUpdateResponse = ResponseData<"/api/listings/{id}", "patch">;
+export type ApiListingDeleteParams = RequestParams<"/api/listings/{id}", "delete">;
+
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertyCreateRequest = ApiListingCreateRequest;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertyCreateResponse = ApiListingCreateResponse;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertyListParams = ApiListingListParams;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertyListResponse = ApiListingListResponse;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertySearchParams = ApiListingSearchParams;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertySearchResponse = ApiListingSearchResponse;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertyGetByIdParams = ApiListingGetByIdParams;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertyGetByIdResponse = ApiListingGetByIdResponse;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertyUpdateParams = ApiListingUpdateParams;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertyUpdateRequest = ApiListingUpdateRequest;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertyUpdateResponse = ApiListingUpdateResponse;
+/** @deprecated Используйте типы ApiListing* */
+export type ApiPropertyDeleteParams = ApiListingDeleteParams;
 
 // Favorites endpoints
 export type FavoritesListResponse = ResponseData<"/api/favorites", "get">;

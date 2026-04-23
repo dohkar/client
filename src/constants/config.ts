@@ -14,21 +14,13 @@ export const APP_CONFIG = {
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 /**
- * Запуск только недвижимости: скрыть выбор категории в подаче, не смешивать выдачу с авто/техникой,
- * редирект URL /transport и /elektronika → /nedvizhimost. API и админка без изменений.
- * Включить: NEXT_PUBLIC_REAL_ESTATE_ONLY_LAUNCH=true
- */
-export const REAL_ESTATE_ONLY_LAUNCH =
-  process.env.NEXT_PUBLIC_REAL_ESTATE_ONLY_LAUNCH === "true";
-
-/**
  * Лимиты пагинации
- * propertiesMaxLimit должен совпадать с server MAX_PAGE_LIMIT (GET /api/properties).
+ * propertiesMaxLimit должен совпадать с server MAX_PAGE_LIMIT (GET /api/listings).
  */
 export const PAGINATION = {
   defaultLimit: 10,
   maxLimit: 100,
-  /** Максимум записей на страницу для GET /api/properties (сервер ограничивает ответ этим числом). */
+  /** Максимум записей на страницу для GET /api/listings (сервер ограничивает ответ этим числом). */
   propertiesMaxLimit: 50,
 } as const;
 

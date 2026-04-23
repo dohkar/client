@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { PropertyGridSkeleton } from "@/components/features/property-grid-skeleton";
+import { ListingGridSkeleton } from "@/components/features/listing-grid-skeleton";
 
 /**
  * Скелетон поиска по региону/категории (хлебные крошки, поле поиска, сетка).
@@ -24,7 +24,7 @@ export function SearchRouteSkeleton() {
         <Skeleton className='h-9 w-36 rounded-lg' />
       </div>
 
-      <PropertyGridSkeleton count={8} />
+      <ListingGridSkeleton count={8} />
     </div>
   );
 }

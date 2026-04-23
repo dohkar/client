@@ -19,10 +19,7 @@ export function ViewHistorySection() {
   if (!isReady || items.length === 0) return null;
 
   return (
-    <section
-      className='w-full overflow-hidden ml-4 sm:ml-2'
-      aria-label='Просмотренные объявления'
-    >
+    <section className='w-full overflow-hidden' aria-label='Просмотренные объявления'>
       <div className='flex items-center justify-between mb-1'>
         <h2 className='text-base font-semibold text-muted-foreground'>Вы смотрели</h2>
         <Button

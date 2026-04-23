@@ -36,6 +36,13 @@ export default function AdminOverviewPage() {
     return <div className='text-center py-12 text-muted-foreground'>Нет данных</div>;
   }
 
+  const o = statistics.overview as Record<string, number | undefined>;
+  const totalListings = o.totalListings ?? o.totalProperties ?? 0;
+  const activeListings = o.activeListings ?? o.activeProperties ?? 0;
+  const pendingListings = o.pendingListings ?? o.pendingProperties ?? 0;
+  const newListingsToday = o.newListingsToday ?? o.newPropertiesToday ?? 0;
+  const newListingsThisWeek = o.newListingsThisWeek ?? o.newPropertiesThisWeek ?? 0;
+
   return (
     <div className='space-y-6'>
       {/* Stats Cards */}
@@ -58,9 +65,7 @@ export default function AdminOverviewPage() {
             <div className='flex items-center justify-between'>
               <div>
                 <p className='text-sm text-muted-foreground mb-1'>Всего объявлений</p>
-                <p className='text-2xl sm:text-3xl font-bold'>
-                  {statistics.overview.totalProperties}
-                </p>
+                <p className='text-2xl sm:text-3xl font-bold'>{totalListings}</p>
               </div>
               <Home className='w-8 h-8 text-primary' />
             </div>
@@ -71,9 +76,7 @@ export default function AdminOverviewPage() {
             <div className='flex items-center justify-between'>
               <div>
                 <p className='text-sm text-muted-foreground mb-1'>Активных объявлений</p>
-                <p className='text-2xl sm:text-3xl font-bold'>
-                  {statistics.overview.activeProperties}
-                </p>
+                <p className='text-2xl sm:text-3xl font-bold'>{activeListings}</p>
               </div>
               <CheckCircle2 className='w-8 h-8 text-green-500' />
             </div>
@@ -84,9 +87,7 @@ export default function AdminOverviewPage() {
             <div className='flex items-center justify-between'>
               <div>
                 <p className='text-sm text-muted-foreground mb-1'>На модерации</p>
-                <p className='text-2xl sm:text-3xl font-bold'>
-                  {statistics.overview.pendingProperties ?? 0}
-                </p>
+                <p className='text-2xl sm:text-3xl font-bold'>{pendingListings}</p>
               </div>
               <Clock className='w-8 h-8 text-yellow-500' />
             </div>
@@ -111,8 +112,7 @@ export default function AdminOverviewPage() {
               <div>
                 <p className='text-sm text-muted-foreground mb-1'>Новых за сегодня</p>
                 <p className='text-2xl sm:text-3xl font-bold'>
-                  {(statistics.overview.newUsersToday ?? 0) +
-                    (statistics.overview.newPropertiesToday ?? 0)}
+                  {(statistics.overview.newUsersToday ?? 0) + newListingsToday}
                 </p>
               </div>
               <AlertCircle className='w-8 h-8 text-primary' />
@@ -125,8 +125,7 @@ export default function AdminOverviewPage() {
               <div>
                 <p className='text-sm text-muted-foreground mb-1'>Новых за неделю</p>
                 <p className='text-2xl sm:text-3xl font-bold'>
-                  {(statistics.overview.newUsersThisWeek ?? 0) +
-                    (statistics.overview.newPropertiesThisWeek ?? 0)}
+                  {(statistics.overview.newUsersThisWeek ?? 0) + newListingsThisWeek}
                 </p>
               </div>
               <Clock className='w-8 h-8 text-primary' />

@@ -83,8 +83,8 @@ function ChatListItem({ chat, isSelected, onClick }: ChatListItemProps) {
   const hasUnread = chat.unreadCount > 0;
 
   const title =
-    isPropertyChat && chat.property
-      ? chat.property.title
+    isPropertyChat && chat.listing
+      ? chat.listing.title
       : isSupportChat
         ? "Техническая поддержка"
         : "Поддержка";

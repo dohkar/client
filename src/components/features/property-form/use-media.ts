@@ -7,10 +7,10 @@ import {
   validateVideoFiles,
   ALLOWED_IMAGE_TYPES,
   MAX_FILE_SIZE,
-  MAX_IMAGES_PER_PROPERTY,
+  MAX_IMAGES_PER_LISTING,
   ALLOWED_VIDEO_TYPES,
   MAX_VIDEO_FILE_SIZE,
-  MAX_VIDEOS_PER_PROPERTY,
+  MAX_VIDEOS_PER_LISTING,
 } from "@/services/upload.service";
 import { generateId } from "./schema";
 import { toast } from "sonner";
@@ -36,8 +36,8 @@ export interface VideoPreview {
 }
 
 export const MEDIA_LIMITS = {
-  maxImages: MAX_IMAGES_PER_PROPERTY,
-  maxVideos: MAX_VIDEOS_PER_PROPERTY,
+  maxImages: MAX_IMAGES_PER_LISTING,
+  maxVideos: MAX_VIDEOS_PER_LISTING,
   allowedImageTypes: ALLOWED_IMAGE_TYPES,
   allowedVideoTypes: ALLOWED_VIDEO_TYPES,
   maxFileSizeMb: MAX_FILE_SIZE / 1024 / 1024,
@@ -84,8 +84,8 @@ export function usePropertyFormMedia(initialImages?: string[], initialVideos?: s
       const files = Array.from(event.target.files || []);
       if (files.length === 0) return;
 
-      if (imagePreviews.length + files.length > MAX_IMAGES_PER_PROPERTY) {
-        toast.error(`Максимум ${MAX_IMAGES_PER_PROPERTY} изображений`);
+      if (imagePreviews.length + files.length > MAX_IMAGES_PER_LISTING) {
+        toast.error(`Максимум ${MAX_IMAGES_PER_LISTING} изображений`);
         return;
       }
 
@@ -107,7 +107,7 @@ export function usePropertyFormMedia(initialImages?: string[], initialVideos?: s
       setIsUploading(true);
 
       try {
-        const result = await uploadService.uploadPropertyImages(files);
+        const result = await uploadService.uploadListingImages(files);
         setImagePreviews((prev) =>
           prev.map((p) => {
             const fileIndex = newPreviews.findIndex((np) => np.id === p.id);
@@ -164,8 +164,8 @@ export function usePropertyFormMedia(initialImages?: string[], initialVideos?: s
       const files = Array.from(event.target.files || []);
       if (files.length === 0) return;
 
-      if (videoPreviews.length + files.length > MAX_VIDEOS_PER_PROPERTY) {
-        toast.error(`Максимум ${MAX_VIDEOS_PER_PROPERTY} видео`);
+      if (videoPreviews.length + files.length > MAX_VIDEOS_PER_LISTING) {
+        toast.error(`Максимум ${MAX_VIDEOS_PER_LISTING} видео`);
         return;
       }
 
@@ -187,7 +187,7 @@ export function usePropertyFormMedia(initialImages?: string[], initialVideos?: s
       setIsUploading(true);
 
       try {
-        const result = await uploadService.uploadPropertyVideos(files);
+        const result = await uploadService.uploadListingVideos(files);
         setVideoPreviews((prev) =>
           prev.map((p) => {
             const fileIndex = newPreviews.findIndex((np) => np.id === p.id);

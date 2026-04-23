@@ -19,6 +19,20 @@ export function useListings(params?: ListingSearchParams) {
   });
 }
 
+/** Лёгкий запрос total для кнопки «Показать N…» (limit=1). */
+export function useListingsTotalCount(
+  params: ListingSearchParams | undefined,
+  enabled: boolean
+) {
+  return useQuery({
+    queryKey: queryKeys.listings.list(params),
+    queryFn: () => listingsService.getListings(params),
+    enabled: Boolean(enabled && params),
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+}
+
 export function useListing(id: string) {
   return useQuery({
     queryKey: queryKeys.listings.detail(id),
@@ -60,21 +74,6 @@ export function useUpdateListing() {
     },
     onError: (error: Error) => {
       toast.error(error.message || "Ошибка при обновлении объявления");
-    },
-  });
-}
-
-export function useDeleteListing() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => listingsService.deleteListing(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
-      toast.success("Объявление удалено");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Ошибка при удалении объявления");
     },
   });
 }

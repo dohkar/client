@@ -6,7 +6,7 @@ import {
 } from "@/lib/regions";
 
 /**
- * Минимальный объект листинга из ответа API избранного (без полных связей region, city, realEstate, vehicle, electronics).
+ * Минимальный объект листинга из ответа API избранного (без полных связей region, city, realEstate).
  */
 export type FavoriteListingBackend = Partial<ListingBackend> &
   Pick<
@@ -37,8 +37,6 @@ export function adaptFavoriteListing(raw: FavoriteListingBackend): Listing {
     region: raw.region ?? null,
     city: raw.city ?? null,
     realEstate: raw.realEstate ?? null,
-    vehicle: raw.vehicle ?? null,
-    electronics: raw.electronics ?? null,
     user: raw.user ?? undefined,
     regionId: raw.regionId ?? null,
     cityId: raw.cityId ?? null,
@@ -133,8 +131,6 @@ export function adaptListing(backend: ListingBackend): Listing {
     createdAt: backend.createdAt,
     updatedAt: backend.updatedAt,
     realEstate: backend.realEstate,
-    vehicle: backend.vehicle,
-    electronics: backend.electronics,
     floor: backend.floor,
     latitude,
     longitude,

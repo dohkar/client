@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { Building2, Home, Zap, Store } from "lucide-react";
 import type { PropertyType } from "@/types/property";
 import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
-import { buildSearchUrl } from "@/lib/url/segments";
+import { buildSearchUrl, NEW_BUILDING_CATEGORY_SLUG } from "@/lib/url/segments";
 
 export interface CategoryConfig {
   id: PropertyType;
@@ -19,7 +19,11 @@ export const CATEGORIES: CategoryConfig[] = [
     name: "Квартиры",
     description: "Студии, однушки, многокомнатные",
     icon: Building2,
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "kvartiry", dealType: "prodam" }),
+    href: buildSearchUrl({
+      region: DEFAULT_SEARCH_REGION,
+      category: "kvartiry",
+      dealType: "prodam",
+    }),
     color: "from-blue-500/10 to-cyan-500/10",
   },
   {
@@ -27,7 +31,11 @@ export const CATEGORIES: CategoryConfig[] = [
     name: "Дома",
     description: "Коттеджи, частные дома",
     icon: Home,
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "doma", dealType: "prodam" }),
+    href: buildSearchUrl({
+      region: DEFAULT_SEARCH_REGION,
+      category: "doma",
+      dealType: "prodam",
+    }),
     color: "from-green-500/10 to-emerald-500/10",
   },
   {
@@ -35,7 +43,11 @@ export const CATEGORIES: CategoryConfig[] = [
     name: "Участки",
     description: "Земля для строительства",
     icon: Zap,
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "uchastki", dealType: "prodam" }),
+    href: buildSearchUrl({
+      region: DEFAULT_SEARCH_REGION,
+      category: "uchastki",
+      dealType: "prodam",
+    }),
     color: "from-amber-500/10 to-orange-500/10",
   },
   {
@@ -79,7 +91,12 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     id: "novostroyki",
     label: "Новостройки",
     description: "Квартиры в строящихся и сданных домах от застройщиков",
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "novostroyki", dealType: "prodam" }),
+    href: buildSearchUrl({
+      region: DEFAULT_SEARCH_REGION,
+      category: NEW_BUILDING_CATEGORY_SLUG,
+      dealType: "prodam",
+      params: { newBuilding: true },
+    }),
     icon: {
       src: "https://avito.st/static/ims/rre_services_web_nd_light_216x116.png",
       srcSet: [
@@ -102,7 +119,11 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     id: "buy-apartment",
     label: "Покупка квартиры",
     description: "Вторичное жильё и новые квартиры от собственников и агентств",
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "kvartiry", dealType: "prodam" }),
+    href: buildSearchUrl({
+      region: DEFAULT_SEARCH_REGION,
+      category: "kvartiry",
+      dealType: "prodam",
+    }),
     icon: {
       src: "https://avito.st/static/ims/rre_services_web_ss_light_216x116.png",
       srcSet: [
@@ -125,7 +146,11 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     id: "buy-house",
     label: "Покупка дома",
     description: "Дома, дачи, коттеджи и таунхаусы для постоянного проживания",
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "doma", dealType: "prodam" }),
+    href: buildSearchUrl({
+      region: DEFAULT_SEARCH_REGION,
+      category: "doma",
+      dealType: "prodam",
+    }),
     icon: {
       src: "https://avito.st/static/ims/rre_services_web_su_light_216x116.png",
       srcSet: [
@@ -170,50 +195,6 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
       tags: ["travel"],
     },
   },
-  {
-    id: "long-rent-apartment",
-    label: "Аренда квартиры надолго",
-    description: "Квартиры для долгосрочной аренды от собственников и риелторов",
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "kvartiry", dealType: "sdam" }),
-    icon: {
-      src: "https://avito.st/static/ims/rre_services_web_ltr_light_216x116.png",
-      srcSet: [
-        "https://avito.st/static/ims/rre_services_web_ltr_light_108x58.png 108w",
-        "https://avito.st/static/ims/rre_services_web_ltr_light_216x116.png 216w",
-        "https://avito.st/static/ims/rre_services_web_ltr_light_324x174.png 324w",
-        "https://avito.st/static/ims/rre_services_web_ltr_light_432x232.png 432w",
-      ],
-      alt: "Снять квартиру надолго в Ингушетии",
-      sizes: "(max-width: 768px) 108px, 216px",
-    },
-    meta: {
-      priority: 5,
-      featured: true,
-      analyticsId: "real_estate_long_rent_apartment",
-      tags: ["popular"],
-    },
-  },
-  {
-    id: "rent-room",
-    label: "Аренда комнаты",
-    description: "Комнаты в квартирах и общежитиях для долгосрочной аренды",
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "kvartiry", dealType: "sdam" }),
-    icon: {
-      src: "https://avito.st/static/ims/rre_services_web_ltr_light_216x116.png",
-      srcSet: [
-        "https://avito.st/static/ims/rre_services_web_ltr_light_108x58.png 108w",
-        "https://avito.st/static/ims/rre_services_web_ltr_light_216x116.png 216w",
-        "https://avito.st/static/ims/rre_services_web_ltr_light_324x174.png 324w",
-        "https://avito.st/static/ims/rre_services_web_ltr_light_432x232.png 432w",
-      ],
-      alt: "Снять комнату в Ингушетии",
-      sizes: "(max-width: 768px) 108px, 216px",
-    },
-    meta: {
-      priority: 6,
-      analyticsId: "real_estate_rent_room",
-    },
-  },
   // === НОВЫЕ КАТЕГОРИИ ===
   {
     id: "commercial",
@@ -245,7 +226,11 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     id: "land",
     label: "Участки и земля",
     description: "Земельные участки под ИЖС, сельхозназначения и коммерцию",
-    href: buildSearchUrl({ region: DEFAULT_SEARCH_REGION, category: "uchastki", dealType: "prodam" }),
+    href: buildSearchUrl({
+      region: DEFAULT_SEARCH_REGION,
+      category: "uchastki",
+      dealType: "prodam",
+    }),
     icon: {
       src: "https://avito.st/static/ims/rre_services_web_land_light_216x116.png",
       srcSet: [
@@ -260,31 +245,6 @@ export const CATEGORIES_AVITO: AvitoCategory[] = [
     meta: {
       priority: 8,
       analyticsId: "real_estate_land",
-    },
-  },
-  {
-    id: "garage",
-    label: "Гаражи и машиноместа",
-    description: "Гаражи, парковочные места и боксы в собственности",
-    href: buildSearchUrl({
-      region: DEFAULT_SEARCH_REGION,
-      category: "garazhi_i_mashinomesta",
-      dealType: "prodam",
-    }),
-    icon: {
-      src: "https://avito.st/static/ims/rre_services_web_garage_light_216x116.png",
-      srcSet: [
-        "https://avito.st/static/ims/rre_services_web_garage_light_108x58.png 108w",
-        "https://avito.st/static/ims/rre_services_web_garage_light_216x116.png 216w",
-        "https://avito.st/static/ims/rre_services_web_garage_light_324x174.png 324w",
-        "https://avito.st/static/ims/rre_services_web_garage_light_432x232.png 432w",
-      ],
-      alt: "Купить гараж в Ингушетии",
-      sizes: "(max-width: 768px) 108px, 216px",
-    },
-    meta: {
-      priority: 9,
-      analyticsId: "real_estate_garage",
     },
   },
 ];

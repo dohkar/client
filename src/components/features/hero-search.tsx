@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useMemo, useRef, type FormEvent } from "react";
+import { useState, useMemo, useRef, useEffect, useReducer, type FormEvent } from "react";
 import { ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,15 +24,36 @@ import {
   REGION_MAP,
 } from "@/lib/url/segments";
 import { useUserRegion } from "@/hooks/use-user-region";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useListingsTotalCount } from "@/hooks/use-listings";
+import {
+  buildHeroListingSearchParams,
+  getHeroRegionNameForId,
+  type HeroDealApiToken,
+} from "@/lib/hero-listing-search-params";
+import {
+  ensureRegionCacheInitialized,
+  getRegionIdByName,
+} from "@/services/region.service";
+import type { ListingCategory } from "@/types/listing";
 import { Categories } from "./categories";
 import { useSearchHistory } from "@/hooks/use-search-history";
 
 /** Герой: таб (buy/rent/daily) → API-значение для объявлений (Продам / Сдам / Посуточно). */
-const HERO_DEAL_TO_API: Record<DealType, string> = {
+const HERO_DEAL_TO_API: Record<DealType, HeroDealApiToken> = {
   buy: "SALE",
   rent: "RENT_OUT",
   daily: "DAILY",
 };
+
+function ruListingWord(n: number): string {
+  const abs = Math.abs(Math.trunc(n)) % 100;
+  const d = abs % 10;
+  if (abs > 10 && abs < 20) return "объявлений";
+  if (d === 1) return "объявление";
+  if (d >= 2 && d <= 4) return "объявления";
+  return "объявлений";
+}
 
 type PropertyTypeFilter = "all" | "apartment" | "house" | "land" | "commercial";
 
@@ -223,8 +244,6 @@ export function HeroSearch() {
     setRoomsMin,
     setPriceMin,
     setPriceMax,
-    // priceMinNum,
-    // priceMaxNum,
     priceError,
     priceLabel,
     // isDirty,
@@ -232,7 +251,72 @@ export function HeroSearch() {
     // handleReset,
   } = useHeroSearchFilters(userRegion);
 
+  const priceMinNum = parsePrice(priceMin);
+  const priceMaxNum = parsePrice(priceMax);
+
   const queryInputRef = useRef<HTMLInputElement>(null);
+  const regionCacheInitRef = useRef(false);
+  const [, bumpRegionCache] = useReducer((x: number) => x + 1, 0);
+
+  useEffect(() => {
+    if (regionCacheInitRef.current) return;
+    regionCacheInitRef.current = true;
+    ensureRegionCacheInitialized()
+      .then(() => bumpRegionCache())
+      .catch(() => {});
+  }, []);
+
+  const debouncedQuery = useDebounce(query, 400);
+  const debouncedRoomsMin = useDebounce(roomsMin, 400);
+  const debouncedPriceMinNum = useDebounce(priceMinNum, 400);
+  const debouncedPriceMaxNum = useDebounce(priceMaxNum, 400);
+
+  const listingCategory = useMemo((): ListingCategory => "REAL_ESTATE", []);
+
+  const regionNameForId = useMemo(() => getHeroRegionNameForId(userRegion), [userRegion]);
+  const regionId = regionNameForId ? getRegionIdByName(regionNameForId) : undefined;
+
+  const countParams = useMemo(() => {
+    const isPriceValid = !(
+      debouncedPriceMinNum != null &&
+      debouncedPriceMaxNum != null &&
+      debouncedPriceMinNum > debouncedPriceMaxNum
+    );
+    return buildHeroListingSearchParams({
+      dealToken: HERO_DEAL_TO_API[dealType] ?? "SALE",
+      query: debouncedQuery,
+      propertyType: type,
+      roomsMin: debouncedRoomsMin,
+      priceMin:
+        debouncedPriceMinNum != null && isPriceValid ? debouncedPriceMinNum : null,
+      priceMax:
+        debouncedPriceMaxNum != null && isPriceValid ? debouncedPriceMaxNum : null,
+      listingCategory,
+      regionId,
+    });
+  }, [
+    dealType,
+    debouncedQuery,
+    type,
+    debouncedRoomsMin,
+    debouncedPriceMinNum,
+    debouncedPriceMaxNum,
+    listingCategory,
+    regionId,
+  ]);
+
+  const { data: countData, isFetching: isCountFetching } = useListingsTotalCount(
+    countParams,
+    !priceError
+  );
+  const total = typeof countData?.total === "number" ? countData.total : undefined;
+
+  const submitLabel = (() => {
+    if (priceError) return "Показать объявления";
+    if (isCountFetching && total === undefined) return "Показать объявления…";
+    if (total === undefined) return "Показать объявления";
+    return `Показать ${total.toLocaleString("ru-RU")} ${ruListingWord(total)}`;
+  })();
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -424,7 +508,7 @@ export function HeroSearch() {
               className='w-full flex-1 min-[400px]:w-auto ml-0 min-[400px]:ml-auto min-h-[44px] sm:min-h-10 h-9 sm:h-10 px-4 sm:px-5 rounded-xl text-sm sm:text-base font-semibold'
               disabled={priceError}
             >
-              Показать объявления
+              {submitLabel}
             </Button>
           </form>
 

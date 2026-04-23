@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { QUICK_PRESETS } from "@/lib/search-constants";
-import type { PropertyFilters } from "@/stores";
+import type { ListingFilters } from "@/stores";
 
 interface QuickPresetsProps {
   onPresetSelect: (
-    filters: Partial<PropertyFilters>,
+    filters: Partial<ListingFilters>,
     localPriceMin?: string,
     localPriceMax?: string
   ) => void;

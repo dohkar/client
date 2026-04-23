@@ -45,7 +45,6 @@ export interface Message {
 export interface Chat {
   id: string;
   type: ChatType;
-  propertyId: string | null;
   /** Для новых чатов по Listing: id листинга (опционально). */
   listingId?: string | null;
   isArchived: boolean;
@@ -54,7 +53,7 @@ export interface Chat {
   createdAt: Date;
   participants: ChatParticipant[];
   unreadCount: number;
-  property?: {
+  listing?: {
     id: string;
     title: string;
     price: number;

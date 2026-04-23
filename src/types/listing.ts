@@ -1,20 +1,10 @@
 import type { PropertyType, PropertyDealType, RegionDto, CityDto } from "./property";
 
-export type ListingCategory = "REAL_ESTATE" | "VEHICLE" | "ELECTRONICS";
+export type ListingCategory = "REAL_ESTATE";
 export type ListingStatus = "ACTIVE" | "SOLD" | "ARCHIVED";
 export type ModerationStatus = "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
 export type PromotionTier = "NONE" | "ELIGIBLE" | "BOOSTED";
 export type SellerType = "PRIVATE" | "BUSINESS";
-
-export interface Brand {
-  id: string;
-  name: string;
-  slug: string;
-  category?: ListingCategory | null;
-  isVerified: boolean;
-  logoUrl?: string | null;
-  sortOrder: number;
-}
 
 export interface RealEstateDetails {
   type: "APARTMENT" | "HOUSE" | "LAND" | "COMMERCIAL";
@@ -23,26 +13,6 @@ export interface RealEstateDetails {
   features: string[];
   latitude?: number | null;
   longitude?: number | null;
-}
-
-export interface VehicleDetails {
-  brandId: string;
-  brand?: { id: string; name: string; slug: string };
-  model: string;
-  year: number;
-  mileage?: number | null;
-  bodyType?: string | null;
-  engine?: string | null;
-  transmission?: string | null;
-}
-
-export interface ElectronicsDetails {
-  brandId: string;
-  brand?: { id: string; name: string; slug: string };
-  productType: string;
-  model: string;
-  storage?: string | null;
-  condition?: string | null;
 }
 
 export interface ListingBackend {
@@ -84,8 +54,6 @@ export interface ListingBackend {
   createdAt: string;
   updatedAt: string;
   realEstate?: RealEstateDetails | null;
-  vehicle?: VehicleDetails | null;
-  electronics?: ElectronicsDetails | null;
 }
 
 export interface Listing {
@@ -123,8 +91,6 @@ export interface Listing {
   createdAt: string;
   updatedAt: string;
   realEstate?: RealEstateDetails | null;
-  vehicle?: VehicleDetails | null;
-  electronics?: ElectronicsDetails | null;
   floor?: number | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -155,11 +121,8 @@ export interface ListingSearchParams {
   floorMin?: number;
   floorMax?: number;
   floorNotFirst?: boolean;
-  brandId?: string;
-  yearMin?: number;
-  yearMax?: number;
-  mileageMax?: number;
-  productType?: string;
+  /** Только новостройки (бэкенд: realEstate.features содержит «Новостройка») */
+  newBuilding?: boolean;
   sortBy?:
     | "price-asc"
     | "price-desc"
@@ -170,3 +133,5 @@ export interface ListingSearchParams {
   page?: number;
   limit?: number;
 }
+
+export type { PropertyType, PropertyDealType, RegionDto, CityDto };

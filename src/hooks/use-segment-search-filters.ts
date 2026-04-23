@@ -16,8 +16,11 @@ import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defa
 import {
   API_REGION_TO_SLUG,
   buildSearchUrl,
+  CATEGORY_MAP,
   categorySlugFromType,
   dealTypeSlugFromApi,
+  categoryPathImpliesNewBuilding,
+  NEW_BUILDING_CATEGORY_SLUG,
   parseSegments,
 } from "@/lib/url/segments";
 import { useUserRegion } from "@/hooks/use-user-region";
@@ -77,6 +80,7 @@ interface SegmentSearchFiltersReturn {
   handleDealTypeChange: (dealType: SearchFiltersDisplay["dealType"]) => void;
   handleDealTypeReset: () => void;
   handleFloorReset: () => void;
+  handleNewBuildingReset: () => void;
   handleResetAll: () => void;
   priceErrors: PriceValidationErrors;
   currentPage: number;
@@ -207,6 +211,12 @@ export function useSegmentSearchFilters(
         ? "all"
         : parsedSegments.apiRegion;
 
+    const newBuildingParam = activeSearchParams.get("newBuilding");
+    const newBuildingFromQuery =
+      newBuildingParam === "1" ||
+      newBuildingParam === "true" ||
+      newBuildingParam === "yes";
+
     return {
       query: activeSearchParams.get("query")?.trim() ?? "",
       dealType,
@@ -222,6 +232,10 @@ export function useSegmentSearchFilters(
         activeSearchParams.get("floor_not_first") === "true"
           ? true
           : null,
+      newBuilding:
+        newBuildingFromQuery || categoryPathImpliesNewBuilding(params.category)
+          ? true
+          : null,
       region,
       cityId: activeSearchParams.get("cityId")?.trim() || null,
       sortBy: parseSort(activeSearchParams.get("sort")),
@@ -233,6 +247,7 @@ export function useSegmentSearchFilters(
     parsedSegments?.apiDeal,
     parsedSegments?.apiRegion,
     parsedSegments?.apiType,
+    params.category,
   ]);
 
   const showRegionChip = params.region !== userRegionSlug;
@@ -278,10 +293,23 @@ export function useSegmentSearchFilters(
         filters.region === "all"
           ? "all"
           : regionDisplayToSlug(filters.region, currentRegionSlug);
-      const nextCategorySlug =
-        filters.type === "all"
-          ? DEFAULT_SEARCH_CATEGORY
-          : categorySlugFromType(filters.type);
+      const nextCategorySlug = (() => {
+        if (filters.type !== "all") {
+          return categorySlugFromType(filters.type);
+        }
+        if (filters.newBuilding === true) {
+          return categoryPathImpliesNewBuilding(params.category)
+            ? params.category
+            : NEW_BUILDING_CATEGORY_SLUG;
+        }
+        if (categoryPathImpliesNewBuilding(params.category)) {
+          return DEFAULT_SEARCH_CATEGORY;
+        }
+        if (params.category in CATEGORY_MAP) {
+          return params.category;
+        }
+        return DEFAULT_SEARCH_CATEGORY;
+      })();
       const nextDealTypeSlug =
         filters.dealType && filters.dealType !== "all"
           ? dealTypeSlugFromApi(filters.dealType)
@@ -297,6 +325,7 @@ export function useSegmentSearchFilters(
         floor_min: filters.floorMin ?? undefined,
         floor_max: filters.floorMax ?? undefined,
         floor_not_first: filters.floorNotFirst ? "1" : undefined,
+        newBuilding: filters.newBuilding === true ? "true" : undefined,
         sort: filters.sortBy !== "relevance" ? filters.sortBy : undefined,
         page: filters.page > 1 ? filters.page : undefined,
       };
@@ -307,7 +336,7 @@ export function useSegmentSearchFilters(
         params: queryParams,
       });
     },
-    [params.region]
+    [params.region, params.category]
   );
 
   const updateFilters = useCallback(
@@ -638,6 +667,7 @@ export function useSegmentSearchFilters(
         floorMax: null,
         floorNotFirst: null,
       }),
+    handleNewBuildingReset: () => updateFilters({ newBuilding: null }),
     handleResetAll,
     priceErrors,
     currentPage,

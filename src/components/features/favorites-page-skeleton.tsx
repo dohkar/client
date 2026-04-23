@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { PropertyGridSkeleton } from "@/components/features/property-grid-skeleton";
+import { ListingGridSkeleton } from "@/components/features/listing-grid-skeleton";
 
 export function FavoritesPageSkeleton() {
   return (
@@ -13,7 +13,7 @@ export function FavoritesPageSkeleton() {
         <Skeleton className='h-10 w-full sm:w-40' />
         <Skeleton className='h-10 w-full sm:w-36' />
       </div>
-      <PropertyGridSkeleton count={8} />
+      <ListingGridSkeleton count={8} />
     </div>
   );
 }

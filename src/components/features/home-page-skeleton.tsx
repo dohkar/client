@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { PropertyGridSkeleton } from "@/components/features/property-grid-skeleton";
+import { ListingGridSkeleton } from "@/components/features/listing-grid-skeleton";
 
 /**
  * Скелетон главной: hero + сетка объявлений.
@@ -25,7 +25,7 @@ export function HomePageSkeleton() {
         </div>
 
         <section className='mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12'>
-          <PropertyGridSkeleton count={12} />
+          <ListingGridSkeleton count={12} />
         </section>
       </main>
     </div>

@@ -29,7 +29,6 @@ import type { Chat } from "@/types/chat";
 
 interface ActionMenuButtonProps {
   isPropertyChat: boolean;
-  propertyId?: string | null;
   listingId?: string | null;
   onBlock?: () => void;
   onReport?: () => void;
@@ -37,14 +36,12 @@ interface ActionMenuButtonProps {
 
 function ActionMenuButton({
   isPropertyChat,
-  propertyId,
   listingId,
   onBlock,
   onReport,
 }: ActionMenuButtonProps) {
   const listingHref = listingId ? ROUTES.listing(listingId) : null;
-  const propertyHref = propertyId ? ROUTES.property(propertyId) : null;
-  const openAdHref = listingHref ?? propertyHref;
+  const openAdHref = listingHref;
 
   return (
     <DropdownMenu>
@@ -218,13 +215,11 @@ export function ChatHeader({
         {/* Правая часть: действия */}
         <div className='flex items-center gap-1 pl-2'>
           {/* Ссылка на объявление (у иконки external link) */}
-          {isPropertyChat && (chat.listingId || chat.property) && (
+          {isPropertyChat && (chat.listingId || chat.listing) && (
             <Button asChild variant='ghost' size='icon'>
               <Link
                 href={
-                  chat.listingId
-                    ? ROUTES.listing(chat.listingId)
-                    : ROUTES.property(chat.property!.id)
+                  ROUTES.listing(chat.listingId ?? chat.listing!.id)
                 }
                 target='_blank'
                 tabIndex={-1}
@@ -237,33 +232,28 @@ export function ChatHeader({
           {/* ⋮ меню */}
           <ActionMenuButton
             isPropertyChat={isPropertyChat}
-            propertyId={chat.property?.id}
-            listingId={chat.listingId}
+            listingId={chat.listingId ?? chat.listing?.id}
             onBlock={onBlock}
             onReport={onReport}
           />
         </div>
       </div>
       {/* Кликабельная панель объявления снизу (PROPERTY или LISTING) */}
-      {isPropertyChat && chat.property && (
+      {isPropertyChat && chat.listing && (
         <Link
-          href={
-            chat.listingId
-              ? ROUTES.listing(chat.listingId)
-              : ROUTES.property(chat.property.id)
-          }
+          href={ROUTES.listing(chat.listingId ?? chat.listing.id)}
           target='_blank'
           className='flex items-center gap-2 px-3 sm:px-4 pb-2 sm:pb-3 pt-0.5 group transition hover:bg-muted/40 rounded'
         >
           {/* Картинка объявления (маленькая) */}
           {(() => {
-            const imgSrc = chat.property.images?.[0] ?? "/placeholder.svg";
+            const imgSrc = chat.listing.images?.[0] ?? "/placeholder.svg";
             return imgSrc ? (
               <div className='shrink-0 h-8 w-8 overflow-hidden rounded object-cover border'>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imgSrc}
-                  alt={chat.property.title}
+                  alt={chat.listing.title}
                   className='h-full w-full object-cover'
                   draggable={false}
                 />
@@ -275,7 +265,7 @@ export function ChatHeader({
             );
           })()}
           <span className='truncate text-xs sm:text-sm text-muted-foreground group-hover:underline'>
-            {chat.property.title} · {formatPrice(chat.property.price)}
+            {chat.listing.title} · {formatPrice(chat.listing.price)}
           </span>
         </Link>
       )}
