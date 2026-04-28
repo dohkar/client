@@ -19,10 +19,10 @@ import type { Listing } from "@/types/listing";
 
 function FormErrorFallback() {
   return (
-    <Card className="border-destructive/50 bg-destructive/5">
+    <Card className='border-destructive/50 bg-destructive/5'>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-destructive">
-          <AlertCircle className="h-5 w-5" />
+        <CardTitle className='flex items-center gap-2 text-destructive'>
+          <AlertCircle className='h-5 w-5' />
           Ошибка загрузки формы
         </CardTitle>
         <CardDescription>
@@ -30,10 +30,7 @@ function FormErrorFallback() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Button
-          onClick={() => window.location.reload()}
-          aria-label="Обновить страницу"
-        >
+        <Button onClick={() => window.location.reload()} aria-label='Обновить страницу'>
           Обновить страницу
         </Button>
       </CardContent>
@@ -54,33 +51,33 @@ export function SellFormSection() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/20">
-      <div className="container mx-auto px-4 py-6 md:py-10">
-        <div className="max-w-4xl mx-auto">
+    <div className='min-h-screen bg-muted/20'>
+      <div className='container mx-auto px-4 py-6 md:py-10'>
+        <div className='max-w-4xl mx-auto'>
           <a
-            href="#listing-form"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:ring-2 focus:ring-ring"
+            href='#listing-form'
+            className='sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:ring-2 focus:ring-ring'
           >
             Перейти к форме
           </a>
 
-          <header className="mb-8">
-            <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-primary/10 p-2.5">
-                <Megaphone className="h-6 w-6 text-primary" aria-hidden />
+          <header className='mb-8'>
+            <div className='flex items-start gap-3'>
+              <div className='rounded-lg bg-primary/10 p-2.5'>
+                <Megaphone className='h-6 w-6 text-primary' aria-hidden />
               </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+              <div className='min-w-0 flex-1'>
+                <h1 className='text-2xl font-bold tracking-tight text-foreground md:text-3xl'>
                   Разместить объявление
                 </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
+                {/* <p className="mt-1 text-sm text-muted-foreground">
                   Выберите категорию — недвижимость, транспорт или электроника — и
                   заполните форму. Обязательные поля отмечены звёздочкой.
-                </p>
+                </p> */}
                 {limits && limits.remaining >= 0 && (
-                  <p className="mt-2 inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                  <p className='mt-2 inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground'>
                     В этом месяце:
-                    <span className="mx-1 font-semibold text-foreground">
+                    <span className='mx-1 font-semibold text-foreground'>
                       {limits.remaining} из {limits.monthlyLimit}
                     </span>
                     объявлений можно создать
@@ -90,8 +87,8 @@ export function SellFormSection() {
             </div>
           </header>
 
-          <section id="listing-form" aria-labelledby="listing-form-title">
-            <h2 id="listing-form-title" className="sr-only">
+          <section id='listing-form' aria-labelledby='listing-form-title'>
+            <h2 id='listing-form-title' className='sr-only'>
               Форма создания объявления
             </h2>
             <ErrorBoundary fallback={FormErrorFallback}>
