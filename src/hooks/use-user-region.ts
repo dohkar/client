@@ -5,9 +5,18 @@ import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { REGION_MAP } from "@/lib/url/segments";
 
 export const USER_REGION_COOKIE = "user_region";
+const GPS_REGION_STORAGE_KEY = "dohkar.gpsRegionSlug.v1";
 
 function getRegionFromCookie(): string {
   if (typeof document === "undefined") return DEFAULT_SEARCH_REGION;
+
+  try {
+    const gps = localStorage.getItem(GPS_REGION_STORAGE_KEY);
+    if (gps && gps in REGION_MAP && gps !== "all") return gps;
+  } catch {
+    // ignore
+  }
+
   const match = document.cookie
     .split("; ")
     .find((r) => r.startsWith(`${USER_REGION_COOKIE}=`));
@@ -28,6 +37,22 @@ export function useUserRegion(): string {
     () => getRegionFromCookie(), // клиент
     () => DEFAULT_SEARCH_REGION // сервер
   );
+}
+
+export function writeGpsRegionSlug(slug: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(GPS_REGION_STORAGE_KEY, slug);
+  } catch {
+    // ignore
+  }
+  try {
+    document.cookie = `${USER_REGION_COOKIE}=${encodeURIComponent(slug)}; path=/; max-age=${
+      60 * 60 * 24 * 30
+    }; samesite=lax`;
+  } catch {
+    // ignore
+  }
 }
 
 const SLUG_TO_REGION_VALUE: Record<string, string> = {

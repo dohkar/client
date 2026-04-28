@@ -40,8 +40,10 @@ function isValidOAuthMessage(data: unknown): data is { type: string } {
   );
 }
 
-export interface OAuthPopupButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
+export interface OAuthPopupButtonProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  "className"
+> {
   provider: OAuthPopupProvider;
   label: string;
   icon?: React.ReactNode;
@@ -95,127 +97,144 @@ export const OAuthPopupButton = forwardRef<HTMLButtonElement, OAuthPopupButtonPr
       setIsLoading(false);
     }, []);
 
-    const openOAuthPopup = useCallback(() => {
-      if (typeof window === "undefined") return;
+    const openOAuthPopup = useCallback(
+      (e?: React.MouseEvent<HTMLButtonElement>) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+        if (typeof window === "undefined") return;
 
-      const url = getOAuthUrl();
-      const preferRedirect =
-        isMobile || (typeof window !== "undefined" && window.innerWidth < 768);
+        const url = getOAuthUrl();
+        const preferRedirect =
+          isMobile || (typeof window !== "undefined" && window.innerWidth < 768);
 
-      if (preferRedirect) {
-        window.location.href = url;
-        return;
-      }
+        if (preferRedirect) {
+          window.location.href = url;
+          return;
+        }
 
-      if (popupRef.current && !popupRef.current.closed) {
-        popupRef.current.focus();
-        return;
-      }
+        if (popupRef.current && !popupRef.current.closed) {
+          popupRef.current.focus();
+          return;
+        }
 
-      const { left, top } = getPopupPosition();
-      const features = `width=${POPUP_WIDTH},height=${POPUP_HEIGHT},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`;
-      const popup = window.open(url, "oauth-popup", features);
+        const { left, top } = getPopupPosition();
+        const features = `width=${POPUP_WIDTH},height=${POPUP_HEIGHT},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`;
+        // Некоторые браузеры охотнее разрешают pop-up, если сначала открыть about:blank,
+        // а уже затем синхронно выставить location на OAuth URL.
+        const popup = window.open("about:blank", "oauth-popup", features);
 
-      if (!popup) {
-        toast.error("Всплывающее окно заблокировано", {
-          description: "Разрешите всплывающие окна или войдите в этом окне",
-          action: {
-            label: "Войти в этом окне",
-            onClick: () => {
-              window.location.href = url;
+        if (!popup) {
+          toast.error("Всплывающее окно заблокировано", {
+            description: "Разрешите всплывающие окна или войдите в этом окне",
+            action: {
+              label: "Войти в этом окне",
+              onClick: () => {
+                window.location.assign(url);
+              },
             },
-          },
-        });
-        return;
-      }
-
-      popupRef.current = popup;
-      completedRef.current = false;
-      setIsLoading(true);
-
-      const handleMessage = (event: MessageEvent) => {
-        // Убрана проверка isAllowedOrigin
-        if (!isValidOAuthMessage(event.data)) return;
-
-        completedRef.current = true;
-        cleanup();
-
-        if (isOAuthSuccess(event.data)) {
-          setUser(event.data.user);
-          useAuthStore.setState({
-            isAuthenticated: true,
-            isInitialized: true,
-            error: null,
           });
-          toast.success("Вы успешно вошли в аккаунт");
-          void useAuthStore
-            .getState()
-            .checkAuth()
-            .then(() => {
-              if (onSuccessRedirect) {
-                router.push(onSuccessRedirect);
-              }
-            });
           return;
         }
 
-        if (isOAuthLinked(event.data)) {
-          setUser(event.data.user);
-          useAuthStore.setState({
-            isAuthenticated: true,
-            isInitialized: true,
-            error: null,
-          });
-          const name =
-            event.data.provider === "google"
-              ? "Google"
-              : event.data.provider === "yandex"
-                ? "Яндекс"
-                : "VK";
-          toast.success(`${name} привязан к аккаунту`);
-          return;
-        }
-
-        if (isOAuthError(event.data)) {
-          toast.error("Ошибка авторизации", {
-            description: event.data.error,
-          });
-          useAuthStore.getState().setError(event.data.error);
-        }
-      };
-
-      listenerRef.current = handleMessage;
-      window.addEventListener("message", handleMessage);
-
-      // Cross-Origin-Opener-Policy (COOP) may block reading "closed" property of the popup.
-      // In this case, don't rely on it for cleanup, only handle success/error through postMessage.
-      pollRef.current = setInterval(() => {
-        // Attempt to check .closed but ignore possible errors due to COOP
-        let isClosed = false;
         try {
-          isClosed = !!popupRef.current?.closed;
+          popup.location.href = url;
+          popup.focus();
         } catch {
-          // Ignore error
+          // Если не удалось навигировать окно (крайне редко), fallback на redirect
+          popup.close();
+          window.location.assign(url);
+          return;
         }
-        if (isClosed) {
-          if (!completedRef.current) {
-            toast.info("Вход отменён", {
-              description: "Окно авторизации было закрыто",
+
+        popupRef.current = popup;
+        completedRef.current = false;
+        setIsLoading(true);
+
+        const handleMessage = (event: MessageEvent) => {
+          // Убрана проверка isAllowedOrigin
+          if (!isValidOAuthMessage(event.data)) return;
+
+          completedRef.current = true;
+          cleanup();
+
+          if (isOAuthSuccess(event.data)) {
+            setUser(event.data.user);
+            useAuthStore.setState({
+              isAuthenticated: true,
+              isInitialized: true,
+              error: null,
             });
-            cleanup();
+            toast.success("Вы успешно вошли в аккаунт");
+            void useAuthStore
+              .getState()
+              .checkAuth()
+              .then(() => {
+                if (onSuccessRedirect) {
+                  router.push(onSuccessRedirect);
+                }
+              });
+            return;
           }
-        }
-      }, 500);
-    }, [
-      provider,
-      oauthState,
-      getOAuthUrl,
-      isMobile,
-      cleanup,
-      setUser,
-      onSuccessRedirect,
-      router,
-    ]);
+
+          if (isOAuthLinked(event.data)) {
+            setUser(event.data.user);
+            useAuthStore.setState({
+              isAuthenticated: true,
+              isInitialized: true,
+              error: null,
+            });
+            const name =
+              event.data.provider === "google"
+                ? "Google"
+                : event.data.provider === "yandex"
+                  ? "Яндекс"
+                  : "VK";
+            toast.success(`${name} привязан к аккаунту`);
+            return;
+          }
+
+          if (isOAuthError(event.data)) {
+            toast.error("Ошибка авторизации", {
+              description: event.data.error,
+            });
+            useAuthStore.getState().setError(event.data.error);
+          }
+        };
+
+        listenerRef.current = handleMessage;
+        window.addEventListener("message", handleMessage);
+
+        // Cross-Origin-Opener-Policy (COOP) may block reading "closed" property of the popup.
+        // In this case, don't rely on it for cleanup, only handle success/error through postMessage.
+        pollRef.current = setInterval(() => {
+          // Attempt to check .closed but ignore possible errors due to COOP
+          let isClosed = false;
+          try {
+            isClosed = !!popupRef.current?.closed;
+          } catch {
+            // Ignore error
+          }
+          if (isClosed) {
+            if (!completedRef.current) {
+              toast.info("Вход отменён", {
+                description: "Окно авторизации было закрыто",
+              });
+              cleanup();
+            }
+          }
+        }, 500);
+      },
+      [
+        provider,
+        oauthState,
+        getOAuthUrl,
+        isMobile,
+        cleanup,
+        setUser,
+        onSuccessRedirect,
+        router,
+      ]
+    );
 
     useEffect(() => {
       return () => {

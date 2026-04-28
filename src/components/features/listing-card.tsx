@@ -10,6 +10,7 @@ import type { Listing } from "@/types/listing";
 import { formatPrice, formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
 import { useFavorites } from "@/hooks/use-favorites";
+import { stripPostalCodePrefix, getRegionLabel } from "@/lib/ui/location";
 
 interface ListingCardProps {
   listing: Listing;
@@ -36,8 +37,16 @@ export function ListingCard({
 
   const image = listing.image || listing.images[0] || "/placeholder.svg";
   const isCompact = variant === "compact";
-  const locationText =
-    listing.location || listing.city || listing.region || "Локация не указана";
+  const locationTextRaw = listing.location || listing.city || listing.region || "";
+  const locationText = locationTextRaw
+    ? stripPostalCodePrefix(
+        listing.location
+          ? String(listing.location)
+          : listing.city
+            ? String(listing.city)
+            : (getRegionLabel(listing.region) ?? String(listing.region ?? ""))
+      )
+    : "Локация не указана";
 
   return (
     <Link
@@ -130,7 +139,7 @@ export function ListingCard({
                 isCompact ? "w-3.5 h-3.5 mt-0.5 shrink-0" : "w-4 h-4 mt-0.5 shrink-0"
               }
             />
-            <span className='line-clamp-1'>{locationText}</span>
+            <span className='min-w-0 line-clamp-1 break-words'>{locationText}</span>
           </div>
 
           <div

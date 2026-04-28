@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { REGION_MAP } from "@/lib/url/segments";
+import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 
 const NON_REAL_ESTATE_CATEGORY_SLUGS = new Set(["transport", "elektronika"]);
 
@@ -38,15 +38,15 @@ function regionNameToSlug(regionName: string | null | undefined): string | null 
   return null;
 }
 
-async function detectRegionByIp(ip: string): Promise<string> {
+async function detectRegionByIp(ip: string): Promise<string | null> {
   try {
     const res = await fetch(`http://ip-api.com/json/${ip}?fields=regionName&lang=ru`, {
       next: { revalidate: 3600 },
     });
     const data = (await res.json()) as { regionName?: string };
-    return regionNameToSlug(data.regionName) ?? DEFAULT_SEARCH_REGION;
+    return regionNameToSlug(data.regionName);
   } catch {
-    return DEFAULT_SEARCH_REGION;
+    return null;
   }
 }
 
@@ -78,27 +78,28 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Каталог всегда “Все регионы”, но регион пользователя определяем для приоритизации выдачи.
   const response = NextResponse.next();
 
-  let userRegion = getValidUserRegion(request.cookies.get(USER_REGION_COOKIE)?.value);
+  const existing = getValidUserRegion(request.cookies.get(USER_REGION_COOKIE)?.value);
+  if (existing) return response;
 
-  if (!userRegion) {
-    const geo = (request as NextRequest & { geo?: { region?: string; city?: string } })
-      .geo;
-    const vercelRegion =
-      geo?.region ?? request.headers.get("x-vercel-ip-country-region") ?? null;
-    userRegion =
-      regionNameToSlug(vercelRegion) ??
-      (await detectRegionByIp(
-        request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-      ));
+  const geo = (request as NextRequest & { geo?: { region?: string; city?: string } }).geo;
+  const vercelRegion =
+    geo?.region ?? request.headers.get("x-vercel-ip-country-region") ?? null;
 
-    response.cookies.set(USER_REGION_COOKIE, userRegion, {
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-      sameSite: "lax",
-    });
-  }
+  const fromVercel = regionNameToSlug(vercelRegion);
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1";
+  const fromIp = await detectRegionByIp(ip);
+
+  const userRegion = fromVercel ?? fromIp ?? null;
+  if (!userRegion || userRegion === DEFAULT_SEARCH_REGION) return response;
+
+  response.cookies.set(USER_REGION_COOKIE, userRegion, {
+    maxAge: 60 * 60 * 24 * 30,
+    path: "/",
+    sameSite: "lax",
+  });
 
   return response;
 }

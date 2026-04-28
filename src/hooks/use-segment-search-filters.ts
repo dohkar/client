@@ -371,10 +371,10 @@ export function useSegmentSearchFilters(
   );
 
   const resetFilters = useCallback(() => {
-    // Сброс на базовый поиск: регион пользователя + «Недвижимость» (все типы), без типа сделки.
-    // Иначе при текущем path /ingushetiya/kvartiry/prodam мы бы строили тот же URL и чипсы не исчезали.
+    // Сброс на базовый поиск: «Все регионы» + «Недвижимость» (все типы), без типа сделки.
+    // UX как в Avito: каталог по умолчанию не ограничиваем регионом.
     const cleanUrl = buildSearchUrl({
-      region: userRegionSlug,
+      region: "all",
       category: DEFAULT_SEARCH_CATEGORY,
     });
     const currentFull = browserUrlKeyFrom(pathname, activeSearchParams);
@@ -384,7 +384,7 @@ export function useSegmentSearchFilters(
     startTransition(() => {
       router.replace(cleanUrl, { scroll: false });
     });
-  }, [userRegionSlug, router, pathname, activeSearchParams]);
+  }, [router, pathname, activeSearchParams]);
 
   const queryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const priceMinDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);

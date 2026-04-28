@@ -44,8 +44,8 @@ export const CATEGORY_MAP = {
   },
   // Новостройки: отдельный path-сегмент; фильтр newBuilding=true задаётся в query (см. buildSearchUrl).
   novostroyki: { label: "Новостройки", apiType: undefined },
-  transport: { label: "Транспорт", apiType: undefined },
-  elektronika: { label: "Электроника", apiType: undefined },
+  // transport: { label: "Транспорт", apiType: undefined },
+  // elektronika: { label: "Электроника", apiType: undefined },
 } as const satisfies Record<string, { label: string; apiType: PropertyType | undefined }>;
 
 /** Слаг (path) → значение API. Каждый слаг = роль объявления (один к одному с API). */
@@ -160,7 +160,7 @@ export function regionSlugFromApi(apiRegion: string): string {
     case "other":
       return API_REGION_TO_SLUG.Other;
     default:
-      return "ingushetiya";
+      return "all";
   }
 }
 

@@ -24,6 +24,7 @@ import {
   REGION_MAP,
 } from "@/lib/url/segments";
 import { useUserRegion } from "@/hooks/use-user-region";
+import { useDetectUserRegion } from "@/hooks/use-detect-user-region";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useListingsTotalCount } from "@/hooks/use-listings";
 import {
@@ -229,6 +230,7 @@ function useHeroSearchFilters(userRegionSlug: string) {
 // ─── COMPONENT ───────────────────────────────────────────────
 export function HeroSearch() {
   const router = useRouter();
+  useDetectUserRegion();
   const userRegion = useUserRegion();
   const { push: pushSearch } = useSearchHistory();
   const {
@@ -329,7 +331,7 @@ export function HeroSearch() {
         label:
           query.trim() ||
           (PROPERTY_TYPE_OPTIONS.find((o) => o.value === type)?.label ?? "Поиск"),
-        region: regionEntry?.label ?? "Ингушетия",
+        region: regionEntry?.label ?? "Все регионы",
         href: searchUrl,
       });
     }

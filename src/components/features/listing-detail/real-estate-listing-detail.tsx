@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -44,6 +51,11 @@ import { analyticsService } from "@/services/analytics.service";
 import type { Listing } from "@/types/listing";
 import type { PropertyDealType } from "@/types/property";
 import type { LucideIcon } from "lucide-react";
+import {
+  formatListingLocationLine,
+  getRegionLabel,
+  stripPostalCodePrefix,
+} from "@/lib/ui/location";
 
 const RELATED_SWIPE_HINT_KEY = "dohkar.related.swipeHintSeen.v1";
 function readSwipeHintSeen(): boolean {
@@ -127,14 +139,13 @@ function SpecCell({
 }
 
 function buildAddressLine(listing: Listing): string {
-  const parts = [
-    listing.location,
-    listing.street,
-    listing.house,
-    listing.city,
-    listing.region,
-  ].filter((p): p is string => Boolean(p && String(p).trim()));
-  return parts.length > 0 ? parts.join(" · ") : "Адрес не указан";
+  return formatListingLocationLine({
+    location: listing.location ? stripPostalCodePrefix(String(listing.location)) : null,
+    street: listing.street,
+    house: listing.house,
+    city: listing.city,
+    region: listing.region ? getRegionLabel(listing.region) : null,
+  });
 }
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -192,7 +203,7 @@ function StickyListingCard({
         <div className='min-w-0'>
           <p className='truncate font-medium'>{listing.contact.name}</p>
           {sellerYear != null && (
-            <p className='text-xs text-muted-foreground'>на Dohkar с {sellerYear}</p>
+            <p className='text-xs text-muted-foreground'>на Дохкар с {sellerYear}</p>
           )}
         </div>
       </div>
@@ -212,7 +223,7 @@ function StickyListingCard({
         </Button>
       </div>
       <p className='mt-3 text-center text-xs text-muted-foreground'>
-        Безопасная сделка через Dohkar
+        Безопасная сделка через Дохкар
       </p>
     </div>
   );
@@ -235,6 +246,8 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
   const re = listing.realEstate;
 
   const [descExpanded, setDescExpanded] = useState(false);
+  const [needsDescriptionExpand, setNeedsDescriptionExpand] = useState(false);
+  const descMeasureRef = useRef<HTMLDivElement | null>(null);
 
   const mediaItems = useMemo(() => buildListingMediaItems(listing), [listing]);
 
@@ -322,9 +335,22 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
     ? new Date(listing.sellerCreatedAt).getFullYear()
     : null;
 
-  const descriptionLines = listing.description.split("\n");
-  const needsDescriptionExpand =
-    listing.description.length > 160 || descriptionLines.length > 3;
+  useLayoutEffect(() => {
+    const el = descMeasureRef.current;
+    if (!el) return;
+
+    const compute = () => {
+      // Если контент реально переполняет line-clamp — показываем "Читать далее".
+      // С небольшим запасом из-за дробных значений line-height.
+      const overflows = el.scrollHeight > el.clientHeight + 2;
+      setNeedsDescriptionExpand(overflows);
+    };
+
+    compute();
+    const ro = new ResizeObserver(() => compute());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [listing.description]);
 
   const typeLabel = RE_TYPE_LABELS[re.type] ?? re.type;
 
@@ -433,7 +459,9 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
           </h1>
           <div className='flex items-start gap-2 text-muted-foreground'>
             <MapPin className='mt-0.5 h-4 w-4 shrink-0' />
-            <span className='text-sm'>{buildAddressLine(listing)}</span>
+            <span className='min-w-0 break-words text-sm'>
+              {buildAddressLine(listing)}
+            </span>
           </div>
 
           <div className='grid grid-cols-2 gap-3 sm:gap-4'>
@@ -451,17 +479,26 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
             />
           </div>
 
-          <div>
+          <div className='relative'>
+            {/* Измеряем переполнение отдельно (всегда clamp-3), чтобы кнопка не пропадала при раскрытии. */}
+            <div
+              ref={descMeasureRef}
+              aria-hidden
+              className='invisible pointer-events-none absolute left-0 right-0 top-0 line-clamp-3 whitespace-pre-wrap break-words text-sm text-foreground'
+            >
+              {listing.description}
+            </div>
+
             <div
               className={
                 !needsDescriptionExpand || descExpanded
-                  ? "whitespace-pre-wrap text-sm text-foreground"
-                  : "line-clamp-3 text-sm text-foreground"
+                  ? "whitespace-pre-wrap break-words text-sm text-foreground"
+                  : "line-clamp-3 whitespace-pre-wrap break-words text-sm text-foreground"
               }
             >
               {listing.description}
             </div>
-            {needsDescriptionExpand && (
+            {needsDescriptionExpand && listing.description.trim().length > 0 && (
               <Button
                 variant='link'
                 className='mt-1 h-auto p-0 text-primary'
@@ -570,11 +607,18 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
                       : undefined
                   }
                 />
-                <DetailRow label='Регион' value={listing.region} />
+                <DetailRow label='Регион' value={getRegionLabel(listing.region)} />
                 <DetailRow label='Город' value={listing.city} />
                 <DetailRow label='Улица' value={listing.street} />
                 <DetailRow label='Дом' value={listing.house} />
-                <DetailRow label='Ориентир' value={listing.location} />
+                <DetailRow
+                  label='Ориентир'
+                  value={
+                    listing.location
+                      ? stripPostalCodePrefix(String(listing.location))
+                      : undefined
+                  }
+                />
                 <DetailRow
                   label='Координаты'
                   value={
