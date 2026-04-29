@@ -68,9 +68,9 @@ export function ListingCard({
             className='absolute inset-0'
           />
 
-          <div className='absolute inset-0 bg-linear-to-t from-black/45 via-black/5 to-transparent opacity-100' />
+          <div className='pointer-events-none absolute inset-0 bg-linear-to-t from-black/45 via-black/5 to-transparent opacity-100' />
 
-          <div className='absolute top-3 left-3 flex gap-2 flex-wrap'>
+          <div className='pointer-events-none absolute top-3 left-3 flex gap-2 flex-wrap'>
             {listing.promotionTier === "BOOSTED" && (
               <Badge className='shadow-sm bg-primary text-primary-foreground'>
                 <Sparkles className='mr-1 h-3.5 w-3.5' />
