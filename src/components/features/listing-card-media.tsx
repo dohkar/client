@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import Image from "next/image";
 import type React from "react";
 import { useMemo, useRef, useState } from "react";
@@ -185,7 +186,7 @@ export function ListingCardMedia({
         <div className='pointer-events-none absolute inset-y-0 left-0 right-0 hidden items-center justify-between px-2 opacity-0 transition-opacity duration-150 md:flex md:group-hover:opacity-100'>
           <button
             type='button'
-            className='pointer-events-auto grid size-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/45 disabled:opacity-40'
+            className='pointer-events-auto cursor-pointer grid size-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/45 disabled:opacity-40'
             onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -198,13 +199,11 @@ export function ListingCardMedia({
             disabled={index === 0}
             aria-label='Предыдущее фото'
           >
-            <span aria-hidden className='text-xl leading-none'>
-              ‹
-            </span>
+            <ArrowLeftIcon className='size-5' />
           </button>
           <button
             type='button'
-            className='pointer-events-auto grid size-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/45 disabled:opacity-40'
+            className='pointer-events-auto cursor-pointer grid size-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/45 disabled:opacity-40'
             onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -217,9 +216,7 @@ export function ListingCardMedia({
             disabled={index === sources.length - 1}
             aria-label='Следующее фото'
           >
-            <span aria-hidden className='text-xl leading-none'>
-              ›
-            </span>
+            <ArrowRightIcon className='size-5' />
           </button>
         </div>
       )}
@@ -228,7 +225,6 @@ export function ListingCardMedia({
         <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-black/35 px-2 py-1 backdrop-blur'>
           {sources.map((_, i) => (
             <span
-              // eslint-disable-next-line react/no-array-index-key
               key={i}
               className={[
                 "block h-1.5 w-1.5 rounded-full transition-all",

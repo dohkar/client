@@ -50,7 +50,7 @@ export function ListingCard({
     : "Локация не указана";
 
   return (
-    <div className='group block w-full max-w-full mx-auto'>
+    <div className='group cursor-pointer block w-full max-w-full mx-auto'>
       <div
         role='link'
         tabIndex={0}
