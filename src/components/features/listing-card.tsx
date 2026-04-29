@@ -2,7 +2,6 @@
 
 import type React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { MapPin, Heart, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { formatPrice, formatDate } from "@/lib/utils/format";
 import { ROUTES } from "@/constants";
 import { useFavorites } from "@/hooks/use-favorites";
 import { stripPostalCodePrefix, getRegionLabel } from "@/lib/ui/location";
+import { ListingCardMedia } from "./listing-card-media";
 
 interface ListingCardProps {
   listing: Listing;
@@ -35,7 +35,6 @@ export function ListingCard({
     toggleFavorite(listing.id, listing);
   };
 
-  const image = listing.image || listing.images[0] || "/placeholder.svg";
   const isCompact = variant === "compact";
   const locationTextRaw = listing.location || listing.city || listing.region || "";
   const locationText = locationTextRaw
@@ -61,16 +60,15 @@ export function ListingCard({
           isCompact ? "min-h-[320px]" : "min-h-[420px]",
         ].join(" ")}
       >
-        <div className='relative aspect-[4/3] overflow-hidden bg-muted'>
-          <Image
-            src={image}
-            alt={listing.title}
-            fill
-            className='object-cover group-hover:scale-105 transition-transform duration-300'
-            sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+        <div className='relative aspect-4/3 overflow-hidden bg-muted'>
+          <ListingCardMedia
+            title={listing.title}
+            image={listing.image}
+            images={listing.images}
+            className='absolute inset-0'
           />
 
-          <div className='absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent opacity-100' />
+          <div className='absolute inset-0 bg-linear-to-t from-black/45 via-black/5 to-transparent opacity-100' />
 
           <div className='absolute top-3 left-3 flex gap-2 flex-wrap'>
             {listing.promotionTier === "BOOSTED" && (
@@ -139,7 +137,7 @@ export function ListingCard({
                 isCompact ? "w-3.5 h-3.5 mt-0.5 shrink-0" : "w-4 h-4 mt-0.5 shrink-0"
               }
             />
-            <span className='min-w-0 line-clamp-1 break-words'>{locationText}</span>
+            <span className='min-w-0 line-clamp-1 wrap-break-word'>{locationText}</span>
           </div>
 
           <div
