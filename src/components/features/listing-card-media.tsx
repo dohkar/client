@@ -21,6 +21,7 @@ type ListingCardMediaProps = {
   image?: string | null;
   images?: string[] | null;
   className?: string;
+  onNavigate?: () => void;
 };
 
 export function ListingCardMedia({
@@ -28,6 +29,7 @@ export function ListingCardMedia({
   image,
   images,
   className,
+  onNavigate,
 }: ListingCardMediaProps) {
   const sources = useMemo(
     () =>
@@ -45,6 +47,7 @@ export function ListingCardMedia({
 
   const canSwipe = sources.length > 1;
   const widthPercent = 100 / sources.length;
+  const shiftPercentPerIndex = 100 / sources.length;
 
   const visibleIndexes = useMemo(() => {
     const set = new Set<number>();
@@ -60,6 +63,10 @@ export function ListingCardMedia({
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!canSwipe) return;
+    // Если нажали на кнопку (стрелки) — не запускаем drag-логику контейнера
+    if ((e.target as HTMLElement | null)?.closest("button")) return;
+    // На десктопе (мышь) убираем нативный drag/selection картинки
+    if (e.pointerType === "mouse") e.preventDefault();
     activePointerIdRef.current = e.pointerId;
     startXRef.current = e.clientX;
     didDragRef.current = false;
@@ -73,6 +80,7 @@ export function ListingCardMedia({
     if (activePointerIdRef.current !== e.pointerId) return;
     if (startXRef.current == null) return;
 
+    if (e.pointerType === "mouse") e.preventDefault();
     const dx = e.clientX - startXRef.current;
     if (Math.abs(dx) > 4) didDragRef.current = true;
     setDragX(dx);
@@ -115,8 +123,21 @@ export function ListingCardMedia({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
+      onDragStart={(e) => {
+        // Блокируем нативный drag картинки (серое "превью" как на скрине)
+        e.preventDefault();
+      }}
+      onClick={(e) => {
+        if (!onNavigate) return;
+        // Клик по медиа ведёт на страницу листинга, но:
+        // - если это был drag/swipe, то клик будет отменён ниже (onClickCapture)
+        // - клики по стрелкам уже остановлены в их onClick
+        e.preventDefault();
+        e.stopPropagation();
+        onNavigate();
+      }}
       onClickCapture={(e) => {
-        // если был свайп — не даём кликнуть и перейти по Link
+        // если был свайп — не даём сработать клику/переходу
         if (didDragRef.current) {
           e.preventDefault();
           e.stopPropagation();
@@ -132,7 +153,7 @@ export function ListingCardMedia({
           className='absolute inset-0 flex h-full w-full'
           style={{
             width: `${sources.length * 100}%`,
-            transform: `translateX(calc(${-index * 100}% + ${dragX}px))`,
+            transform: `translateX(calc(${-index * shiftPercentPerIndex}% + ${dragX}px))`,
             transition: isDragging ? "none" : "transform 220ms ease-out",
           }}
         >
@@ -147,7 +168,8 @@ export function ListingCardMedia({
                   src={src}
                   alt={i === 0 ? title : `${title} — фото ${i + 1}`}
                   fill
-                  className='object-cover'
+                  draggable={false}
+                  className='pointer-events-none object-cover'
                   sizes='(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw'
                 />
               ) : (
@@ -164,6 +186,10 @@ export function ListingCardMedia({
           <button
             type='button'
             className='pointer-events-auto grid size-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/45 disabled:opacity-40'
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -179,6 +205,10 @@ export function ListingCardMedia({
           <button
             type='button'
             className='pointer-events-auto grid size-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/45 disabled:opacity-40'
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();

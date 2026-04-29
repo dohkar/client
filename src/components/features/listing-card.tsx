@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { MapPin, Heart, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,11 @@ export function ListingCard({
   hideFavoriteButton = false,
   variant = "default",
 }: ListingCardProps) {
+  const router = useRouter();
   const { isFavorite, toggleFavorite, isMutating } = useFavorites();
   const favorite = isFavorite(listing.id);
   const isPending = isMutating(listing.id);
+  const href = ROUTES.listing(listing.id, listing.slug);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -48,17 +50,24 @@ export function ListingCard({
     : "Локация не указана";
 
   return (
-    <Link
-      href={ROUTES.listing(listing.id, listing.slug)}
-      className='group block w-full max-w-full mx-auto focus:outline-none'
-    >
+    <div className='group block w-full max-w-full mx-auto'>
       <div
+        role='link'
+        tabIndex={0}
+        aria-label={listing.title}
         className={[
           "relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm",
           "transition-shadow duration-200 hover:shadow-md",
-          "focus-within:ring-2 focus-within:ring-primary/30",
+          "focus:outline-none focus:ring-2 focus:ring-primary/30",
           isCompact ? "min-h-[320px]" : "min-h-[420px]",
         ].join(" ")}
+        onClick={() => router.push(href)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            router.push(href);
+          }
+        }}
       >
         <div className='relative aspect-4/3 overflow-hidden bg-muted'>
           <ListingCardMedia
@@ -66,6 +75,7 @@ export function ListingCard({
             image={listing.image}
             images={listing.images}
             className='absolute inset-0'
+            onNavigate={() => router.push(href)}
           />
 
           <div className='pointer-events-none absolute inset-0 bg-linear-to-t from-black/45 via-black/5 to-transparent opacity-100' />
@@ -166,6 +176,6 @@ export function ListingCard({
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
