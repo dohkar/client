@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -15,6 +15,8 @@ import { Filter, Building2, DollarSign, Ruler, MapPin } from "lucide-react";
 import { useUIStore } from "@/stores";
 import { PROPERTY_TYPE_OPTIONS, REGION_OPTIONS } from "@/lib/search-constants";
 import { CitySearchSelect } from "@/components/features/CitySearchSelect";
+import { useCities } from "@/hooks/use-cities";
+import { getRegionIdByName } from "@/services/region.service";
 import type { SearchFiltersDisplay } from "@/lib/search-params";
 import type { CityDto } from "@/types/property";
 
@@ -52,6 +54,19 @@ export interface MobileFilterDrawerProps {
   isPending: boolean;
 }
 
+// Helper to initialize state from filters
+function getInitialDraftState(filters: SearchFiltersDisplay) {
+  return {
+    type: filters.type,
+    region: filters.region,
+    cityId: filters.cityId ?? null,
+    roomsMin: filters.roomsMin ?? null,
+    areaMin: filters.areaMin != null ? String(filters.areaMin) : "",
+    priceMin: filters.priceMin != null ? String(filters.priceMin) : "",
+    priceMax: filters.priceMax != null ? String(filters.priceMax) : "",
+  };
+}
+
 export function MobileFilterDrawer({
   appliedFilters: filters,
   cities,
@@ -62,20 +77,49 @@ export function MobileFilterDrawer({
   const { isFilterModalOpen, openFilterModal, closeFilterModal } = useUIStore();
   const regionOptions = regionOptionsProp ?? REGION_OPTIONS;
 
-  const [draftType, setDraftType] = useState<SearchFiltersDisplay["type"]>("all");
-  const [draftRegion, setDraftRegion] = useState<SearchFiltersDisplay["region"]>("all");
-  const [draftCityId, setDraftCityId] = useState<string | null>(null);
-  const [draftRoomsMin, setDraftRoomsMin] = useState<number | null>(null);
-  const [draftAreaMin, setDraftAreaMin] = useState<string>("");
-  const [draftPriceMin, setDraftPriceMin] = useState<string>("");
-  const [draftPriceMax, setDraftPriceMax] = useState<string>("");
+  // single source of truth for draft, reset when modal opens
+  const [lastFilters, setLastFilters] = useState(filters);
+  // Keep track if we have initialized draft state for the currently open modal
+  const [draftState, setDraftState] = useState(() => getInitialDraftState(filters));
   const [priceErrors, setPriceErrors] = useState<PriceValidationErrors>({});
+
+  // Detect when new modal session starts (modal opened, filters changed)
+  const isModalOpening = isFilterModalOpen && lastFilters !== filters;
+
+  // Reset all state when modal opens, but avoid setState in useEffect!
+  if (isModalOpening) {
+    setDraftState(getInitialDraftState(filters));
+    setPriceErrors({});
+    setLastFilters(filters);
+  }
+
+  const draftType = draftState.type;
+  const draftRegion = draftState.region;
+  const draftCityId = draftState.cityId;
+  const draftRoomsMin = draftState.roomsMin;
+  const draftAreaMin = draftState.areaMin;
+  const draftPriceMin = draftState.priceMin;
+  const draftPriceMax = draftState.priceMax;
+
+  const setDraftType = (type: SearchFiltersDisplay["type"]) =>
+    setDraftState((state) => ({ ...state, type }));
+  const setDraftRegion = (region: SearchFiltersDisplay["region"]) =>
+    setDraftState((state) => ({ ...state, region }));
+  const setDraftCityId = (cityId: string | null) =>
+    setDraftState((state) => ({ ...state, cityId }));
+  const setDraftRoomsMin = (roomsMin: number | null) =>
+    setDraftState((state) => ({ ...state, roomsMin }));
+  const setDraftAreaMin = (areaMin: string) =>
+    setDraftState((state) => ({ ...state, areaMin }));
+  const setDraftPriceMin = (priceMin: string) =>
+    setDraftState((state) => ({ ...state, priceMin }));
+  const setDraftPriceMax = (priceMax: string) =>
+    setDraftState((state) => ({ ...state, priceMax }));
 
   const isDraftDirty = useMemo(() => {
     const appliedAreaStr = filters.areaMin != null ? String(filters.areaMin) : "";
     const appliedPriceMinStr = filters.priceMin != null ? String(filters.priceMin) : "";
     const appliedPriceMaxStr = filters.priceMax != null ? String(filters.priceMax) : "";
-
     return (
       draftType !== filters.type ||
       draftRegion !== filters.region ||
@@ -102,17 +146,26 @@ export function MobileFilterDrawer({
     filters.type,
   ]);
 
-  useEffect(() => {
-    if (!isFilterModalOpen) return;
-    setDraftType(filters.type);
-    setDraftRegion(filters.region);
-    setDraftCityId(filters.cityId ?? null);
-    setDraftRoomsMin(filters.roomsMin ?? null);
-    setDraftAreaMin(filters.areaMin != null ? String(filters.areaMin) : "");
-    setDraftPriceMin(filters.priceMin != null ? String(filters.priceMin) : "");
-    setDraftPriceMax(filters.priceMax != null ? String(filters.priceMax) : "");
-    setPriceErrors({});
-  }, [isFilterModalOpen, filters]);
+  const draftRegionId = useMemo(() => {
+    if (draftRegion === "all") return undefined;
+    return getRegionIdByName(draftRegion) ?? undefined;
+  }, [draftRegion]);
+
+  const shouldLoadDraftCities =
+    isFilterModalOpen &&
+    draftRegion !== "all" &&
+    draftRegionId != null &&
+    draftRegion !== filters.region;
+
+  const { data: draftCities = [] } = useCities(draftRegionId, {
+    enabled: shouldLoadDraftCities,
+  });
+
+  const citiesForSelect = useMemo(() => {
+    // Если регион не меняли — используем города, уже загруженные в родителе (чтобы не мигать).
+    if (draftRegion === filters.region) return cities;
+    return draftCities;
+  }, [cities, draftCities, draftRegion, filters.region]);
 
   const hasActiveFilters =
     Boolean(filters.query?.trim()) ||
@@ -159,7 +212,7 @@ export function MobileFilterDrawer({
       >
         <SheetContent
           side='bottom'
-          className='rounded-t-2xl h-[85vh] p-0 flex flex-col overflow-hidden'
+          className='rounded-t-2xl h-[85vh] p-0 flex flex-col overflow-hidden transform-gpu will-change-transform'
         >
           <SheetHeader className='pb-2 shrink-0'>
             <div className='mx-auto mt-2 h-1.5 w-10 rounded-full bg-muted' aria-hidden />
@@ -331,8 +384,15 @@ export function MobileFilterDrawer({
                 label='Город'
                 value={draftCityId ?? ""}
                 onValueChange={(value) => setDraftCityId(value || null)}
-                cities={cities}
-                placeholder={cities.length === 0 ? "Загрузка городов…" : "Все города"}
+                cities={citiesForSelect}
+                disabled={draftRegion === "all" || draftRegionId == null}
+                placeholder={
+                  draftRegion === "all"
+                    ? "Сначала выберите регион"
+                    : citiesForSelect.length === 0
+                      ? "Загрузка городов…"
+                      : "Все города"
+                }
               />
             </div>
           </div>
@@ -341,13 +401,15 @@ export function MobileFilterDrawer({
             <Button
               variant='outline'
               onClick={() => {
-                setDraftType("all");
-                setDraftRegion("all");
-                setDraftCityId(null);
-                setDraftRoomsMin(null);
-                setDraftAreaMin("");
-                setDraftPriceMin("");
-                setDraftPriceMax("");
+                setDraftState({
+                  type: "all",
+                  region: "all",
+                  cityId: null,
+                  roomsMin: null,
+                  areaMin: "",
+                  priceMin: "",
+                  priceMax: "",
+                });
                 setPriceErrors({});
               }}
               className='flex-1'
