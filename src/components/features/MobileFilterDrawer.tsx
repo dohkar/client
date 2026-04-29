@@ -23,7 +23,6 @@ export type RegionOption = { value: string; label: string };
 export interface MobileFilterDrawerProps {
   appliedFilters: SearchFiltersDisplay;
   cities: CityDto[];
-  /** Сортировка: «Все регионы», затем регион пользователя. Если не передано — REGION_OPTIONS */
   regionOptions?: RegionOption[];
   draftPriceMin: string;
   draftPriceMax: string;
@@ -80,6 +79,7 @@ export function MobileFilterDrawer({
 
   return (
     <>
+      {/* Кнопка фильтра хорошо видна и индикатор новых фильтров добавляет интерактивности */}
       <Button
         variant='outline'
         className='md:hidden gap-2 shadow-sm hover:shadow-md transition-shadow'
@@ -105,8 +105,11 @@ export function MobileFilterDrawer({
           }
         }}
       >
-        <SheetContent side='bottom' className='rounded-t-2xl max-h-[85vh] p-0'>
-          <SheetHeader className='pb-2'>
+        <SheetContent
+          side='bottom'
+          className='rounded-t-2xl h-[85vh] p-0 flex flex-col overflow-hidden'
+        >
+          <SheetHeader className='pb-2 shrink-0'>
             <div className='mx-auto mt-2 h-1.5 w-10 rounded-full bg-muted' aria-hidden />
             <SheetTitle className='flex items-center gap-2'>
               <div className='p-1.5 rounded-lg bg-primary/10'>
@@ -116,7 +119,7 @@ export function MobileFilterDrawer({
             </SheetTitle>
           </SheetHeader>
 
-          <div className='space-y-6 px-4 pb-6 overflow-y-auto'>
+          <div className='space-y-6 px-4 pb-6 overflow-y-auto flex-1'>
             {/* Тип недвижимости */}
             <div>
               <label className='flex items-center gap-2 text-sm font-semibold text-foreground mb-3'>
@@ -145,8 +148,10 @@ export function MobileFilterDrawer({
               </label>
               <div className='space-y-2'>
                 <div className='relative'>
+                  {/* UX: Добавить step=1000 чтобы быстрее задавать цену */}
                   <Input
                     type='number'
+                    step={1000}
                     placeholder='От'
                     min={0}
                     value={localPriceMin}
@@ -166,6 +171,7 @@ export function MobileFilterDrawer({
                 <div className='relative'>
                   <Input
                     type='number'
+                    step={1000}
                     placeholder='До'
                     min={0}
                     value={localPriceMax}
@@ -197,7 +203,7 @@ export function MobileFilterDrawer({
                 <Building2 className='w-4 h-4 text-muted-foreground' />
                 Комнат минимум
               </label>
-              <div className='flex gap-2 flex-wrap'>
+              <div className='grid grid-cols-5 gap-2'>
                 {["0", "1", "2", "3", "4+"].map((option) => {
                   const optionValue = option === "4+" ? 4 : Number(option);
                   const isSelected =
@@ -208,7 +214,7 @@ export function MobileFilterDrawer({
                       variant={isSelected ? "default" : "outline"}
                       size='sm'
                       onClick={() => handleRoomsChange(optionValue)}
-                      className='flex-1 min-w-[60px] min-h-[44px] transition-all hover:scale-105'
+                      className='min-h-[44px] transition-all hover:scale-105'
                     >
                       {option}
                     </Button>
@@ -226,6 +232,7 @@ export function MobileFilterDrawer({
               <div className='relative'>
                 <Input
                   type='number'
+                  step={1}
                   placeholder='От'
                   min={0}
                   value={filters.areaMin ?? ""}
@@ -277,7 +284,7 @@ export function MobileFilterDrawer({
             </div>
           </div>
 
-          <div className='border-t bg-background p-4 flex gap-2'>
+          <div className='border-t bg-background p-4 flex gap-2 shrink-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]'>
             <Button variant='outline' onClick={handleResetAll} className='flex-1'>
               Сбросить
             </Button>
