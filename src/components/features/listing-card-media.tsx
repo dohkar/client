@@ -55,6 +55,8 @@ export function ListingCardMedia({
   }, [index, sources.length]);
 
   const clampIndex = (next: number) => Math.max(0, Math.min(sources.length - 1, next));
+  const goPrev = () => setIndex((prev) => clampIndex(prev - 1));
+  const goNext = () => setIndex((prev) => clampIndex(prev + 1));
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!canSwipe) return;
@@ -156,6 +158,41 @@ export function ListingCardMedia({
           ))}
         </div>
       </div>
+
+      {canSwipe && (
+        <div className='pointer-events-none absolute inset-y-0 left-0 right-0 hidden items-center justify-between px-2 opacity-0 transition-opacity duration-150 md:flex md:group-hover:opacity-100'>
+          <button
+            type='button'
+            className='pointer-events-auto grid size-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/45 disabled:opacity-40'
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              goPrev();
+            }}
+            disabled={index === 0}
+            aria-label='Предыдущее фото'
+          >
+            <span aria-hidden className='text-xl leading-none'>
+              ‹
+            </span>
+          </button>
+          <button
+            type='button'
+            className='pointer-events-auto grid size-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/45 disabled:opacity-40'
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              goNext();
+            }}
+            disabled={index === sources.length - 1}
+            aria-label='Следующее фото'
+          >
+            <span aria-hidden className='text-xl leading-none'>
+              ›
+            </span>
+          </button>
+        </div>
+      )}
 
       {canSwipe && (
         <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-black/35 px-2 py-1 backdrop-blur'>
