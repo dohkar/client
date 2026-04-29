@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -16,27 +17,38 @@ import { PROPERTY_TYPE_OPTIONS, REGION_OPTIONS } from "@/lib/search-constants";
 import { CitySearchSelect } from "@/components/features/CitySearchSelect";
 import type { SearchFiltersDisplay } from "@/lib/search-params";
 import type { CityDto } from "@/types/property";
-import type { PriceValidationErrors } from "@/hooks/use-segment-search-filters";
 
 export type RegionOption = { value: string; label: string };
+
+interface PriceValidationErrors {
+  priceMin?: string;
+  priceMax?: string;
+}
+
+function validatePrices(min: string, max: string): PriceValidationErrors {
+  const errors: PriceValidationErrors = {};
+  const minNum = min.trim() ? Number(min.trim()) : null;
+  const maxNum = max.trim() ? Number(max.trim()) : null;
+
+  if (minNum !== null && maxNum !== null && minNum > maxNum) {
+    errors.priceMin = "Минимальная цена не может быть больше максимальной";
+    errors.priceMax = "Максимальная цена не может быть меньше минимальной";
+  }
+  if (minNum !== null && minNum < 0) {
+    errors.priceMin = "Цена не может быть отрицательной";
+  }
+  if (maxNum !== null && maxNum < 0) {
+    errors.priceMax = "Цена не может быть отрицательной";
+  }
+
+  return errors;
+}
 
 export interface MobileFilterDrawerProps {
   appliedFilters: SearchFiltersDisplay;
   cities: CityDto[];
   regionOptions?: RegionOption[];
-  draftPriceMin: string;
-  draftPriceMax: string;
-  setDraftPriceMin: (value: string) => void;
-  setDraftPriceMax: (value: string) => void;
-  onTypeChange: (type: SearchFiltersDisplay["type"]) => void;
-  onRegionChange: (region: SearchFiltersDisplay["region"]) => void;
-  onCityChange: (cityId: string | null) => void;
-  onRoomsChange: (rooms: number | null) => void;
-  onAreaMinChange: (areaMin: number | null) => void;
-  onPriceMinBlur: () => void;
-  onPriceMaxBlur: () => void;
-  onResetAll: () => void;
-  priceErrors: PriceValidationErrors;
+  onApply: (updates: Partial<SearchFiltersDisplay>) => void;
   isPending: boolean;
 }
 
@@ -44,23 +56,63 @@ export function MobileFilterDrawer({
   appliedFilters: filters,
   cities,
   regionOptions: regionOptionsProp,
-  draftPriceMin: localPriceMin,
-  draftPriceMax: localPriceMax,
-  setDraftPriceMin: setLocalPriceMin,
-  setDraftPriceMax: setLocalPriceMax,
-  onTypeChange: handleTypeChange,
-  onRegionChange: handleRegionChange,
-  onCityChange: handleCityChange,
-  onRoomsChange: handleRoomsChange,
-  onAreaMinChange: handleAreaMinChange,
-  onPriceMinBlur: handlePriceMinBlur,
-  onPriceMaxBlur: handlePriceMaxBlur,
-  onResetAll: handleResetAll,
-  priceErrors,
+  onApply,
   isPending,
 }: MobileFilterDrawerProps) {
   const { isFilterModalOpen, openFilterModal, closeFilterModal } = useUIStore();
   const regionOptions = regionOptionsProp ?? REGION_OPTIONS;
+
+  const [draftType, setDraftType] = useState<SearchFiltersDisplay["type"]>("all");
+  const [draftRegion, setDraftRegion] = useState<SearchFiltersDisplay["region"]>("all");
+  const [draftCityId, setDraftCityId] = useState<string | null>(null);
+  const [draftRoomsMin, setDraftRoomsMin] = useState<number | null>(null);
+  const [draftAreaMin, setDraftAreaMin] = useState<string>("");
+  const [draftPriceMin, setDraftPriceMin] = useState<string>("");
+  const [draftPriceMax, setDraftPriceMax] = useState<string>("");
+  const [priceErrors, setPriceErrors] = useState<PriceValidationErrors>({});
+
+  const isDraftDirty = useMemo(() => {
+    const appliedAreaStr = filters.areaMin != null ? String(filters.areaMin) : "";
+    const appliedPriceMinStr = filters.priceMin != null ? String(filters.priceMin) : "";
+    const appliedPriceMaxStr = filters.priceMax != null ? String(filters.priceMax) : "";
+
+    return (
+      draftType !== filters.type ||
+      draftRegion !== filters.region ||
+      (draftCityId ?? null) !== (filters.cityId ?? null) ||
+      draftRoomsMin !== (filters.roomsMin ?? null) ||
+      draftAreaMin !== appliedAreaStr ||
+      draftPriceMin !== appliedPriceMinStr ||
+      draftPriceMax !== appliedPriceMaxStr
+    );
+  }, [
+    draftAreaMin,
+    draftCityId,
+    draftPriceMax,
+    draftPriceMin,
+    draftRegion,
+    draftRoomsMin,
+    draftType,
+    filters.areaMin,
+    filters.cityId,
+    filters.priceMax,
+    filters.priceMin,
+    filters.region,
+    filters.roomsMin,
+    filters.type,
+  ]);
+
+  useEffect(() => {
+    if (!isFilterModalOpen) return;
+    setDraftType(filters.type);
+    setDraftRegion(filters.region);
+    setDraftCityId(filters.cityId ?? null);
+    setDraftRoomsMin(filters.roomsMin ?? null);
+    setDraftAreaMin(filters.areaMin != null ? String(filters.areaMin) : "");
+    setDraftPriceMin(filters.priceMin != null ? String(filters.priceMin) : "");
+    setDraftPriceMax(filters.priceMax != null ? String(filters.priceMax) : "");
+    setPriceErrors({});
+  }, [isFilterModalOpen, filters]);
 
   const hasActiveFilters =
     Boolean(filters.query?.trim()) ||
@@ -126,7 +178,10 @@ export function MobileFilterDrawer({
                 <Building2 className='w-4 h-4 text-muted-foreground' />
                 Тип недвижимости
               </label>
-              <Select value={filters.type} onValueChange={handleTypeChange}>
+              <Select
+                value={draftType}
+                onValueChange={(v) => setDraftType(v as SearchFiltersDisplay["type"])}
+              >
                 <SelectTrigger className='w-full'>
                   <SelectValue placeholder='Выберите тип' />
                 </SelectTrigger>
@@ -154,12 +209,11 @@ export function MobileFilterDrawer({
                     step={1000}
                     placeholder='От'
                     min={0}
-                    value={localPriceMin}
+                    value={draftPriceMin}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "");
-                      setLocalPriceMin(val);
+                      setDraftPriceMin(val);
                     }}
-                    onBlur={handlePriceMinBlur}
                     className={`pl-9 ${priceErrors.priceMin ? "border-destructive" : ""}`}
                     autoComplete='off'
                     inputMode='numeric'
@@ -174,12 +228,11 @@ export function MobileFilterDrawer({
                     step={1000}
                     placeholder='До'
                     min={0}
-                    value={localPriceMax}
+                    value={draftPriceMax}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "");
-                      setLocalPriceMax(val);
+                      setDraftPriceMax(val);
                     }}
-                    onBlur={handlePriceMaxBlur}
                     className={`pl-9 ${priceErrors.priceMax ? "border-destructive" : ""}`}
                     autoComplete='off'
                     inputMode='numeric'
@@ -207,13 +260,13 @@ export function MobileFilterDrawer({
                 {["0", "1", "2", "3", "4+"].map((option) => {
                   const optionValue = option === "4+" ? 4 : Number(option);
                   const isSelected =
-                    filters.roomsMin !== null && filters.roomsMin === optionValue;
+                    draftRoomsMin !== null && draftRoomsMin === optionValue;
                   return (
                     <Button
                       key={option}
                       variant={isSelected ? "default" : "outline"}
                       size='sm'
-                      onClick={() => handleRoomsChange(optionValue)}
+                      onClick={() => setDraftRoomsMin(optionValue)}
                       className='min-h-[44px] transition-all hover:scale-105'
                     >
                       {option}
@@ -235,14 +288,8 @@ export function MobileFilterDrawer({
                   step={1}
                   placeholder='От'
                   min={0}
-                  value={filters.areaMin ?? ""}
-                  onChange={(e) =>
-                    handleAreaMinChange(
-                      e.target.value !== "" && !Number.isNaN(Number(e.target.value))
-                        ? Number(e.target.value)
-                        : null
-                    )
-                  }
+                  value={draftAreaMin}
+                  onChange={(e) => setDraftAreaMin(e.target.value.replace(/\D/g, ""))}
                   className='pl-9'
                   autoComplete='off'
                 />
@@ -258,7 +305,13 @@ export function MobileFilterDrawer({
                 <MapPin className='w-4 h-4 text-muted-foreground' />
                 Регион
               </label>
-              <Select value={filters.region} onValueChange={handleRegionChange}>
+              <Select
+                value={draftRegion}
+                onValueChange={(v) => {
+                  setDraftRegion(v as SearchFiltersDisplay["region"]);
+                  setDraftCityId(null);
+                }}
+              >
                 <SelectTrigger className='w-full'>
                   <SelectValue placeholder='Выберите регион' />
                 </SelectTrigger>
@@ -276,8 +329,8 @@ export function MobileFilterDrawer({
             <div>
               <CitySearchSelect
                 label='Город'
-                value={filters.cityId ?? ""}
-                onValueChange={(value) => handleCityChange(value || null)}
+                value={draftCityId ?? ""}
+                onValueChange={(value) => setDraftCityId(value || null)}
                 cities={cities}
                 placeholder={cities.length === 0 ? "Загрузка городов…" : "Все города"}
               />
@@ -285,19 +338,48 @@ export function MobileFilterDrawer({
           </div>
 
           <div className='border-t bg-background p-4 flex gap-2 shrink-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]'>
-            <Button variant='outline' onClick={handleResetAll} className='flex-1'>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setDraftType("all");
+                setDraftRegion("all");
+                setDraftCityId(null);
+                setDraftRoomsMin(null);
+                setDraftAreaMin("");
+                setDraftPriceMin("");
+                setDraftPriceMax("");
+                setPriceErrors({});
+              }}
+              className='flex-1'
+            >
               Сбросить
             </Button>
             <Button
               onClick={() => {
-                handlePriceMinBlur();
-                handlePriceMaxBlur();
+                const errs = validatePrices(draftPriceMin, draftPriceMax);
+                if (Object.keys(errs).length > 0) {
+                  setPriceErrors(errs);
+                  return;
+                }
+                setPriceErrors({});
+
+                const updates: Partial<SearchFiltersDisplay> = {
+                  type: draftType,
+                  region: draftRegion,
+                  cityId: draftRegion === "all" ? null : (draftCityId ?? null),
+                  roomsMin: draftRoomsMin,
+                  areaMin: draftAreaMin.trim() ? Number(draftAreaMin.trim()) : null,
+                  priceMin: draftPriceMin.trim() ? Number(draftPriceMin.trim()) : null,
+                  priceMax: draftPriceMax.trim() ? Number(draftPriceMax.trim()) : null,
+                };
+
+                onApply(updates);
                 closeFilterModal();
               }}
               disabled={isPending}
               className='flex-1'
             >
-              {isPending ? "Применяем…" : "Применить"}
+              {isPending ? "Применяем…" : isDraftDirty ? "Применить" : "Готово"}
             </Button>
           </div>
         </SheetContent>

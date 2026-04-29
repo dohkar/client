@@ -104,6 +104,7 @@ export function SearchPageClient({
     setDraftPriceMin,
     setDraftPriceMax,
     setDraftAreaMin,
+    updateFilters,
     handleTypeChange,
     handleRegionChange,
     handleRoomsChange,
@@ -260,46 +261,36 @@ export function SearchPageClient({
                 appliedFilters={appliedFilters}
                 cities={cities}
                 regionOptions={regionOptions}
-                draftPriceMin={draftPriceMin}
-                draftPriceMax={draftPriceMax}
-                setDraftPriceMin={setDraftPriceMin}
-                setDraftPriceMax={setDraftPriceMax}
-                onTypeChange={handleTypeChange}
-                onRegionChange={handleRegionChange}
-                onCityChange={handleCityChange}
-                onRoomsChange={handleRoomsChange}
-                onAreaMinChange={handleAreaMinChange}
-                onPriceMinBlur={handlePriceMinBlur}
-                onPriceMaxBlur={handlePriceMaxBlur}
-                onResetAll={handleResetAll}
-                priceErrors={priceErrors}
+                onApply={(updates) => updateFilters(updates)}
                 isPending={isPending}
               />
             </div>
           </div>
         </div>
 
-        <HorizontalFilters
-          filters={appliedFilters}
-          cities={cities}
-          regionOptions={regionOptions}
-          localPriceMin={draftPriceMin}
-          localPriceMax={draftPriceMax}
-          localAreaMin={draftAreaMin}
-          priceErrors={priceErrors}
-          onTypeChange={handleTypeChange}
-          onRegionChange={handleRegionChange}
-          onCityChange={handleCityChange}
-          onRoomsChange={handleRoomsChange}
-          onSortChange={handleSortChange}
-          onPriceMinChange={setDraftPriceMin}
-          onPriceMaxChange={setDraftPriceMax}
-          onPriceMinBlur={handlePriceMinBlur}
-          onPriceMaxBlur={handlePriceMaxBlur}
-          onAreaMinChange={setDraftAreaMin}
-          onAreaMinBlur={handleAreaMinBlur}
-          onDealTypeChange={handleDealTypeChange}
-        />
+        <div className='hidden md:block'>
+          <HorizontalFilters
+            filters={appliedFilters}
+            cities={cities}
+            regionOptions={regionOptions}
+            localPriceMin={draftPriceMin}
+            localPriceMax={draftPriceMax}
+            localAreaMin={draftAreaMin}
+            priceErrors={priceErrors}
+            onTypeChange={handleTypeChange}
+            onRegionChange={handleRegionChange}
+            onCityChange={handleCityChange}
+            onRoomsChange={handleRoomsChange}
+            onSortChange={handleSortChange}
+            onPriceMinChange={setDraftPriceMin}
+            onPriceMaxChange={setDraftPriceMax}
+            onPriceMinBlur={handlePriceMinBlur}
+            onPriceMaxBlur={handlePriceMaxBlur}
+            onAreaMinChange={setDraftAreaMin}
+            onAreaMinBlur={handleAreaMinBlur}
+            onDealTypeChange={handleDealTypeChange}
+          />
+        </div>
 
         <ActiveFilters
           filters={appliedFilters}
