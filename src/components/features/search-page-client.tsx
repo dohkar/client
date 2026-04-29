@@ -21,7 +21,6 @@ import {
 } from "@/lib/search-constants";
 import { useSortedRegionOptions } from "@/hooks/use-user-region";
 import type { RegionOption } from "@/hooks/use-user-region";
-import { useUserRegion } from "@/hooks/use-user-region";
 import { useDetectUserRegion } from "@/hooks/use-detect-user-region";
 import { ROUTES } from "@/constants";
 import { Input } from "@/components/ui/input";
@@ -64,7 +63,6 @@ export function SearchPageClient({
   const queryClient = useQueryClient();
   const pathParams = useParams();
   useDetectUserRegion();
-  const userRegionSlug = useUserRegion();
 
   // Параметры маршрута всегда из URL (useParams), чтобы при клиентской навигации
   // не показывать старые данные из кэша/пропсов
@@ -181,30 +179,7 @@ export function SearchPageClient({
     cityId: appliedFilters.cityId ?? undefined,
   });
 
-  const listingsRaw = Array.isArray(data?.data) ? data.data : [];
-  const listings = useMemo(() => {
-    // Как в Avito: если фильтр региона = "Все регионы", приоритизируем регион пользователя (IP/GPS).
-    if (appliedFilters.region !== "all") return listingsRaw;
-    if (!userRegionSlug || userRegionSlug === "all") return listingsRaw;
-
-    const preferred =
-      userRegionSlug === "ingushetiya"
-        ? "Ingushetia"
-        : userRegionSlug === "chechnya"
-          ? "Chechnya"
-          : userRegionSlug === "other"
-            ? "Other"
-            : null;
-    if (!preferred) return listingsRaw;
-
-    const head: typeof listingsRaw = [];
-    const tail: typeof listingsRaw = [];
-    for (const item of listingsRaw) {
-      if (item.region === preferred) head.push(item);
-      else tail.push(item);
-    }
-    return head.length > 0 ? [...head, ...tail] : listingsRaw;
-  }, [appliedFilters.region, listingsRaw, userRegionSlug]);
+  const listings = Array.isArray(data?.data) ? data.data : [];
   const totalPages = typeof data?.totalPages === "number" ? data.totalPages : 0;
 
   const activeFiltersCount = useMemo(() => {

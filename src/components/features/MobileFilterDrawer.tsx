@@ -1,13 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -101,7 +95,7 @@ export function MobileFilterDrawer({
         )}
       </Button>
 
-      <Dialog
+      <Sheet
         open={isFilterModalOpen}
         onOpenChange={(open) => {
           if (open) {
@@ -111,17 +105,18 @@ export function MobileFilterDrawer({
           }
         }}
       >
-        <DialogContent className='max-w-md max-h-[90vh] overflow-y-auto'>
-          <DialogHeader>
-            <DialogTitle className='flex items-center gap-2'>
+        <SheetContent side='bottom' className='rounded-t-2xl max-h-[85vh] p-0'>
+          <SheetHeader className='pb-2'>
+            <div className='mx-auto mt-2 h-1.5 w-10 rounded-full bg-muted' aria-hidden />
+            <SheetTitle className='flex items-center gap-2'>
               <div className='p-1.5 rounded-lg bg-primary/10'>
                 <Filter className='h-5 w-5 text-primary' />
               </div>
               Фильтры поиска
-            </DialogTitle>
-          </DialogHeader>
+            </SheetTitle>
+          </SheetHeader>
 
-          <div className='space-y-6 py-4'>
+          <div className='space-y-6 px-4 pb-6 overflow-y-auto'>
             {/* Тип недвижимости */}
             <div>
               <label className='flex items-center gap-2 text-sm font-semibold text-foreground mb-3'>
@@ -282,12 +277,8 @@ export function MobileFilterDrawer({
             </div>
           </div>
 
-          <DialogFooter className='flex-col sm:flex-row gap-2'>
-            <Button
-              variant='outline'
-              onClick={handleResetAll}
-              className='w-full sm:w-auto'
-            >
+          <div className='border-t bg-background p-4 flex gap-2'>
+            <Button variant='outline' onClick={handleResetAll} className='flex-1'>
               Сбросить
             </Button>
             <Button
@@ -297,13 +288,13 @@ export function MobileFilterDrawer({
                 closeFilterModal();
               }}
               disabled={isPending}
-              className='w-full sm:w-auto'
+              className='flex-1'
             >
               {isPending ? "Применяем…" : "Применить"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
