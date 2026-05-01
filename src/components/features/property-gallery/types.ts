@@ -18,4 +18,6 @@ export type MediaGalleryProps = {
   initialIndex?: number;
   className?: string;
   aspectRatio?: AspectRatio;
+  /** Сброс состояния галереи при смене сущности (например id листинга). Передаётся в `key` у `MediaGrid`. */
+  resetKey?: string;
 };

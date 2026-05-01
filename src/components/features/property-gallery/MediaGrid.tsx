@@ -56,16 +56,23 @@ export function MediaGrid({
   const [thumbsApi, setThumbsApi] = useState<CarouselApi>();
   const [fullscreenApi, setFullscreenApi] = useState<CarouselApi>();
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  /** Индекс при открытии модалки (в opts, без ref при render — правило ESLint). */
+  const [fullscreenStartIndex, setFullscreenStartIndex] = useState(0);
 
-  // при смене медиа (или initialIndex) — аккуратно ресетимся
+  const openFullscreen = useCallback(() => {
+    const idx = mainApi?.selectedScrollSnap() ?? currentIndex;
+    setFullscreenStartIndex(idx);
+    setIsFullscreenOpen(true);
+  }, [mainApi, currentIndex, setFullscreenStartIndex, setIsFullscreenOpen]);
+
+  // Только главная лента и миниатюры: стартовый индекс / смена листинга.
+  // Fullscreen НЕ трогаем здесь: при появлении `fullscreenApi` иначе всегда уезжали на `clampedInitialIndex` (обычно 0).
   useEffect(() => {
-    setCurrentIndex(clampedInitialIndex);
     mainApi?.scrollTo(clampedInitialIndex);
     thumbsApi?.scrollTo(clampedInitialIndex);
-    fullscreenApi?.scrollTo(clampedInitialIndex);
-  }, [clampedInitialIndex, mainApi, thumbsApi, fullscreenApi]);
+  }, [clampedInitialIndex, mainApi, thumbsApi]);
 
-  const syncFromApi = useCallback(
+  const syncFromMainApi = useCallback(
     (api: CarouselApi | undefined) => {
       if (!api) return;
       const idx = api.selectedScrollSnap();
@@ -75,10 +82,21 @@ export function MediaGrid({
     [thumbsApi]
   );
 
-  // подписываемся на select/reInit главного каруселя
+  const syncFromFullscreenApi = useCallback(
+    (api: CarouselApi | undefined) => {
+      if (!api) return;
+      const idx = api.selectedScrollSnap();
+      setCurrentIndex(idx);
+      thumbsApi?.scrollTo(idx);
+      mainApi?.scrollTo(idx);
+    },
+    [mainApi, thumbsApi]
+  );
+
+  // Главная лента: индекс + миниатюры (fullscreen закрыт или не трогаем main)
   useEffect(() => {
-    if (!mainApi) return;
-    const onSelect = () => syncFromApi(mainApi);
+    if (!mainApi || isFullscreenOpen) return;
+    const onSelect = () => syncFromMainApi(mainApi);
     mainApi.on("select", onSelect);
     mainApi.on("reInit", onSelect);
     onSelect();
@@ -86,7 +104,19 @@ export function MediaGrid({
       mainApi.off("select", onSelect);
       mainApi.off("reInit", onSelect);
     };
-  }, [mainApi, syncFromApi]);
+  }, [mainApi, isFullscreenOpen, syncFromMainApi]);
+
+  // Fullscreen: свайп обновляет индекс и подстраивает main + thumbs (без немедленного onSelect — иначе до scrollTo читается 0-й слайд).
+  useEffect(() => {
+    if (!fullscreenApi || !isFullscreenOpen) return;
+    const onSelect = () => syncFromFullscreenApi(fullscreenApi);
+    fullscreenApi.on("select", onSelect);
+    fullscreenApi.on("reInit", onSelect);
+    return () => {
+      fullscreenApi.off("select", onSelect);
+      fullscreenApi.off("reInit", onSelect);
+    };
+  }, [fullscreenApi, isFullscreenOpen, syncFromFullscreenApi]);
 
   const goToIndex = useCallback(
     (idx: number) => {
@@ -107,10 +137,13 @@ export function MediaGrid({
     mainApi?.scrollNext();
   }, [mainApi]);
 
-  // при открытом fullscreen синхронизируем позицию
+  // Открыли модалку или сменился индекс снаружи — прокрутить fullscreen к текущему кадру (после монтирования Embla).
   useEffect(() => {
-    if (!isFullscreenOpen) return;
-    fullscreenApi?.scrollTo(currentIndex);
+    if (!isFullscreenOpen || !fullscreenApi) return;
+    const id = requestAnimationFrame(() => {
+      fullscreenApi.scrollTo(currentIndex);
+    });
+    return () => cancelAnimationFrame(id);
   }, [currentIndex, fullscreenApi, isFullscreenOpen]);
 
   // --- RENDER ---
@@ -153,7 +186,7 @@ export function MediaGrid({
                   <button
                     type='button'
                     className='relative block h-full min-h-0 w-full cursor-zoom-in'
-                    onClick={() => setIsFullscreenOpen(true)}
+                    onClick={openFullscreen}
                     aria-label={`Открыть медиа ${idx + 1} из ${media.length} на весь экран`}
                   >
                     {isVideoItem ? (
@@ -185,7 +218,6 @@ export function MediaGrid({
             })}
           </CarouselContent>
 
-          {/* стрелки (простые, всегда видимы на md+) */}
           {hasMore ? (
             <>
               <Button
@@ -212,19 +244,17 @@ export function MediaGrid({
           ) : null}
         </Carousel>
 
-        {/* fullscreen toggle */}
         <Button
           type='button'
           variant='ghost'
           size='icon'
           className='absolute right-2 top-2 z-20 size-10 rounded-full border border-border/50 bg-background/80 text-foreground shadow-lg backdrop-blur-md transition-all hover:bg-background/90 focus-visible:ring-2 focus-visible:ring-ring md:right-3 md:top-3 md:size-11'
           aria-label='Открыть на весь экран'
-          onClick={() => setIsFullscreenOpen(true)}
+          onClick={openFullscreen}
         >
           <Maximize2 className='size-5 md:size-6' />
         </Button>
 
-        {/* счётчик */}
         {hasMore ? (
           <div className='absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/15 bg-black/60 px-3 py-1 text-xs font-semibold text-white shadow-md backdrop-blur-md tabular-nums'>
             {currentIndex + 1} / {media.length}
@@ -232,9 +262,9 @@ export function MediaGrid({
         ) : null}
       </div>
 
-      {/* миниатюры снизу */}
+      {/* миниатюры снизу — отступы и без overflow-hidden на кнопке, иначе ring обрезается */}
       {hasMore ? (
-        <div className='mt-2 w-full rounded-xl border border-border/50 bg-muted/10 px-1 pb-1.5 pt-2'>
+        <div className='mt-2 w-full rounded-xl border border-border/50 bg-muted/10 px-2 py-2 sm:px-3 sm:py-2.5'>
           <Carousel
             opts={{
               align: "start",
@@ -244,18 +274,21 @@ export function MediaGrid({
             setApi={setThumbsApi}
             className='w-full'
           >
-            <CarouselContent className='-ml-1.5 justify-start sm:-ml-2'>
+            <CarouselContent className='-ml-1.5 mr-1.5 justify-start'>
               {media.map((item, idx) => {
                 const isActive = idx === currentIndex;
                 return (
-                  <CarouselItem key={item.id} className='basis-auto pl-1.5 sm:pl-2'>
+                  <CarouselItem
+                    key={item.id}
+                    className='basis-auto py-0.5 pl-2 sm:py-1 sm:pl-2.5'
+                  >
                     <button
                       type='button'
                       aria-label={`Показать ${idx + 1} из ${media.length}`}
                       aria-current={isActive || undefined}
                       onClick={() => goToIndex(idx)}
                       className={cn(
-                        "relative overflow-hidden rounded-lg outline-none ring-offset-2 transition-[box-shadow,opacity,transform] duration-150 focus-visible:ring-2 focus-visible:ring-ring",
+                        "relative rounded-lg outline-none ring-offset-2 ring-offset-background transition-[box-shadow,opacity,transform] duration-150 focus-visible:ring-2 focus-visible:ring-ring",
                         isActive
                           ? "z-10 opacity-100 shadow-md ring-2 ring-primary/60"
                           : "opacity-80 hover:opacity-100 hover:ring-1 hover:ring-border"
@@ -291,16 +324,17 @@ export function MediaGrid({
           showCloseButton
         >
           <DialogTitle className='sr-only'>Галерея медиа</DialogTitle>
-          <div className='relative h-full w-full'>
-            <div className='absolute left-4 top-4 z-20 rounded-full bg-black/60 px-3 py-1 text-sm font-semibold text-white backdrop-blur'>
+          <div className='relative h-full w-full pt-14 pb-6 sm:pt-16'>
+            <div className='absolute left-4 top-4 z-20 rounded-full bg-black/60 px-3 py-1 text-sm font-semibold text-white backdrop-blur sm:left-5 sm:top-5'>
               {currentIndex + 1} / {media.length}
             </div>
-            <div className='h-full w-full'>
+            <div className='h-full min-h-0 w-full'>
               <Carousel
                 opts={{
                   align: "start",
                   containScroll: "trimSnaps",
                   loop: hasMore,
+                  startIndex: fullscreenStartIndex,
                 }}
                 setApi={setFullscreenApi}
                 className='h-full w-full'

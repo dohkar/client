@@ -428,6 +428,7 @@ export function RealEstateListingDetail({ listing }: { listing: Listing }) {
         <div className='order-1 min-w-0 lg:order-none'>
           <div className='relative min-w-0 max-lg:max-h-[min(70vw,420px)] overflow-hidden rounded-xl lg:max-h-[min(560px,calc(100dvh-10rem))]'>
             <MediaGallery
+              resetKey={listingId}
               media={mediaItems}
               aspectRatio='4/3'
               className='[&_[role=region]]:rounded-xl'

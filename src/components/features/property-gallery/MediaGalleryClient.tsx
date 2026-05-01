@@ -11,9 +11,12 @@ export function MediaGalleryClient({
   initialIndex = 0,
   className,
   aspectRatio = "16/9",
+  resetKey,
 }: MediaGalleryProps) {
+  const gridKey = resetKey ?? media.map((m) => m.id).join("|");
   return (
     <MediaGrid
+      key={gridKey}
       media={media}
       initialIndex={initialIndex}
       aspectRatio={aspectRatio}
