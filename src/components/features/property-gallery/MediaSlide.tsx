@@ -233,6 +233,26 @@ export function MediaSlide({
     [zoom, isImageItem, onZoomChange, onDoubleClick, applyPanStyle]
   );
 
+  // Одиночный клик на десктопе: toggle zoom (как в маркетплейсах),
+  // но только когда не идёт drag и слайд активен.
+  const handleClick = useCallback(
+    (e: MouseEvent<HTMLDivElement>) => {
+      if (!isActive || !isImageItem) return;
+      if (isDragging) return;
+      // если пользователь тянул/выделял — не интерпретируем как клик зума
+      if (Math.abs(e.movementX) > 2 || Math.abs(e.movementY) > 2) return;
+      e.stopPropagation();
+      if (zoom === MIN_ZOOM) {
+        onZoomChange(MAX_ZOOM);
+      } else {
+        onZoomChange(MIN_ZOOM);
+        panRef.current = { x: 0, y: 0 };
+        applyPanStyle();
+      }
+    },
+    [applyPanStyle, isActive, isDragging, isImageItem, onZoomChange, zoom]
+  );
+
   // Keyboard controls
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -401,6 +421,7 @@ export function MediaSlide({
       onMouseMove={handleMouseMove}
       onMouseUp={stopDragging}
       onMouseLeave={stopDragging}
+      onClick={handleClick}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
