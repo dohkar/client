@@ -39,6 +39,7 @@ import {
 import type { ListingCategory } from "@/types/listing";
 import { Categories } from "./categories";
 import { useSearchHistory } from "@/hooks/use-search-history";
+import { formatPriceCompact, parsePriceDigits } from "@/lib/format-price";
 
 /** Герой: таб (buy/rent/daily) → API-значение для объявлений (Продам / Сдам / Посуточно). */
 const HERO_DEAL_TO_API: Record<DealType, HeroDealApiToken> = {
@@ -67,60 +68,6 @@ const INITIAL_STATE = {
   priceMax: "",
 };
 
-// ─── PRICE UTILS ─────────────────────────────────────────────
-
-/**
- * Парсит строку → число или null.
- * Принимает как "1 234 567", так и "1234567".
- */
-function parsePrice(val: string): number | null {
-  const digits = val.replace(/\s/g, "").replace(/\D/g, "");
-  if (!digits) return null;
-  const n = Number(digits);
-  return isNaN(n) || n < 0 ? null : n;
-}
-
-/**
- * Форматирует число для отображения в <input>:
- * 1234567 → "1 234 567"
- * Пробел — неразрывный пробел (\u00a0) чтобы браузер не переносил.
- */
-function formatForInput(val: string): string {
-  const n = parsePrice(val);
-  if (n == null) return "";
-  return n.toLocaleString("ru-RU"); // "1 234 567" с неразрывными пробелами
-}
-
-/**
- * Компактный формат для кнопки/лейбла фильтра (как в Авито):
- * 232323   → "232,3 тыс."
- * 2321323  → "2,3 млн"
- * 1500000000 → "1,5 млрд"
- * Меньше 10 000 → просто число
- */
-function formatCompact(n: number): string {
-  if (n >= 1_000_000_000) {
-    return (
-      (n / 1_000_000_000).toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + " млрд"
-    );
-  }
-  if (n >= 1_000_000) {
-    return (n / 1_000_000).toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + " млн";
-  }
-  if (n >= 1_000) {
-    return (n / 1_000).toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + " тыс.";
-  }
-  return n.toLocaleString("ru-RU");
-}
-
-/**
- * Полный формат для тегов-фильтров под строкой поиска:
- * 232323 → "232 323 ₽"
- */
-// function formatFull(n: number): string {
-//   return n.toLocaleString("ru-RU") + "\u00a0₽";
-// }
-
 /**
  * Лейбл кнопки "Цена" — компактный, как в Авито.
  * "От 232,3 тыс. до 2,3 млн"  |  "От 100 тыс."  |  "до 5 млн"  |  "Цена"
@@ -132,9 +79,9 @@ function buildPriceLabel(
 ): string {
   if (hasError) return "Цена";
   if (min != null && max != null)
-    return `От ${formatCompact(min)} до ${formatCompact(max)}`;
-  if (min != null) return `От ${formatCompact(min)}`;
-  if (max != null) return `до ${formatCompact(max)}`;
+    return `От ${formatPriceCompact(min)} до ${formatPriceCompact(max)}`;
+  if (min != null) return `От ${formatPriceCompact(min)}`;
+  if (max != null) return `до ${formatPriceCompact(max)}`;
   return "Цена";
 }
 
@@ -148,8 +95,8 @@ function useHeroSearchFilters(userRegionSlug: string) {
   const [priceMin, setPriceMinRaw] = useState(INITIAL_STATE.priceMin);
   const [priceMax, setPriceMaxRaw] = useState(INITIAL_STATE.priceMax);
 
-  const priceMinNum = parsePrice(priceMin);
-  const priceMaxNum = parsePrice(priceMax);
+  const priceMinNum = parsePriceDigits(priceMin);
+  const priceMaxNum = parsePriceDigits(priceMax);
 
   const hasValidMin = priceMinNum != null;
   const hasValidMax = priceMaxNum != null;
@@ -253,8 +200,8 @@ export function HeroSearch() {
     // handleReset,
   } = useHeroSearchFilters(userRegion);
 
-  const priceMinNum = parsePrice(priceMin);
-  const priceMaxNum = parsePrice(priceMax);
+  const priceMinNum = parsePriceDigits(priceMin);
+  const priceMaxNum = parsePriceDigits(priceMax);
 
   const queryInputRef = useRef<HTMLInputElement>(null);
   const regionCacheInitRef = useRef(false);
@@ -461,38 +408,54 @@ export function HeroSearch() {
               >
                 <div className='flex gap-2'>
                   <div className='flex-1 relative'>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs pointer-events-none select-none'>
+                      от
+                    </span>
                     <Input
-                      value={priceMin ? `От ${formatForInput(priceMin)} ₽` : ""}
+                      value={priceMin}
                       onChange={(e) => {
-                        // Убираем "От", "₽" и пробелы при вводе
                         const raw = e.target.value.replace(/[^\d]/g, "");
                         setPriceMin(raw);
                       }}
-                      placeholder='От 100 000 ₽'
-                      className='h-10 text-sm pl-2 pr-4'
+                      placeholder=''
+                      className='h-10 text-sm pl-9 pr-8'
                       inputMode='numeric'
                       autoComplete='off'
-                      maxLength={20}
+                      maxLength={15}
                       id='priceMin'
                       aria-label='Минимальная цена'
                     />
+                    <span
+                      className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none select-none'
+                      aria-hidden
+                    >
+                      ₽
+                    </span>
                   </div>
                   <div className='flex-1 relative'>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs pointer-events-none select-none'>
+                      до
+                    </span>
                     <Input
-                      value={priceMax ? `До ${formatForInput(priceMax)} ₽` : ""}
+                      value={priceMax}
                       onChange={(e) => {
-                        // Убираем "До", "₽" и пробелы при вводе
                         const raw = e.target.value.replace(/[^\d]/g, "");
                         setPriceMax(raw);
                       }}
-                      placeholder='До 10 000 000 ₽'
-                      className='h-10 text-sm pl-2 pr-4'
+                      placeholder=''
+                      className='h-10 text-sm pl-9 pr-8'
                       inputMode='numeric'
                       autoComplete='off'
-                      maxLength={20}
+                      maxLength={15}
                       id='priceMax'
                       aria-label='Максимальная цена'
                     />
+                    <span
+                      className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none select-none'
+                      aria-hidden
+                    >
+                      ₽
+                    </span>
                   </div>
                 </div>
 

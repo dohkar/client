@@ -4,6 +4,7 @@ import {
   SORT_LABELS,
   DEAL_TYPE_LABELS,
 } from "@/lib/search-constants";
+import { formatPriceCompact } from "@/lib/format-price";
 
 /** Минимальный тип для отображения ценового диапазона */
 interface PriceFilters {
@@ -36,6 +37,18 @@ export function getPriceLabel(filters: PriceFilters): string {
   if (filters.priceMax != null) {
     return `до ${filters.priceMax.toLocaleString()} ₽`;
   }
+  return "Цена";
+}
+
+/** Лейбл кнопки «Цена» в горизонтальной панели: «От 2,3 млн до 5 млн». */
+export function getPriceLabelCompact(filters: PriceFilters): string {
+  const min = filters.priceMin ?? null;
+  const max = filters.priceMax ?? null;
+  if (min != null && max != null) {
+    return `От ${formatPriceCompact(min)} до ${formatPriceCompact(max)}`;
+  }
+  if (min != null) return `От ${formatPriceCompact(min)}`;
+  if (max != null) return `до ${formatPriceCompact(max)}`;
   return "Цена";
 }
 

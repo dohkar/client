@@ -24,7 +24,7 @@ import {
 import {
   getTypeLabel,
   getRegionLabel,
-  getPriceLabel,
+  getPriceLabelCompact,
   getRoomsLabel,
   getAreaLabel,
   getDealTypeLabel,
@@ -180,10 +180,10 @@ export function HorizontalFilters({
               <Button
                 variant='outline'
                 className='h-10 sm:h-11 px-4 w-full justify-between text-xs sm:text-base'
-                aria-label={`Цена: ${getPriceLabel(filters)}`}
+                aria-label={`Цена: ${getPriceLabelCompact(filters)}`}
               >
-                <span className='truncate max-w-[70px] sm:max-w-[110px]'>
-                  {getPriceLabel(filters)}
+                <span className='truncate max-w-[88px] sm:max-w-[140px]'>
+                  {getPriceLabelCompact(filters)}
                 </span>
                 <ChevronDown className='w-4 h-4 opacity-50 shrink-0' aria-hidden />
               </Button>
@@ -205,30 +205,42 @@ export function HorizontalFilters({
                         onPriceMinChange(val);
                       }}
                       onBlur={onPriceMinBlur}
-                      className={`pl-9 text-xs sm:text-base ${priceErrors.priceMin ? "border-destructive" : ""}`}
+                      className={`pl-9 pr-8 text-xs sm:text-base ${priceErrors.priceMin ? "border-destructive" : ""}`}
                       autoComplete='off'
                       inputMode='numeric'
                     />
-                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm'>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm pointer-events-none select-none'>
                       от
+                    </span>
+                    <span
+                      className='absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm pointer-events-none select-none'
+                      aria-hidden
+                    >
+                      ₽
                     </span>
                   </div>
                   <div className='relative w-1/2'>
                     <Input
                       type='text'
-                      placeholder='5 000 000'
+                      placeholder='0'
                       value={localPriceMax}
                       onChange={(e) => {
                         const val = e.target.value.replace(/[^\d]/g, "");
                         onPriceMaxChange(val);
                       }}
                       onBlur={onPriceMaxBlur}
-                      className={`pl-9 text-xs sm:text-base ${priceErrors.priceMax ? "border-destructive" : ""}`}
+                      className={`pl-9 pr-8 text-xs sm:text-base ${priceErrors.priceMax ? "border-destructive" : ""}`}
                       autoComplete='off'
                       inputMode='numeric'
                     />
-                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm'>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm pointer-events-none select-none'>
                       до
+                    </span>
+                    <span
+                      className='absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs sm:text-sm pointer-events-none select-none'
+                      aria-hidden
+                    >
+                      ₽
                     </span>
                   </div>
                 </div>
