@@ -11,7 +11,12 @@ import { ViewHistorySection } from "@/components/features/view-history/view-hist
 
 export default function HomePage() {
   const homeListParams = useMemo(
-    () => ({ limit: 12, sortBy: "date-desc" as const, category: "REAL_ESTATE" as const }),
+    () => ({
+      limit: 12,
+      sortBy: "date-desc" as const,
+      category: "REAL_ESTATE" as const,
+      regionBoost: true,
+    }),
     []
   );
   const { data, isLoading } = useListings(homeListParams);

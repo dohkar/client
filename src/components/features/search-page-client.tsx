@@ -1,19 +1,17 @@
 "use client";
 
-import { useMemo, useEffect, useRef, useReducer } from "react";
+import { useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { Search, XIcon } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useListings } from "@/hooks/use-listings";
-import { queryKeys } from "@/lib/react-query/query-keys";
 import { useCities } from "@/hooks/use-cities";
 import { useSegmentSearchFilters } from "@/hooks/use-segment-search-filters";
 import { toListingSearchParams } from "@/lib/search-params";
-import {
-  getRegionIdByName,
-  ensureRegionCacheInitialized,
-} from "@/services/region.service";
+import { regionsService } from "@/services/regions.service";
+import { initializeRegionCache } from "@/services/region.service";
+import { REGION_NAME_TO_BACKEND } from "@/lib/regions";
 import {
   SEARCH_CONSTANTS,
   PROPERTY_TYPE_LABELS,
@@ -39,6 +37,7 @@ import {
 } from "@/components/search";
 import { MobileFilterDrawer } from "@/components/features/MobileFilterDrawer";
 import type { ListingCategory } from "@/types/listing";
+import type { RegionDto } from "@/types/property";
 
 export interface SegmentRouteParams {
   region: string;
@@ -60,7 +59,6 @@ export function SearchPageClient({
   searchParams: searchParamsProp,
 }: SearchPageClientProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const pathParams = useParams();
   useDetectUserRegion();
 
@@ -132,25 +130,24 @@ export function SearchPageClient({
     isPending,
   } = useSegmentSearchFilters(params, searchParams);
 
-  const regionCacheInitRef = useRef(false);
-  const [, forceRender] = useReducer((x: number) => x + 1, 0);
+  const regionsQuery = useQuery({
+    queryKey: ["regions"],
+    queryFn: () => regionsService.getRegions(),
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const regionId = useMemo(() => {
+    if (appliedFilters.region === "all") return undefined;
+    const backend = REGION_NAME_TO_BACKEND[appliedFilters.region];
+    return regionsQuery.data?.find((r: RegionDto) => r.name === backend)?.id;
+  }, [appliedFilters.region, regionsQuery.data]);
 
   useEffect(() => {
-    if (regionCacheInitRef.current) return;
-    regionCacheInitRef.current = true;
+    const list = regionsQuery.data;
+    if (list?.length) initializeRegionCache(list);
+  }, [regionsQuery.data]);
 
-    ensureRegionCacheInitialized()
-      .then(() => {
-        forceRender();
-        queryClient.invalidateQueries({ queryKey: queryKeys.listings.all });
-      })
-      .catch(() => {});
-  }, [queryClient]);
-
-  const regionId =
-    appliedFilters.region !== "all"
-      ? getRegionIdByName(appliedFilters.region)
-      : undefined;
+  const listingsQueryEnabled = appliedFilters.region === "all" || regionsQuery.isSuccess;
 
   const { data: cities = [] } = useCities(regionId ?? undefined);
   const selectedCityName =
@@ -174,11 +171,14 @@ export function SearchPageClient({
     [appliedFilters, listingCategory, params.category]
   );
 
-  const { data, isLoading, error } = useListings({
-    ...baseApiParams,
-    regionId,
-    cityId: appliedFilters.cityId ?? undefined,
-  });
+  const { data, isLoading, error } = useListings(
+    {
+      ...baseApiParams,
+      regionId,
+      cityId: appliedFilters.cityId ?? undefined,
+    },
+    { enabled: listingsQueryEnabled }
+  );
 
   const listings = Array.isArray(data?.data) ? data.data : [];
   const totalPages = typeof data?.totalPages === "number" ? data.totalPages : 0;

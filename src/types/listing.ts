@@ -108,6 +108,8 @@ export interface ListingSearchParams {
   priceMax?: number;
   regionId?: string;
   cityId?: string;
+  /** Только главная: подмешивание региона из cookie при отсутствии regionId */
+  regionBoost?: boolean;
   propertyType?: ListingPropertyTypeParam;
   rooms?: number;
   areaMin?: number;

@@ -39,6 +39,9 @@ function normalizeListingSearchParams(
   if (params.cityId !== undefined && params.cityId.trim().length > 0) {
     normalized.cityId = params.cityId.trim();
   }
+  if (params.regionBoost === true) {
+    normalized.regionBoost = true;
+  }
   if (params.propertyType !== undefined) {
     normalized.propertyType = params.propertyType;
   }

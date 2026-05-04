@@ -15,6 +15,7 @@ function buildListingsQuery(params?: ListingSearchParams): string {
   if (params.priceMax != null) q.append("priceMax", params.priceMax.toString());
   if (params.regionId) q.append("regionId", params.regionId);
   if (params.cityId) q.append("cityId", params.cityId);
+  if (params.regionBoost === true) q.append("regionBoost", "true");
   if (params.propertyType) q.append("propertyType", params.propertyType);
   if (params.rooms != null) q.append("rooms", params.rooms.toString());
   if (params.areaMin != null) q.append("areaMin", params.areaMin.toString());

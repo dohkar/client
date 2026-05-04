@@ -9,13 +9,17 @@ import { listingsService } from "@/services/listings.service";
 import type { ListingSearchParams } from "@/types/listing";
 import { toast } from "sonner";
 
-export function useListings(params?: ListingSearchParams) {
+export function useListings(
+  params?: ListingSearchParams,
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: queryKeys.listings.list(params),
     queryFn: () => listingsService.getListings(params),
     staleTime: 60 * 1000,
     retry: 2,
     placeholderData: keepPreviousData,
+    enabled: options?.enabled ?? true,
   });
 }
 

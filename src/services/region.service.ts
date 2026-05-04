@@ -34,6 +34,15 @@ function applyRegionsToCache(regions: RegionApiItem[]): void {
   }
 }
 
+/** Кэш считается полным, если для каждого backend из реестра есть id (после деплоя новых регионов). */
+function cacheCoversAllRegistryRegions(): boolean {
+  for (const backend of FALLBACK_BACKEND_REGIONS) {
+    const name = REGION_BACKEND_TO_NAME[backend];
+    if (!regionNameToIdCache.has(name)) return false;
+  }
+  return true;
+}
+
 export function initializeRegionCache(regions: RegionApiItem[]): void {
   if (!regions.length) return;
   applyRegionsToCache(regions);
@@ -41,7 +50,7 @@ export function initializeRegionCache(regions: RegionApiItem[]): void {
 }
 
 export async function ensureRegionCacheInitialized(): Promise<void> {
-  if (regionNameToIdCache.size > 0 && isCacheFresh()) {
+  if (regionNameToIdCache.size > 0 && isCacheFresh() && cacheCoversAllRegistryRegions()) {
     return;
   }
 
