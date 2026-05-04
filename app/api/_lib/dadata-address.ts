@@ -50,6 +50,11 @@ function str(v: unknown): string | undefined {
   return s.length ? s : undefined;
 }
 
+/** Убирает российский почтовый индекс (6 цифр) в начале строки из DaData. */
+export function stripLeadingPostalCode(address: string): string {
+  return address.replace(/^\d{6}\s*,?\s*/u, "").trim();
+}
+
 function parseGeo(s: DadataSuggestion): GeocodeSuccessPayload | null {
   const data = s.data;
   if (!data || typeof data !== "object") return null;
@@ -73,7 +78,9 @@ function parseGeo(s: DadataSuggestion): GeocodeSuccessPayload | null {
     str(data.house) ||
     undefined;
 
-  const formattedAddress = (s.unrestricted_value ?? s.value).trim();
+  const rawFormatted = (s.unrestricted_value ?? s.value).trim();
+  if (!rawFormatted) return null;
+  const formattedAddress = stripLeadingPostalCode(rawFormatted);
   if (!formattedAddress) return null;
 
   const components: AddressComponentsPayload = {};
@@ -116,17 +123,33 @@ export function allSuggestionsWithGeo(
   return out;
 }
 
+export interface DadataSuggestOptions {
+  /** Поднять подсказки указанного региона (русское название субъекта РФ). */
+  locationsBoostRegion?: string;
+}
+
 export async function dadataSuggestAddress(
   query: string,
-  count = 7
+  count = 7,
+  options?: DadataSuggestOptions
 ): Promise<DadataSuggestResponse> {
   const headers = getDadataHeaders();
   if (!headers) throw new Error("DADATA_AUTH_MISSING");
 
+  const body: Record<string, unknown> = {
+    query,
+    count,
+    locations: [{ country_iso_code: "RU" }],
+  };
+  const boost = options?.locationsBoostRegion?.trim();
+  if (boost) {
+    body.locations_boost = [{ region: boost }];
+  }
+
   const response = await fetch(DADATA_SUGGEST_ADDRESS_URL, {
     method: "POST",
     headers,
-    body: JSON.stringify({ query, count }),
+    body: JSON.stringify(body),
     next: { revalidate: 0 },
   });
 

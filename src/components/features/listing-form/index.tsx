@@ -165,7 +165,9 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
           house: undefined,
         });
         if (r.ok) {
-          await applyGeocodeResultToListingForm(r.data, setValue, regions);
+          await applyGeocodeResultToListingForm(r.data, setValue, regions, {
+            mode: "autoCoarse",
+          });
           lat = r.data.latitude;
         }
       }
@@ -372,6 +374,7 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
           watch={watch}
           errors={errors}
           regions={regions}
+          preferredRegion={selectedRegion}
           isResolvingLocation={isResolvingLocation}
           onGeolocation={handleGeolocationPosition}
         />

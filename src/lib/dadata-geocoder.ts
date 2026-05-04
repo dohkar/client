@@ -19,6 +19,11 @@ export interface AddressComponents {
   house?: string;
 }
 
+/** Убирает российский индекс (6 цифр) в начале строки (как в ответе DaData). */
+export function stripLeadingPostalCode(address: string): string {
+  return address.replace(/^\d{6}\s*,?\s*/u, "").trim();
+}
+
 export interface GeocodeResult {
   latitude: number;
   longitude: number;

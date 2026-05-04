@@ -1,9 +1,27 @@
 import type { UseFormSetValue } from "react-hook-form";
-import type { GeocodeResult } from "@/lib/dadata-geocoder";
+import type { GeocodeResult, AddressComponents } from "@/lib/dadata-geocoder";
+import { stripLeadingPostalCode } from "@/lib/dadata-geocoder";
 import { regionsService } from "@/services/regions.service";
 import type { RegionDto, CityDto } from "@/types/property";
 import { REGION_BACKEND_TO_NAME } from "@/lib/regions";
 import type { ListingFormData } from "./schema";
+
+function normalizeLocPart(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Только регион и населённый пункт — без улицы и дома (автогеолокация / грубый геокод).
+ */
+export function buildCoarseLocationLabel(components: AddressComponents): string {
+  const region = components.region?.trim();
+  const city = components.city?.trim();
+  if (region && city && normalizeLocPart(region) === normalizeLocPart(city)) {
+    return city;
+  }
+  if (region && city) return `${region}, ${city}`;
+  return region || city || "";
+}
 
 function normalizeGeoName(value: string): string {
   return value
@@ -48,22 +66,36 @@ export function matchCityId(cities: CityDto[], dadataCity: string | undefined): 
   return partial?.id ?? "";
 }
 
+/** userPick — выбор из подсказки DaData (полный адрес, без индекса; улица/дом с подсказки). autoCoarse — GPS / автогеокод: только регион+город, улицу и дом не заполняем. */
+export type ApplyGeocodeMode = "userPick" | "autoCoarse";
+
 /**
- * Записывает в форму листинга результат выбора адреса (DaData) и подбирает город в справочнике.
+ * Записывает в форму листинга результат DaData и подбирает город в справочнике.
  */
 export async function applyGeocodeResultToListingForm(
   payload: GeocodeResult,
   setValue: UseFormSetValue<ListingFormData>,
-  regions: RegionDto[]
+  regions: RegionDto[],
+  opts?: { mode?: ApplyGeocodeMode }
 ): Promise<void> {
-  setValue("location", payload.formattedAddress);
+  const mode = opts?.mode ?? "userPick";
+  const cleanedFormatted = stripLeadingPostalCode(payload.formattedAddress);
+
   setValue("realEstate.latitude", payload.latitude);
   setValue("realEstate.longitude", payload.longitude);
 
-  if (payload.components.street) setValue("street", payload.components.street);
-  else setValue("street", "");
-  if (payload.components.house) setValue("house", payload.components.house);
-  else setValue("house", "");
+  if (mode === "autoCoarse") {
+    const coarse = buildCoarseLocationLabel(payload.components) || cleanedFormatted;
+    setValue("location", coarse);
+    setValue("street", "");
+    setValue("house", "");
+  } else {
+    setValue("location", cleanedFormatted);
+    if (payload.components.street) setValue("street", payload.components.street);
+    else setValue("street", "");
+    if (payload.components.house) setValue("house", payload.components.house);
+    else setValue("house", "");
+  }
 
   const formRegion = dadataRegionToListingRegion(payload.components.region);
   setValue("region", formRegion);

@@ -8,6 +8,7 @@ import {
   ADDRESS_SUGGEST_MIN_QUERY_CHARS,
   ADDRESS_SUGGEST_SUPPRESS_AFTER_PICK_MS,
 } from "@/lib/search-constants";
+import type { FetchAddressSuggestionsOptions } from "@/lib/fetch-address-suggestions";
 
 type UseAddressSuggestionsResult = {
   suggestions: GeocodeResult[];
@@ -29,7 +30,10 @@ type UseAddressSuggestionsResult = {
  *    это снова запустило бы suggest. Подавление на ~1 с убирает лишний платный вызов.
  * 5. **Cleanup** — при размонтировании или смене `query` таймер и HTTP отменяются.
  */
-export function useAddressSuggestions(query: string): UseAddressSuggestionsResult {
+export function useAddressSuggestions(
+  query: string,
+  suggestOptions?: FetchAddressSuggestionsOptions
+): UseAddressSuggestionsResult {
   const [suggestions, setSuggestions] = useState<GeocodeResult[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [listOpen, setListOpen] = useState(false);
@@ -67,7 +71,7 @@ export function useAddressSuggestions(query: string): UseAddressSuggestionsResul
 
     const timerId = window.setTimeout(() => {
       setSuggestLoading(true);
-      void fetchAddressSuggestions(trimmed, ac.signal)
+      void fetchAddressSuggestions(trimmed, ac.signal, suggestOptions)
         .then((list) => {
           if (ac.signal.aborted) return;
           if (epochAtSchedule !== requestEpochRef.current) return;
@@ -92,7 +96,7 @@ export function useAddressSuggestions(query: string): UseAddressSuggestionsResul
       window.clearTimeout(timerId);
       ac.abort();
     };
-  }, [query]);
+  }, [query, suggestOptions?.boostRegion]);
 
   return {
     suggestions,

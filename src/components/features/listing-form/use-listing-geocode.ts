@@ -31,8 +31,13 @@ export function useListingFormLocation(
             formattedAddress: rev.formattedAddress,
             components: rev.components,
           };
-          await applyGeocodeResultToListingForm(full, setValue, options.regions);
-          toast.success("Адрес обновлён по геолокации", { duration: 1200 });
+          await applyGeocodeResultToListingForm(full, setValue, options.regions, {
+            mode: "autoCoarse",
+          });
+          toast.success(
+            "Регион и город по геолокации; улицу и дом при желании укажите вручную или выберите из подсказок.",
+            { duration: 3200 }
+          );
         } else {
           setValue("realEstate.latitude", lat);
           setValue("realEstate.longitude", lon);

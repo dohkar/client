@@ -36,9 +36,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const boostRegion =
+      typeof body?.boostRegion === "string" ? body.boostRegion.trim() : "";
+
     let json;
     try {
-      json = await dadataSuggestAddress(query, 12);
+      json = await dadataSuggestAddress(query, 12, {
+        locationsBoostRegion: boostRegion || undefined,
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "";
       if (msg === "DADATA_AUTH_MISSING" || msg === "DADATA_AUTH_FORBIDDEN") {
