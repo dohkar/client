@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { PropertyType } from "@/types/property";
+import type { RegionName } from "@/lib/regions";
 
 export interface ListingFilters {
   query: string;
@@ -10,7 +11,7 @@ export interface ListingFilters {
   priceMax: number | null;
   roomsMin: number | null;
   areaMin: number | null;
-  region: "Chechnya" | "Ingushetia" | "Other" | "all";
+  region: RegionName | "all";
   cityId: string | null;
   sortBy: "price-asc" | "price-desc" | "date-desc" | "relevance";
 }
@@ -50,4 +51,3 @@ export const useListingFiltersStore = create<ListingFiltersState>()(
     }
   )
 );
-

@@ -4,10 +4,19 @@ import { Home, Key, Calendar } from "lucide-react";
 export interface PopularCity {
   label: string;
   slug: string;
-  region: "ingushetiya" | "chechnya";
+  /** Сегмент региона в URL каталога (см. REGION_MAP). */
+  region: string;
 }
 
 export const POPULAR_CITIES: PopularCity[] = [
+  { label: "Москва", slug: "moskva", region: "moskva" },
+  { label: "Санкт-Петербург", slug: "sankt-peterburg", region: "sankt-peterburg" },
+  { label: "Краснодар", slug: "krasnodar", region: "krasnodarskiy-kray" },
+  { label: "Махачкала", slug: "makhachkala", region: "dagestan" },
+  { label: "Казань", slug: "kazan", region: "tatarstan" },
+  { label: "Екатеринбург", slug: "ekaterinburg", region: "sverdlovskaya-oblast" },
+  { label: "Новосибирск", slug: "novosibirsk", region: "novosibirskaya-oblast" },
+  { label: "Ростов-на-Дону", slug: "rostov-na-donu", region: "rostovskaya-oblast" },
   { label: "Грозный", slug: "groznyy", region: "chechnya" },
   { label: "Назрань", slug: "nazran", region: "ingushetiya" },
   { label: "Магас", slug: "magas", region: "ingushetiya" },

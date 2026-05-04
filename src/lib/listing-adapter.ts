@@ -3,6 +3,8 @@ import {
   getRegionNameById,
   registerRegionMapping,
   REGION_BACKEND_TO_NAME,
+  type RegionName,
+  type RegionBackendName,
 } from "@/lib/regions";
 
 /**
@@ -64,13 +66,11 @@ export function adaptListing(backend: ListingBackend): Listing {
     typeof backend.region.name === "string"
   ) {
     const region = backend.region;
-    const backendName = region.name as keyof typeof REGION_BACKEND_TO_NAME;
-    regionName = REGION_BACKEND_TO_NAME[backendName] || region.name;
+    const backendName = region.name as RegionBackendName;
+    const mapped = REGION_BACKEND_TO_NAME[backendName];
+    regionName = mapped ?? "Other";
     if (backend.regionId) {
-      registerRegionMapping(
-        backend.regionId,
-        regionName as "Chechnya" | "Ingushetia" | "Other"
-      );
+      registerRegionMapping(backend.regionId, regionName as RegionName);
     }
   } else if (backend.regionId) {
     regionName = getRegionNameById(backend.regionId);

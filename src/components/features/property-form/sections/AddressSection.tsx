@@ -20,12 +20,13 @@ import type { PropertyFormData } from "../schema";
 import type { CityDto } from "@/types";
 import { yandexMapsPointUrl } from "@/lib/maps-external-link";
 import { toast } from "sonner";
+import { REGION_REGISTRY } from "@/lib/regions";
 
-const REGION_OPTIONS: Array<{ value: PropertyFormData["region"]; label: string }> = [
-  { value: "Chechnya", label: "Чечня" },
-  { value: "Ingushetia", label: "Ингушетия" },
-  { value: "Other", label: "Другое" },
-];
+const REGION_OPTIONS: Array<{ value: PropertyFormData["region"]; label: string }> =
+  REGION_REGISTRY.map((r) => ({
+    value: r.frontend,
+    label: r.frontend === "Other" ? "Другое" : r.labelRu,
+  }));
 
 interface AddressSectionProps {
   register: UseFormRegister<PropertyFormData>;

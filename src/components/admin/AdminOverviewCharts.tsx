@@ -16,7 +16,7 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { REGION_LABELS as REGION_LABELS_FROM_CONST } from "@/lib/search-constants";
+import { REGION_BACKEND_LABELS } from "@/lib/regions";
 import React from "react";
 
 const COLORS = [
@@ -37,14 +37,10 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const REGION_LABELS: Record<string, string> = {
-  CHECHNYA: "Чечня",
-  INGUSHETIA: "Ингушетия",
-  DAGESTAN: "Дагестан",
+  ...REGION_BACKEND_LABELS,
   NORTH_OSSETIA: "Северная Осетия",
   KABARDINO_BALKARIA: "Кабардино-Балкария",
   KARACHAY_CIRCASSIA: "Карачаево-Черкесия",
-  OTHER: "Другие",
-  ...REGION_LABELS_FROM_CONST, // объединяем, если регионов много
 };
 
 type Stats = {

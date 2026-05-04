@@ -1,6 +1,7 @@
 import type { PropertyType } from "@/types/property";
+import { REGION_REGISTRY, type RegionName } from "@/lib/regions";
 
-type RegionApiValue = "Chechnya" | "Ingushetia" | "Other";
+type RegionApiValue = RegionName;
 /** Тип сделки в URL/API: роль объявления (один к одному с API). */
 type DealApiValue = "SALE" | "BUY" | "RENT_OUT" | "RENT_IN" | "DAILY" | "EXCHANGE";
 type SearchParamValue = string | number | boolean | null | undefined;
@@ -14,13 +15,12 @@ export function categoryPathImpliesNewBuilding(categorySlug: string): boolean {
 
 export const REGION_MAP = {
   all: { label: "Все регионы", apiValue: undefined },
-  ingushetiya: { label: "Ингушетия", apiValue: "Ingushetia" },
-  chechnya: { label: "Чечня", apiValue: "Chechnya" },
-  other: { label: "Другие регионы", apiValue: "Other" },
-} as const satisfies Record<
-  string,
-  { label: string; apiValue: RegionApiValue | undefined }
->;
+  ...Object.fromEntries(
+    REGION_REGISTRY.map(
+      (r) => [r.slug, { label: r.labelRu, apiValue: r.frontend }] as const
+    )
+  ),
+} as Record<string, { label: string; apiValue: RegionApiValue | undefined }>;
 
 /**
  * REGION_NAME_TO_SLUG — объект для сопоставления русского названия региона (label) со слагом (ключом) региона.
@@ -28,9 +28,7 @@ export const REGION_MAP = {
  */
 export const REGION_NAME_TO_SLUG: Record<string, string> = {
   "Все регионы": "all",
-  Ингушетия: "ingushetiya",
-  Чечня: "chechnya",
-  "Другие регионы": "other",
+  ...Object.fromEntries(REGION_REGISTRY.map((r) => [r.labelRu, r.slug] as const)),
 };
 
 export const CATEGORY_MAP = {
@@ -85,11 +83,13 @@ export const DEAL_SLUG_LABELS: Record<string, string> = {
   obmen: "Обмен",
 };
 
-export const API_REGION_TO_SLUG: Record<RegionApiValue, string> = {
-  Ingushetia: "ingushetiya",
-  Chechnya: "chechnya",
-  Other: "other",
-};
+export const API_REGION_TO_SLUG: Record<RegionApiValue, string> = REGION_REGISTRY.reduce(
+  (acc, row) => {
+    acc[row.frontend as RegionApiValue] = row.slug;
+    return acc;
+  },
+  {} as Record<RegionApiValue, string>
+);
 
 export interface BuildSearchUrlInput {
   region: string;
@@ -151,17 +151,12 @@ export function dealTypeSlugFromApi(apiDeal?: string): string {
 }
 
 export function regionSlugFromApi(apiRegion: string): string {
-  const normalized = apiRegion.trim().toLowerCase();
-  switch (normalized) {
-    case "ingushetia":
-      return API_REGION_TO_SLUG.Ingushetia;
-    case "chechnya":
-      return API_REGION_TO_SLUG.Chechnya;
-    case "other":
-      return API_REGION_TO_SLUG.Other;
-    default:
-      return "all";
-  }
+  const t = apiRegion.trim();
+  const lower = t.toLowerCase();
+  const row = REGION_REGISTRY.find(
+    (r) => r.frontend === t || r.frontend.toLowerCase() === lower
+  );
+  return row ? row.slug : "all";
 }
 
 export interface ParsedSearchSegments {
@@ -177,7 +172,7 @@ export function parseSegments(
   category: string,
   dealType?: string
 ): ParsedSearchSegments | null {
-  const regionEntry = REGION_MAP[region as keyof typeof REGION_MAP];
+  const regionEntry = REGION_MAP[region];
   const categoryEntry = CATEGORY_MAP[category as keyof typeof CATEGORY_MAP];
 
   if (!regionEntry || !categoryEntry) {
@@ -212,10 +207,10 @@ export function parseSearchPathname(pathname: string): ParsedSearchPathname | nu
     return null;
   }
 
-  if (!REGION_MAP[region as keyof typeof REGION_MAP]) {
+  if (!(region in REGION_MAP)) {
     return null;
   }
-  if (!CATEGORY_MAP[category as keyof typeof CATEGORY_MAP]) {
+  if (!(category in CATEGORY_MAP)) {
     return null;
   }
   if (dealType && !DEAL_TYPE_MAP[dealType]) {

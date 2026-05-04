@@ -17,10 +17,8 @@ const PROPERTY_TYPE_TO_LISTING_API: Record<
 };
 
 function regionSlugToName(regionSlug: string): RegionName | undefined {
-  const entry = REGION_MAP[regionSlug as keyof typeof REGION_MAP];
-  const v = entry?.apiValue;
-  if (v === "Ingushetia" || v === "Chechnya" || v === "Other") return v;
-  return undefined;
+  const entry = REGION_MAP[regionSlug];
+  return entry?.apiValue;
 }
 
 function heroDealToListingDeal(token: HeroDealApiToken): PropertyDealType {

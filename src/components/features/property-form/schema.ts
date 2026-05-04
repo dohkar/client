@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { REGION_NAME_VALUES } from "@/lib/regions";
 
 export const propertySchema = z
   .object({
@@ -6,7 +7,7 @@ export const propertySchema = z
     dealType: z.enum(["SALE", "BUY", "RENT_OUT", "RENT_IN", "EXCHANGE"]).default("SALE"),
     price: z.number().min(0).optional().nullable(),
     location: z.string().min(5, "Адрес должен быть не менее 5 символов"),
-    region: z.enum(["Chechnya", "Ingushetia", "Other"]),
+    region: z.enum(REGION_NAME_VALUES),
     cityId: z.string().uuid().optional().or(z.literal("")),
     street: z.string().optional(),
     house: z.string().optional(),

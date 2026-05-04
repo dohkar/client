@@ -1,3 +1,5 @@
+import type { RegionName } from "@/lib/regions";
+
 export type PropertyType = "apartment" | "house" | "land" | "commercial";
 export type PropertyStatus = "active" | "pending" | "rejected" | "sold" | "archived";
 
@@ -74,7 +76,7 @@ export interface Property {
   price: number;
   currency: "RUB" | "USD";
   location: string;
-  region: "Chechnya" | "Ingushetia" | "Other";
+  region: RegionName;
   type: PropertyType;
   dealType: PropertyDealType;
   rooms?: number;
@@ -120,7 +122,7 @@ export interface PropertySearchParams {
   floorMin?: number;
   floorMax?: number;
   floorNotFirst?: boolean;
-  region?: "Chechnya" | "Ingushetia" | "Other";
+  region?: RegionName;
   regionId?: string;
   cityId?: string;
   sortBy?:

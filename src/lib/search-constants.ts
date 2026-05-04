@@ -1,4 +1,5 @@
 import type { PropertyType } from "@/types/property";
+import { REGION_FRONTEND_LABELS, REGION_REGISTRY, type RegionName } from "@/lib/regions";
 
 /**
  * Константы для страницы поиска
@@ -35,9 +36,7 @@ export const PROPERTY_TYPE_LABELS: Record<string, string> = {
  */
 export const REGION_LABELS: Record<string, string> = {
   all: "Все регионы",
-  Chechnya: "Чечня",
-  Ingushetia: "Ингушетия",
-  Other: "Другие регионы",
+  ...REGION_FRONTEND_LABELS,
 };
 
 /**
@@ -76,9 +75,7 @@ export const PROPERTY_TYPE_OPTIONS = [
  */
 export const REGION_OPTIONS = [
   { value: "all", label: "Все регионы" },
-  { value: "Chechnya", label: "Чечня" },
-  { value: "Ingushetia", label: "Ингушетия" },
-  { value: "Other", label: "Другие регионы" },
+  ...REGION_REGISTRY.map((r) => ({ value: r.frontend, label: r.labelRu })),
 ] as const;
 
 /**
@@ -129,7 +126,7 @@ export interface QuickPreset {
     priceMin?: number | null;
     priceMax?: number | null;
     roomsMin?: number | null;
-    region?: "Chechnya" | "Ingushetia" | "Other" | "all";
+    region?: RegionName | "all";
     areaMin?: number | null;
   };
 }

@@ -3,13 +3,16 @@ import {
   registerRegionMapping,
   REGION_BACKEND_TO_NAME,
   type RegionName,
+  type RegionBackendName,
 } from "@/lib/regions";
 import { logger } from "@/lib/utils/logger";
 
 type RegionApiItem = { id: string; name: string };
 
 const REGION_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const FALLBACK_BACKEND_REGIONS = ["CHECHNYA", "INGUSHETIA", "OTHER"] as const;
+const FALLBACK_BACKEND_REGIONS = Object.keys(
+  REGION_BACKEND_TO_NAME
+) as RegionBackendName[];
 
 const regionNameToIdCache = new Map<RegionName, string>();
 let cacheInitializedAt: number | null = null;

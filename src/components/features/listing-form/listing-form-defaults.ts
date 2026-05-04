@@ -1,13 +1,9 @@
 import type { Listing } from "@/types/listing";
 import type { ListingFormData } from "./schema";
-import { getRegionNameById } from "@/lib/regions";
+import { getRegionNameById, isRegionName } from "@/lib/regions";
 
 function listingRegionToForm(listing: Listing): ListingFormData["region"] {
-  if (
-    listing.region === "Chechnya" ||
-    listing.region === "Ingushetia" ||
-    listing.region === "Other"
-  ) {
+  if (listing.region && isRegionName(listing.region)) {
     return listing.region;
   }
   if (listing.regionId) {

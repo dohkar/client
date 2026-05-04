@@ -3,6 +3,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { REGION_MAP } from "@/lib/url/segments";
+import { REGION_SLUG_TO_NAME } from "@/lib/regions";
 
 export const USER_REGION_COOKIE = "user_region";
 const GPS_REGION_STORAGE_KEY = "dohkar.gpsRegionSlug.v1";
@@ -55,11 +56,7 @@ export function writeGpsRegionSlug(slug: string): void {
   }
 }
 
-const SLUG_TO_REGION_VALUE: Record<string, string> = {
-  ingushetiya: "Ingushetia",
-  chechnya: "Chechnya",
-  other: "Other",
-};
+const SLUG_TO_REGION_VALUE: Record<string, string> = { ...REGION_SLUG_TO_NAME };
 
 export type RegionOption = { value: string; label: string };
 

@@ -21,6 +21,18 @@ export function dadataRegionToListingRegion(
   const r = regionText.toLowerCase();
   if (r.includes("чечен")) return "Chechnya";
   if (r.includes("ингуш")) return "Ingushetia";
+  if (r.includes("дагестан")) return "Dagestan";
+  if (r.includes("московская")) return "MoscowOblast";
+  if (r.includes("москва")) return "Moscow";
+  if (r.includes("ленинградск")) return "LeningradOblast";
+  if (r.includes("санкт-петербург") || r.includes("петербург") || r === "спб") {
+    return "SaintPetersburg";
+  }
+  if (r.includes("краснодарск")) return "KrasnodarKrai";
+  if (r.includes("ростовск")) return "RostovOblast";
+  if (r.includes("татарстан")) return "Tatarstan";
+  if (r.includes("свердловск")) return "SverdlovskOblast";
+  if (r.includes("новосибирск")) return "NovosibirskOblast";
   return "Other";
 }
 

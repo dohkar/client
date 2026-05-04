@@ -7,6 +7,7 @@ import type {
   ListingPropertyTypeParam,
 } from "@/types/listing";
 import { categoryPathImpliesNewBuilding } from "@/lib/url/segments";
+import { REGION_NAME_VALUES, type RegionName } from "@/lib/regions";
 
 /** UI / Property search используют нижний регистр; Listings API ожидает Prisma enum. */
 const PROPERTY_TYPE_TO_LISTING_API: Record<PropertyType, ListingPropertyTypeParam> = {
@@ -66,9 +67,9 @@ const SearchParamsSchema = z
       z.boolean().optional().nullable().catch(null)
     ),
     region: z
-      .enum(["Chechnya", "Ingushetia", "Other"])
+      .enum(REGION_NAME_VALUES)
       .optional()
-      .transform((v) => v as "Chechnya" | "Ingushetia" | "Other" | undefined),
+      .transform((v) => v as RegionName | undefined),
     cityId: z.string().max(36).optional(),
     sortBy: z
       .enum(["price-asc", "price-desc", "date-desc", "relevance"])
@@ -103,7 +104,7 @@ export interface SearchFiltersDisplay {
   floorNotFirst: boolean | null;
   /** Только новостройки (через ?newBuilding=true или path /…/novostroyki/…) */
   newBuilding: boolean | null;
-  region: "Chechnya" | "Ingushetia" | "Other" | "all";
+  region: RegionName | "all";
   cityId: string | null;
   sortBy: "price-asc" | "price-desc" | "date-desc" | "relevance";
   page: number;
@@ -169,7 +170,7 @@ export function parseSearchParams(
     floorMax: d.floorMax ?? null,
     floorNotFirst: d.floorNotFirst ?? null,
     newBuilding: d.newBuilding ?? null,
-    region: (d.region ?? "all") as "Chechnya" | "Ingushetia" | "Other" | "all",
+    region: (d.region ?? "all") as RegionName | "all",
     cityId: d.cityId?.trim() ?? null,
     sortBy: d.sortBy ?? "relevance",
     page: d.page ?? 1,
@@ -312,7 +313,7 @@ export function toPropertySearchParams(
   if (filters.floorMax != null) params.floorMax = filters.floorMax;
   if (filters.floorNotFirst === true) params.floorNotFirst = true;
   if (filters.region !== "all") {
-    params.region = filters.region as "Chechnya" | "Ingushetia" | "Other";
+    params.region = filters.region as RegionName;
   }
   if (filters.cityId && filters.cityId.trim().length > 0) {
     params.cityId = filters.cityId.trim();

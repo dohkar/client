@@ -1,13 +1,11 @@
 import { z } from "zod";
+import { REGION_NAME_VALUES } from "@/lib/regions";
 
 /**
  * Схема валидации для входа
  */
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email обязателен")
-    .email("Некорректный email адрес"),
+  email: z.string().min(1, "Email обязателен").email("Некорректный email адрес"),
   password: z
     .string()
     .min(8, "Пароль должен содержать минимум 8 символов")
@@ -26,11 +24,7 @@ export const registerSchema = z
       .string()
       .min(2, "Имя должно содержать минимум 2 символа")
       .max(50, "Имя слишком длинное"),
-    email: z
-      .string()
-      .email("Некорректный email адрес")
-      .optional()
-      .or(z.literal("")),
+    email: z.string().email("Некорректный email адрес").optional().or(z.literal("")),
     phone: z
       .string()
       .regex(
@@ -63,17 +57,14 @@ export type RegisterFormData = z.infer<typeof registerSchema>;
  */
 export const createPropertySchema = z
   .object({
-    title: z
-      .string()
-      .min(10, "Минимум 10 символов")
-      .max(200, "Максимум 200 символов"),
+    title: z.string().min(10, "Минимум 10 символов").max(200, "Максимум 200 символов"),
     dealType: z.enum(["SALE", "BUY", "RENT_OUT", "RENT_IN", "EXCHANGE"], {
       required_error: "Выберите тип сделки",
     }),
     propertyType: z.enum(["apartment", "house", "land", "commercial"], {
       required_error: "Выберите тип недвижимости",
     }),
-    region: z.enum(["Chechnya", "Ingushetia", "Other"], {
+    region: z.enum(REGION_NAME_VALUES, {
       required_error: "Выберите регион",
     }),
     city: z.string().min(1, "Укажите город или населенный пункт"),
@@ -145,7 +136,7 @@ export const searchSchema = z.object({
   priceMax: z.number().min(0).optional().nullable(),
   rooms: z.number().min(0).optional().nullable(),
   areaMin: z.number().min(0).optional().nullable(),
-  region: z.enum(["Chechnya", "Ingushetia", "Other"]).optional(),
+  region: z.enum(REGION_NAME_VALUES).optional(),
   sortBy: z
     .enum(["price-asc", "price-desc", "date-desc", "relevance"])
     .default("relevance"),
