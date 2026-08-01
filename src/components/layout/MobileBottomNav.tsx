@@ -7,7 +7,7 @@ import {
   Search,
   Heart,
   LayoutDashboard,
-  PlusCircle,
+  Plus,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -27,14 +27,18 @@ interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
-  /** Показывать только авторизованным */
+  /** Центральный CTA (Авито / Юла): визуально выделен */
+  isPrimaryAction?: boolean;
   requireAuth?: boolean;
-  /** Показывать только гостям */
   requireGuest?: boolean;
-  /** Кастомная проверка активного состояния */
   isActive?: (pathname: string) => boolean;
 }
 
+/**
+ * Порядок по паттерну крупных маркетплейсов:
+ * discovery (слева) → CTA по центру → личное (справа).
+ * Слот аккаунта крайний справа: Войти ↔ Кабинет.
+ */
 const navItems: NavItem[] = [
   {
     label: "Главная",
@@ -46,6 +50,12 @@ const navItems: NavItem[] = [
     href: DEFAULT_SEARCH_URL,
     icon: Search,
     isActive: (pathname) => isSearchPathname(pathname),
+  },
+  {
+    label: "Разместить",
+    href: ROUTES.sell,
+    icon: Plus,
+    isPrimaryAction: true,
   },
   {
     label: "Избранное",
@@ -65,18 +75,12 @@ const navItems: NavItem[] = [
     icon: LayoutDashboard,
     requireAuth: true,
   },
-  {
-    label: "Разместить",
-    href: ROUTES.sell,
-    icon: PlusCircle,
-  },
 ];
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
 
-  // Гость: Войти вместо Кабинета — всегда 5 слотов, без скачков layout
   const visibleItems = navItems.filter((item) => {
     if (item.requireAuth) return isAuthenticated;
     if (item.requireGuest) return !isAuthenticated;
@@ -89,13 +93,45 @@ export function MobileBottomNav() {
       aria-label='Мобильная навигация'
     >
       <div className='container mx-auto px-1'>
-        <div className='flex items-center justify-around h-16'>
+        <div className='flex items-end justify-around h-16 pt-1'>
           {visibleItems.map((item) => {
             const Icon = item.icon;
             const isActive = item.isActive
               ? item.isActive(pathname)
               : pathname === item.href ||
                 (item.href !== ROUTES.home && pathname?.startsWith(item.href));
+
+            if (item.isPrimaryAction) {
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className='flex flex-col items-center justify-end gap-0.5 flex-1 h-full min-h-[44px] min-w-0 relative -mt-3'
+                  aria-label={item.label}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <span
+                    className={cn(
+                      "flex items-center justify-center size-12 rounded-full shadow-md transition-transform",
+                      "bg-gradient-to-br from-emerald-600 to-teal-600 text-white",
+                      "active:scale-95",
+                      isActive &&
+                        "ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
+                    )}
+                  >
+                    <Icon className='size-6' strokeWidth={2.5} />
+                  </span>
+                  <span
+                    className={cn(
+                      "text-[10px] font-medium leading-tight truncate max-w-full px-0.5",
+                      isActive ? "text-primary font-semibold" : "text-muted-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            }
 
             return (
               <Link
