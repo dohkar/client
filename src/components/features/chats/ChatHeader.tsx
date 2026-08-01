@@ -132,40 +132,44 @@ export function ChatHeader({
     (isFallbackPolling || isConnecting || isRealtimeConnected === false);
 
   return (
-    <div className='border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10'>
-      <div className='flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3'>
+    <div className='border-b bg-background/95 backdrop-blur-sm shrink-0 z-10'>
+      <div className='flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 gap-1'>
         {/* Левая часть: назад + аватар + имя/статус */}
-        <div className='flex items-center gap-3 flex-1 min-w-0'>
+        <div className='flex items-center gap-2 sm:gap-3 flex-1 min-w-0'>
           {onBack && (
             <Button
               variant='ghost'
               size='icon'
               onClick={onBack}
-              className='lg:hidden -ml-2'
+              className='lg:hidden -ml-1 shrink-0 size-10'
+              aria-label='Назад к списку чатов'
             >
               <ArrowLeft className='h-5 w-5' />
             </Button>
           )}
 
-          {/* Аватар с индикатором онлайн-bottom-right */}
           <div className='relative shrink-0'>
-            <Avatar className='h-10 w-10 border-2 border-background shadow-sm'>
+            <Avatar className='h-9 w-9 sm:h-10 sm:w-10 border-2 border-background shadow-sm'>
               <AvatarImage src={otherUser?.avatar || undefined} alt={otherName} />
               <AvatarFallback>{(otherName[0] || "U").toUpperCase()}</AvatarFallback>
             </Avatar>
-            {/* Статус онлайн — зелёная точка */}
             {isOtherOnline && (
-              <span className='absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background' />
+              <span className='absolute bottom-0 right-0 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-green-500 border-2 border-background' />
             )}
           </div>
 
-          <div className='min-w-0'>
-            <div className='flex items-center gap-2 min-w-0'>
-              {/* Имя пользователя/техподдержки */}
-              <h2 className='font-bold text-[1.09rem] truncate leading-snug'>
-                {isSupportChat ? "Техническая поддержка Дохкар" : otherName}
+          <div className='min-w-0 flex-1'>
+            <div className='flex items-center gap-1.5 min-w-0'>
+              <h2 className='font-semibold text-base truncate leading-snug'>
+                {isSupportChat ? (
+                  <>
+                    <span className='sm:hidden'>Поддержка</span>
+                    <span className='hidden sm:inline'>Техническая поддержка</span>
+                  </>
+                ) : (
+                  otherName
+                )}
               </h2>
-              {/* Для PROPERTY показываем архив как маленькую плашку */}
               {isPropertyChat && isArchived && (
                 <Badge
                   variant='secondary'
@@ -175,24 +179,22 @@ export function ChatHeader({
                   Удалено
                 </Badge>
               )}
-              {/* Support: tiny онлайн бейдж */}
               {isSupportChat && (
-                <span className='relative flex h-3 w-3 ml-1'>
-                  <span className='absolute inline-flex h-full w-full rounded-full bg-green-400 animate-ping opacity-70'></span>
-                  <span className='relative inline-flex rounded-full h-3 w-3 bg-green-500'></span>
+                <span className='relative flex h-2.5 w-2.5 shrink-0'>
+                  <span className='absolute inline-flex h-full w-full rounded-full bg-green-400 animate-ping opacity-70' />
+                  <span className='relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500' />
                 </span>
               )}
             </div>
-            {/* Статус в одну строку */}
-            <div className='text-xs text-muted-foreground flex items-center gap-1.5 leading-tight'>
+            <div className='text-xs text-muted-foreground flex items-center gap-1.5 leading-tight truncate'>
               {isSupportChat ? (
-                // Для поддержки: статус всегда "онлайн" и маленький совет под именем только на desktop
-                <>
-                  <span className='text-green-500 font-medium'>онлайн</span>
-                  <span className='hidden sm:inline text-[0.98em] ml-1 text-muted-foreground'>
-                    Обычно отвечаем за 5–15 минут
+                <span className='text-green-500 font-medium truncate'>
+                  онлайн
+                  <span className='text-muted-foreground font-normal'>
+                    {" "}
+                    · ответ 5–15 мин
                   </span>
-                </>
+                </span>
               ) : isOtherTyping ? (
                 <>
                   <span>печатает</span>
@@ -212,15 +214,11 @@ export function ChatHeader({
             </div>
           </div>
         </div>
-        {/* Правая часть: действия */}
-        <div className='flex items-center gap-1 pl-2'>
-          {/* Ссылка на объявление (у иконки external link) */}
+        <div className='flex items-center gap-0.5 shrink-0'>
           {isPropertyChat && (chat.listingId || chat.listing) && (
-            <Button asChild variant='ghost' size='icon'>
+            <Button asChild variant='ghost' size='icon' className='size-10'>
               <Link
-                href={
-                  ROUTES.listing(chat.listingId ?? chat.listing!.id)
-                }
+                href={ROUTES.listing(chat.listingId ?? chat.listing!.id)}
                 target='_blank'
                 tabIndex={-1}
                 aria-label='Открыть объявление в новом окне'
@@ -229,7 +227,6 @@ export function ChatHeader({
               </Link>
             </Button>
           )}
-          {/* ⋮ меню */}
           <ActionMenuButton
             isPropertyChat={isPropertyChat}
             listingId={chat.listingId ?? chat.listing?.id}
@@ -238,14 +235,12 @@ export function ChatHeader({
           />
         </div>
       </div>
-      {/* Кликабельная панель объявления снизу (PROPERTY или LISTING) */}
       {isPropertyChat && chat.listing && (
         <Link
           href={ROUTES.listing(chat.listingId ?? chat.listing.id)}
           target='_blank'
-          className='flex items-center gap-2 px-3 sm:px-4 pb-2 sm:pb-3 pt-0.5 group transition hover:bg-muted/40 rounded'
+          className='flex items-center gap-2 px-3 sm:px-4 pb-2 sm:pb-3 pt-0.5 group transition hover:bg-muted/40'
         >
-          {/* Картинка объявления (маленькая) */}
           {(() => {
             const imgSrc = chat.listing.images?.[0] ?? "/placeholder.svg";
             return imgSrc ? (
@@ -270,14 +265,6 @@ export function ChatHeader({
         </Link>
       )}
 
-      {/* Для поддержки на мобильном: показать обычную подсказку ниже имени */}
-      {isSupportChat && (
-        <div className='sm:hidden px-3 pb-2 -mt-1 text-xs text-muted-foreground'>
-          Обычно отвечаем за 5–15 минут
-        </div>
-      )}
-
-      {/* Соединение: показывать только если реально offline (красный внизу) */}
       {showConnectionProblem && (
         <div className='flex border-t border-destructive/20 bg-destructive/5'>
           <div className='px-4 py-1 text-xs text-destructive font-semibold flex items-center gap-2 w-full'>

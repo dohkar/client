@@ -63,7 +63,7 @@ export function SupportButton() {
           "bg-muted text-foreground hover:bg-muted/80 hover:text-foreground",
           "hover:scale-105 transition-transform duration-200",
           "md:bottom-8 md:right-8 md:h-14 md:w-14 md:bg-primary md:text-primary-foreground",
-          "md:hover:bg-primary/90 mb-20 md:mb-0"
+          "md:hover:bg-primary/90 mb-mobile-nav md:mb-0"
         )}
         aria-label='Техническая поддержка'
       >

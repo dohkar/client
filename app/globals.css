@@ -166,6 +166,30 @@
     padding-bottom: calc(1rem + var(--safe-area-inset-bottom));
   }
 
+  /**
+   * Отступ контента под MobileBottomNav:
+   * h-16 (4rem) + pt-1 (0.25rem) + pb-safe (1rem + inset) ≈ 5.25rem + inset
+   */
+  .pb-mobile-nav {
+    padding-bottom: calc(5.25rem + var(--safe-area-inset-bottom));
+  }
+
+  @media (min-width: 768px) {
+    .pb-mobile-nav {
+      padding-bottom: 0;
+    }
+  }
+
+  .mb-mobile-nav {
+    margin-bottom: calc(5.25rem + var(--safe-area-inset-bottom));
+  }
+
+  @media (min-width: 768px) {
+    .mb-mobile-nav {
+      margin-bottom: 0;
+    }
+  }
+
   .pt-safe {
     padding-top: calc(1rem + var(--safe-area-inset-top));
   }
@@ -657,11 +681,11 @@
     }
   }
 
-  /* iOS safe area */
+  /* iOS safe area + отступ над MobileBottomNav */
   @supports (padding-bottom: env(safe-area-inset-bottom)) {
-    @media (max-width: 640px) {
+    @media (max-width: 767px) {
       [data-sonner-toaster] {
-        bottom: calc(20px + env(safe-area-inset-bottom)) !important;
+        bottom: calc(5.25rem + env(safe-area-inset-bottom) + 12px) !important;
       }
     }
   }

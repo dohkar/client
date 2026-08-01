@@ -85,7 +85,7 @@ export function MessageList({
 
   if (isLoading) {
     return (
-      <div className='flex-1 overflow-y-auto p-4 space-y-4'>
+      <div className='flex-1 min-h-0 overflow-y-auto p-4 space-y-4'>
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
@@ -100,16 +100,17 @@ export function MessageList({
 
   if (messages.length === 0) {
     return (
-      <EmptyState
-        type={chatType === "SUPPORT" ? "support-empty" : "no-messages"}
-        chatType={chatType}
-      />
+      <div className='flex-1 min-h-0 flex flex-col'>
+        <EmptyState
+          type={chatType === "SUPPORT" ? "support-empty" : "no-messages"}
+          chatType={chatType}
+        />
+      </div>
     );
   }
 
   return (
-    <div ref={scrollRef} className='relative flex-1 overflow-y-auto p-4'>
-      {/* Кнопка загрузки старых сообщений */}
+    <div ref={scrollRef} className='relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3 sm:p-4'>
       {hasMore && (
         <div className='flex justify-center mb-4'>
           <Button
@@ -130,7 +131,6 @@ export function MessageList({
         </div>
       )}
 
-      {/* Сообщения с группировкой по датам */}
       {groupedMessages.map((group, groupIndex) => (
         <div key={groupIndex}>
           <MessageDateSeparator date={group.date} />
@@ -149,24 +149,28 @@ export function MessageList({
         </div>
       ))}
 
-      {/* Кнопка вниз */}
+      {/* Кнопка «вниз» — absolute, не мешает composer (Telegram-style) */}
       {newMessagesCount > 0 && (
-        <div className='sticky bottom-3 flex justify-center pointer-events-none'>
+        <div className='sticky bottom-3 flex justify-end pointer-events-none pr-1'>
           <Button
             type='button'
             variant='secondary'
-            size='sm'
-            className='pointer-events-auto shadow-sm rounded-full px-3 py-2 opacity-90 transition-opacity'
+            size='icon'
+            className='pointer-events-auto shadow-md rounded-full size-10 opacity-95'
+            aria-label={
+              newMessagesCount > 1
+                ? `Вниз, новых сообщений: ${newMessagesCount}`
+                : "Вниз"
+            }
             onClick={() => {
               scrollToBottom();
               setNewMessagesCount(0);
             }}
           >
-            <ArrowDown className='h-4 w-4 mr-2' />
-            Вниз
+            <ArrowDown className='h-4 w-4' />
             {newMessagesCount > 1 && (
-              <span className='ml-2 text-xs text-muted-foreground'>
-                +{newMessagesCount}
+              <span className='absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center'>
+                {newMessagesCount > 9 ? "9+" : newMessagesCount}
               </span>
             )}
           </Button>

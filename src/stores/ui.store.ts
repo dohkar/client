@@ -10,6 +10,9 @@ interface UIState {
   // Mobile menu
   isMobileMenuOpen: boolean;
 
+  /** Скрыть нижний nav (immersive экраны: открытый чат и т.п.) */
+  isMobileBottomNavHidden: boolean;
+
   // Theme (managed by next-themes, but we can track it here)
   theme: "light" | "dark" | "system";
 
@@ -30,8 +33,12 @@ interface UIState {
   closeAuthModal: () => void;
   toggleMobileMenu: () => void;
   setMobileMenuOpen: (isOpen: boolean) => void;
+  setMobileBottomNavHidden: (hidden: boolean) => void;
   setTheme: (theme: "light" | "dark" | "system") => void;
-  addNotification: (message: string, type?: "success" | "error" | "info" | "warning") => void;
+  addNotification: (
+    message: string,
+    type?: "success" | "error" | "info" | "warning"
+  ) => void;
   removeNotification: (id: string) => void;
   clearNotifications: () => void;
 }
@@ -42,6 +49,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   isAuthModalOpen: false,
   authModalType: null,
   isMobileMenuOpen: false,
+  isMobileBottomNavHidden: false,
   theme: "system",
   notifications: [],
 
@@ -51,14 +59,13 @@ export const useUIStore = create<UIState>((set, get) => ({
   openFilterModal: () => set({ isFilterModalOpen: true }),
   closeFilterModal: () => set({ isFilterModalOpen: false }),
 
-  openAuthModal: (type) =>
-    set({ isAuthModalOpen: true, authModalType: type }),
-  closeAuthModal: () =>
-    set({ isAuthModalOpen: false, authModalType: null }),
+  openAuthModal: (type) => set({ isAuthModalOpen: true, authModalType: type }),
+  closeAuthModal: () => set({ isAuthModalOpen: false, authModalType: null }),
 
   toggleMobileMenu: () =>
     set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),
   setMobileMenuOpen: (isOpen) => set({ isMobileMenuOpen: isOpen }),
+  setMobileBottomNavHidden: (hidden) => set({ isMobileBottomNavHidden: hidden }),
 
   setTheme: (theme) => set({ theme }),
 
@@ -76,7 +83,6 @@ export const useUIStore = create<UIState>((set, get) => ({
       ],
     }));
 
-    // Auto remove after 5 seconds
     setTimeout(() => {
       get().removeNotification(id);
     }, 5000);

@@ -6,6 +6,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { ConditionalFooter } from "@/components/layout/ConditionalFooter";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { AppMain } from "@/components/layout/AppMain";
 // import { AuthModal } from "@/components/features/auth-modal"; // временно: редирект на /auth/login
 import { SupportButton } from "@/components/features/chats/SupportButton";
 import { APP_CONFIG } from "@/constants";
@@ -111,7 +112,7 @@ export default async function RootLayout({
                   >
                     <Header />
                   </Suspense>
-                  <main className='flex-1 pb-20 md:pb-0 bg-muted/20'>{children}</main>
+                  <AppMain>{children}</AppMain>
                   <ConditionalFooter />
                   <MobileBottomNav />
                   {/* <AuthModal /> */}

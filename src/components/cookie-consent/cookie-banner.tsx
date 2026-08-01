@@ -17,11 +17,13 @@ export function CookieBanner() {
       aria-label="Согласие на обработку данных"
       aria-live="polite"
       className="
-        fixed bottom-4 left-4 right-4
+        fixed left-4 right-4
+        bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px)+0.75rem)]
         sm:left-auto sm:right-6 sm:bottom-6 sm:w-[380px]
-        z-50 bg-card border border-border
+        z-[60] bg-card border border-border
         rounded-2xl shadow-2xl p-5
         flex flex-col gap-4
+        md:bottom-6
       "
     >
       <div className="flex gap-3">

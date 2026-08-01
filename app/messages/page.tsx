@@ -8,7 +8,7 @@ import {
   useSendMessage,
   useMarkAsRead,
 } from "@/hooks/use-chats";
-import { useAuthStore } from "@/stores";
+import { useAuthStore, useUIStore } from "@/stores";
 import {
   ChatList,
   ChatHeader,
@@ -32,12 +32,34 @@ function MessagesPageContent() {
   const isInitialized = useAuthStore((state) => state.isInitialized);
   const isLoadingAuth = useAuthStore((state) => state.isLoading);
   const user = useAuthStore((state) => state.user);
+  const setMobileBottomNavHidden = useUIStore((s) => s.setMobileBottomNavHidden);
 
   // Получаем chatId из query параметров
   const chatIdFromQuery = searchParams.get("chatId");
   const [selectedChatId, setSelectedChatId] = useState<string | null>(
     chatIdFromQuery || null
   );
+
+  // Immersive chat на мобилке: скрываем bottom nav (паттерн WhatsApp / Telegram)
+  useEffect(() => {
+    setMobileBottomNavHidden(!!selectedChatId);
+    return () => setMobileBottomNavHidden(false);
+  }, [selectedChatId, setMobileBottomNavHidden]);
+
+  // Блокируем скролл body при fullscreen-чате на мобилке
+  useEffect(() => {
+    if (!selectedChatId) return;
+    const media = window.matchMedia("(max-width: 1023px)");
+    const apply = () => {
+      document.body.style.overflow = media.matches ? "hidden" : "";
+    };
+    apply();
+    media.addEventListener("change", apply);
+    return () => {
+      media.removeEventListener("change", apply);
+      document.body.style.overflow = "";
+    };
+  }, [selectedChatId]);
 
   // Получаем список чатов
   const { data: chats = [], isLoading: isChatsLoading } = useChatsList();
@@ -241,19 +263,42 @@ function MessagesPageContent() {
   }
 
   return (
-    <div className='bg-background'>
-      <div className='container mx-auto px-1 py-1 lg:px-2 lg:py-4'>
-        <h1 className='text-2xl font-bold mb-6 hidden lg:block'>Сообщения</h1>
+    <div
+      className={cn(
+        "bg-background",
+        // Открытый чат на мобилке — на весь экран (nav скрыт)
+        selectedChatId && "max-lg:fixed max-lg:inset-0 max-lg:z-[60]"
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto flex flex-col",
+          selectedChatId
+            ? "max-lg:h-full max-lg:px-0 max-lg:py-0"
+            : // Список чатов: место под bottom nav + safe-area только < md
+              "max-md:h-[calc(100dvh-5.25rem-env(safe-area-inset-bottom,0px))] md:max-lg:h-dvh",
+          "px-1 py-1 lg:container lg:px-2 lg:py-4",
+          "lg:h-auto"
+        )}
+      >
+        <h1 className='text-2xl font-bold mb-6 hidden lg:block shrink-0'>Сообщения</h1>
 
-        <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-154px)]'>
+        <div
+          className={cn(
+            "grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-4 min-h-0 flex-1",
+            // Desktop: фиксированная высота под хедер + заголовок
+            "lg:h-[calc(100dvh-8.5rem)]"
+          )}
+        >
           {/* Список чатов */}
           <Card
             className={cn(
-              "lg:col-span-4 flex flex-col overflow-hidden",
+              "lg:col-span-4 flex flex-col overflow-hidden min-h-0",
+              "max-lg:rounded-none max-lg:border-0 max-lg:shadow-none",
               selectedChatId && "hidden lg:flex"
             )}
           >
-            <div className='border-b p-4'>
+            <div className='border-b px-4 py-3 shrink-0'>
               <h2 className='font-semibold'>Все чаты</h2>
             </div>
             <ChatList
@@ -267,7 +312,8 @@ function MessagesPageContent() {
           {/* Активный чат */}
           <Card
             className={cn(
-              "lg:col-span-8 flex flex-col overflow-hidden",
+              "lg:col-span-8 flex flex-col overflow-hidden min-h-0",
+              "max-lg:rounded-none max-lg:border-0 max-lg:shadow-none",
               !selectedChatId && "hidden lg:flex"
             )}
           >

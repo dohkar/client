@@ -9,10 +9,11 @@ import {
   LayoutDashboard,
   Plus,
   User,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores";
+import { useAuthStore, useUIStore } from "@/stores";
 import { ROUTES } from "@/constants";
 import { DEFAULT_SEARCH_REGION, DEFAULT_SEARCH_CATEGORY } from "@/constants/defaults";
 import { buildSearchUrl, isSearchPathname } from "@/lib/url/segments";
@@ -27,7 +28,6 @@ interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
-  /** Центральный CTA (Авито / Юла): визуально выделен */
   isPrimaryAction?: boolean;
   requireAuth?: boolean;
   requireGuest?: boolean;
@@ -35,9 +35,10 @@ interface NavItem {
 }
 
 /**
- * Порядок по паттерну крупных маркетплейсов:
- * discovery (слева) → CTA по центру → личное (справа).
- * Слот аккаунта крайний справа: Войти ↔ Кабинет.
+ * После скрытия хедера на мобилке:
+ * гость — Избранное + Войти;
+ * авторизован — Сообщения + Кабинет (избранное в кабинете).
+ * Порядок: discovery → CTA → личное.
  */
 const navItems: NavItem[] = [
   {
@@ -61,13 +62,21 @@ const navItems: NavItem[] = [
     label: "Избранное",
     href: ROUTES.favorites,
     icon: Heart,
+    requireGuest: true,
+  },
+  {
+    label: "Сообщения",
+    href: ROUTES.messages,
+    icon: MessageSquare,
+    requireAuth: true,
   },
   {
     label: "Войти",
     href: ROUTES.login,
     icon: User,
     requireGuest: true,
-    isActive: (pathname) => pathname === ROUTES.login || pathname.startsWith("/auth/"),
+    isActive: (pathname) =>
+      pathname === ROUTES.login || pathname.startsWith("/auth/"),
   },
   {
     label: "Кабинет",
@@ -80,12 +89,17 @@ const navItems: NavItem[] = [
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
+  const isMobileBottomNavHidden = useUIStore((s) => s.isMobileBottomNavHidden);
 
   const visibleItems = navItems.filter((item) => {
     if (item.requireAuth) return isAuthenticated;
     if (item.requireGuest) return !isAuthenticated;
     return true;
   });
+
+  if (isMobileBottomNavHidden) {
+    return null;
+  }
 
   return (
     <nav

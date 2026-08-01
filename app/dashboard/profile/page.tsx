@@ -63,7 +63,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className='min-h-[calc(100vh-65px)] py-4 px-1 md:px-4 md:py-8'>
+    <div className='min-h-dvh md:min-h-[calc(100vh-4rem)] py-4 px-1 md:px-4 md:py-8'>
       <div className='max-w-5xl mx-auto space-y-6'>
         {/* Header Card */}
         <ProfileHeader

@@ -126,7 +126,7 @@ export default function SupportPage() {
   }
 
   return (
-    <div className='min-h-[calc(100vh-65px)] bg-muted/30'>
+    <div className='min-h-dvh md:min-h-[calc(100vh-4rem)] bg-muted/30'>
       <div className='container mx-auto px-4 py-6 sm:py-8 md:py-12'>
         <div className='max-w-2xl mx-auto'>
           {/* Back button */}

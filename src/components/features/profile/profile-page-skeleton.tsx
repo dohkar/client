@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function ProfilePageSkeleton() {
   return (
-    <div className='min-h-[calc(100vh-65px)] py-4 px-1 md:px-4 md:py-8 animate-pulse'>
+    <div className='min-h-dvh md:min-h-[calc(100vh-4rem)] py-4 px-1 md:px-4 md:py-8 animate-pulse'>
       <div className='max-w-5xl mx-auto space-y-6'>
         {/* Header Card Skeleton */}
         <Card className='overflow-hidden'>

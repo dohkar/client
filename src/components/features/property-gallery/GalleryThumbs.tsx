@@ -30,7 +30,7 @@ export function GalleryThumbs({
       className={cn(
         "absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-4 overflow-x-auto",
         // Добавляем отступ снизу для мобильной навигации (h-16 = 64px + safe area)
-        "pb-20 md:pb-4",
+        "pb-mobile-nav md:pb-4",
         className
       )}
     >

@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
-import { redirect } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { redirect, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Heart, MessageSquare, Settings, Shield, HelpCircle } from "lucide-react";
+import {
+  Home,
+  Heart,
+  MessageSquare,
+  Settings,
+  Shield,
+  HelpCircle,
+  LogOut,
+} from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
@@ -13,16 +21,28 @@ import { favoritesService } from "@/services/favorites.service";
 import { useListingLimits } from "@/hooks/use-listings";
 import { useChatsList } from "@/hooks/use-chats";
 import { ROUTES } from "@/constants";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function DashboardPage() {
-  const { isAuthenticated, user, isInitialized, isLoading } = useAuthStore();
+  const router = useRouter();
+  const { isAuthenticated, user, isInitialized, isLoading, logout } = useAuthStore();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
-    // Ждем завершения инициализации перед проверкой
     if (isInitialized && !isAuthenticated) {
       redirect(ROUTES.login);
     }
   }, [isAuthenticated, isInitialized]);
+
+  const handleLogout = useCallback(async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      router.push(ROUTES.home);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }, [logout, router]);
 
   const {
     data: limits,
@@ -42,7 +62,6 @@ export default function DashboardPage() {
 
   const { data: chats, isLoading: chatsLoading } = useChatsList();
 
-  // Показываем загрузку во время инициализации
   if (!isInitialized || isLoading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
@@ -77,7 +96,8 @@ export default function DashboardPage() {
       value: chatsLoading
         ? "..."
         : chats
-          ? chats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0) || chats.length
+          ? chats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0) ||
+            chats.length
           : 0,
       icon: MessageSquare,
       href: "/messages",
@@ -97,16 +117,21 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className='min-h-[calc(100vh-65px)]'>
+    <div className='min-h-dvh md:min-h-[calc(100vh-4rem)]'>
       <div className='container mx-auto px-4 py-6 sm:py-8 md:py-12'>
         <div className='max-w-6xl mx-auto'>
-          <div className='mb-6 sm:mb-8'>
-            <h1 className='text-2xl sm:text-3xl font-bold text-foreground mb-2'>
-              Личный кабинет
-            </h1>
-            <p className='text-sm sm:text-base text-muted-foreground'>
-              Управляйте своими объявлениями и настройками
-            </p>
+          <div className='mb-6 sm:mb-8 flex items-start justify-between gap-3'>
+            <div className='min-w-0'>
+              <h1 className='text-2xl sm:text-3xl font-bold text-foreground mb-2'>
+                Личный кабинет
+              </h1>
+              <p className='text-sm sm:text-base text-muted-foreground'>
+                Управляйте своими объявлениями и настройками
+              </p>
+            </div>
+            <div className='md:hidden shrink-0'>
+              <ThemeToggle variant='icon' />
+            </div>
           </div>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8'>
@@ -126,7 +151,11 @@ export default function DashboardPage() {
                       <p className='text-sm sm:text-base text-muted-foreground mb-3'>
                         {stat.title}
                       </p>
-                      <Button variant='outline' size='sm' onClick={() => refetchLimits()}>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => refetchLimits()}
+                      >
                         Повторить
                       </Button>
                     </CardContent>
@@ -157,25 +186,37 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle>Быстрые действия</CardTitle>
             </CardHeader>
-            <CardContent className='flex flex-col sm:flex-row gap-3 sm:gap-4'>
-              <Link href={ROUTES.sell} className='flex-1'>
+            <CardContent className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4'>
+              <Link href={ROUTES.sell} className='flex-1 min-w-[140px]'>
                 <Button className='w-full btn-caucasus min-h-[44px]'>
                   <Home className='w-4 h-4 mr-2' />
                   <span className='text-sm sm:text-base'>Разместить объявление</span>
                 </Button>
               </Link>
-              <Link href={`${ROUTES.dashboard}/profile`} className='flex-1'>
+              <Link href={`${ROUTES.dashboard}/profile`} className='flex-1 min-w-[140px]'>
                 <Button variant='outline' className='w-full min-h-[44px]'>
                   <Settings className='w-4 h-4 mr-2' />
                   <span className='text-sm sm:text-base'>Профиль</span>
                 </Button>
               </Link>
-              <Link href={ROUTES.dashboardSupport} className='flex-1'>
+              <Link href={ROUTES.dashboardSupport} className='flex-1 min-w-[140px]'>
                 <Button variant='outline' className='w-full min-h-[44px]'>
                   <HelpCircle className='w-4 h-4 mr-2' />
                   <span className='text-sm sm:text-base'>Поддержка</span>
                 </Button>
               </Link>
+              <Button
+                type='button'
+                variant='outline'
+                className='flex-1 min-w-[140px] min-h-[44px] text-destructive hover:text-destructive md:hidden'
+                onClick={() => void handleLogout()}
+                disabled={isLoggingOut}
+              >
+                <LogOut className='w-4 h-4 mr-2' />
+                <span className='text-sm sm:text-base'>
+                  {isLoggingOut ? "Выход…" : "Выйти"}
+                </span>
+              </Button>
             </CardContent>
           </Card>
         </div>
