@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ROUTES } from "@/constants";
 import { DEFAULT_SEARCH_REGION } from "@/constants/defaults";
 import { buildSearchUrl } from "@/lib/url/segments";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -125,7 +126,10 @@ export function Footer() {
 
         <div className='border-t mt-8 sm:mt-12 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs sm:text-sm text-muted-foreground'>
           <p>© {currentYear} Дохкар. Все права защищены.</p>
-          <div className='flex flex-wrap justify-center gap-4 sm:gap-6'>
+          <div className='flex flex-wrap justify-center items-center gap-4 sm:gap-6'>
+            <div className='md:hidden'>
+              <ThemeToggle variant='icon' />
+            </div>
             <Link href={ROUTES.privacy} className='hover:text-primary transition-colors'>
               Конфиденциальность
             </Link>

@@ -106,7 +106,7 @@ export default async function RootLayout({
                 <div className='flex min-h-screen flex-col'>
                   <Suspense
                     fallback={
-                      <header className='sticky top-0 z-50 w-full border-b bg-background/95 h-16' />
+                      <header className='sticky top-0 z-50 w-full border-b bg-background/95 h-16 hidden md:block' />
                     }
                   >
                     <Header />
