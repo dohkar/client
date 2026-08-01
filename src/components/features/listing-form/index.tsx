@@ -418,20 +418,20 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
       )}
 
       {step < 3 ? (
-        <div className='flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='flex flex-row items-center gap-3 border-t border-border pt-4'>
           <Button
             type='button'
             variant='outline'
             disabled={step === 0}
             onClick={() => setStep((s) => Math.max(0, s - 1))}
-            className='sm:min-w-[120px]'
+            className='flex-1 sm:flex-none sm:min-w-[120px]'
           >
             <ChevronLeft className='mr-1 h-4 w-4' />
             Назад
           </Button>
           <Button
             type='button'
-            className='sm:min-w-[140px]'
+            className='flex-1 sm:flex-none sm:min-w-[140px]'
             onClick={() => void handleGoNext()}
           >
             Далее
@@ -439,22 +439,24 @@ export function ListingForm({ onSuccess, listingId, initialListing }: ListingFor
           </Button>
         </div>
       ) : (
-        <div className='flex flex-col gap-4 border-t border-border pt-4'>
+        <div className='flex flex-row items-center gap-3 border-t border-border pt-4'>
           <Button
             type='button'
             variant='outline'
-            className='w-fit'
+            className='shrink-0'
             onClick={() => setStep(2)}
           >
             <ChevronLeft className='mr-1 h-4 w-4' />
             Назад
           </Button>
-          <SubmitButton
-            isLoading={isLoading}
-            isUploadingMedia={hasUploadingMedia}
-            isEdit={isEdit}
-            onPressSubmit={() => void handleSubmit(onSubmit)()}
-          />
+          <div className='min-w-0 flex-1'>
+            <SubmitButton
+              isLoading={isLoading}
+              isUploadingMedia={hasUploadingMedia}
+              isEdit={isEdit}
+              onPressSubmit={() => void handleSubmit(onSubmit)()}
+            />
+          </div>
         </div>
       )}
     </form>

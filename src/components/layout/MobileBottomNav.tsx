@@ -106,20 +106,20 @@ export function MobileBottomNav() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className='flex flex-col items-center justify-end gap-0.5 flex-1 h-full min-h-[44px] min-w-0 relative -mt-3'
+                  className='flex flex-col items-center justify-end gap-0.5 flex-1 h-full min-h-[44px] min-w-0 relative -mt-2'
                   aria-label={item.label}
                   aria-current={isActive ? "page" : undefined}
                 >
                   <span
                     className={cn(
-                      "flex items-center justify-center size-12 rounded-full shadow-md transition-transform",
+                      "flex items-center justify-center size-11 rounded-full shadow-md transition-transform",
                       "bg-gradient-to-br from-emerald-600 to-teal-600 text-white",
                       "active:scale-95",
                       isActive &&
                         "ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
                     )}
                   >
-                    <Icon className='size-6' strokeWidth={2.5} />
+                    <Icon className='size-5' strokeWidth={2.5} />
                   </span>
                   <span
                     className={cn(

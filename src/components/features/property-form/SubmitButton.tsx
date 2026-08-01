@@ -23,7 +23,7 @@ export function SubmitButton({
   const isDisabled = disabled ?? (isLoading || isUploadingMedia);
 
   return (
-    <div className='sticky bottom-0 left-0 right-0 z-10 pt-1 pb-2 px-2 md:pt-2 md:pb-3 md:px-0 bg-background/95 backdrop-blur-[2px] supports-[backdrop-filter]:bg-background/80 border-t border-border md:border-0 md:bg-transparent md:shadow-none flex justify-end'>
+    <div className='flex justify-end w-full'>
       <Button
         type={onPressSubmit ? "button" : "submit"}
         size='lg'

@@ -59,14 +59,15 @@ export function SupportButton() {
         disabled={supportChatMutation.isPending || !isInitialized}
         size='lg'
         className={cn(
-          "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg",
-          "hover:scale-110 transition-transform duration-200",
-          "md:bottom-8 md:right-8",
-          "mb-20 md:mb-0"
+          "fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full shadow-md",
+          "bg-muted text-foreground hover:bg-muted/80 hover:text-foreground",
+          "hover:scale-105 transition-transform duration-200",
+          "md:bottom-8 md:right-8 md:h-14 md:w-14 md:bg-primary md:text-primary-foreground",
+          "md:hover:bg-primary/90 mb-20 md:mb-0"
         )}
         aria-label='Техническая поддержка'
       >
-        <LifeBuoy className='h-6 w-6' />
+        <LifeBuoy className='h-5 w-5 md:h-6 md:w-6' />
         {supportChatMutation.isPending && (
           <span className='absolute inset-0 flex items-center justify-center'>
             <span className='h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent' />
